@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 
 export default function HomePage() {
   return (
@@ -45,7 +44,7 @@ export default function HomePage() {
           <div>
             <h3 className="text-xl font-semibold mb-2 text-[#3B82F6]">1. Describe</h3>
             <p className="text-gray-700">
-              Type your agent's role and behavior using natural language.
+              Type your agent&apos;s role and behavior using natural language.
             </p>
           </div>
           <div>
@@ -57,7 +56,7 @@ export default function HomePage() {
           <div>
             <h3 className="text-xl font-semibold mb-2 text-[#3B82F6]">3. Deploy</h3>
             <p className="text-gray-700">
-              Once ready, share your AI assistant via link or embed it anywhere.
+              Once it&apos;s ready, share your AI assistant via link or embed it anywhere.
             </p>
           </div>
         </div>
