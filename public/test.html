@@ -1,0 +1,12 @@
+<!-- Ajoutez ceci avant </body> -->
+<script type="text/javascript">
+  window.addEventListener('DOMContentLoaded', function() {
+    var s = document.createElement('script');
+    s.src = "http://localhost:3000/widget-client.js";
+    s.async = true;
+    s.onload = function() {
+      window.AIChatWidget.init({ widgetId: "685f17a1531311ae236a6c98" });
+    };
+    document.body.appendChild(s);
+  });
+</script>
