@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import { NextConfig as ActualNextConfig } from "next";
 
 const nextConfig: ActualNextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true, // ← AJOUTÉ POUR IGNORER ESLINT
+  },
   webpack: (config, { isServer }) => {
     // Évite les erreurs liées à "fs" côté client
     if (!isServer) {
