@@ -7,9 +7,10 @@ import { createUserOpenAI } from "@/lib/openai";
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   try {
+    const params = await context.params;
     await connectToDatabase();
     const session = await getServerSession(authOptions);
     if (!session || !session.user?.id) {
@@ -22,7 +23,7 @@ export async function POST(
       return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
     }
 
-    const { id } = context.params;
+    const { id } = params;
 
     const agent = await Agent.findOne({ _id: id, userId: session.user.id });
     if (!agent) return NextResponse.json({ error: "Agent not found" }, { status: 404 });

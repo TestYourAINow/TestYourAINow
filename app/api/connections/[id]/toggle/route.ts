@@ -6,9 +6,9 @@ import { authOptions } from '@/lib/authOptions'
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
-  const { params } = context
+  const params = await context.params
   await connectToDatabase()
 
   const session = await getServerSession(authOptions)

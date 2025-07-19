@@ -19,9 +19,17 @@ export default function WebhookIntegrationModal({
   initialData,
 }: WebhookIntegrationModalProps) {
   const [name, setName] = useState(initialData?.name || "");
-  const [description, setDescription] = useState(initialData?.description || "");
-  const [url, setUrl] = useState(initialData?.url || "");
-  const [fields, setFields] = useState(initialData?.fields?.length ? initialData.fields : [{ key: "", value: "" }]);
+  const [description, setDescription] = useState(
+    initialData?.type === "webhook" ? initialData.description || "" : ""
+  );
+  const [url, setUrl] = useState(
+    initialData?.type === "webhook" ? initialData.url || "" : ""
+  );
+  const [fields, setFields] = useState(
+    initialData?.type === "webhook" && initialData.fields?.length
+      ? initialData.fields
+      : [{ key: "", value: "" }]
+  );
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingInstructions, setIsAddingInstructions] = useState(false);
@@ -183,7 +191,7 @@ export default function WebhookIntegrationModal({
       if (updatePromptRes.ok) {
         const updatedPromptData = await updatePromptRes.json();
         const updatedPrompt = updatedPromptData.prompt;
-        
+
         const versionRes = await fetch(`/api/agents/${agentId}/versions`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -204,13 +212,13 @@ export default function WebhookIntegrationModal({
             ],
           }),
         });
-        
+
         if (versionRes.ok) {
           toast.success("Instructions added to prompt and new version created");
         } else {
           toast.error("Failed to create new version.");
         }
-        
+
         onClose();
         onSave({ type: "webhook", name, description, url, fields: cleanedFields, createdAt: new Date().toISOString() });
       } else {
@@ -238,13 +246,13 @@ export default function WebhookIntegrationModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/70" 
+      <div
+        className="absolute inset-0 bg-black/70"
         onClick={onClose}
       />
-      
+
       {/* Modal Content */}
-      <div 
+      <div
         className="relative z-10 bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl w-full max-w-2xl text-white overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -271,7 +279,7 @@ export default function WebhookIntegrationModal({
               <Link className="text-blue-400" size={20} />
               <h3 className="text-lg font-semibold text-blue-200">Basic Information</h3>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Webhook Name *</label>
@@ -326,7 +334,7 @@ export default function WebhookIntegrationModal({
                 Add Field
               </button>
             </div>
-            
+
             <div className="space-y-3">
               {fields.map((field, index) => (
                 <div key={index} className="bg-gray-800/50 border border-gray-600 rounded-lg p-4">
@@ -359,13 +367,13 @@ export default function WebhookIntegrationModal({
                       </button>
                     </div>
                   </div>
-                  
+
                   {field.key && (
                     <div className="text-xs text-gray-400 bg-gray-900/50 px-2 py-1 rounded font-mono">
                       Preview: <span className="text-green-400">{field.key.trim().replace(/\s+/g, "_")}_testvalue</span>
                     </div>
                   )}
-                  
+
                   {fieldErrors[index] && (
                     <p className="text-red-400 text-xs mt-1">{fieldErrors[index]}</p>
                   )}

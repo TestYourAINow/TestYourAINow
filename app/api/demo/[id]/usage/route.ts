@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { Demo } from '@/models/Demo';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: any) {
+  const params = await context.params;
   await connectToDatabase();
 
   try {

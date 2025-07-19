@@ -7,8 +7,9 @@ import { authOptions } from "@/lib/authOptions";
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
 
   const session = await getServerSession(authOptions);
@@ -16,7 +17,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const { id } = params;
 
   const versions = await AgentVersion.find({ agentId: id }).sort({ createdAt: -1 });
 
@@ -25,8 +26,9 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
 
   const session = await getServerSession(authOptions);
@@ -34,7 +36,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const { id } = params;
 
   const agent = await Agent.findOne({ _id: id, userId: session.user.id });
   if (!agent) return NextResponse.json({ error: "Agent not found" }, { status: 404 });

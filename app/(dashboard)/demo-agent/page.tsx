@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { HexColorPicker } from 'react-colorful';
-import { Moon, Sun, Bot, User, Info, X, Upload, Send, Settings, MessageCircle, RotateCcw, Globe, Smartphone } from "lucide-react";
+import { 
+  Moon, Sun, Bot, User, Info, X, Upload, Send, Settings, MessageCircle, 
+  RotateCcw, Globe, Smartphone, Palette, Monitor, Eye, Trash2
+} from "lucide-react";
 import { cn } from '@/lib/utils';
 import CreateDemoModal from '@/components/CreateDemoModal';
 import InfoDemoModal from '@/components/InfoDemoModal';
 import { DeleteDemoModal } from '@/components/DeleteDemoModal';
-import RequireApiKey from "@/components/RequireApiKey"; // Import ajouté
+import RequireApiKey from "@/components/RequireApiKey";
 
 // Types
 interface DemoConfig {
@@ -206,13 +209,13 @@ const ChatWindow: React.FC<{
               >
                 {message.isBot && (
                   <img
-                    src={config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS44IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo='}
+                    src={config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS4IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo='}
                     alt="Bot"
                     className="w-8 h-8 rounded-full self-start mr-2"
                     style={{ flexShrink: 0 }}
                     onError={(e) => {
                       const target = e.currentTarget as HTMLImageElement;
-                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS4IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
+                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS44IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
                     }}
                   />
                 )}
@@ -233,7 +236,7 @@ const ChatWindow: React.FC<{
             {isTyping && (
               <div className="flex items-start mb-3 flex-row">
                 <img
-                  src={config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS44IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo='}
+                  src={config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS4IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo='}
                   alt="Bot"
                   className="w-8 h-8 rounded-full self-start mr-2"
                 />
@@ -288,6 +291,36 @@ const ChatWindow: React.FC<{
       </div>
     );
   };
+
+// Composant pour les actions de démo
+const DemoActions = ({ 
+  demo, 
+  onView, 
+  onDelete 
+}: { 
+  demo: DemoItem; 
+  onView: () => void; 
+  onDelete: () => void; 
+}) => {
+  return (
+    <div className="flex gap-2">
+      <button
+        onClick={onView}
+        className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 rounded-lg transition-colors"
+        title="View Info"
+      >
+        <Eye size={14} />
+      </button>
+      <button
+        onClick={onDelete}
+        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
+        title="Delete"
+      >
+        <Trash2 size={14} />
+      </button>
+    </div>
+  );
+};
 
 export default function DemoAgentPage() {
   // Configuration states
@@ -575,74 +608,120 @@ export default function DemoAgentPage() {
       <div className="min-h-screen bg-transparent">
         <div className="flex justify-center min-h-screen py-6">
           <div className="w-full max-w-7xl mx-auto px-6">
-            {/* Header */}
+            {/* Header amélioré */}
             <div className="mb-6">
-              <h1 className="text-xl font-semibold text-white">
-                {config.name}
-              </h1>
-              <p className="text-sm text-gray-400">
-                Demo Agent Builder
-              </p>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 bg-green-600 rounded-xl">
+                  <Smartphone className="text-white" size={24} />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-white mb-2">
+                    Demo Agent Builder
+                  </h1>
+                  <p className="text-sm text-gray-400">
+                    Create interactive demos for your AI agents
+                  </p>
+                </div>
+                
+                {/* Quick stats */}
+                {userDemos.length > 0 && (
+                  <div className="ml-auto flex items-center gap-4">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-white">{userDemos.length}</div>
+                      <div className="text-xs text-gray-400">Demos</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-white">{agents.length}</div>
+                      <div className="text-xs text-gray-400">Agents</div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div style={{ display: 'flex', height: 'calc(100vh - 180px)', gap: '24px' }}>
+            <div style={{ display: 'flex', height: 'calc(100vh - 200px)', gap: '24px' }}>
               {/* Preview Panel - Left */}
               <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl relative overflow-hidden" style={{ flex: '1.4' }}>
-                {/* Watermark */}
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '12px',
-                  color: 'rgba(255, 255, 255, 0.15)',
-                  fontSize: '20px',
-                  fontWeight: 500,
-                  pointerEvents: 'none',
-                  zIndex: 1
-                }}>
-                  <MessageCircle className="w-40 h-40 mb-3" />
-                  <span>Demo Preview</span>
+                
+                {/* Device Frame */}
+                <div className="absolute top-4 left-4 bg-gray-700/50 rounded-lg p-2 flex items-center gap-2">
+                  <Monitor size={16} className="text-gray-400" />
+                  <span className="text-xs text-gray-400">Desktop Preview</span>
                 </div>
 
-                {/* Chat Widget Preview */}
-                <div
-                  className="chat-widget"
-                  style={{
-                    '--primary-color': config.primaryColor,
-                    position: 'absolute',
-                    bottom: '24px',
-                    right: '24px',
-                  } as React.CSSProperties}
-                >
-                  <ChatButton
-                    isOpen={isOpen}
-                    onClick={toggleChat}
-                    config={config}
-                    showPopup={showPopupBubble}
-                  />
-                  <ChatWindow
-                    isOpen={isOpen}
-                    config={config}
-                    messages={messages}
-                    isTyping={isTyping}
-                    inputValue={inputValue}
-                    onInputChange={setInputValue}
-                    onSendMessage={sendMessage}
-                    onNewChat={startNewChat}
-                    onClose={toggleChat}
-                    messagesEndRef={messagesEndRef}
-                    inputRef={inputRef}
-                    animateMessages={animateMessages}
-                  />
-                </div>
+                {/* Preview Content */}
+                {!config.agentId ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center">
+                    <div className="w-24 h-24 bg-gray-700/50 rounded-full flex items-center justify-center mb-6">
+                      <MessageCircle className="w-12 h-12 text-gray-500" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-400 mb-3">Select an Agent</h3>
+                    <p className="text-gray-500 max-w-md">
+                      Choose an AI agent from the configuration panel to see the live preview of your demo
+                    </p>
+                    <div className="mt-6 text-sm text-gray-600">
+                      👈 Configure your demo settings on the right
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Watermark */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '12px',
+                      color: 'rgba(255, 255, 255, 0.1)',
+                      fontSize: '20px',
+                      fontWeight: 500,
+                      pointerEvents: 'none',
+                      zIndex: 1
+                    }}>
+                      <MessageCircle className="w-32 h-32 mb-3" />
+                      <span>Live Preview</span>
+                    </div>
+
+                    {/* Chat Widget Preview */}
+                    <div
+                      className="chat-widget"
+                      style={{
+                        '--primary-color': config.primaryColor,
+                        position: 'absolute',
+                        bottom: '24px',
+                        right: '24px',
+                      } as React.CSSProperties}
+                    >
+                      <ChatButton
+                        isOpen={isOpen}
+                        onClick={toggleChat}
+                        config={config}
+                        showPopup={showPopupBubble}
+                      />
+                      <ChatWindow
+                        isOpen={isOpen}
+                        config={config}
+                        messages={messages}
+                        isTyping={isTyping}
+                        inputValue={inputValue}
+                        onInputChange={setInputValue}
+                        onSendMessage={sendMessage}
+                        onNewChat={startNewChat}
+                        onClose={toggleChat}
+                        messagesEndRef={messagesEndRef}
+                        inputRef={inputRef}
+                        animateMessages={animateMessages}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Configuration Panel - Right */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl text-white overflow-hidden max-h-[90vh] overflow-y-auto" style={{ width: '400px', display: 'flex', flexDirection: 'column' }}>
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl text-white overflow-hidden" style={{ width: '400px', display: 'flex', flexDirection: 'column' }}>
 
                 {/* Configuration Section */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
@@ -747,11 +826,9 @@ export default function DemoAgentPage() {
                         />
                         <div className="text-gray-400">
                           <div className="mx-auto w-16 h-16 bg-gray-500 rounded-full flex items-center justify-center mb-4">
-                            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V22H15L13.5 7.5C13.1 7.1 12.6 6.9 12 6.9S10.9 7.1 10.5 7.5L9 22H3V9L8 5H16L21 9Z" />
-                            </svg>
+                            <Upload className="w-8 h-8" />
                           </div>
-                          <p className="text-sm font-medium text-gray-300">Bot avatar</p>
+                          <p className="text-sm font-medium text-gray-300">Upload Bot Avatar</p>
                           <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF (max 1MB)</p>
                         </div>
                       </div>
@@ -774,7 +851,7 @@ export default function DemoAgentPage() {
                           className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
                           title="Remove avatar"
                         >
-                          ×
+                          <X size={16} />
                         </button>
                       </div>
                     )}
@@ -916,7 +993,7 @@ export default function DemoAgentPage() {
                   {/* Theme & Colors */}
                   <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
                     <div className="flex items-center gap-3 mb-4">
-                      <Globe className="text-blue-400" size={20} />
+                      <Palette className="text-blue-400" size={20} />
                       <h3 className="text-lg font-semibold text-blue-200">Theme & Colors</h3>
                     </div>
 
@@ -1004,73 +1081,75 @@ export default function DemoAgentPage() {
                       <h3 className="text-lg font-semibold text-blue-200">Demo Information</h3>
                     </div>
 
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between text-gray-300">
-                        <span>Agent:</span>
-                        <span className="text-white font-medium">{selectedAgent?.name || 'None selected'}</span>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="bg-gray-800/30 rounded-lg p-3">
+                        <div className="text-gray-400 text-xs mb-1">Agent</div>
+                        <div className="text-white font-medium truncate">{selectedAgent?.name || 'None selected'}</div>
                       </div>
-                      <div className="flex justify-between text-gray-300">
-                        <span>Theme:</span>
-                        <span className="text-white capitalize">{config.theme === 'light' ? 'Light' : 'Dark'}</span>
+                      <div className="bg-gray-800/30 rounded-lg p-3">
+                        <div className="text-gray-400 text-xs mb-1">Theme</div>
+                        <div className="text-white capitalize">{config.theme}</div>
                       </div>
-                      <div className="flex justify-between text-gray-300">
-                        <span>Primary Color:</span>
+                      <div className="bg-gray-800/30 rounded-lg p-3">
+                        <div className="text-gray-400 text-xs mb-1">Color</div>
                         <div className="flex items-center gap-2">
                           <div
-                            className="w-4 h-4 rounded-full border border-gray-600"
+                            className="w-3 h-3 rounded-full border border-gray-600"
                             style={{ backgroundColor: config.primaryColor }}
                           />
                           <span className="text-white text-xs font-mono">{config.primaryColor}</span>
                         </div>
                       </div>
-                      <div className="flex justify-between text-gray-300">
-                        <span>Popup message:</span>
-                        <span className="text-white">{config.showPopup ? 'Enabled' : 'Disabled'}</span>
-                      </div>
-                      <div className="flex justify-between text-gray-300">
-                        <span>Welcome message:</span>
-                        <span className="text-white">{config.showWelcomeMessage ? 'Enabled' : 'Disabled'}</span>
+                      <div className="bg-gray-800/30 rounded-lg p-3">
+                        <div className="text-gray-400 text-xs mb-1">Features</div>
+                        <div className="text-white text-xs">
+                          {[config.showPopup && 'Popup', config.showWelcomeMessage && 'Welcome'].filter(Boolean).join(', ') || 'Basic'}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Your Demos Section */}
-                <div className="border-t border-gray-700 bg-gray-800/50 p-4 h-48">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Settings className="text-gray-400" size={18} />
-                    <h3 className="text-sm font-semibold text-white">Your Demos</h3>
+                {/* Your Demos Section améliorée */}
+                <div className="border-t border-gray-700 bg-gray-800/50 p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Smartphone className="text-green-400" size={18} />
+                    <h3 className="text-lg font-semibold text-green-200">Your Demos</h3>
+                    {userDemos.length > 0 && (
+                      <span className="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full">
+                        {userDemos.length}
+                      </span>
+                    )}
                   </div>
 
-                  <div className="h-32 overflow-y-auto pr-1">
+                  <div className="max-h-48 overflow-y-auto custom-scrollbar">
                     {userDemos.length === 0 ? (
-                      <p className="text-xs text-gray-400 italic text-center py-4">No demos created yet.</p>
+                      <div className="text-center py-8">
+                        <div className="w-12 h-12 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Smartphone className="w-6 h-6 text-gray-500" />
+                        </div>
+                        <p className="text-sm text-gray-400 mb-2">No demos created yet</p>
+                        <p className="text-xs text-gray-500">Create your first demo to get started</p>
+                      </div>
                     ) : (
-                      <ul className="space-y-2">
+                      <div className="space-y-3">
                         {userDemos.map((demo) => (
-                          <li key={demo._id} className="bg-gray-800/50 rounded-lg p-3 border border-gray-600">
-                            <div className="flex justify-between items-center">
-                              <span className="truncate text-gray-300 text-sm">{demo.name}</span>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => openInfoModal(demo._id)}
-                                  title="Info"
-                                  className="hover:bg-gray-700 p-1 rounded"
-                                >
-                                  <Info className="w-4 h-4 text-blue-400 hover:text-blue-300" />
-                                </button>
-                                <button
-                                  onClick={() => openDeleteDemoModal(demo._id, demo.name)}
-                                  title="Delete"
-                                  className="hover:bg-gray-700 p-1 rounded"
-                                >
-                                  <X className="w-4 h-4 text-red-500 hover:text-red-400" />
-                                </button>
+                          <div key={demo._id} className="bg-gray-800/50 border border-gray-600 rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-white font-medium truncate">{demo.name}</h4>
+                                <p className="text-xs text-gray-400 mt-1">Interactive demo widget</p>
                               </div>
+                              
+                              <DemoActions
+                                demo={demo}
+                                onView={() => openInfoModal(demo._id)}
+                                onDelete={() => openDeleteDemoModal(demo._id, demo.name)}
+                              />
                             </div>
-                          </li>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1111,7 +1190,6 @@ export default function DemoAgentPage() {
           onClose={() => setShowInfoModal(false)}
         />
 
-        {/* Modal de suppression de démo */}
         <DeleteDemoModal
           isOpen={deleteDemoModal.isOpen}
           onClose={closeDeleteDemoModal}
@@ -1119,6 +1197,23 @@ export default function DemoAgentPage() {
           demoName={deleteDemoModal.demoName}
           isDeleting={isDeletingDemo}
         />
+
+        {/* Custom Styles */}
+        <style jsx>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+          }
+        `}</style>
       </div>
     </RequireApiKey>
   );

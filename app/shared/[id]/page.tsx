@@ -4,7 +4,7 @@ import { Demo } from '@/models/Demo';
 import SharedDemoClient from '@/components/SharedDemoClient';
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // Interface pour typer le retour de Mongoose
@@ -32,7 +32,7 @@ interface DemoDocument {
 }
 
 export default async function SharedDemoPage({ params }: Props) {
-  const { id } = params;
+  const { id } = await params;
 
   await connectToDatabase();
 

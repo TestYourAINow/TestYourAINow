@@ -6,8 +6,9 @@ import { Agent } from "@/models/Agent";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string; integrationName: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
 
   const session = await getServerSession(authOptions);

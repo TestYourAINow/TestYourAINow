@@ -15,8 +15,9 @@ const supabase = createClient(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.id) {
@@ -144,8 +145,9 @@ export async function POST(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.id) {

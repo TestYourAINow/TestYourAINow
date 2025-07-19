@@ -6,9 +6,9 @@ import { authOptions } from '@/lib/authOptions'
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
-  const { params } = context
+  const params = await context.params
   await connectToDatabase()
 
   const session = await getServerSession(authOptions)
@@ -28,8 +28,8 @@ export async function GET(
   return NextResponse.json({ connection })
 }
 
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
-  const { params } = context;
+export async function PUT(req: NextRequest, context: any) {
+  const params = await context.params;
   await connectToDatabase()
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
@@ -62,9 +62,9 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
 // 🔥 NOUVELLE MÉTHODE DELETE
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
-  const { params } = context
+  const params = await context.params
   await connectToDatabase()
 
   const session = await getServerSession(authOptions)

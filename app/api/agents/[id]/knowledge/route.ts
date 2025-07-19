@@ -4,7 +4,8 @@ import { AgentKnowledge } from "@/models/AgentKnowledge";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: any) {
+  const params = await context.params;
   await connectToDatabase();
 
   const session = await getServerSession(authOptions);

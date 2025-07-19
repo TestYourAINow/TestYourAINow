@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { widgetId: string } }
+  context: any
 ) {
+  const params = await context.params;
   const widgetId = params.widgetId;
 
   const script = `

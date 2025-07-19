@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-export default function SuccessPage() {
+function SuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -32,5 +32,13 @@ export default function SuccessPage() {
     <div className="text-center text-white mt-20">
       Vérification du paiement...
     </div>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div className="text-center text-white mt-20">Loading...</div>}>
+      <SuccessContent />
+    </Suspense>
   )
 }

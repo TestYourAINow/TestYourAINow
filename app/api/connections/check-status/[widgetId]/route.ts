@@ -16,9 +16,10 @@ interface ConnectionDocument {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { widgetId: string } }
+  context: any
 ) {
   try {
+    const params = await context.params
     await connectToDatabase()
     
     const { widgetId } = params

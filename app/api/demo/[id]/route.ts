@@ -6,7 +6,8 @@ import { authOptions } from '@/lib/authOptions';
 import { Demo } from '@/models/Demo';
 import { Agent } from '@/models/Agent';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: any) {
+  const params = await context.params;
   await connectToDatabase();
 
   const session = await getServerSession(authOptions);
@@ -45,7 +46,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: any) {
+  const params = await context.params;
   await connectToDatabase();
 
   const session = await getServerSession(authOptions);

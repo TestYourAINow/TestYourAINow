@@ -6,8 +6,9 @@ import { authOptions } from "@/lib/authOptions";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string; versionId: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.id) {
@@ -28,8 +29,9 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string; versionId: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.id) {

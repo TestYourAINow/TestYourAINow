@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import clsx from "clsx"
 import { toast } from "sonner"
-import { User, Mail, Lock, Shield, Trash2, Save, CheckCircle, AlertCircle, Camera, Upload, X } from "lucide-react"
+import { 
+  User, Lock, Shield, Trash2, Save, CheckCircle, AlertCircle, 
+  Camera, Upload, X
+} from "lucide-react"
 
 export default function AccountSettingsPage() {
   const { data: session } = useSession()
@@ -216,21 +218,28 @@ export default function AccountSettingsPage() {
   return (
     <div className="min-h-screen bg-transparent">
       <div className="flex justify-center min-h-screen py-6">
-        <div className="w-full max-w-4xl mx-auto px-6">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-semibold text-white mb-2">
-              Account Settings
-            </h1>
-            <p className="text-sm text-gray-400">
-              Manage your account information and security settings
-            </p>
+        <div className="w-full max-w-6xl mx-auto px-6">
+          {/* Header amélioré */}
+          <div className="mb-8">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-blue-600 rounded-xl">
+                <User className="text-white" size={24} />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  Account Settings
+                </h1>
+                <p className="text-sm text-gray-400">
+                  Manage your account information and security settings
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', height: 'calc(100vh - 180px)', gap: '24px' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Settings Panel */}
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl text-white overflow-hidden flex-1">
-              <div className="p-6 space-y-6">
+            <div className="lg:col-span-2">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl p-6 space-y-6">
                 
                 {/* Profile Photo Section */}
                 <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
@@ -242,7 +251,7 @@ export default function AccountSettingsPage() {
                   <div className="flex items-center gap-6">
                     {/* Current/Preview Image */}
                     <div className="relative">
-                      <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-600 flex items-center justify-center border-2 border-gray-500">
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-600 flex items-center justify-center border-2 border-gray-500">
                         {previewImage ? (
                           <img 
                             src={previewImage} 
@@ -256,7 +265,7 @@ export default function AccountSettingsPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <User className="text-gray-400" size={32} />
+                          <User className="text-gray-400" size={36} />
                         )}
                       </div>
                       
@@ -314,7 +323,7 @@ export default function AccountSettingsPage() {
                       )}
                       
                       <p className="text-gray-400 text-xs">
-                        Max 5MB • JPEG, PNG, WebP
+                        Max 5MB • JPEG, PNG, WebP formats supported
                       </p>
                     </div>
                   </div>
@@ -339,27 +348,27 @@ export default function AccountSettingsPage() {
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Name
+                        Display Name
                       </label>
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                        placeholder="Enter your name"
+                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400"
+                        placeholder="Enter your display name"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Email
+                        Email Address
                       </label>
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                        placeholder="Enter your email"
+                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400"
+                        placeholder="Enter your email address"
                       />
                     </div>
                   </form>
@@ -369,7 +378,7 @@ export default function AccountSettingsPage() {
                 <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-4">
                     <Lock className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Security</h3>
+                    <h3 className="text-lg font-semibold text-blue-200">Security Settings</h3>
                   </div>
                   
                   <div>
@@ -380,8 +389,8 @@ export default function AccountSettingsPage() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                      placeholder="Enter new password"
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400"
+                      placeholder="Enter new password to change it"
                     />
                   </div>
 
@@ -392,20 +401,20 @@ export default function AccountSettingsPage() {
                         <Shield className="text-blue-400" size={16} />
                         <span className="text-sm font-medium text-blue-200">Password Requirements</span>
                       </div>
-                      <ul className="space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {rules.map((rule, idx) => (
-                          <li key={idx} className="flex items-center gap-2 text-sm">
+                          <div key={idx} className="flex items-center gap-2 text-sm">
                             {rule.valid ? (
-                              <CheckCircle className="text-green-400" size={16} />
+                              <CheckCircle className="text-green-400 flex-shrink-0" size={16} />
                             ) : (
-                              <AlertCircle className="text-gray-500" size={16} />
+                              <AlertCircle className="text-gray-500 flex-shrink-0" size={16} />
                             )}
                             <span className={rule.valid ? "text-green-400" : "text-gray-500"}>
                               {rule.label}
                             </span>
-                          </li>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -453,61 +462,100 @@ export default function AccountSettingsPage() {
               </div>
             </div>
 
-            {/* Account Info Panel */}
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl shadow-2xl text-white w-80">
-              <div className="p-6">
+            {/* Sidebar Information */}
+            <div className="space-y-6">
+              {/* Account Overview */}
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <User className="text-blue-400" size={20} />
-                  <h3 className="text-lg font-semibold text-blue-200">Account Information</h3>
+                  <h3 className="text-lg font-semibold text-blue-200">Account Overview</h3>
                 </div>
                 
-                <div className="space-y-4">
-                  <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-14 h-14 rounded-full flex items-center justify-center overflow-hidden text-white font-bold text-lg border-2 border-gray-500/50 ${profileImage ? '' : 'bg-blue-600'}`}>
-                        {profileImage ? (
-                          <img 
-                            src={profileImage} 
-                            alt="Profile" 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          session?.user?.name?.charAt(0).toUpperCase() || "U"
-                        )}
+                <div className="bg-gray-700/50 border border-gray-600 rounded-lg p-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center overflow-hidden text-white font-bold text-xl border-2 border-gray-500/50 ${profileImage ? '' : 'bg-blue-600'}`}>
+                      {profileImage ? (
+                        <img 
+                          src={profileImage} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        session?.user?.name?.charAt(0).toUpperCase() || "U"
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">{session?.user?.name || 'User'}</p>
+                      <p className="text-gray-400 text-sm">{session?.user?.email || 'No email'}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="w-2 h-2 bg-green-400 rounded-full" />
+                        <span className="text-green-400 text-xs font-medium">Online</span>
                       </div>
-                      <div>
-                        <p className="text-white font-medium">{session?.user?.name || 'User'}</p>
-                        <p className="text-gray-400 text-sm">{session?.user?.email || 'No email'}</p>
-                      </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between text-gray-300">
-                      <span>Account Status:</span>
-                      <span className="text-green-400 font-medium">Active</span>
-                    </div>
-                    <div className="flex justify-between text-gray-300">
-                      <span>Member Since:</span>
-                      <span className="text-white">
-                        {session?.user ? new Date().getFullYear() : 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-gray-300">
-                      <span>Last Login:</span>
-                      <span className="text-white">Today</span>
-                    </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-gray-800/30 rounded-lg p-3">
+                    <div className="text-gray-400 text-xs mb-1">Status</div>
+                    <div className="text-green-400 font-medium">Active</div>
                   </div>
+                  <div className="bg-gray-800/30 rounded-lg p-3">
+                    <div className="text-gray-400 text-xs mb-1">Member Since</div>
+                    <div className="text-white">{new Date().getFullYear()}</div>
+                  </div>
+                  <div className="bg-gray-800/30 rounded-lg p-3">
+                    <div className="text-gray-400 text-xs mb-1">Last Login</div>
+                    <div className="text-white">Today</div>
+                  </div>
+                  <div className="bg-gray-800/30 rounded-lg p-3">
+                    <div className="text-gray-400 text-xs mb-1">Plan</div>
+                    <div className="text-white">Creator</div>
+                  </div>
+                </div>
+              </div>
 
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mt-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Shield className="text-yellow-400" size={16} />
-                      <span className="text-yellow-200 text-sm font-medium">Security Tip</span>
+              {/* Security Status */}
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Shield className="text-green-400" size={20} />
+                  <h3 className="text-lg font-semibold text-green-200">Security Status</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="text-green-400" size={16} />
+                      <span className="text-sm text-gray-300">Email verified</span>
                     </div>
-                    <p className="text-yellow-100 text-xs">
-                      Use a strong password with a mix of letters, numbers, and special characters to keep your account secure.
-                    </p>
+                    <div className="w-2 h-2 bg-green-400 rounded-full" />
                   </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="text-green-400" size={16} />
+                      <span className="text-sm text-gray-300">Strong password</span>
+                    </div>
+                    <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="text-green-400" size={16} />
+                      <span className="text-sm text-gray-300">Account secured</span>
+                    </div>
+                    <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  </div>
+                </div>
+
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="text-green-400" size={16} />
+                    <span className="text-green-200 text-sm font-medium">Account Protected</span>
+                  </div>
+                  <p className="text-green-100 text-xs">
+                    Your account is secured with industry-standard encryption and security measures.
+                  </p>
                 </div>
               </div>
             </div>

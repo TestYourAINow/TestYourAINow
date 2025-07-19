@@ -13,13 +13,14 @@ async function getSessionUser() {
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id } = context.params;
+  const { id } = params;
   const body = await req.json();
   const { type, name, description, url, fields, files, apiKey } = body;
 
@@ -58,13 +59,14 @@ export async function POST(
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id } = context.params;
+  const { id } = params;
   const agent = await Agent.findOne({ _id: id, userId: user.id });
   if (!agent) return NextResponse.json({ error: "Agent not found" }, { status: 404 });
 
@@ -73,13 +75,14 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id } = context.params;
+  const { id } = params;
   const body = await req.json();
   const { name, files } = body;
 

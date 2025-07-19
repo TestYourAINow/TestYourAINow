@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Send, X, MessageCircle, Settings, Globe, Smartphone, Plus, RotateCcw, User, Bot, Info } from 'lucide-react';
+import { 
+  Send, X, MessageCircle, Settings, Globe, Smartphone, Plus, RotateCcw, User, Bot, Info,
+  Monitor, Upload, Palette, Save, ExternalLink, Code
+} from 'lucide-react';
 import { DeploymentModal, DeployButton } from '@/components/DeploymentModal';
 
 // Types
@@ -676,44 +679,82 @@ const ChatbotBuilder: React.FC = () => {
       {/* Main Content - Centered Container */}
       <div className="flex justify-center min-h-screen py-6">
         <div className="w-full max-w-7xl mx-auto px-6">
-          {/* Header */}
+          {/* Header amélioré */}
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-white">
-              {name || 'Configuration du Chatbot'}
-            </h1>
-            <p className="text-sm text-gray-400">
-              Créé le 05/06/2025 • ID: {connectionId}
-            </p>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-purple-600 rounded-xl">
+                <Code className="text-white" size={24} />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  Chatbot Builder
+                </h1>
+                <p className="text-sm text-gray-400">
+                  Configure your chatbot widget for deployment
+                </p>
+              </div>
+              
+              {/* Quick info */}
+              <div className="ml-auto text-right">
+                <div className="text-sm text-gray-300">Connection ID</div>
+                <div className="text-xs text-gray-500 font-mono">{connectionId}</div>
+              </div>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', height: 'calc(100vh - 180px)', gap: '24px' }}>
-            {/* Preview Panel - Left avec style InfoDemoModal */}
+          <div style={{ display: 'flex', height: 'calc(100vh - 200px)', gap: '24px' }}>
+            {/* Preview Panel - Left */}
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl relative overflow-hidden" style={{ flex: '1.4' }}>
-              {/* Watermark */}
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '12px',
-                color: 'rgba(255, 255, 255, 0.15)',
-                fontSize: '20px',
-                fontWeight: 500,
-                pointerEvents: 'none',
-                zIndex: 1
-              }}>
-                <MessageCircle className="w-40 h-40 mb-3" />
-                <span>Zone de prévisualisation</span>
+              
+              {/* Device Frame */}
+              <div className="absolute top-4 left-4 bg-gray-700/50 rounded-lg p-2 flex items-center gap-2">
+                <Monitor size={16} className="text-gray-400" />
+                <span className="text-xs text-gray-400">Website Preview</span>
               </div>
 
-              <ChatWidget config={config} />
+              {/* Preview Content */}
+              {!selectedAgent ? (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <div className="w-24 h-24 bg-gray-700/50 rounded-full flex items-center justify-center mb-6">
+                    <MessageCircle className="w-12 h-12 text-gray-500" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-400 mb-3">Select an Agent</h3>
+                  <p className="text-gray-500 max-w-md">
+                    Choose an AI agent to see the live preview of your chatbot widget
+                  </p>
+                  <div className="mt-6 text-sm text-gray-600">
+                    👈 Configure your widget settings on the right
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Watermark */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '12px',
+                    color: 'rgba(255, 255, 255, 0.1)',
+                    fontSize: '20px',
+                    fontWeight: 500,
+                    pointerEvents: 'none',
+                    zIndex: 1
+                  }}>
+                    <MessageCircle className="w-32 h-32 mb-3" />
+                    <span>Live Preview</span>
+                  </div>
+
+                  <ChatWidget config={config} />
+                </>
+              )}
             </div>
 
-            {/* Configuration Panel - Right avec style InfoDemoModal */}
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl text-white overflow-hidden max-h-[90vh] overflow-y-auto" style={{ width: '400px', display: 'flex', flexDirection: 'column' }}>
+            {/* Configuration Panel - Right */}
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl text-white overflow-hidden" style={{ width: '400px', display: 'flex', flexDirection: 'column' }}>
 
               {/* Configuration Section */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
@@ -722,33 +763,33 @@ const ChatbotBuilder: React.FC = () => {
                 <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-4">
                     <Settings className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Configuration Générale</h3>
+                    <h3 className="text-lg font-semibold text-blue-200">General Configuration</h3>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Titre du Widget
+                        Widget Title
                       </label>
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => updateName(e.target.value)}
-                        placeholder="Nom du widget"
+                        placeholder="Widget name"
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Choisir un Agent
+                        Choose Agent
                       </label>
                       <select
                         value={selectedAgent}
                         onChange={(e) => updateSelectedAgent(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
                       >
-                        <option value="">Sélectionner un agent...</option>
+                        <option value="">Select an agent...</option>
                         {agents.map((agent) => (
                           <option key={agent._id} value={agent._id}>
                             {agent.name}
@@ -763,7 +804,7 @@ const ChatbotBuilder: React.FC = () => {
                 <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-4">
                     <User className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Avatar du Bot</h3>
+                    <h3 className="text-lg font-semibold text-blue-200">Bot Avatar</h3>
                   </div>
 
                   {!settings.avatar ? (
@@ -782,10 +823,10 @@ const ChatbotBuilder: React.FC = () => {
                             };
                             reader.readAsDataURL(file);
                           } else {
-                            alert('⚠️ Avatar trop lourd (max 1MB)');
+                            alert('⚠️ Avatar too large (max 1MB)');
                           }
                         } else {
-                          alert('⚠️ Veuillez sélectionner une image (.png, .jpg, .gif)');
+                          alert('⚠️ Please select an image (.png, .jpg, .gif)');
                         }
                       }}
                       onDragOver={(e) => e.preventDefault()}
@@ -811,18 +852,16 @@ const ChatbotBuilder: React.FC = () => {
                               };
                               reader.readAsDataURL(file);
                             } else {
-                              alert('⚠️ Avatar trop lourd (max 1MB)');
+                              alert('⚠️ Avatar too large (max 1MB)');
                             }
                           }
                         }}
                       />
                       <div className="text-gray-400">
                         <div className="mx-auto w-16 h-16 bg-gray-500 rounded-full flex items-center justify-center mb-4">
-                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V22H15L13.5 7.5C13.1 7.1 12.6 6.9 12 6.9S10.9 7.1 10.5 7.5L9 22H3V9L8 5H16L21 9Z" />
-                          </svg>
+                          <Upload className="w-8 h-8" />
                         </div>
-                        <p className="text-sm font-medium text-gray-300">Avatar du bot</p>
+                        <p className="text-sm font-medium text-gray-300">Upload Bot Avatar</p>
                         <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF (max 1MB)</p>
                       </div>
                     </div>
@@ -837,15 +876,15 @@ const ChatbotBuilder: React.FC = () => {
                           />
                         </div>
                         <p className="text-xs text-gray-400 text-center mt-3">
-                          ✅ Avatar uploadé avec succès
+                          ✅ Avatar uploaded successfully
                         </p>
                       </div>
                       <button
                         onClick={() => updateSettings('avatar', '')}
                         className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
-                        title="Supprimer l'avatar"
+                        title="Remove avatar"
                       >
-                        ×
+                        <X size={16} />
                       </button>
                     </div>
                   )}
@@ -855,45 +894,45 @@ const ChatbotBuilder: React.FC = () => {
                 <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-4">
                     <MessageCircle className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Configuration du Chat</h3>
+                    <h3 className="text-lg font-semibold text-blue-200">Chat Configuration</h3>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Titre du Chat
+                        Chat Title
                       </label>
                       <input
                         type="text"
                         value={settings.chatTitle || ''}
                         onChange={(e) => updateSettings('chatTitle', e.target.value)}
-                        placeholder="Titre du chat"
+                        placeholder="Chat title"
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Sous-titre
+                        Subtitle
                       </label>
                       <input
                         type="text"
                         value={settings.subtitle || ''}
                         onChange={(e) => updateSettings('subtitle', e.target.value)}
-                        placeholder="Sous-titre"
+                        placeholder="Subtitle"
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Texte de Placeholder
+                        Placeholder Text
                       </label>
                       <input
                         type="text"
                         value={settings.placeholderText || ''}
                         onChange={(e) => updateSettings('placeholderText', e.target.value)}
-                        placeholder="Tapez votre message..."
+                        placeholder="Type your message..."
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
                       />
                     </div>
@@ -904,7 +943,7 @@ const ChatbotBuilder: React.FC = () => {
                       </label>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs text-gray-400 mb-2">Largeur</label>
+                          <label className="block text-xs text-gray-400 mb-2">Width</label>
                           <input
                             type="number"
                             value={settings.width || 380}
@@ -915,7 +954,7 @@ const ChatbotBuilder: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-2">Hauteur</label>
+                          <label className="block text-xs text-gray-400 mb-2">Height</label>
                           <input
                             type="number"
                             value={settings.height || 600}
@@ -927,26 +966,26 @@ const ChatbotBuilder: React.FC = () => {
                         </div>
                       </div>
                       <p className="text-xs text-gray-400 mt-2">
-                        Largeur: 300-600px • Hauteur: 400-800px
+                        Width: 300-600px • Height: 400-800px
                       </p>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Position du Widget
+                        Widget Position
                       </label>
                       <select
                         value={settings.placement || 'bottom-right'}
                         onChange={(e) => updateSettings('placement', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
                       >
-                        <option value="bottom-right">Bas Droite</option>
-                        <option value="bottom-left">Bas Gauche</option>
-                        <option value="top-right">Haut Droite</option>
-                        <option value="top-left">Haut Gauche</option>
+                        <option value="bottom-right">Bottom Right</option>
+                        <option value="bottom-left">Bottom Left</option>
+                        <option value="top-right">Top Right</option>
+                        <option value="top-left">Top Left</option>
                       </select>
                       <p className="text-xs text-gray-400 mt-2">
-                        La position sera appliquée lors du déploiement sur votre site web
+                        Position will be applied when deployed on your website
                       </p>
                     </div>
                   </div>
@@ -956,13 +995,13 @@ const ChatbotBuilder: React.FC = () => {
                 <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-4">
                     <Bot className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Message de Bienvenue</h3>
+                    <h3 className="text-lg font-semibold text-blue-200">Welcome Message</h3>
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-gray-300">
-                        Afficher le message de bienvenue
+                        Show welcome message
                       </label>
                       <div className="flex items-center">
                         <input
@@ -980,7 +1019,7 @@ const ChatbotBuilder: React.FC = () => {
                         type="text"
                         value={settings.welcomeMessage || ''}
                         onChange={(e) => updateSettings('welcomeMessage', e.target.value)}
-                        placeholder="Bonjour ! Comment puis-je vous aider aujourd'hui ?"
+                        placeholder="Hello! How can I help you today?"
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
                       />
                     </div>
@@ -991,13 +1030,13 @@ const ChatbotBuilder: React.FC = () => {
                 <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-4">
                     <MessageCircle className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Message Popup</h3>
+                    <h3 className="text-lg font-semibold text-blue-200">Popup Message</h3>
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-gray-300">
-                        Activer le popup
+                        Enable popup
                       </label>
                       <div className="flex items-center">
                         <input
@@ -1016,13 +1055,13 @@ const ChatbotBuilder: React.FC = () => {
                         value={settings.popupMessage || ''}
                         onChange={(e) => updateSettings('popupMessage', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                        placeholder="Salut ! Besoin d'aide ?"
+                        placeholder="Hi! Need any help?"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs text-gray-400 mb-2">
-                        Délai (secondes)
+                        Delay (seconds)
                       </label>
                       <input
                         type="number"
@@ -1039,14 +1078,14 @@ const ChatbotBuilder: React.FC = () => {
                 {/* Thème et Couleurs */}
                 <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-4">
-                    <Globe className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Thème et Couleurs</h3>
+                    <Palette className="text-blue-400" size={20} />
+                    <h3 className="text-lg font-semibold text-blue-200">Theme & Colors</h3>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Thème
+                        Theme
                       </label>
                       <div className="flex items-center space-x-3">
                         <button
@@ -1057,7 +1096,7 @@ const ChatbotBuilder: React.FC = () => {
                             }`}
                         >
                           <Globe className="w-4 h-4" />
-                          Clair
+                          Light
                         </button>
                         <button
                           onClick={() => updateSettings('theme', 'dark')}
@@ -1067,14 +1106,14 @@ const ChatbotBuilder: React.FC = () => {
                             }`}
                         >
                           <Smartphone className="w-4 h-4" />
-                          Sombre
+                          Dark
                         </button>
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Couleur Principale
+                        Primary Color
                       </label>
                       <div className="grid grid-cols-4 gap-3 mb-4">
                         {colorPresets.map((color) => (
@@ -1118,12 +1157,12 @@ const ChatbotBuilder: React.FC = () => {
                     {isSaving ? (
                       <>
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        Sauvegarde...
+                        Saving...
                       </>
                     ) : (
                       <>
-                        <Settings className="w-5 h-5" />
-                        Enregistrer la Configuration
+                        <Save className="w-5 h-5" />
+                        Save Configuration
                       </>
                     )}
                   </button>
@@ -1137,56 +1176,54 @@ const ChatbotBuilder: React.FC = () => {
                   )}
                 </div>
 
-                {/* Informations du Widget - avec fond bleu */}
+                {/* Informations du Widget */}
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <Info className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Informations du Widget</h3>
+                    <h3 className="text-lg font-semibold text-blue-200">Widget Information</h3>
                   </div>
 
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between text-gray-300">
-                      <span>Agent:</span>
-                      <span className="text-white font-medium">{selectedAgentName || 'Aucun sélectionné'}</span>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-gray-800/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs mb-1">Agent</div>
+                      <div className="text-white font-medium truncate">{selectedAgentName || 'None selected'}</div>
                     </div>
-                    <div className="flex justify-between text-gray-300">
-                      <span>Taille:</span>
-                      <span className="text-white">{settings.width || 380}×{settings.height || 600}px</span>
+                    <div className="bg-gray-800/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs mb-1">Size</div>
+                      <div className="text-white">{settings.width || 380}×{settings.height || 600}px</div>
                     </div>
-                    <div className="flex justify-between text-gray-300">
-                      <span>Thème:</span>
-                      <span className="text-white capitalize">{(settings.theme || 'light') === 'light' ? 'Clair' : 'Sombre'}</span>
+                    <div className="bg-gray-800/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs mb-1">Theme</div>
+                      <div className="text-white capitalize">{(settings.theme || 'light')}</div>
                     </div>
-                    <div className="flex justify-between text-gray-300">
-                      <span>Couleur Principale:</span>
+                    <div className="bg-gray-800/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs mb-1">Position</div>
+                      <div className="text-white capitalize">
+                        {(settings.placement || 'bottom-right').replace('-', ' ')}
+                      </div>
+                    </div>
+                    <div className="bg-gray-800/30 rounded-lg p-3 col-span-2">
+                      <div className="text-gray-400 text-xs mb-1">Primary Color</div>
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-4 h-4 rounded-full border border-gray-600"
+                          className="w-3 h-3 rounded-full border border-gray-600"
                           style={{ backgroundColor: settings.primaryColor || '#007bff' }}
                         />
                         <span className="text-white text-xs font-mono">{settings.primaryColor || '#007bff'}</span>
                       </div>
                     </div>
-                    <div className="flex justify-between text-gray-300">
-                      <span>Position du Widget:</span>
-                      <span className="text-white capitalize">
-                        {(settings.placement || 'bottom-right') === 'bottom-right' ? 'Bas Droite' :
-                          (settings.placement || 'bottom-right') === 'bottom-left' ? 'Bas Gauche' :
-                            (settings.placement || 'bottom-right') === 'top-right' ? 'Haut Droite' : 'Haut Gauche'}
-                      </span>
-                    </div>
                     {lastSaved && (
-                      <div className="flex justify-between text-gray-300">
-                        <span>Dernière sauvegarde:</span>
-                        <span className="text-white">{lastSaved.toLocaleTimeString()}</span>
+                      <div className="bg-gray-800/30 rounded-lg p-3 col-span-2">
+                        <div className="text-gray-400 text-xs mb-1">Last Saved</div>
+                        <div className="text-white text-xs">{lastSaved.toLocaleString()}</div>
                       </div>
                     )}
                     {savedWidgetId && (
-                      <div className="flex justify-between text-gray-300">
-                        <span>Widget ID:</span>
-                        <span className="text-white font-mono text-xs bg-blue-800/50 px-2 py-1 rounded">
-                          {savedWidgetId.slice(-8)}...
-                        </span>
+                      <div className="bg-gray-800/30 rounded-lg p-3 col-span-2">
+                        <div className="text-gray-400 text-xs mb-1">Widget ID</div>
+                        <div className="text-white font-mono text-xs bg-blue-800/50 px-2 py-1 rounded">
+                          {savedWidgetId.slice(-12)}...
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1203,6 +1240,23 @@ const ChatbotBuilder: React.FC = () => {
         widgetId={savedWidgetId || ''}
         widgetName={name || 'Assistant IA'}
       />
+
+      {/* Custom Styles */}
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #6b7280;
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
+        }
+      `}</style>
     </div>
   );
 };

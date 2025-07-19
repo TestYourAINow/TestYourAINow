@@ -22,7 +22,7 @@ function getDiffHtml(original: string, updated: string): string {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
     await connectToDatabase();

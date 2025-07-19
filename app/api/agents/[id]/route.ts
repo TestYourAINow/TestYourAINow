@@ -12,7 +12,8 @@ async function getSessionUser() {
 }
 
 // GET un agent spécifique
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: any) {
+  const params = await context.params;
   await connectToDatabase();
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,7 +25,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // PUT pour update un agent
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: any) {
+  const params = await context.params;
   await connectToDatabase();
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -71,7 +73,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // DELETE un agent
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: any) {
+  const params = await context.params;
   await connectToDatabase();
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -83,7 +86,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 }
 
 // POST avec action de duplication
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: any) {
+  const params = await context.params;
   await connectToDatabase();
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

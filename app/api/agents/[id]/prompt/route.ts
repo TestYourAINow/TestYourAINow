@@ -11,8 +11,9 @@ function escapeRegExp(text: string) {
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
 
   const session = await getServerSession(authOptions);
@@ -20,7 +21,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const { id } = params;
 
   const agent = await Agent.findOne({ _id: id, userId: session.user.id });
   if (!agent) return NextResponse.json({ error: "Agent not found" }, { status: 404 });
@@ -30,8 +31,9 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
 
   const session = await getServerSession(authOptions);
@@ -39,7 +41,7 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const { id } = params;
   const body = await req.json();
   const { prompt, appendInstructions, replaceInstructionsFor } = body;
 
@@ -51,7 +53,7 @@ export async function PUT(
     agent.finalPrompt = prompt;
   }
 
-  // S’assurer que le bloc ## Integrations Instructions est présent
+  // S'assurer que le bloc ## Integrations Instructions est présent
   const header = "## Integrations Instructions";
   if (appendInstructions && !agent.finalPrompt?.includes(header)) {
     agent.finalPrompt = (agent.finalPrompt || "") + "\n\n" + header;

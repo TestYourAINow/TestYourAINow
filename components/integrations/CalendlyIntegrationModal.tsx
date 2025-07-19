@@ -18,9 +18,14 @@ export default function CalendlyIntegrationModal({
   agentId,
   initialData,
 }: CalendlyIntegrationModalProps) {
+  // ✅ Type narrowing spécifique à Calendly uniquement
   const [name, setName] = useState(initialData?.name || "");
-  const [description, setDescription] = useState(initialData?.description || "");
-  const [apiKey, setApiKey] = useState(initialData?.apiKey || "");
+  const [description, setDescription] = useState(
+    initialData?.type === "calendly" ? initialData.description || "" : ""
+  );
+  const [apiKey, setApiKey] = useState(
+    initialData?.type === "calendly" ? initialData.apiKey || "" : ""
+  );
 
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingInstructions, setIsAddingInstructions] = useState(false);
@@ -117,7 +122,14 @@ export default function CalendlyIntegrationModal({
         return;
       }
 
-      onSave({ type: "calendly", name, description, apiKey, createdAt: new Date().toISOString() });
+      // ✅ Maintenant ce type est correctement défini
+      onSave({ 
+        type: "calendly", 
+        name, 
+        description, 
+        apiKey, 
+        createdAt: new Date().toISOString() 
+      });
       setHasBeenSaved(true);
       toast.success("Calendly integration saved!");
       onClose();
@@ -193,7 +205,14 @@ export default function CalendlyIntegrationModal({
       }
 
       onClose();
-      onSave({ type: "calendly", name, description, apiKey, createdAt: new Date().toISOString() });
+      // ✅ Ce type fonctionne aussi maintenant
+      onSave({ 
+        type: "calendly", 
+        name, 
+        description, 
+        apiKey, 
+        createdAt: new Date().toISOString() 
+      });
     } catch {
       toast.error("Something went wrong.");
     } finally {

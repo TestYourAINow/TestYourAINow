@@ -9,8 +9,11 @@ import { createUserOpenAI } from "@/lib/openai";
 type IntegrationFile = { name: string; size: number; path: string; url: string };
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: any) {
   try {
+    // Récupérer les paramètres
+    const params = await context.params;
+    
     await connectToDatabase();
 
     const session = await getServerSession(authOptions);
