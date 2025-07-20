@@ -15,6 +15,7 @@ export default function SignupPage() {
   const [username, setUsername] = useState("");
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState(""); // ⬅️ NOUVEAU
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -64,7 +65,7 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
-    if (!username || !email || !password || !confirm) {
+    if (!username || !email || !confirmEmail || !password || !confirm) {
       setError("Please fill in all fields.");
       return;
     }
@@ -76,6 +77,12 @@ export default function SignupPage() {
 
     if (!isValidEmail(email)) {
       setError("Please enter a valid email.");
+      return;
+    }
+
+    // ⬇️ NOUVEAU : Vérification des emails
+    if (email !== confirmEmail) {
+      setError("Email addresses do not match.");
       return;
     }
 
@@ -127,7 +134,7 @@ export default function SignupPage() {
         return;
       }
 
-      // ⬇️ Appelle l'API checkout
+      // ⬇️ Appelle l'API checkout (comme avant)
       const checkoutRes = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -205,6 +212,27 @@ export default function SignupPage() {
             {email && isValidEmail(email) && emailAvailable === false && (
               <p className="text-red-500 text-sm flex items-center gap-1">
                 <XCircle className="w-4 h-4" /> Email already registered
+              </p>
+            )}
+          </div>
+
+          {/* ⬇️ NOUVEAU CHAMP */}
+          <div className="space-y-2">
+            <input
+              type="email"
+              placeholder="Confirm Email"
+              value={confirmEmail}
+              onChange={(e) => setConfirmEmail(e.target.value)}
+              className="w-full rounded-2xl bg-[#1a1a1a] border border-gray-700 px-4 py-3 text-sm focus:outline-none focus:border-blue-500/50 transition-colors"
+            />
+            {confirmEmail && email !== confirmEmail && (
+              <p className="text-red-500 text-sm flex items-center gap-1">
+                <XCircle className="w-4 h-4" /> Email addresses do not match
+              </p>
+            )}
+            {confirmEmail && email === confirmEmail && email && (
+              <p className="text-green-500 text-sm flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" /> Emails match
               </p>
             )}
           </div>

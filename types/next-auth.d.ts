@@ -10,7 +10,7 @@ declare module "next-auth" {
       isSubscribed: boolean;
       stripeCustomerId?: string;
       openaiApiKey: string;
-      profileImage: string | null
+      profileImage: string | null;
     };
   }
 
@@ -21,7 +21,7 @@ declare module "next-auth" {
     isSubscribed: boolean;
     stripeCustomerId?: string;
     openaiApiKey?: string;
-    profileImage: string | null
+    profileImage: string | null;
   }
 
   interface JWT {
@@ -31,6 +31,6 @@ declare module "next-auth" {
     isSubscribed: boolean;
     stripeCustomerId?: string;
     openaiApiKey?: string;
-    profileImage: string | null
+    profileImage: string | null;
   }
 }

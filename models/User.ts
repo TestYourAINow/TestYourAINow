@@ -1,3 +1,4 @@
+// models/User.ts
 import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema({
@@ -6,8 +7,9 @@ const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   isSubscribed: { type: Boolean, default: false },
   stripeCustomerId: { type: String },
+  subscriptionDate: { type: Date },
   openaiApiKey: { type: String },
-  profileImage: { type: String, default: null }, // Nouveau champ pour la photo de profil
+  profileImage: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 

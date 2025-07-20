@@ -41,7 +41,7 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
 
   if (!isOpen) return null;
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://votre-domaine.com';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://testyourainow.com';
 
   // ✅ VERSION SÉCURISÉE : utilise DOMContentLoaded pour garantir que body existe
   const embedCode = `<!-- Ajoutez ceci avant </body> -->

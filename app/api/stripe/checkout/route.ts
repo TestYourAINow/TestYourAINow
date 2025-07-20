@@ -44,7 +44,7 @@ export async function POST() {
       payment_method_types: ["card"],
       line_items: [
         {
-          price: "price_1RjoLBEInlvHc9P2Pr8mAtC0", // Remplace avec ton vrai ID
+          price: "price_1RjllgEInlvHc9P2zN2NrK5Y",
           quantity: 1,
         },
       ],

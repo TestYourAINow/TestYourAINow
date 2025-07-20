@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { OpenAI } from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { createUserOpenAI } from "@/lib/openai";
 
 export async function POST(req: Request) {
   try {
+    const { openai, error } = await createUserOpenAI();
+    
+    if (!openai) {
+      return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
+    }
+
     const body = await req.json();
     const { webhookName, description, fields } = body;
 
@@ -58,8 +60,16 @@ Add best practices for calling this webhook appropriately.
 
     const result = completion.choices[0].message.content;
     return NextResponse.json({ instructions: result });
-  } catch (err) {
-    console.error("[GENERATE_INSTRUCTIONS]", err);
+  } catch (error: any) {
+    console.error("[GENERATE_INSTRUCTIONS]", error);
+    
+    if (error.status === 401) {
+      return NextResponse.json(
+        { error: "Invalid OpenAI API key. Please check your API key in settings." },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { error: "Failed to generate instructions" },
       { status: 500 }

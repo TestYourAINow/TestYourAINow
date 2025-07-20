@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
           name: user.username,
           isSubscribed: user.isSubscribed,
           stripeCustomerId: user.stripeCustomerId,
-          profileImage: null, // Ajouté pour correspondre au type User
+          profileImage: null,
         };
       },
     }),
@@ -72,7 +72,7 @@ export const authOptions: NextAuthOptions = {
         isSubscribed: dbUser?.isSubscribed ?? false,
         stripeCustomerId: dbUser?.stripeCustomerId ?? "",
         openaiApiKey: dbUser?.openaiApiKey ?? "",
-        profileImage: dbUser?.profileImage ?? null, // Récupéré depuis la DB
+        profileImage: dbUser?.profileImage ?? null,
       };
 
       return session;

@@ -27,8 +27,3 @@ export async function createUserOpenAI(): Promise<{ openai: OpenAI | null; error
     return { openai: null, error: "Failed to initialize OpenAI" };
   }
 }
-
-// Garde l'ancienne export pour compatibilité (optionnel)
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
