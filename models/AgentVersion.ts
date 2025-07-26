@@ -1,3 +1,4 @@
+// /models/AgentVersion.ts
 import mongoose, { Schema, Document, models, Types } from "mongoose";
 
 export interface AgentVersionDocument extends Document {
@@ -7,6 +8,7 @@ export interface AgentVersionDocument extends Document {
   temperature: number;
   top_p: number;
   createdAt: Date;
+  updatedAt: Date; // ⭐ Ajouté automatiquement par timestamps: true
   integrations?: {
     type: string;
     name: string;
@@ -29,7 +31,7 @@ const AgentVersionSchema = new Schema<AgentVersionDocument>({
   openaiModel: { type: String, required: true },
   temperature: { type: Number, required: true },
   top_p: { type: Number, required: true },
-  createdAt: { type: Date, default: Date.now },
+  // ❌ SUPPRIMÉ : createdAt: { type: Date, default: Date.now },
   integrations: [{
     type: { type: String, required: true },
     name: { type: String, required: true },
@@ -43,7 +45,7 @@ const AgentVersionSchema = new Schema<AgentVersionDocument>({
     apiKey: { type: String },
     createdAt: { type: Date, default: Date.now }
   }]
-});
+}, { timestamps: true }); // ⭐ AJOUTÉ !
 
 const AgentVersion =
   models.AgentVersion || mongoose.model<AgentVersionDocument>("AgentVersion", AgentVersionSchema);

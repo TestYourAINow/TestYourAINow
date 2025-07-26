@@ -63,6 +63,7 @@ export async function PUT(req: NextRequest, context: any) {
       temperature,
       top_p,
       ...(integrations !== undefined && { integrations }),
+      updatedAt: new Date(), // ⭐ Ajout de updatedAt automatique
     },
     { new: true }
   );
@@ -114,6 +115,7 @@ export async function POST(req: NextRequest, context: any) {
       temperature: original.temperature,
       top_p: original.top_p,
       integrations: original.integrations ?? [],
+      updatedAt: new Date(), // ⭐ Ajout de updatedAt pour les duplicatas aussi
     });
 
     return NextResponse.json({ message: "Agent duplicated", agentId: copy._id });

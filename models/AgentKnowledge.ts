@@ -7,7 +7,8 @@ export interface AgentKnowledgeDocument extends Document {
   path: string;
   content: string;
   createdAt: Date;
-  sourceName?: string; // <- ajouté ici
+  updatedAt: Date; // ⭐ Ajouté automatiquement par timestamps: true
+  sourceName?: string;
 }
 
 const AgentKnowledgeSchema = new Schema<AgentKnowledgeDocument>(
@@ -16,10 +17,10 @@ const AgentKnowledgeSchema = new Schema<AgentKnowledgeDocument>(
     fileName: { type: String, required: true },
     path: { type: String, required: true },
     content: { type: String, required: true },
-    sourceName: { type: String }, // <- ajouté ici
-    createdAt: { type: Date, default: Date.now },
+    sourceName: { type: String },
+    // ❌ SUPPRIMÉ : createdAt: { type: Date, default: Date.now },
   },
-  { timestamps: true }
+  { timestamps: true } // ⭐ Ça gère createdAt ET updatedAt automatiquement !
 );
 
 export const AgentKnowledge =

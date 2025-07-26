@@ -87,8 +87,6 @@ export default function AgentPromptPage() {
     setEditingName(false);
   };
 
-  // Fonction supprimée car la date ne s'affiche pas correctement
-
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -218,10 +216,11 @@ export default function AgentPromptPage() {
                     </div>
                   </div>
                   
+                  {/* CHANGEMENT ICI : Style normal au lieu de font-mono */}
                   <div className="flex-1 bg-gray-800 border border-gray-600 rounded-lg p-4 overflow-y-auto custom-scrollbar">
-                    <pre className="text-sm text-gray-100 whitespace-pre-wrap leading-relaxed font-mono">
+                    <div className="text-sm text-gray-100 whitespace-pre-wrap leading-relaxed">
                       {prompt || "No prompt available..."}
-                    </pre>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,69 +1,186 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 import TextareaAutosize from "react-textarea-autosize";
+import { 
+  Bot, Briefcase, Settings, User, Globe, MessageCircle, 
+  ChevronLeft, ChevronRight, CheckCircle, Key, Zap, Info, Upload, AlertCircle,
+  X, Plus, Clock, Star, TrendingUp, Shield
+} from "lucide-react";
 import { toast, Toaster } from "react-hot-toast";
-import { Settings, Bot, MessageCircle, Globe, Info, User, Upload, Zap, CheckCircle, AlertCircle } from "lucide-react";
+
+// 🔧 CORRECTION - Import du vrai composant au lieu du mock
 import ImportWebsiteModal from "@/components/ImportWebsiteModal";
 
-type Step = 1 | 2;
+type Step = 1 | 2 | 3 | 4;
 
-const defaultFields = {
+interface FormData {
+  name: string;
+  industry: string;
+  language: string;
+  template: "sales" | "support" | "blank" | "";
+  openaiModel: string;
+  apiKey: string;
+  temperature: number;
+  top_p: number;
+  description: string;
+  questions: string;
+  tone: string;
+  rules: string;
+  companyInfo: string;
+}
+
+const defaultFormData: FormData = {
   name: "",
+  industry: "",
+  language: "",
   template: "",
   openaiModel: "gpt-4o",
-  apiKey: "",
+  apiKey: "test",
+  temperature: 0.3,
+  top_p: 1,
   description: "",
   questions: "",
   tone: "",
   rules: "",
   companyInfo: "",
-  language: "",
-  industry: "",
 };
 
-const defaultAdvancedSettings = {
-  temperature: 0.3,
-  top_p: 1,
-};
-
-const templatePresets: Record<string, Partial<typeof defaultFields>> = {
+const templatePresets: Record<string, Partial<typeof defaultFormData>> = {
   support: {
-    description:
-      "Create an AI that should work as a support agent for a (INDUSTRY) Company. Friendly, engaging, with great support skills and empathy.",
-    questions:
-      "The AI should handle any objections and questions from (INDUSTRY) customers. Then ask a variation of is there anything else I can help you with?",
-    tone:
-      "The AI should speak (LANGUAGE). The prompt should be written in (LANGUAGE). AI should speak Informal and friendly tone. Like 2 friends texting on SMS. Grade 3 according to the Hemingway app.",
-    rules: `1. Handle questions with empathy and understanding.\n2. Never repeat a customer's question back to them.\n3. Don't use !'s extensively.\n4. Use smiley emojis sometimes.`,
+    description: "Create an AI that should work as a support agent for a (INDUSTRY) Company. Friendly, engaging, with great support skills and empathy.",
+    questions: "The AI should handle any objections and questions from (INDUSTRY) customers. Then ask a variation of is there anything else I can help you with?",
+    tone: "The AI should speak (LANGUAGE). The prompt should be written in (LANGUAGE). AI should speak Informal and friendly tone. Like 2 friends texting on SMS. Grade 3 according to the Hemingway app.",
+    rules: "1. Handle questions with empathy and understanding.\n2. Never repeat a customer's question back to them.\n3. Don't use !'s extensively.\n4. Use smiley emojis sometimes.",
   },
   sales: {
-    description:
-      "Create an AI that works as a receptionist for a (INDUSTRY) Company. Friendly, engaging, but also have the sales skills of Jeremy Miner.",
-    questions: `The AI should ALWAYS answer any questions and objections first, AND ALWAYS ask this question in first it's response:\n1. (Add a question that a sales person would ask the customer in (INDUSTRY))\nThen, it should ask each of these questions 1 by 1 to go through the rest of the conversation flow:\n2. (Add a question that a sales person would ask the customer in (INDUSTRY))\n3. Would mornings or afternoons usually work best for a quick phone call?`,
-    tone:
-      "The AI should speak (LANGUAGE). The prompt should be written in (LANGUAGE). AI should speak Informal and friendly tone. Like 2 friends texting on SMS. Grade 3 according to the Hemingway app.",
-    rules: `1. Only ask one question at a time.\n2. Never repeat a question.\n3. Don't use !'s extensively.\n4. Use smiley emojis sometimes.`,
+    description: "Create an AI that works as a receptionist for a (INDUSTRY) Company. Friendly, engaging, but also have the sales skills of Jeremy Miner.",
+    questions: "The AI should ALWAYS answer any questions and objections first, AND ALWAYS ask this question in first response:\n1. (Add a sales question)\nThen continue with structured questions.",
+    tone: "The AI should speak (LANGUAGE). The prompt should be written in (LANGUAGE). AI should speak Informal and friendly tone. Like 2 friends texting on SMS. Grade 3 according to the Hemingway app.",
+    rules: "1. Only ask one question at a time.\n2. Never repeat a question.\n3. Don't use !'s extensively.\n4. Use smiley emojis sometimes.",
   },
 };
 
-// Fonction pour évaluer la qualité du contenu
+const modelOptions = [
+  {
+    id: "gpt-4o",
+    name: "GPT-4o",
+    description: "Multimodal model, excellent for complex tasks",
+    badge: "Most Popular",
+    badgeColor: "bg-blue-500",
+    inputPrice: 2.50,
+    outputPrice: 10.00,
+    contextWindow: "128K",
+  },
+  {
+    id: "gpt-4o-mini",
+    name: "GPT-4o Mini",
+    description: "Fast and cost-effective multimodal model",
+    badge: "Best Value",
+    badgeColor: "bg-green-500",
+    inputPrice: 0.15,
+    outputPrice: 0.60,
+    contextWindow: "128K",
+  },
+  {
+    id: "gpt-4-turbo",
+    name: "GPT-4 Turbo",
+    description: "Advanced reasoning with large context window",
+    badge: "",
+    badgeColor: "",
+    inputPrice: 10.00,
+    outputPrice: 30.00,
+    contextWindow: "128K",
+  },
+  {
+    id: "gpt-4",
+    name: "GPT-4",
+    description: "High-intelligence standard model",
+    badge: "",
+    badgeColor: "",
+    inputPrice: 30.00,
+    outputPrice: 60.00,
+    contextWindow: "8K",
+  },
+  {
+    id: "gpt-4-32k",
+    name: "GPT-4 32K",
+    description: "Extended context version of GPT-4",
+    badge: "",
+    badgeColor: "",
+    inputPrice: 60.00,
+    outputPrice: 120.00,
+    contextWindow: "32K",
+  },
+  {
+    id: "gpt-3.5-turbo",
+    name: "GPT-3.5 Turbo",
+    description: "Fast and efficient for most tasks",
+    badge: "",
+    badgeColor: "",
+    inputPrice: 0.50,
+    outputPrice: 1.50,
+    contextWindow: "16K",
+  },
+];
+
+const updateTemplateContent = (
+  formData: FormData, 
+  templateKey: string, 
+  industry: string, 
+  language: string
+): Partial<FormData> => {
+  if (!templateKey || templateKey === "blank" || !templatePresets[templateKey]) {
+    return {};
+  }
+
+  const preset = templatePresets[templateKey];
+  const updates: Partial<FormData> = {};
+
+  if (preset.description) {
+    updates.description = preset.description
+      .replaceAll("(LANGUAGE)", language || "English")
+      .replaceAll("(INDUSTRY)", industry || "technology");
+  }
+
+  if (preset.questions) {
+    updates.questions = preset.questions
+      .replaceAll("(LANGUAGE)", language || "English")
+      .replaceAll("(INDUSTRY)", industry || "technology");
+  }
+
+  if (preset.tone) {
+    updates.tone = preset.tone
+      .replaceAll("(LANGUAGE)", language || "English")
+      .replaceAll("(INDUSTRY)", industry || "technology");
+  }
+
+  if (preset.rules) {
+    updates.rules = preset.rules
+      .replaceAll("(LANGUAGE)", language || "English")
+      .replaceAll("(INDUSTRY)", industry || "technology");
+  }
+
+  return updates;
+};
+
 const getContentQuality = (content: string, minLength: number = 50) => {
   if (!content.trim()) return { status: 'empty', message: 'Field is empty', color: 'text-gray-400' };
-  if (content.length < minLength) return { status: 'short', message: 'Consider adding more detail', color: 'text-yellow-400' };
+  if (content.length < minLength) return { status: 'short', message: 'Consider adding more detail', color: 'text-orange-400' };
   if (content.length < minLength * 2) return { status: 'good', message: 'Good content', color: 'text-green-400' };
   return { status: 'excellent', message: 'Excellent detail', color: 'text-green-400' };
 };
 
-// Composant pour les indicateurs de qualité
 const QualityIndicator = ({ content, minLength = 50 }: { content: string; minLength?: number }) => {
   const quality = getContentQuality(content, minLength);
   
   if (quality.status === 'empty') return null;
   
   return (
-    <div className={`flex items-center gap-1 text-xs mt-1 ${quality.color}`}>
+    <div className={`flex items-center gap-1.5 text-xs mt-2 ${quality.color}`}>
       {quality.status === 'short' ? (
         <AlertCircle size={12} />
       ) : (
@@ -74,135 +191,575 @@ const QualityIndicator = ({ content, minLength = 50 }: { content: string; minLen
   );
 };
 
-// Composant pour le compteur de caractères
 const CharacterCounter = ({ content, maxLength = 1000 }: { content: string; maxLength?: number }) => {
   const percentage = (content.length / maxLength) * 100;
   const isNearLimit = percentage > 80;
   
   return (
-    <div className={`text-xs mt-1 ${isNearLimit ? 'text-yellow-400' : 'text-gray-400'}`}>
+    <div className={`text-xs mt-1 ${isNearLimit ? 'text-orange-400' : 'text-gray-400'}`}>
       {content.length}/{maxLength} characters
     </div>
   );
 };
 
-// Composant pour l'indicateur de progression
-const ProgressIndicator = ({ currentStep }: { currentStep: Step }) => {
+// 🎨 NOUVEAU - Modal Add API Key selon design system
+const AddApiKeyModal = ({ 
+  isOpen, 
+  onClose, 
+  onApiKeyAdded 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onApiKeyAdded: (newApiKeyData: { id: string; name: string; maskedKey: string; isDefault: boolean }) => void;
+}) => {
+  const [newApiKey, setNewApiKey] = useState("");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newApiKey.trim() || !newProjectName.trim()) return;
+
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const newApiKeyData = {
+        id: Date.now().toString(),
+        name: newProjectName.trim(),
+        maskedKey: `${newApiKey.slice(0, 3)}...${newApiKey.slice(-4)}`,
+        isDefault: false
+      };
+      
+      onApiKeyAdded(newApiKeyData);
+      setNewApiKey("");
+      setNewProjectName("");
+      onClose();
+      toast.success("API key added successfully!");
+    } catch (error) {
+      console.error('Error adding API key:', error);
+      toast.error("Failed to add API key");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <div className="flex items-center justify-center gap-3 mb-6">
-      <div className="flex items-center gap-2">
-        <div className={`w-8 h-8 rounded-full ${currentStep >= 1 ? 'bg-blue-600' : 'bg-gray-600'} flex items-center justify-center text-white text-sm font-semibold transition-colors`}>
-          {currentStep > 1 ? <CheckCircle size={16} /> : '1'}
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-md mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/20 border-2 border-blue-500/40 flex items-center justify-center shadow-lg">
+              <Key className="text-blue-400" size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                Add API Key
+              </h2>
+              <p className="text-sm text-gray-400 mt-0.5">Connect your OpenAI API key</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200 group"
+          >
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gray-500/0 to-gray-500/0 group-hover:from-gray-500/10 group-hover:to-gray-500/10 transition-all duration-200"></div>
+            <X size={20} className="relative z-10" />
+          </button>
         </div>
-        <div className={`w-12 h-0.5 transition-colors ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-600'}`} />
-        <div className={`w-8 h-8 rounded-full ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-600'} flex items-center justify-center text-white text-sm font-semibold transition-colors`}>
-          2
-        </div>
-      </div>
-      <div className="text-sm text-gray-400 ml-3">
-        Step {currentStep} of 2
+
+        {/* Content */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Project Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+              placeholder="Enter project name..."
+              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              OpenAI API Key <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="password"
+              value={newApiKey}
+              onChange={(e) => setNewApiKey(e.target.value)}
+              placeholder="sk-..."
+              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm font-mono"
+              required
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-6 border-t border-gray-700/50">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-3.5 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-xl font-semibold transition-all backdrop-blur-sm border border-gray-700/50 hover:border-gray-600/50"
+            >
+              Cancel
+            </button>
+            
+            <button
+              type="submit"
+              disabled={!newApiKey.trim() || !newProjectName.trim() || isSubmitting}
+              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105 relative overflow-hidden group disabled:opacity-50 disabled:hover:scale-100"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              {isSubmitting ? 'Adding...' : 'Add API Key'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default function CreateAgentPage() {
+// 🎨 NOUVEAU - Step Indicator Premium
+const StepIndicator = ({ currentStep }: { currentStep: Step }) => {
+  const steps = [
+    { number: 1, title: "AI Type & Basics", icon: Bot, color: "from-blue-500 to-cyan-500" },
+    { number: 2, title: "Model Settings", icon: Settings, color: "from-purple-500 to-pink-500" },
+    { number: 3, title: "Personality & Knowledge", icon: User, color: "from-green-500 to-emerald-500" },
+    { number: 4, title: "Final Review", icon: CheckCircle, color: "from-orange-500 to-red-500" },
+  ];
+
+  return (
+    <div className="mb-12">
+      <div className="flex items-center justify-between max-w-4xl mx-auto">
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          const isActive = currentStep === step.number;
+          const isCompleted = currentStep > step.number;
+          const isConnected = index < steps.length - 1;
+
+          return (
+            <div key={step.number} className="flex items-center flex-1">
+              <div className="flex items-center">
+                {/* Circle avec gradient et effets premium */}
+                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  isCompleted 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white transform scale-110' 
+                    : isActive 
+                    ? `bg-gradient-to-r ${step.color} text-white transform scale-110 shadow-lg shadow-blue-500/30` 
+                    : 'bg-gray-800/50 text-gray-400 border border-gray-700/50'
+                }`}>
+                  {/* Glow effect pour step actif */}
+                  {isActive && (
+                    <div className={`absolute inset-0 rounded-full bg-gradient-to-r ${step.color} blur-lg opacity-50 animate-pulse`}></div>
+                  )}
+                  
+                  {/* Icon */}
+                  <div className="relative z-10">
+                    {isCompleted ? <CheckCircle size={20} /> : <Icon size={20} />}
+                  </div>
+                </div>
+                
+                {/* Text */}
+                <div className="ml-4 hidden sm:block">
+                  <div className={`text-sm font-semibold transition-colors ${
+                    isActive ? 'text-white' : isCompleted ? 'text-green-400' : 'text-gray-400'
+                  }`}>
+                    {step.title}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">Step {step.number}</div>
+                </div>
+              </div>
+              
+              {/* Connector Line */}
+              {isConnected && (
+                <div className="flex-1 mx-4 h-0.5 transition-all duration-500">
+                  <div className={`h-full rounded-full transition-all duration-500 ${
+                    isCompleted 
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-500/20' 
+                      : 'bg-gray-700/50'
+                  }`} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// 🎨 NOUVEAU - Model Dropdown Premium
+const ModelDropdown = ({ 
+  selectedModel, 
+  onModelSelect 
+}: { 
+  selectedModel: string; 
+  onModelSelect: (modelId: string) => void; 
+}) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const selectedModelData = modelOptions.find(m => m.id === selectedModel);
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowDropdown(false);
+    };
+
+    if (showDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showDropdown]);
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowDropdown(!showDropdown);
+        }}
+        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 rounded-xl focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 outline-none text-white flex items-center justify-between hover:bg-gray-800/80 transition-all backdrop-blur-sm"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center shadow-lg">
+            <Bot className="w-4 h-4 text-white" />
+          </div>
+          <div className="text-left">
+            <div className="font-medium">{selectedModelData?.name || 'Select Model'}</div>
+            {selectedModelData?.badge && (
+              <div className="text-xs text-gray-400">{selectedModelData.badge}</div>
+            )}
+          </div>
+        </div>
+        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${showDropdown ? 'rotate-90' : 'rotate-0'}`} />
+      </button>
+
+      {showDropdown && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-50 max-h-80 overflow-y-auto">
+          {modelOptions.map((model) => (
+            <button
+              key={model.id}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onModelSelect(model.id);
+                setShowDropdown(false);
+              }}
+              className={`w-full p-4 text-left hover:bg-gray-800/50 transition-all border-b border-gray-700/30 last:border-b-0 ${
+                selectedModel === model.id ? 'bg-blue-500/20 border-blue-500/30' : ''
+              }`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded flex items-center justify-center">
+                  <Bot className="w-3 h-3 text-white" />
+                </div>
+                <span className="font-medium text-white">{model.name}</span>
+                {model.badge && (
+                  <span className={`px-2 py-1 text-xs rounded-full text-white ${model.badgeColor}`}>
+                    {model.badge}
+                  </span>
+                )}
+                {selectedModel === model.id && (
+                  <CheckCircle className="w-4 h-4 text-blue-400 ml-auto" />
+                )}
+              </div>
+              <p className="text-sm text-gray-400 mb-2">{model.description}</p>
+              <div className="flex items-center gap-4 text-xs text-gray-500">
+                <span>Input: ${model.inputPrice}/1M</span>
+                <span>Output: ${model.outputPrice}/1M</span>
+                <span>Context: {model.contextWindow}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// 🎨 NOUVEAU - API Key Dropdown Premium
+const ApiKeyDropdown = ({ 
+  selectedApiKey, 
+  onApiKeySelect,
+  onAddNewClick,
+  apiKeys
+}: { 
+  selectedApiKey: string; 
+  onApiKeySelect: (keyId: string) => void;
+  onAddNewClick: () => void;
+  apiKeys: Array<{ id: string; name: string; maskedKey: string; isDefault: boolean }>;
+}) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  
+  const selectedApiKeyData = apiKeys.find(k => k.id === selectedApiKey) || apiKeys[1];
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowDropdown(false);
+    };
+
+    if (showDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showDropdown]);
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowDropdown(!showDropdown);
+        }}
+        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 rounded-xl focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 outline-none text-white flex items-center justify-between hover:bg-gray-800/80 transition-all backdrop-blur-sm"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg">
+            <Key className="w-4 h-4 text-white" />
+          </div>
+          <div className="text-left">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm font-medium">{selectedApiKeyData.name}</span>
+              {selectedApiKeyData.isDefault && (
+                <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+                  Default
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-gray-400 font-mono">{selectedApiKeyData.maskedKey}</div>
+          </div>
+        </div>
+        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${showDropdown ? 'rotate-90' : 'rotate-0'}`} />
+      </button>
+
+      {showDropdown && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-50">
+          {apiKeys.map((apiKey) => (
+            <button
+              key={apiKey.id}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onApiKeySelect(apiKey.id);
+                setShowDropdown(false);
+              }}
+              className={`w-full p-3 text-left hover:bg-gray-800/50 transition-all border-b border-gray-700/30 last:border-b-0 ${
+                selectedApiKey === apiKey.id ? 'bg-blue-500/20 border-blue-500/30' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium text-white">{apiKey.name}</span>
+                    {apiKey.isDefault && (
+                      <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-400 font-mono">{apiKey.maskedKey}</div>
+                </div>
+                {selectedApiKey === apiKey.id && (
+                  <CheckCircle className="text-blue-400" size={16} />
+                )}
+              </div>
+            </button>
+          ))}
+          
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowDropdown(false);
+              onAddNewClick();
+            }}
+            className="w-full p-3 text-left hover:bg-gray-800/50 transition-all text-blue-400 border-t border-gray-700/50"
+          >
+            <div className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              <span className="text-sm font-medium">Add New API Key</span>
+            </div>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function CreateAgentWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [step, setStep] = useState<Step>(1);
-  const [fields, setFields] = useState({ ...defaultFields });
-  const [advanced, setAdvanced] = useState(defaultAdvancedSettings);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const { data: session } = useSession();
+  const [currentStep, setCurrentStep] = useState<Step>(1);
+  const [formData, setFormData] = useState<FormData>(defaultFormData);
   const [loading, setLoading] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showAddApiModal, setShowAddApiModal] = useState(false);
+  const [apiKeys, setApiKeys] = useState([
+    { id: 'default', name: 'Default Project', maskedKey: 'sk-...1VMA', isDefault: false },
+    { id: 'test', name: 'test', maskedKey: 'sk-...1VMA', isDefault: true }
+  ]);
+  
+  // 🔧 CORRECTION - Variables d'état corrigées pour correspondre à l'ancienne version
+  const [showImportModal, setShowImportModal] = useState(false);
   const [faqGenerating, setFaqGenerating] = useState(false);
   const [originalCompanyText, setOriginalCompanyText] = useState("");
   const [isFaqGenerated, setIsFaqGenerated] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
 
-  useEffect(() => {
-    const modalName = searchParams.get("name");
-    const modalLang = searchParams.get("language");
-    const modalIndustry = searchParams.get("industry");
-    const template = searchParams.get("template");
-    const isFromScratch = !template || template === "blank";
-
-    if (modalName || modalLang || modalIndustry || template) {
-      const newFields = {
-        ...fields,
-        name: modalName || fields.name,
-        language: modalLang || fields.language,
-        industry: modalIndustry || fields.industry,
-        template: isFromScratch ? "select" : template!,
-        ...(templatePresets[template ?? ""] ?? {}),
-      };
-
-      for (const key of ["description", "questions", "tone"]) {
-        const value = newFields[key as keyof typeof fields];
-        if (value?.includes("(LANGUAGE)") || value?.includes("(INDUSTRY)")) {
-          newFields[key as keyof typeof fields] = value
-            .replaceAll("(LANGUAGE)", modalLang ?? "English")
-            .replaceAll("(INDUSTRY)", modalIndustry ?? "technology");
-        }
-      }
-
-      setFields(newFields);
-    }
-  }, []);
-
-  const handleInput = (
-    field: keyof typeof defaultFields,
-    value: string
-  ) => {
-    setFields((prev) => ({ ...prev, [field]: value }));
+  const handleApiKeyAdded = (newApiKeyData: { id: string; name: string; maskedKey: string; isDefault: boolean }) => {
+    setApiKeys(prev => [...prev, newApiKeyData]);
+    updateFormData("apiKey", newApiKeyData.id);
   };
 
-  const clearField = (field: keyof typeof defaultFields) => {
-    setFields((prev) => ({ ...prev, [field]: "" }));
+  // 🔧 CORRECTION - Fonction d'import corrigée pour correspondre à l'ancienne version
+  const handleImportWebsite = (content: string) => {
+    updateFormData("companyInfo", content);
+    setShowImportModal(false);
+    toast.success("Website content imported successfully!");
   };
 
-  const handleTemplateSelect = (value: string) => {
-    if (value === "") {
-      setFields((prev) => ({ 
-        ...prev, 
-        template: "", 
-        description: "", 
-        questions: "", 
-        tone: "", 
-        rules: "", 
-      }));
+  // 🔧 FONCTION MANQUANTE - Generate FAQ
+  const handleGenerateFaq = async () => {
+    if (!formData.companyInfo.trim()) {
+      toast.error("Please add company information first");
       return;
     }
+
+    setOriginalCompanyText(formData.companyInfo);
+    setFaqGenerating(true);
     
-    const base = {
-      template: value,
-      ...(templatePresets[value] ?? {}),
-    };
-    setFields((prev) => ({ ...prev, ...base }));
+    try {
+      const res = await fetch("/api/generate-faq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: formData.companyInfo.trim(),
+          apiKey: formData.apiKey || "user_api_key",
+        }),
+      });
+      
+      const data = await res.json();
+      const cleaned = (data.faq || "")
+        .replace(/^```markdown/, "")
+        .replace(/```$/, "")
+        .trim();
+        
+      updateFormData("companyInfo", cleaned || "Could not generate FAQ.");
+      setIsFaqGenerated(true);
+      toast.success("FAQ generated successfully");
+    } catch (error) {
+      console.error("Error generating FAQ:", error);
+      toast.error("Something went wrong while generating FAQ.");
+    } finally {
+      setFaqGenerating(false);
+    }
+  };
+
+  // 🔧 FONCTION MANQUANTE - Revert FAQ
+  const handleRevertFaq = () => {
+    updateFormData("companyInfo", originalCompanyText);
+    setIsFaqGenerated(false);
+    toast.success("Changes reverted successfully");
+  };
+
+  const updateFormData = <K extends keyof FormData>(field: K, value: FormData[K]) => {
+    setFormData(prev => {
+      const newFormData = { ...prev, [field]: value };
+      
+      if ((field === 'industry' || field === 'language') && prev.template && prev.template !== 'blank') {
+        const templateUpdates = updateTemplateContent(
+          { ...prev, [field]: value },
+          prev.template, 
+          field === 'industry' ? value as string : prev.industry,
+          field === 'language' ? value as string : prev.language
+        );
+        
+        return { ...newFormData, ...templateUpdates };
+      }
+      
+      return newFormData;
+    });
+  };
+
+  const handleTemplateSelect = (template: typeof formData.template) => {
+    setFormData(prev => {
+      const baseData: FormData = { ...prev, template };
+      
+      if (template && template !== "blank" && templatePresets[template]) {
+        const templateUpdates = updateTemplateContent(
+          baseData, 
+          template, 
+          prev.industry, 
+          prev.language
+        );
+        return { ...baseData, ...templateUpdates };
+      } else if (template === "blank") {
+        return {
+          ...baseData,
+          description: "",
+          questions: "",
+          tone: "",
+          rules: ""
+        };
+      }
+      
+      return baseData;
+    });
+  };
+
+  const canProceedToNextStep = () => {
+    switch (currentStep) {
+      case 1:
+        return formData.name && formData.industry && formData.language && formData.template;
+      case 2:
+        return formData.openaiModel;
+      case 3:
+        return formData.description && formData.questions && formData.tone && formData.rules;
+      case 4:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const handleNext = () => {
+    if (canProceedToNextStep() && currentStep < 4) {
+      setCurrentStep((prev) => (prev + 1) as Step);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep((prev) => (prev - 1) as Step);
+    }
   };
 
   const handleSubmit = async () => {
-    setShowOverlay(true);
     setLoading(true);
     try {
       const res = await fetch("/api/agents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...fields, ...advanced }),
+        body: JSON.stringify(formData),
       });
-      const text = await res.text();
-      let data = null;
-      try {
-        data = JSON.parse(text);
-      } catch (err) {
-        throw new Error("Invalid JSON response");
-      }
-      if (!res.ok || !data?.id) {
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
         throw new Error(data?.error || "Failed to create agent");
       }
+      
       toast.success("Agent created successfully");
       
-      // Add the POST request to generate prompt
       await fetch(`/api/agents/${data.id}/generate-prompt`, {
         method: "POST"
       });
@@ -213,595 +770,785 @@ export default function CreateAgentPage() {
       toast.error("An error occurred while creating your agent.");
     } finally {
       setLoading(false);
-      setShowOverlay(false);
     }
-  };
-
-  // Calculer la complétude générale
-  const getCompleteness = () => {
-    const requiredFields = ['name', 'description', 'questions', 'tone', 'rules'];
-    const completedFields = requiredFields.filter(field => fields[field as keyof typeof fields].trim().length > 0);
-    return Math.round((completedFields.length / requiredFields.length) * 100);
   };
 
   return (
     <>
-      <Toaster
-        position="top-center"
+      <Toaster 
+        position="top-center" 
         toastOptions={{
           style: {
-            background: "#1f2937",
-            color: "#fff",
-            border: "1px solid #4b5563",
+            zIndex: 10000,
+            background: 'rgba(17, 24, 39, 0.95)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(75, 85, 99, 0.5)',
+            color: 'white',
+            borderRadius: '12px',
           },
         }}
       />
       
-      {/* Modal d'import de site web */}
+      {/* 🔧 CORRECTION - Utilisation du vrai modal avec les bonnes props */}
       <ImportWebsiteModal
-        isOpen={showPopup}
-        onClose={() => setShowPopup(false)}
-        onImport={(content: string) => handleInput("companyInfo", content)}
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImport={handleImportWebsite}
       />
-
-      {/* Loading Overlay */}
-      {showOverlay && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="text-center bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl p-8 shadow-2xl">
-            <div className="animate-spin h-10 w-10 rounded-full border-4 border-blue-500 border-t-transparent mx-auto mb-4" />
-            <p className="text-white font-medium text-lg">Building your AI...</p>
-            <p className="text-sm text-gray-400 mt-2">This usually takes around 1 minute.</p>
-          </div>
-        </div>
-      )}
       
-      {/* Main Content */}
-      <div className="min-h-screen bg-transparent">
-        <div className="flex justify-center min-h-screen py-6">
-          <div className="w-full max-w-7xl mx-auto px-6">
+      <AddApiKeyModal
+        isOpen={showAddApiModal}
+        onClose={() => setShowAddApiModal(false)}
+        onApiKeyAdded={handleApiKeyAdded}
+      />
+      
+      <div className="min-h-screen bg-transparent relative">
+        {/* Background Effects */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
+
+        <div className="flex justify-center min-h-screen py-8">
+          <div className="w-full max-w-6xl mx-auto px-6 relative z-10">
+            
             {/* Header */}
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Build your AI
-              </h1>
-              <p className="text-sm text-gray-400">
-                Create and configure your AI agent with advanced settings
-              </p>
-              
-              {/* Completeness indicator */}
-              <div className="mt-4 bg-gray-800 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-300">Setup Progress</span>
-                  <span className="text-sm text-blue-400">{getCompleteness()}%</span>
-                </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${getCompleteness()}%` }}
-                  />
-                </div>
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-2xl px-6 py-3 mb-6">
+                <Bot className="w-6 h-6 text-blue-400" />
+                <span className="text-blue-400 font-semibold">AI Agent Creation</span>
               </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-4">
+                Create your AI Agent
+              </h1>
+              <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                Build and customize your intelligent AI assistant with our step-by-step wizard
+              </p>
             </div>
 
-            <div style={{ display: 'flex', height: 'calc(100vh - 240px)', gap: '24px' }}>
-              {/* Left Panel - Basic Settings */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl text-white overflow-hidden" style={{ width: '400px', display: 'flex', flexDirection: 'column' }}>
-                
-                {/* Basic Settings Section */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-                  
-                  {/* Configuration Générale */}
-                  <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Settings className="text-blue-400" size={20} />
-                      <h3 className="text-lg font-semibold text-blue-200">Basic Settings</h3>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      {/* AI Name */}
-                      <div className="relative">
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          AI Name
-                        </label>
-                        <input
-                          value={fields.name}
-                          onChange={(e) => handleInput("name", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                          placeholder="Example: Sarah Support Bot"
-                        />
-                        <CharacterCounter content={fields.name} maxLength={50} />
-                        <button
-                          onClick={() => clearField("name")}
-                          className="absolute top-0 right-0 mt-1 mr-2 text-xs text-gray-400 hover:underline"
-                        >
-                          Clear
-                        </button>
-                      </div>
+            <StepIndicator currentStep={currentStep} />
 
-                      {/* Template */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          Template
-                        </label>
-                        <select
-                          value={fields.template}
-                          onChange={(e) => handleTemplateSelect(e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
-                        >
-                          <option value="">No template</option>
-                          <option value="sales">Sales AI</option>
-                          <option value="support">Support AI</option>
-                        </select>
+            {/* Main Card */}
+            <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-3xl shadow-2xl p-8 text-white relative overflow-hidden">
+              {/* Card Background Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
+              
+              <div className="relative z-10">
+                {/* STEP 1 - AI Type Selection */}
+                {currentStep === 1 && (
+                  <div className="space-y-8">
+                    <div className="text-center mb-10">
+                      <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/30">
+                        <Bot className="w-10 h-10 text-white" />
                       </div>
-
-                      {/* Model */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          Model
-                        </label>
-                        <select
-                          value={fields.openaiModel}
-                          onChange={(e) => handleInput("openaiModel", e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
-                        >
-                          <option value="gpt-4o">gpt-4o</option>
-                          <option value="gpt-4">gpt-4</option>
-                          <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-                        </select>
-                      </div>
-
-                      {/* API Key */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          OpenAI API Key
-                        </label>
-                        <input
-                          type="password"
-                          disabled
-                          value="sk-****************************"
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg cursor-not-allowed opacity-75"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Advanced Settings */}
-                  <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Globe className="text-blue-400" size={20} />
-                      <h3 className="text-lg font-semibold text-blue-200">Advanced Settings</h3>
+                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                        Choose Your AI Type
+                      </h2>
+                      <p className="text-gray-400 text-lg">Start by selecting the type of AI assistant you want to create</p>
                     </div>
 
-                    <button
-                      onClick={() => setShowAdvanced((prev) => !prev)}
-                      className="text-sm text-gray-300 hover:text-white transition flex items-center gap-2 mb-4"
-                    >
-                      <span className="text-lg">{showAdvanced ? '▼' : '►'}</span> 
-                      Show Parameters
-                    </button>
+                    {/* Template Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                      {[
+                        { 
+                          key: "sales", 
+                          title: "Sales AI", 
+                          desc: "Perfect for lead generation and sales automation",
+                          icon: Briefcase,
+                          gradient: "from-orange-500 to-red-500",
+                          features: ["Lead qualification", "Product recommendations", "Follow-up automation"],
+                          bgGradient: "from-orange-500/10 to-red-500/10",
+                          borderGradient: "from-orange-500/30 to-red-500/30"
+                        },
+                        { 
+                          key: "support", 
+                          title: "Support AI", 
+                          desc: "Ideal for customer support and service inquiries",
+                          icon: Shield,
+                          gradient: "from-blue-500 to-cyan-500",
+                          features: ["Ticket classification", "FAQ responses", "Escalation handling"],
+                          bgGradient: "from-blue-500/10 to-cyan-500/10",
+                          borderGradient: "from-blue-500/30 to-cyan-500/30"
+                        },
+                        { 
+                          key: "blank", 
+                          title: "Start Blank", 
+                          desc: "Start from scratch with a completely custom AI",
+                          icon: Globe,
+                          gradient: "from-purple-500 to-pink-500",
+                          features: ["Full customization", "No presets", "Maximum flexibility"],
+                          bgGradient: "from-purple-500/10 to-pink-500/10",
+                          borderGradient: "from-purple-500/30 to-pink-500/30"
+                        }
+                      ].map((template) => {
+                        const Icon = template.icon;
+                        const isSelected = formData.template === template.key;
+                        return (
+                          <button
+                            key={template.key}
+                            onClick={() => handleTemplateSelect(template.key as any)}
+                            className={`group p-6 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden ${
+                              isSelected
+                                ? `bg-gradient-to-br ${template.bgGradient} border-transparent shadow-2xl transform scale-105`
+                                : "bg-gray-800/50 border-gray-700/50 hover:border-gray-600/50 hover:bg-gray-800/70"
+                            }`}
+                          >
+                            {/* Background Gradient for selected */}
+                            {isSelected && (
+                              <div className={`absolute inset-0 bg-gradient-to-br ${template.bgGradient} opacity-50`}></div>
+                            )}
+                            
+                            <div className="relative z-10">
+                              <div className={`w-16 h-16 rounded-xl mb-4 flex items-center justify-center transition-all duration-300 ${
+                                isSelected 
+                                  ? `bg-gradient-to-r ${template.gradient} shadow-lg` 
+                                  : `bg-gradient-to-r ${template.gradient} opacity-70 group-hover:opacity-100`
+                              }`}>
+                                <Icon size={28} className="text-white" />
+                              </div>
+                              <h3 className="font-bold text-xl mb-3 text-white">{template.title}</h3>
+                              <p className="text-sm text-gray-300 mb-4 leading-relaxed">{template.desc}</p>
+                              <ul className="text-xs space-y-2">
+                                {template.features.map((feature, idx) => (
+                                  <li key={idx} className="flex items-center gap-2 text-gray-400">
+                                    <CheckCircle size={12} className={isSelected ? "text-white" : "text-gray-500"} />
+                                    {feature}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
 
-                    {showAdvanced && (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-3">
-                            Temperature: {advanced.temperature.toFixed(2)}
-                          </label>
-                          <input
-                            type="range"
-                            min="0"
-                            max="2"
-                            step="0.1"
-                            value={advanced.temperature}
-                            onChange={(e) =>
-                              setAdvanced((prev) => ({
-                                ...prev,
-                                temperature: parseFloat(e.target.value),
-                              }))
-                            }
-                            className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-                          />
-                          <div className="text-xs text-gray-400 mt-2">
-                            Controls randomness: Lower values are more focused, higher values more creative
+                    {/* Basic Info Form */}
+                    {formData.template && (
+                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                        <h3 className="text-xl font-semibold mb-6 text-white">Basic Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium mb-3 text-gray-300">AI Name *</label>
+                            <input
+                              value={formData.name}
+                              onChange={(e) => updateFormData("name", e.target.value)}
+                              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 rounded-xl focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 outline-none text-white placeholder-gray-400 font-medium backdrop-blur-sm transition-all"
+                              placeholder="e.g., Sarah Support Bot"
+                            />
                           </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-3">
-                            Top P: {advanced.top_p.toFixed(2)}
-                          </label>
-                          <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.1"
-                            value={advanced.top_p}
-                            onChange={(e) =>
-                              setAdvanced((prev) => ({
-                                ...prev,
-                                top_p: parseFloat(e.target.value),
-                              }))
-                            }
-                            className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-                          />
-                          <div className="text-xs text-gray-400 mt-2">
-                            Controls output diversity: 1.0 considers all tokens, lower values limit to more likely ones
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-3 text-gray-300">Industry *</label>
+                            <input
+                              value={formData.industry}
+                              onChange={(e) => updateFormData("industry", e.target.value)}
+                              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 rounded-xl focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 outline-none text-white placeholder-gray-400 font-medium backdrop-blur-sm transition-all"
+                              placeholder="e.g., Technology, Healthcare"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-3 text-gray-300">Language *</label>
+                            <input
+                              value={formData.language}
+                              onChange={(e) => updateFormData("language", e.target.value)}
+                              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 rounded-xl focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 outline-none text-white placeholder-gray-400 font-medium backdrop-blur-sm transition-all"
+                              placeholder="e.g., English, French"
+                            />
                           </div>
                         </div>
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
+                )}
 
-              {/* Right Panel - Edit AI */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl text-white overflow-hidden" style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
-                
-                {/* Header */}
-                <div className="border-b border-gray-700 bg-gray-800/50 p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Bot className="text-blue-400" size={24} />
-                    <h2 className="text-xl font-semibold text-blue-200">Edit your AI</h2>
-                  </div>
-                  <p className="text-sm text-gray-400">Define how your AI should interact with users</p>
-                </div>
+                {/* STEP 2 - Model Settings */}
+                {currentStep === 2 && (
+                  <div className="space-y-8">
+                    <div className="text-center mb-10">
+                      <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/30">
+                        <Settings className="w-10 h-10 text-white" />
+                      </div>
+                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                        Model Settings
+                      </h2>
+                      <p className="text-gray-400 text-lg">Configure your AI model and parameters</p>
+                    </div>
 
-                {/* Progress Indicator */}
-                <div className="px-6 py-4 border-b border-gray-700">
-                  <ProgressIndicator currentStep={step} />
-                </div>
-
-                {/* Step Navigation */}
-                <div className="flex gap-6 px-6 py-4 border-b border-gray-700">
-                  <button
-                    onClick={() => setStep(1)}
-                    className={`pb-3 px-2 ${step === 1 ? "text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"} transition-colors`}
-                  >
-                    Step 1: Personality and Purpose
-                  </button>
-                  <button
-                    onClick={() => setStep(2)}
-                    className={`pb-3 px-2 ${step === 2 ? "text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"} transition-colors`}
-                  >
-                    Step 2: Knowledge and Rules
-                  </button>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-                  {step === 1 && (
-                    <>
-                      {/* Describe the AI */}
-                      <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <User className="text-blue-400" size={20} />
-                          <h3 className="text-lg font-semibold text-blue-200">Describe the AI</h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      
+                      {/* AI Model Section */}
+                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <Bot className="w-6 h-6 text-white" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-white">AI Model</h3>
                         </div>
                         
-                        <div className="relative">
-                          <p className="text-xs text-gray-400 mb-3">
-                            Define what your AI does, its role, and primary objective. Be specific about the context and goals.
-                          </p>
-                          <TextareaAutosize
-                            minRows={3}
-                            value={fields.description}
-                            onChange={(e) => handleInput("description", e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-3 outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                            placeholder="Example: Customer support specialist for SaaS product, helping users troubleshoot issues and find solutions. Focuses on technical problems, billing questions, and feature explanations."
+                        <div>
+                          <label className="block text-sm font-medium mb-3 text-gray-300">Select Model *</label>
+                          <ModelDropdown 
+                            selectedModel={formData.openaiModel}
+                            onModelSelect={(modelId) => updateFormData("openaiModel", modelId)}
                           />
-                          <QualityIndicator content={fields.description} minLength={50} />
-                          <CharacterCounter content={fields.description} maxLength={500} />
-                          <button
-                            onClick={() => clearField("description")}
-                            className="absolute top-0 right-0 mt-1 mr-2 text-xs text-gray-400 hover:underline"
-                          >
-                            Clear
-                          </button>
                         </div>
+
+                        {/* Model Info */}
+                        {(() => {
+                          const selectedModel = modelOptions.find(m => m.id === formData.openaiModel);
+                          return selectedModel ? (
+                            <div className="mt-6 p-4 bg-gray-900/50 rounded-xl">
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <div className="text-gray-400 mb-1">Context Window</div>
+                                  <div className="text-white font-semibold">{selectedModel.contextWindow}</div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-400 mb-1">Type</div>
+                                  <div className="text-white font-semibold">
+                                    {selectedModel.id.includes('4o') ? 'Multimodal' : 'Text'}
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-gray-400 text-sm mt-3">{selectedModel.description}</p>
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
 
-                      {/* Questions */}
-                      <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <MessageCircle className="text-blue-400" size={20} />
-                          <h3 className="text-lg font-semibold text-blue-200">Questions the AI should ask</h3>
+                      {/* API & Parameters Section */}
+                      <div className="space-y-6">
+                        {/* API Key */}
+                        <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                              <Key className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-white">API Configuration</h3>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-3 text-gray-300">API Key Project *</label>
+                            <ApiKeyDropdown 
+                              selectedApiKey={formData.apiKey}
+                              onApiKeySelect={(keyId) => updateFormData("apiKey", keyId)}
+                              onAddNewClick={() => setShowAddApiModal(true)}
+                              apiKeys={apiKeys}
+                            />
+                          </div>
                         </div>
-                        
-                        <div className="relative">
-                          <p className="text-xs text-gray-400 mb-3">
-                            Define the conversation flow and key questions. Should it follow a structured approach or be more flexible?
-                          </p>
-                          <TextareaAutosize
-                            minRows={3}
-                            value={fields.questions}
-                            onChange={(e) => handleInput("questions", e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-3 outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                            placeholder="Example: What brings you here today? How can I help you with [your product/service]? Can you describe the specific issue you're experiencing?"
-                          />
-                          <QualityIndicator content={fields.questions} minLength={30} />
-                          <CharacterCounter content={fields.questions} maxLength={800} />
-                          <button
-                            onClick={() => clearField("questions")}
-                            className="absolute top-0 right-0 mt-1 mr-2 text-xs text-gray-400 hover:underline"
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      </div>
 
-                      {/* Language, Style and Tone */}
-                      <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <Globe className="text-blue-400" size={20} />
-                          <h3 className="text-lg font-semibold text-blue-200">Language, Style and Tone</h3>
-                        </div>
-                        
-                        <div className="relative">
-                          <p className="text-xs text-gray-400 mb-3">
-                            Define the communication style, language, and personality. How should your AI "sound" to users?
-                          </p>
-                          <TextareaAutosize
-                            minRows={3}
-                            value={fields.tone}
-                            onChange={(e) => handleInput("tone", e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-3 outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                            placeholder="Example: Professional but friendly, conversational, empathetic, like talking to a knowledgeable friend. Uses clear, simple language and avoids jargon."
-                          />
-                          <QualityIndicator content={fields.tone} minLength={30} />
-                          <CharacterCounter content={fields.tone} maxLength={400} />
-                          <button
-                            onClick={() => clearField("tone")}
-                            className="absolute top-0 right-0 mt-1 mr-2 text-xs text-gray-400 hover:underline"
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                        {/* Parameters */}
+                        <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                              <Settings className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-white">Parameters</h3>
+                          </div>
 
-                  {step === 2 && (
-                    <>
-                      {/* Rules */}
-                      <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <Settings className="text-blue-400" size={20} />
-                          <h3 className="text-lg font-semibold text-blue-200">Rules</h3>
-                        </div>
-                        
-                        <div className="relative">
-                          <p className="text-xs text-gray-400 mb-3">
-                            Set specific behavioral guidelines and constraints. What should your AI always do, never do, or avoid?
-                          </p>
-                          <TextareaAutosize
-                            minRows={4}
-                            value={fields.rules}
-                            onChange={(e) => handleInput("rules", e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-3 outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                            placeholder="Example: Always ask clarifying questions before providing solutions. Never make assumptions about user's technical level. If unsure, escalate to human support. Keep responses concise and actionable."
-                          />
-                          <QualityIndicator content={fields.rules} minLength={50} />
-                          <CharacterCounter content={fields.rules} maxLength={600} />
-                          <button
-                            onClick={() => clearField("rules")}
-                            className="absolute top-0 right-0 mt-1 mr-2 text-xs text-gray-400 hover:underline"
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      </div>
+                          <div className="space-y-6">
+                            <div>
+                              <label className="block text-sm font-medium mb-3 text-gray-300">
+                                Temperature: {formData.temperature}
+                              </label>
+                              <input
+                                type="range"
+                                min="0"
+                                max="2"
+                                step="0.1"
+                                value={formData.temperature}
+                                onChange={(e) => updateFormData("temperature", parseFloat(e.target.value))}
+                                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                              />
+                              <div className="text-xs text-gray-400 mt-2">
+                                Controls randomness: lower for focused, higher for creative
+                              </div>
+                            </div>
 
-                      {/* Company Information */}
-                      <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <Info className="text-blue-400" size={20} />
-                          <h3 className="text-lg font-semibold text-blue-200">Company Information for FAQ</h3>
-                        </div>
-                        
-                        <div className="relative">
-                          <div className="flex justify-between items-start mb-3">
-                            <p className="text-xs text-gray-400">
-                              Add comprehensive company information: services, pricing, policies, contact details, FAQs. The more detail, the better your AI will respond to customers.
-                            </p>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => setShowPopup(true)}
-                                className="text-xs bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition flex items-center gap-1"
-                              >
-                                <Upload size={14} />
-                                Import from Website
-                              </button>
-                              {!isFaqGenerated ? (
-                                <button
-                                  onClick={async () => {
-                                    setOriginalCompanyText(fields.companyInfo);
-                                    setFaqGenerating(true);
-                                    try {
-                                      const res = await fetch("/api/generate-faq", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({
-                                          content: fields.companyInfo.trim(),
-                                          apiKey: fields.apiKey || "user_api_key",
-                                        }),
-                                      });
-                                      const data = await res.json();
-                                      const cleaned = (data.faq || "")
-                                        .replace(/^```markdown/, "")
-                                        .replace(/```$/, "")
-                                        .trim();
-                                      handleInput("companyInfo", cleaned || "Could not generate FAQ.");
-                                      setIsFaqGenerated(true);
-                                      toast.success("FAQ generated successfully");
-                                    } catch {
-                                      toast.error("Something went wrong while generating FAQ.");
-                                    } finally {
-                                      setFaqGenerating(false);
-                                    }
-                                  }}
-                                  disabled={faqGenerating}
-                                  className="text-xs bg-purple-600 hover:bg-purple-700 px-3 py-1.5 rounded-lg transition flex items-center gap-1"
-                                >
-                                  {faqGenerating ? (
-                                    <>
-                                      <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
-                                      Converting...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Zap size={14} />
-                                      Turn into FAQ
-                                    </>
-                                  )}
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    handleInput("companyInfo", originalCompanyText);
-                                    setIsFaqGenerated(false);
-                                    toast.success("Changes reverted successfully");
-                                  }}
-                                  className="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1"
-                                >
-                                  <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    width="14" 
-                                    height="14" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M9 14L4 9l5-5"/>
-                                    <path d="M4 9h16"/>
-                                  </svg>
-                                  Revert FAQ
-                                </button>
-                              )}
-                              <button
-                                onClick={() => clearField("companyInfo")}
-                                className="text-xs text-gray-400 hover:underline"
-                              >
-                                Clear
-                              </button>
+                            <div>
+                              <label className="block text-sm font-medium mb-3 text-gray-300">
+                                Top P: {formData.top_p}
+                              </label>
+                              <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.1"
+                                value={formData.top_p}
+                                onChange={(e) => updateFormData("top_p", parseFloat(e.target.value))}
+                                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                              />
+                              <div className="text-xs text-gray-400 mt-2">
+                                Controls diversity: lower for focused, higher for diverse
+                              </div>
                             </div>
                           </div>
-                          <TextareaAutosize
-                            minRows={6}
-                            value={fields.companyInfo}
-                            onChange={(e) => handleInput("companyInfo", e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-3 outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                            placeholder="Example: Company Name: TechCorp Solutions | Services: Cloud hosting, web development, technical support | Hours: Mon-Fri 9AM-6PM EST | Contact: support@techcorp.com | Plans: Basic ($29/mo), Pro ($99/mo), Enterprise (custom pricing)"
-                          />
-                          <QualityIndicator content={fields.companyInfo} minLength={100} />
-                          <CharacterCounter content={fields.companyInfo} maxLength={15000} />
                         </div>
                       </div>
-                    </>
-                  )}
-                </div>
+                    </div>
 
-                {/* Navigation Footer */}
-                <div className="border-t border-gray-700 bg-gray-800/50 p-6">
-                  <div className="flex justify-between items-center">
-                    {step > 1 ? (
-                      <button
-                        onClick={() => setStep((prev) => (prev - 1) as Step)}
-                        className="text-gray-400 hover:text-white transition flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-700"
-                      >
-                        <span>←</span> Back
-                      </button>
-                    ) : (
-                      <div />
-                    )}
-                    
-                    {step < 2 ? (
-                      <button
-                        onClick={() => setStep((prev) => (prev + 1) as Step)}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
-                      >
-                        Continue <span>→</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={handleSubmit}
-                        disabled={loading || getCompleteness() < 80}
-                        className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium shadow-lg hover:shadow-xl"
-                      >
-                        {loading ? (
-                          <div className="flex items-center gap-2">
-                            <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Generating...
+                    {/* Pricing Info */}
+                    {(() => {
+                      const selectedModel = modelOptions.find(m => m.id === formData.openaiModel);
+                      return selectedModel ? (
+                        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
+                          <div className="flex items-center gap-3 mb-4">
+                            <TrendingUp className="w-6 h-6 text-green-400" />
+                            <h3 className="text-lg font-semibold text-green-400">Token Pricing</h3>
                           </div>
-                        ) : (
-                          <>
-                            <Zap size={18} />
-                            Generate with AI
-                          </>
-                        )}
-                      </button>
-                    )}
+                          
+                          <div className="grid grid-cols-2 gap-6">
+                            <div>
+                              <div className="text-sm text-gray-400 mb-1">Input Cost</div>
+                              <div className="text-2xl font-bold text-white">
+                                ${selectedModel.inputPrice.toFixed(2)}
+                              </div>
+                              <div className="text-xs text-gray-400">per 1M tokens</div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-gray-400 mb-1">Output Cost</div>
+                              <div className="text-2xl font-bold text-white">
+                                ${selectedModel.outputPrice.toFixed(2)}
+                              </div>
+                              <div className="text-xs text-gray-400">per 1M tokens</div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-xs text-gray-500 bg-gray-900/30 rounded-xl p-3 mt-4">
+                            💡 A token is approximately 4 characters or 0.75 words. You only pay for what you use.
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
                   </div>
-                  
-                  {/* Progress message */}
-                  <div className="mt-4 text-center">
-                    {getCompleteness() < 80 ? (
-                      <p className="text-xs text-yellow-400">
-                        Complete at least 80% to generate your AI ({getCompleteness()}% done)
+                )}
+
+                {/* STEP 3 - Personality & Knowledge */}
+                {currentStep === 3 && (
+                  <div className="space-y-8">
+                    <div className="text-center mb-10">
+                      <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/30">
+                        <User className="w-10 h-10 text-white" />
+                      </div>
+                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                        Personality & Knowledge
+                      </h2>
+                      <p className="text-gray-400 text-lg">Define how your AI should behave and what it knows</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Description */}
+                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                        <label className="block text-sm font-medium mb-3 text-gray-300">
+                          Description *
+                        </label>
+                        <TextareaAutosize
+                          value={formData.description}
+                          onChange={(e) => updateFormData("description", e.target.value)}
+                          minRows={4}
+                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                          placeholder="Define what your AI does, its role, and primary objective..."
+                        />
+                        <QualityIndicator content={formData.description} minLength={50} />
+                        <CharacterCounter content={formData.description} maxLength={500} />
+                      </div>
+                      
+                      {/* Questions */}
+                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                        <label className="block text-sm font-medium mb-3 text-gray-300">
+                          Questions to Ask *
+                        </label>
+                        <TextareaAutosize
+                          value={formData.questions}
+                          onChange={(e) => updateFormData("questions", e.target.value)}
+                          minRows={4}
+                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                          placeholder="Define the conversation flow and key questions..."
+                        />
+                        <QualityIndicator content={formData.questions} minLength={30} />
+                        <CharacterCounter content={formData.questions} maxLength={800} />
+                      </div>
+                      
+                      {/* Tone */}
+                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                        <label className="block text-sm font-medium mb-3 text-gray-300">
+                          Tone & Style *
+                        </label>
+                        <TextareaAutosize
+                          value={formData.tone}
+                          onChange={(e) => updateFormData("tone", e.target.value)}
+                          minRows={4}
+                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                          placeholder="Define the communication style, language, and personality..."
+                        />
+                        <QualityIndicator content={formData.tone} minLength={30} />
+                        <CharacterCounter content={formData.tone} maxLength={400} />
+                      </div>
+                      
+                      {/* Rules */}
+                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                        <label className="block text-sm font-medium mb-3 text-gray-300">
+                          Rules *
+                        </label>
+                        <TextareaAutosize
+                          value={formData.rules}
+                          onChange={(e) => updateFormData("rules", e.target.value)}
+                          minRows={4}
+                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                          placeholder="Set specific behavioral guidelines and constraints..."
+                        />
+                        <QualityIndicator content={formData.rules} minLength={50} />
+                        <CharacterCounter content={formData.rules} maxLength={600} />
+                      </div>
+                    </div>
+
+                    {/* Company Info */}
+                    <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 lg:col-span-2">
+                      <div className="flex justify-between items-start mb-4">
+                        <label className="block text-sm font-medium text-gray-300">
+                          Company Information (Optional)
+                        </label>
+                        <div className="flex gap-2">
+                          {/* 🔧 CORRECTION - Bouton corrigé pour utiliser showImportModal */}
+                          <button
+                            type="button"
+                            onClick={() => setShowImportModal(true)}
+                            className="text-xs bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
+                          >
+                            <Upload size={12} />
+                            Import Website
+                          </button>
+                          
+                          {!isFaqGenerated ? (
+                            <button
+                              type="button"
+                              onClick={handleGenerateFaq}
+                              disabled={faqGenerating || !formData.companyInfo.trim()}
+                              className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-purple-500/20 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                            >
+                              {faqGenerating ? (
+                                <>
+                                  <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                                  Converting...
+                                </>
+                              ) : (
+                                <>
+                                  <Zap size={12} />
+                                  Turn into FAQ
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleRevertFaq}
+                              className="text-xs bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-red-500/20 transform hover:scale-105"
+                            >
+                              <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                width="12" 
+                                height="12" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              >
+                                <path d="M9 14L4 9l5-5"/>
+                                <path d="M4 9h16"/>
+                              </svg>
+                              Revert FAQ
+                            </button>
+                          )}
+                          
+                          <button
+                            type="button"
+                            onClick={() => updateFormData("companyInfo", "")}
+                            className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <TextareaAutosize
+                        value={formData.companyInfo}
+                        onChange={(e) => updateFormData("companyInfo", e.target.value)}
+                        minRows={6}
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                        placeholder="Add company information, services, pricing, policies, contact details..."
+                      />
+                      <QualityIndicator content={formData.companyInfo} minLength={100} />
+                      <CharacterCounter content={formData.companyInfo} maxLength={15000} />
+                      
+                      <p className="text-xs text-gray-400 mt-3">
+                        💡 The more detailed company information you provide, the better your AI will respond to customers.
                       </p>
-                    ) : (
-                      <p className="text-xs text-green-400">
-                        Ready to generate! ({getCompleteness()}% complete)
-                      </p>
-                    )}
+                    </div>
                   </div>
-                  
-                  {/* API Key Message */}
-                  <div className="mt-2 text-center">
-                    <p className="text-xs text-gray-500">You are using your own API key. Do not use too many tokens.</p>
+                )}
+
+                {/* STEP 4 - Final Review */}
+                {currentStep === 4 && (
+                  <div className="space-y-8">
+                    <div className="text-center mb-10">
+                      <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-orange-500/30">
+                        <CheckCircle className="w-10 h-10 text-white" />
+                      </div>
+                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                        Final Review
+                      </h2>
+                      <p className="text-gray-400 text-lg">Review your AI configuration and generate your assistant</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {/* Configuration Summary */}
+                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <Settings className="w-6 h-6 text-white" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-blue-200">AI Configuration</h3>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
+                            <span className="text-gray-400 text-sm">AI Name</span>
+                            <span className="text-white font-medium">{formData.name}</span>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
+                            <span className="text-gray-400 text-sm">Industry</span>
+                            <span className="text-white font-medium">{formData.industry}</span>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
+                            <span className="text-gray-400 text-sm">Template</span>
+                            <span className={`px-3 py-1 text-xs rounded-full text-white ${
+                              formData.template === 'sales' ? 'bg-orange-600' : 
+                              formData.template === 'support' ? 'bg-blue-600' : 'bg-purple-600'
+                            }`}>
+                              {formData.template === 'sales' ? 'Sales AI' : 
+                               formData.template === 'support' ? 'Support AI' : 'Custom'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
+                            <span className="text-gray-400 text-sm">Model</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 bg-gradient-to-r from-orange-500 to-red-500 rounded flex items-center justify-center">
+                                <Bot className="w-3 h-3 text-white" />
+                              </div>
+                              <span className="text-white font-medium">{formData.openaiModel.toUpperCase()}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Requirements & Status */}
+                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <CheckCircle className="w-6 h-6 text-white" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-green-200">Requirements</h3>
+                        </div>
+                        
+                        <div className="space-y-3 mb-8">
+                          {[
+                            { label: "AI Name", check: !!formData.name },
+                            { label: "Industry", check: !!formData.industry },
+                            { label: "Language", check: !!formData.language },
+                            { label: "Template", check: !!formData.template },
+                            { label: "Model", check: !!formData.openaiModel },
+                            { label: "API Key", check: !!formData.apiKey },
+                            { label: "Description", check: !!formData.description },
+                            { label: "Conversation Flow", check: !!formData.questions },
+                            { label: "Tone & Style", check: !!formData.tone },
+                            { label: "Rules", check: !!formData.rules },
+                            { label: "Company Info", check: !!formData.companyInfo, optional: true }
+                          ].map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-3 p-2 rounded-lg">
+                              {item.check ? (
+                                <CheckCircle className="w-5 h-5 text-green-400" />
+                              ) : (
+                                <div className={`w-5 h-5 rounded-full border-2 ${item.optional ? 'border-gray-500' : 'border-orange-400'}`} />
+                              )}
+                              <span className={`text-sm ${item.check ? 'text-white' : item.optional ? 'text-gray-400' : 'text-orange-400'}`}>
+                                {item.label}
+                                {item.optional && ' (Optional)'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* API Key Warning */}
+                        <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl p-4">
+                          <div className="flex items-center gap-3 text-yellow-400 mb-2">
+                            <Key className="w-5 h-5" />
+                            <span className="font-semibold">API Key Usage</span>
+                          </div>
+                          <p className="text-sm text-yellow-200">
+                            You're using your own OpenAI API key. Costs will be charged directly to your OpenAI account.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pricing Estimate */}
+                    {(() => {
+                      const selectedModel = modelOptions.find(m => m.id === formData.openaiModel);
+                      return selectedModel ? (
+                        <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-2xl p-6">
+                          <div className="flex items-center gap-3 mb-4">
+                            <TrendingUp className="w-6 h-6 text-blue-400" />
+                            <h3 className="text-xl font-semibold text-blue-200">Estimated Costs</h3>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="text-center">
+                              <div className="text-sm text-gray-400 mb-2">Input Tokens</div>
+                              <div className="text-2xl font-bold text-white mb-1">
+                                ${selectedModel.inputPrice.toFixed(2)}
+                              </div>
+                              <div className="text-xs text-gray-400">per 1M tokens</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-sm text-gray-400 mb-2">Output Tokens</div>
+                              <div className="text-2xl font-bold text-white mb-1">
+                                ${selectedModel.outputPrice.toFixed(2)}
+                              </div>
+                              <div className="text-xs text-gray-400">per 1M tokens</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-sm text-gray-400 mb-2">Estimated Monthly</div>
+                              <div className="text-2xl font-bold text-green-400 mb-1">
+                                $5-50
+                              </div>
+                              <div className="text-xs text-gray-400">typical usage</div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-xs text-gray-400 text-center mt-4 p-3 bg-gray-900/30 rounded-lg">
+                            💡 Actual costs depend on usage. Most small businesses spend $10-30/month.
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+
+                    {/* Ready to Deploy */}
+                    <div className="text-center">
+                      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-8">
+                        <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
+                          <Zap className="w-8 h-8 text-white" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-3">Ready to Generate!</h3>
+                        <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                          Your AI assistant will be created and ready to use in about 1 minute.
+                        </p>
+                        
+                        <div className="flex items-center justify-center gap-2 text-green-400 text-sm">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>All requirements met</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                )}
+
+                {/* Navigation */}
+                <div className="flex justify-between items-center mt-12 pt-8 border-t border-gray-700/50">
+                  <button
+                    onClick={handlePrevious}
+                    disabled={currentStep === 1}
+                    className="flex items-center gap-2 px-6 py-3 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all rounded-xl hover:bg-gray-800/50"
+                  >
+                    <ChevronLeft size={20} />
+                    Previous
+                  </button>
+
+                  <div className="text-center">
+                    <div className="text-sm text-gray-400 mb-1">
+                      Step {currentStep} of 4
+                    </div>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4].map((step) => (
+                        <div
+                          key={step}
+                          className={`w-2 h-2 rounded-full transition-all ${
+                            step === currentStep
+                              ? 'bg-blue-400 w-6'
+                              : step < currentStep
+                              ? 'bg-green-400'
+                              : 'bg-gray-600'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {currentStep < 4 ? (
+                    <button
+                      onClick={handleNext}
+                      disabled={!canProceedToNextStep()}
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-500 hover:to-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
+                    >
+                      Next
+                      <ChevronRight size={20} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleSubmit}
+                      disabled={loading}
+                      className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-500/20 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                      {loading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Creating Agent...
+                        </>
+                      ) : (
+                        <>
+                          <Zap size={20} />
+                          Create Agent
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Custom Styles */}
+      
+      {/* Custom Slider Styles */}
       <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #6b7280;
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
-        }
-        
         .slider::-webkit-slider-thumb {
           appearance: none;
           height: 20px;
           width: 20px;
-          background: #3b82f6;
+          background: linear-gradient(135deg, #3b82f6, #06b6d4);
           border-radius: 50%;
           cursor: pointer;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          border: 2px solid white;
         }
         
         .slider::-moz-range-thumb {
           height: 20px;
           width: 20px;
-          background: #3b82f6;
+          background: linear-gradient(135deg, #3b82f6, #06b6d4);
           border-radius: 50%;
           cursor: pointer;
-          border: none;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+          border: 2px solid white;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider::-webkit-slider-track {
+          background: linear-gradient(to right, #374151, #4b5563);
+          border-radius: 8px;
         }
       `}</style>
     </>

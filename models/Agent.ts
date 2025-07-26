@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, models, model } from "mongoose";
 
 export interface AgentDocument extends Document {
   userId: mongoose.Types.ObjectId;
+  folderId?: mongoose.Types.ObjectId; // 🆕 AJOUTÉ
   name: string;
   template?: string;
   openaiModel: string;
@@ -39,6 +40,7 @@ export interface AgentDocument extends Document {
 const AgentSchema = new Schema<AgentDocument>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    folderId: { type: Schema.Types.ObjectId, ref: "Folder" }, // 🆕 AJOUTÉ
     name: { type: String, required: true },
     template: { type: String },
     openaiModel: { type: String, required: true },
