@@ -10,8 +10,9 @@ import mongoose from "mongoose";
 // PUT - Move agent to folder or remove from folder
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   await connectToDatabase();
 
   const session = await getServerSession(authOptions);

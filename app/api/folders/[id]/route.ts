@@ -9,8 +9,9 @@ import mongoose from 'mongoose'
 // GET - Récupérer un folder avec ses agents
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions)
     
@@ -69,8 +70,9 @@ export async function GET(
 // PUT - Mettre à jour un folder
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions)
     
