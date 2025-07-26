@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { HexColorPicker } from 'react-colorful';
 import { 
   Moon, Sun, Bot, User, Info, X, Upload, Send, Settings, MessageCircle, 
-  RotateCcw, Globe, Smartphone, Palette, Monitor, Eye, Trash2
+  RotateCcw, Globe, Smartphone, Palette, Monitor, Eye, Trash2, Sparkles, CheckCircle
 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import CreateDemoModal from '@/components/CreateDemoModal';
@@ -215,7 +215,7 @@ const ChatWindow: React.FC<{
                     style={{ flexShrink: 0 }}
                     onError={(e) => {
                       const target = e.currentTarget as HTMLImageElement;
-                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS44IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
+                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS44IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA7LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
                     }}
                   />
                 )}
@@ -331,7 +331,7 @@ export default function DemoAgentPage() {
     welcomeMessage: 'Hello! How can I help you today?',
     placeholderText: 'Type your message...',
     theme: 'dark',
-    primaryColor: '#007bff',
+    primaryColor: '#3B82F6',
     popupMessage: 'Hello! Need any help?',
     popupDelay: 2,
     showPopup: true,
@@ -596,8 +596,8 @@ export default function DemoAgentPage() {
 
   // Predefined colors
   const colorPresets = [
-    '#007bff', '#28a745', '#dc3545', '#ffc107',
-    '#17a2b8', '#6f42c1', '#e83e8c', '#6c757d'
+    '#3B82F6', '#10B981', '#EF4444', '#F59E0B',
+    '#06B6D4', '#8B5CF6', '#EC4899', '#6B7280'
   ];
 
   const appliedColor = customColor || config.primaryColor;
@@ -605,182 +605,253 @@ export default function DemoAgentPage() {
 
   return (
     <RequireApiKey>
-      <div className="min-h-screen bg-transparent">
-        <div className="flex justify-center min-h-screen py-6">
-          <div className="w-full max-w-7xl mx-auto px-6">
-            {/* Header amélioré */}
-            <div className="mb-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 bg-green-600 rounded-xl">
-                  <Smartphone className="text-white" size={24} />
+      <div className="min-h-screen bg-premium-gradient relative overflow-hidden">
+        {/* Enhanced Background Effects */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+          {/* Enhanced Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-6">
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-emerald-600/20">
+                    <Smartphone className="text-white" size={28} />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center">
+                    <Sparkles className="text-white" size={12} />
+                  </div>
                 </div>
+                
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
                     Demo Agent Builder
                   </h1>
-                  <p className="text-sm text-gray-400">
-                    Create interactive demos for your AI agents
+                  <p className="text-gray-400 text-lg">
+                    Create stunning interactive demos for your AI agents
                   </p>
                 </div>
-                
-                {/* Quick stats */}
-                {userDemos.length > 0 && (
-                  <div className="ml-auto flex items-center gap-4">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-white">{userDemos.length}</div>
-                      <div className="text-xs text-gray-400">Demos</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-white">{agents.length}</div>
-                      <div className="text-xs text-gray-400">Agents</div>
-                    </div>
-                  </div>
-                )}
               </div>
+              
+              {/* Enhanced Stats */}
+              {userDemos.length > 0 && (
+                <div className="flex items-center gap-8">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{userDemos.length}</div>
+                    <div className="text-sm text-gray-400">Active Demos</div>
+                  </div>
+                  <div className="w-px h-12 bg-gray-700" />
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-400">{agents.length}</div>
+                    <div className="text-sm text-gray-400">Available Agents</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', height: 'calc(100vh - 200px)', gap: '24px' }}>
+            {/* Preview Panel - Enhanced but keeping original structure */}
+            <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl relative overflow-hidden" style={{ flex: '1.4' }}>
+              
+              {/* Enhanced Device Frame */}
+              <div className="absolute top-4 left-4 bg-gray-800/50 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center gap-3 border border-gray-700/50">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full" />
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                  <div className="w-3 h-3 bg-green-500 rounded-full" />
+                </div>
+                <div className="w-px h-4 bg-gray-600" />
+                <Monitor size={16} className="text-gray-400" />
+                <span className="text-xs text-gray-400 font-medium">Live Preview</span>
+              </div>
+
+              {/* Enhanced Live Indicator */}
+              <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl backdrop-blur-sm">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                <span className="text-xs text-emerald-400 font-medium">Live</span>
+              </div>
+
+              {/* Preview Content - keeping original logic */}
+              {!config.agentId ? (
+                <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                  <div className="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-800 rounded-3xl flex items-center justify-center mb-8 shadow-2xl border border-gray-600/50">
+                    <MessageCircle className="w-16 h-16 text-gray-500" />
+                  </div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
+                    Select an Agent to Preview
+                  </h3>
+                  <p className="text-gray-400 max-w-md leading-relaxed">
+                    Choose an AI agent from the configuration panel to see your demo come to life with real-time interactions
+                  </p>
+                  <div className="mt-8 flex items-center gap-2 text-blue-400">
+                    <span className="text-2xl">👉</span>
+                    <span className="font-medium">Configure your demo settings</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 bg-grid opacity-5" />
+                  
+                  {/* Enhanced Watermark */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '12px',
+                    color: 'rgba(255, 255, 255, 0.08)',
+                    fontSize: '20px',
+                    fontWeight: 500,
+                    pointerEvents: 'none',
+                    zIndex: 1
+                  }}>
+                    <MessageCircle className="w-32 h-32 mb-3" />
+                    <span>Interactive Preview</span>
+                  </div>
+
+                  {/* Chat Widget Preview - keeping original */}
+                  <div
+                    className="chat-widget"
+                    style={{
+                      '--primary-color': config.primaryColor,
+                      position: 'absolute',
+                      bottom: '24px',
+                      right: '24px',
+                    } as React.CSSProperties}
+                  >
+                    <ChatButton
+                      isOpen={isOpen}
+                      onClick={toggleChat}
+                      config={config}
+                      showPopup={showPopupBubble}
+                    />
+                    <ChatWindow
+                      isOpen={isOpen}
+                      config={config}
+                      messages={messages}
+                      isTyping={isTyping}
+                      inputValue={inputValue}
+                      onInputChange={setInputValue}
+                      onSendMessage={sendMessage}
+                      onNewChat={startNewChat}
+                      onClose={toggleChat}
+                      messagesEndRef={messagesEndRef}
+                      inputRef={inputRef}
+                      animateMessages={animateMessages}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
-            <div style={{ display: 'flex', height: 'calc(100vh - 200px)', gap: '24px' }}>
-              {/* Preview Panel - Left */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl relative overflow-hidden" style={{ flex: '1.4' }}>
-                
-                {/* Device Frame */}
-                <div className="absolute top-4 left-4 bg-gray-700/50 rounded-lg p-2 flex items-center gap-2">
-                  <Monitor size={16} className="text-gray-400" />
-                  <span className="text-xs text-gray-400">Desktop Preview</span>
+            {/* Configuration Panel - Enhanced but keeping structure */}
+            <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl text-white overflow-hidden" style={{ width: '400px', display: 'flex', flexDirection: 'column' }}>
+
+              {/* Enhanced Header */}
+              <div className="p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10">
+                <div className="flex items-center gap-3 mb-2">
+                  <Settings className="text-blue-400" size={24} />
+                  <h2 className="text-xl font-bold text-white">Configuration Panel</h2>
                 </div>
-
-                {/* Preview Content */}
-                {!config.agentId ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center">
-                    <div className="w-24 h-24 bg-gray-700/50 rounded-full flex items-center justify-center mb-6">
-                      <MessageCircle className="w-12 h-12 text-gray-500" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-400 mb-3">Select an Agent</h3>
-                    <p className="text-gray-500 max-w-md">
-                      Choose an AI agent from the configuration panel to see the live preview of your demo
-                    </p>
-                    <div className="mt-6 text-sm text-gray-600">
-                      👈 Configure your demo settings on the right
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Watermark */}
-                    <div style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '12px',
-                      color: 'rgba(255, 255, 255, 0.1)',
-                      fontSize: '20px',
-                      fontWeight: 500,
-                      pointerEvents: 'none',
-                      zIndex: 1
-                    }}>
-                      <MessageCircle className="w-32 h-32 mb-3" />
-                      <span>Live Preview</span>
-                    </div>
-
-                    {/* Chat Widget Preview */}
-                    <div
-                      className="chat-widget"
-                      style={{
-                        '--primary-color': config.primaryColor,
-                        position: 'absolute',
-                        bottom: '24px',
-                        right: '24px',
-                      } as React.CSSProperties}
-                    >
-                      <ChatButton
-                        isOpen={isOpen}
-                        onClick={toggleChat}
-                        config={config}
-                        showPopup={showPopupBubble}
-                      />
-                      <ChatWindow
-                        isOpen={isOpen}
-                        config={config}
-                        messages={messages}
-                        isTyping={isTyping}
-                        inputValue={inputValue}
-                        onInputChange={setInputValue}
-                        onSendMessage={sendMessage}
-                        onNewChat={startNewChat}
-                        onClose={toggleChat}
-                        messagesEndRef={messagesEndRef}
-                        inputRef={inputRef}
-                        animateMessages={animateMessages}
-                      />
-                    </div>
-                  </>
-                )}
+                <p className="text-gray-400 text-sm">Customize your demo experience</p>
               </div>
 
-              {/* Configuration Panel - Right */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl text-white overflow-hidden" style={{ width: '400px', display: 'flex', flexDirection: 'column' }}>
+              {/* Configuration Section - keeping all original logic */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
 
-                {/* Configuration Section */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-
-                  {/* General Configuration */}
-                  <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Settings className="text-blue-400" size={20} />
-                      <h3 className="text-lg font-semibold text-blue-200">General Configuration</h3>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          Demo Name
-                        </label>
-                        <input
-                          type="text"
-                          value={config.name}
-                          onChange={(e) => updateConfig('name', e.target.value)}
-                          placeholder="Demo name"
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          Choose Build
-                        </label>
-                        <select
-                          value={config.agentId}
-                          onChange={(e) => updateConfig('agentId', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
-                        >
-                          <option value="">Select an agent...</option>
-                          {agents.map((agent) => (
-                            <option key={agent._id} value={agent._id}>
-                              {agent.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                {/* General Configuration - Enhanced styling */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Settings className="text-blue-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">General Configuration</h3>
                   </div>
 
-                  {/* Bot Avatar Section */}
-                  <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <User className="text-blue-400" size={20} />
-                      <h3 className="text-lg font-semibold text-blue-200">Bot Avatar</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        Demo Name
+                      </label>
+                      <input
+                        type="text"
+                        value={config.name}
+                        onChange={(e) => updateConfig('name', e.target.value)}
+                        placeholder="Demo name"
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      />
                     </div>
 
-                    {!config.avatar ? (
-                      <div
-                        className="border-2 border-dashed border-gray-500 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-600/30"
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          const file = e.dataTransfer.files[0];
-                          if (file && file.type.startsWith('image/')) {
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        Choose Agent
+                      </label>
+                      <select
+                        value={config.agentId}
+                        onChange={(e) => updateConfig('agentId', e.target.value)}
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm font-medium"
+                      >
+                        <option value="">Select an agent...</option>
+                        {agents.map((agent) => (
+                          <option key={agent._id} value={agent._id}>
+                            {agent.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bot Avatar Section - Enhanced */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <User className="text-purple-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">Bot Avatar</h3>
+                  </div>
+
+                  {!config.avatar ? (
+                    <div
+                      className="border-2 border-dashed border-gray-600/50 rounded-xl p-8 text-center hover:border-blue-400/50 transition-all cursor-pointer bg-gray-900/30 backdrop-blur-sm group"
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const file = e.dataTransfer.files[0];
+                        if (file && file.type.startsWith('image/')) {
+                          if (file.size <= 1024 * 1024) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                              if (e.target?.result) {
+                                updateConfig('avatar', e.target.result);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          } else {
+                            alert('⚠️ Avatar too large (max 1MB)');
+                          }
+                        } else {
+                          alert('⚠️ Please select an image (.png, .jpg, .gif)');
+                        }
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onClick={() => {
+                        const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
+                        fileInput?.click();
+                      }}
+                    >
+                      <input
+                        id="avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target?.files?.[0];
+                          if (file) {
                             if (file.size <= 1024 * 1024) {
                               const reader = new FileReader();
                               reader.onload = (e) => {
@@ -792,373 +863,347 @@ export default function DemoAgentPage() {
                             } else {
                               alert('⚠️ Avatar too large (max 1MB)');
                             }
-                          } else {
-                            alert('⚠️ Please select an image (.png, .jpg, .gif)');
                           }
                         }}
-                        onDragOver={(e) => e.preventDefault()}
-                        onClick={() => {
-                          const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
-                          fileInput?.click();
-                        }}
-                      >
-                        <input
-                          id="avatar-upload"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target?.files?.[0];
-                            if (file) {
-                              if (file.size <= 1024 * 1024) {
-                                const reader = new FileReader();
-                                reader.onload = (e) => {
-                                  if (e.target?.result) {
-                                    updateConfig('avatar', e.target.result);
-                                  }
-                                };
-                                reader.readAsDataURL(file);
-                              } else {
-                                alert('⚠️ Avatar too large (max 1MB)');
-                              }
-                            }
-                          }}
-                        />
-                        <div className="text-gray-400">
-                          <div className="mx-auto w-16 h-16 bg-gray-500 rounded-full flex items-center justify-center mb-4">
-                            <Upload className="w-8 h-8" />
-                          </div>
-                          <p className="text-sm font-medium text-gray-300">Upload Bot Avatar</p>
-                          <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF (max 1MB)</p>
+                      />
+                      <div className="text-gray-400 group-hover:text-gray-300 transition-colors">
+                        <div className="mx-auto w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mb-4 group-hover:bg-gray-600/50 transition-colors">
+                          <Upload className="w-8 h-8" />
                         </div>
+                        <p className="text-sm font-medium">Upload Bot Avatar</p>
+                        <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF (max 1MB)</p>
                       </div>
-                    ) : (
-                      <div className="relative">
-                        <div className="p-6 border border-gray-500 rounded-lg bg-gray-600/30">
-                          <div className="flex items-center justify-center">
-                            <img
-                              src={config.avatar}
-                              alt="Avatar"
-                              className="w-20 h-20 rounded-full object-cover border-2 border-gray-400"
-                            />
-                          </div>
-                          <p className="text-xs text-gray-400 text-center mt-3">
-                            ✅ Avatar uploaded successfully
-                          </p>
+                    </div>
+                  ) : (
+                    <div className="relative bg-gray-900/30 backdrop-blur-sm rounded-xl p-4 border border-gray-700/30">
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={config.avatar}
+                          alt="Avatar"
+                          className="w-16 h-16 rounded-full object-cover border-2 border-gray-600/50"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white">✅ Avatar uploaded successfully</p>
+                          <p className="text-xs text-gray-400 mt-1">Ready to use in your demo</p>
                         </div>
                         <button
                           onClick={() => updateConfig('avatar', '')}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                          className="w-8 h-8 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg flex items-center justify-center transition-colors"
                           title="Remove avatar"
                         >
                           <X size={16} />
                         </button>
                       </div>
-                    )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Chat Configuration - Enhanced */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <MessageCircle className="text-cyan-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent">Chat Configuration</h3>
                   </div>
 
-                  {/* Chat Configuration */}
-                  <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <MessageCircle className="text-blue-400" size={20} />
-                      <h3 className="text-lg font-semibold text-blue-200">Chat Configuration</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        Chat Title
+                      </label>
+                      <input
+                        type="text"
+                        value={config.chatTitle}
+                        onChange={(e) => updateConfig('chatTitle', e.target.value)}
+                        placeholder="Chat title"
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      />
                     </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          Chat Title
-                        </label>
-                        <input
-                          type="text"
-                          value={config.chatTitle}
-                          onChange={(e) => updateConfig('chatTitle', e.target.value)}
-                          placeholder="Chat title"
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        Subtitle
+                      </label>
+                      <input
+                        type="text"
+                        value={config.subtitle}
+                        onChange={(e) => updateConfig('subtitle', e.target.value)}
+                        placeholder="Subtitle"
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      />
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          Subtitle
-                        </label>
-                        <input
-                          type="text"
-                          value={config.subtitle}
-                          onChange={(e) => updateConfig('subtitle', e.target.value)}
-                          placeholder="Subtitle"
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          Placeholder Text
-                        </label>
-                        <input
-                          type="text"
-                          value={config.placeholderText}
-                          onChange={(e) => updateConfig('placeholderText', e.target.value)}
-                          placeholder="Type your message..."
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        Placeholder Text
+                      </label>
+                      <input
+                        type="text"
+                        value={config.placeholderText}
+                        onChange={(e) => updateConfig('placeholderText', e.target.value)}
+                        placeholder="Type your message..."
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      />
                     </div>
                   </div>
+                </div>
 
-                  {/* Welcome Message */}
-                  <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Bot className="text-blue-400" size={20} />
-                      <h3 className="text-lg font-semibold text-blue-200">Welcome Message</h3>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-gray-300">
-                          Show welcome message
-                        </label>
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id="showWelcome"
-                            checked={config.showWelcomeMessage}
-                            onChange={(e) => updateConfig('showWelcomeMessage', e.target.checked)}
-                            className="w-4 h-4 text-orange-600 bg-gray-800 border-gray-600 rounded focus:ring-orange-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <input
-                          type="text"
-                          value={config.welcomeMessage}
-                          onChange={(e) => updateConfig('welcomeMessage', e.target.value)}
-                          placeholder="Hello! How can I help you today?"
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                        />
-                      </div>
-                    </div>
+                {/* Welcome Message - Enhanced */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Bot className="text-emerald-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-emerald-200 to-green-200 bg-clip-text text-transparent">Welcome Message</h3>
                   </div>
 
-                  {/* Popup Configuration */}
-                  <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <MessageCircle className="text-blue-400" size={20} />
-                      <h3 className="text-lg font-semibold text-blue-200">Popup Message</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-300">
+                        Show welcome message
+                      </label>
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="showWelcome"
+                          checked={config.showWelcomeMessage}
+                          onChange={(e) => updateConfig('showWelcomeMessage', e.target.checked)}
+                          className="w-4 h-4 text-emerald-600 bg-gray-800 border-gray-600 rounded focus:ring-emerald-500"
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-gray-300">
-                          Enable popup
-                        </label>
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id="showPopup"
-                            checked={config.showPopup}
-                            onChange={(e) => updateConfig('showPopup', e.target.checked)}
-                            className="w-4 h-4 text-cyan-600 bg-gray-800 border-gray-600 rounded focus:ring-cyan-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <input
-                          type="text"
-                          value={config.popupMessage}
-                          onChange={(e) => updateConfig('popupMessage', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                          placeholder="Hello! Need any help?"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-2">
-                          Delay (seconds)
-                        </label>
-                        <input
-                          type="number"
-                          value={config.popupDelay}
-                          onChange={(e) => updateConfig('popupDelay', parseInt(e.target.value) || 2)}
-                          min="0"
-                          max="30"
-                          className="w-24 px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
-                        />
-                      </div>
+                    <div>
+                      <input
+                        type="text"
+                        value={config.welcomeMessage}
+                        onChange={(e) => updateConfig('welcomeMessage', e.target.value)}
+                        placeholder="Hello! How can I help you today?"
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      />
                     </div>
                   </div>
+                </div>
 
-                  {/* Theme & Colors */}
-                  <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Palette className="text-blue-400" size={20} />
-                      <h3 className="text-lg font-semibold text-blue-200">Theme & Colors</h3>
+                {/* Popup Configuration - Enhanced */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <MessageCircle className="text-orange-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-200 to-yellow-200 bg-clip-text text-transparent">Popup Message</h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-300">
+                        Enable popup
+                      </label>
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="showPopup"
+                          checked={config.showPopup}
+                          onChange={(e) => updateConfig('showPopup', e.target.checked)}
+                          className="w-4 h-4 text-orange-600 bg-gray-800 border-gray-600 rounded focus:ring-orange-500"
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          Theme
-                        </label>
-                        <div className="flex items-center space-x-3">
+                    <div>
+                      <input
+                        type="text"
+                        value={config.popupMessage}
+                        onChange={(e) => updateConfig('popupMessage', e.target.value)}
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                        placeholder="Hello! Need any help?"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-2">
+                        Delay (seconds)
+                      </label>
+                      <input
+                        type="number"
+                        value={config.popupDelay}
+                        onChange={(e) => updateConfig('popupDelay', parseInt(e.target.value) || 2)}
+                        min="0"
+                        max="30"
+                        className="w-24 px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm font-medium"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Theme & Colors - Enhanced */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Palette className="text-pink-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-pink-200 to-purple-200 bg-clip-text text-transparent">Theme & Colors</h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        Theme
+                      </label>
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => updateConfig('theme', 'light')}
+                          className={`flex items-center gap-2 px-4 py-3.5 rounded-xl transition-all duration-300 backdrop-blur-sm ${config.theme === 'light'
+                            ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
+                            : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
+                            }`}
+                        >
+                          <Sun className="w-4 h-4" />
+                          Light
+                        </button>
+                        <button
+                          onClick={() => updateConfig('theme', 'dark')}
+                          className={`flex items-center gap-2 px-4 py-3.5 rounded-xl transition-all duration-300 backdrop-blur-sm ${config.theme === 'dark'
+                            ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
+                            : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
+                            }`}
+                        >
+                          <Moon className="w-4 h-4" />
+                          Dark
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        Primary Color
+                      </label>
+                      <div className="grid grid-cols-4 gap-3 mb-4">
+                        {colorPresets.map((color) => (
                           <button
-                            onClick={() => updateConfig('theme', 'light')}
-                            className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-all ${config.theme === 'light'
-                              ? 'bg-indigo-600 text-white border border-indigo-400'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                            key={color}
+                            onClick={() => updateConfig('primaryColor', color)}
+                            className={`aspect-square rounded-xl border-2 transition-all duration-300 hover:scale-110 hover:shadow-lg relative overflow-hidden ${config.primaryColor === color
+                              ? 'border-white ring-2 ring-blue-500 shadow-xl'
+                              : 'border-gray-600/50 hover:border-gray-500'
                               }`}
+                            style={{ backgroundColor: color }}
                           >
-                            <Sun className="w-4 h-4" />
-                            Light
+                            {config.primaryColor === color && (
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                            )}
                           </button>
-                          <button
-                            onClick={() => updateConfig('theme', 'dark')}
-                            className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-all ${config.theme === 'dark'
-                              ? 'bg-indigo-600 text-white border border-indigo-400'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                              }`}
-                          >
-                            <Moon className="w-4 h-4" />
-                            Dark
-                          </button>
-                        </div>
+                        ))}
                       </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
-                          Primary Color
-                        </label>
-                        <div className="grid grid-cols-4 gap-3 mb-4">
-                          {colorPresets.map((color) => (
-                            <button
-                              key={color}
-                              onClick={() => updateConfig('primaryColor', color)}
-                              className={`w-12 h-10 rounded-lg border-2 transition-transform hover:scale-105 ${config.primaryColor === color
-                                ? 'border-white ring-2 ring-indigo-500'
-                                : 'border-gray-500'
-                                }`}
-                              style={{ backgroundColor: color }}
-                            />
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={config.primaryColor}
-                            onChange={(e) => updateConfig('primaryColor', e.target.value)}
-                            className="w-10 h-10 border border-gray-600 rounded-lg cursor-pointer bg-gray-800"
-                          />
-                          <input
-                            type="text"
-                            value={config.primaryColor}
-                            onChange={(e) => updateConfig('primaryColor', e.target.value)}
-                            className="flex-1 px-4 py-3 text-sm bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                            placeholder="#007bff"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Create Demo Button */}
-                  <div className="pt-4">
-                    <button
-                      onClick={() => setShowCreateModal(true)}
-                      disabled={!config.agentId}
-                      className="w-full bg-green-600 text-white py-4 px-6 rounded-lg font-medium hover:bg-green-700 disabled:bg-green-700 disabled:opacity-75 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
-                    >
-                      <Settings className="w-5 h-5" />
-                      Create Demo
-                    </button>
-                  </div>
-
-                  {/* Demo Information */}
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Info className="text-blue-400" size={20} />
-                      <h3 className="text-lg font-semibold text-blue-200">Demo Information</h3>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="bg-gray-800/30 rounded-lg p-3">
-                        <div className="text-gray-400 text-xs mb-1">Agent</div>
-                        <div className="text-white font-medium truncate">{selectedAgent?.name || 'None selected'}</div>
-                      </div>
-                      <div className="bg-gray-800/30 rounded-lg p-3">
-                        <div className="text-gray-400 text-xs mb-1">Theme</div>
-                        <div className="text-white capitalize">{config.theme}</div>
-                      </div>
-                      <div className="bg-gray-800/30 rounded-lg p-3">
-                        <div className="text-gray-400 text-xs mb-1">Color</div>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full border border-gray-600"
-                            style={{ backgroundColor: config.primaryColor }}
-                          />
-                          <span className="text-white text-xs font-mono">{config.primaryColor}</span>
-                        </div>
-                      </div>
-                      <div className="bg-gray-800/30 rounded-lg p-3">
-                        <div className="text-gray-400 text-xs mb-1">Features</div>
-                        <div className="text-white text-xs">
-                          {[config.showPopup && 'Popup', config.showWelcomeMessage && 'Welcome'].filter(Boolean).join(', ') || 'Basic'}
-                        </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={config.primaryColor}
+                          onChange={(e) => updateConfig('primaryColor', e.target.value)}
+                          className="w-12 h-10 border border-gray-700/50 rounded-xl cursor-pointer bg-gray-900/80 backdrop-blur-sm"
+                        />
+                        <input
+                          type="text"
+                          value={config.primaryColor}
+                          onChange={(e) => updateConfig('primaryColor', e.target.value)}
+                          className="flex-1 px-4 py-3 text-sm bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-pink-500/60 focus:ring-2 focus:ring-pink-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-mono"
+                          placeholder="#3B82F6"
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Your Demos Section améliorée */}
-                <div className="border-t border-gray-700 bg-gray-800/50 p-6">
+                {/* Create Demo Button - Enhanced */}
+                <div className="pt-4">
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    disabled={!config.agentId}
+                    className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center justify-center gap-3 relative overflow-hidden group"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                    <CheckCircle className="w-5 h-5 relative z-10" />
+                    <span className="relative z-10">Create Demo</span>
+                  </button>
+                </div>
+
+                {/* Demo Information - Enhanced */}
+                <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl p-5 backdrop-blur-sm">
                   <div className="flex items-center gap-3 mb-4">
-                    <Smartphone className="text-green-400" size={18} />
-                    <h3 className="text-lg font-semibold text-green-200">Your Demos</h3>
-                    {userDemos.length > 0 && (
-                      <span className="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full">
-                        {userDemos.length}
-                      </span>
-                    )}
+                    <Info className="text-blue-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">Demo Preview</h3>
                   </div>
 
-                  <div className="max-h-48 overflow-y-auto custom-scrollbar">
-                    {userDemos.length === 0 ? (
-                      <div className="text-center py-8">
-                        <div className="w-12 h-12 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <Smartphone className="w-6 h-6 text-gray-500" />
-                        </div>
-                        <p className="text-sm text-gray-400 mb-2">No demos created yet</p>
-                        <p className="text-xs text-gray-500">Create your first demo to get started</p>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700/30">
+                      <div className="text-gray-400 text-xs mb-1">Agent</div>
+                      <div className="text-white font-medium truncate">{selectedAgent?.name || 'None selected'}</div>
+                    </div>
+                    <div className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700/30">
+                      <div className="text-gray-400 text-xs mb-1">Theme</div>
+                      <div className="text-white capitalize">{config.theme}</div>
+                    </div>
+                    <div className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700/30">
+                      <div className="text-gray-400 text-xs mb-1">Color</div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full border border-gray-600"
+                          style={{ backgroundColor: config.primaryColor }}
+                        />
+                        <span className="text-white text-xs font-mono">{config.primaryColor}</span>
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {userDemos.map((demo) => (
-                          <div key={demo._id} className="bg-gray-800/50 border border-gray-600 rounded-lg p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-white font-medium truncate">{demo.name}</h4>
-                                <p className="text-xs text-gray-400 mt-1">Interactive demo widget</p>
-                              </div>
-                              
-                              <DemoActions
-                                demo={demo}
-                                onView={() => openInfoModal(demo._id)}
-                                onDelete={() => openDeleteDemoModal(demo._id, demo.name)}
-                              />
-                            </div>
-                          </div>
-                        ))}
+                    </div>
+                    <div className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700/30">
+                      <div className="text-gray-400 text-xs mb-1">Features</div>
+                      <div className="text-white text-xs">
+                        {[config.showPopup && 'Popup', config.showWelcomeMessage && 'Welcome'].filter(Boolean).join(', ') || 'Basic'}
                       </div>
-                    )}
+                    </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Your Demos Section - Enhanced but keeping original structure */}
+              <div className="border-t border-gray-700/50 bg-gray-800/30 backdrop-blur-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Smartphone className="text-emerald-400" size={18} />
+                  <h3 className="text-lg font-semibold bg-gradient-to-r from-emerald-200 to-green-200 bg-clip-text text-transparent">Your Demos</h3>
+                  {userDemos.length > 0 && (
+                    <span className="bg-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full font-medium border border-emerald-500/30">
+                      {userDemos.length}
+                    </span>
+                  )}
+                </div>
+
+                <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                  {userDemos.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="w-12 h-12 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-3 border border-gray-600/50">
+                        <Smartphone className="w-6 h-6 text-gray-500" />
+                      </div>
+                      <p className="text-sm text-gray-400 mb-2">No demos created yet</p>
+                      <p className="text-xs text-gray-500">Create your first demo to get started</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {userDemos.map((demo) => (
+                        <div key={demo._id} className="bg-gray-800/50 backdrop-blur-sm border border-gray-600/50 rounded-xl p-4 hover:bg-gray-700/50 transition-all duration-300 group">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-white font-medium truncate group-hover:text-blue-300 transition-colors">{demo.name}</h4>
+                              <p className="text-xs text-gray-400 mt-1">Interactive demo widget</p>
+                            </div>
+                            
+                            <DemoActions
+                              demo={demo}
+                              onView={() => openInfoModal(demo._id)}
+                              onDelete={() => openDeleteDemoModal(demo._id, demo.name)}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Modals */}
+        {/* Modals - keeping all original functionality */}
         <CreateDemoModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
@@ -1198,7 +1243,7 @@ export default function DemoAgentPage() {
           isDeleting={isDeletingDemo}
         />
 
-        {/* Custom Styles */}
+        {/* Enhanced Custom Styles */}
         <style jsx>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
@@ -1207,11 +1252,19 @@ export default function DemoAgentPage() {
             background: transparent;
           }
           .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #6b7280;
-            border-radius: 3px;
+            background: linear-gradient(to bottom, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6));
+            border-radius: 16px;
+            border: 1px solid rgba(75, 85, 99, 0.3);
           }
           .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
+            background: linear-gradient(to bottom, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8));
+          }
+          
+          .bg-grid {
+            background-image: 
+              linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
           }
         `}</style>
       </div>

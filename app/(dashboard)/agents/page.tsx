@@ -780,6 +780,88 @@ export default function AgentsPage() {
           onDelete={handleDeleteFolderAction}
         />
 
+        {/* Page Title Section */}
+        {!loading && (
+          <FadeInSection>
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Bot className="w-8 h-8 text-blue-400" />
+                </div>
+                <div className="text-left">
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+                    AI Agent Hub
+                  </h1>
+                  <p className="text-gray-400 text-lg mt-1">
+                    Manage your intelligent AI agents
+                  </p>
+                </div>
+              </div>
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* Enhanced Analytics Overview - PREMIUM STATS CARDS */}
+        {!loading && (agents.length > 0 || folders.length > 0) && (
+          <FadeInSection>
+            <div className="mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* 1. Total Agents */}
+                <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/30 transition-all duration-300">
+                      <Bot className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-gray-400 text-sm font-medium">Total Agents</span>
+                  </div>
+                  <div className="text-3xl font-bold text-white mb-1">{agents.length}</div>
+                  <div className="text-xs text-gray-500">AI assistants created</div>
+                </div>
+
+                {/* 2. Active Agents */}
+                <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20 group-hover:shadow-green-500/30 transition-all duration-300">
+                      <Zap className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-gray-400 text-sm font-medium">Active Agents</span>
+                  </div>
+                  <div className="text-3xl font-bold text-white mb-1">
+                    {agents.filter(agent => agent.integrations && agent.integrations.length > 0).length}
+                  </div>
+                  <div className="text-xs text-gray-500">With integrations</div>
+                </div>
+
+                {/* 3. Total Integrations */}
+                <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/30 transition-all duration-300">
+                      <Activity className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-gray-400 text-sm font-medium">Integrations</span>
+                  </div>
+                  <div className="text-3xl font-bold text-white mb-1">
+                    {agents.reduce((acc, agent) => acc + (agent.integrations?.length || 0), 0)}
+                  </div>
+                  <div className="text-xs text-gray-500">Connected services</div>
+                </div>
+
+                {/* 4. Total Folders */}
+                <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/30 transition-all duration-300">
+                      <FolderPlus className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-gray-400 text-sm font-medium">Folders</span>
+                  </div>
+                  <div className="text-3xl font-bold text-white mb-1">{folders.length}</div>
+                  <div className="text-xs text-gray-500">Organization units</div>
+                </div>
+              </div>
+            </div>
+          </FadeInSection>
+        )}
+
         {/* Enhanced Search and Filter Bar */}
         {!loading && (agents.length > 0 || folders.length > 0) && (
           <FadeInSection>
@@ -1076,89 +1158,37 @@ export default function AgentsPage() {
           </FadeInSection>
         )}
 
-        {/* Enhanced Analytics Overview - ORDRE OPTIMISÉ */}
+        {/* Quick Actions Bar */}
         {!loading && (agents.length > 0 || folders.length > 0) && (
           <FadeInSection>
-            <div className="mt-16 space-y-8">
-              <div className="text-center">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-3">
-                  Analytics Overview
-                </h2>
-                <p className="text-gray-400 text-lg">Monitor your AI workspace performance</p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* 1. Total Agents - PRINCIPAL */}
-                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 backdrop-blur-sm border border-blue-500/30 rounded-2xl p-8 text-center group hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 hover:scale-105">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600/20 border-2 border-blue-500/40 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/20">
-                    <Bot className="text-blue-400" size={24} />
-                  </div>
-                  <div className="text-4xl font-bold text-white mb-2">{agents.length}</div>
-                  <div className="text-blue-200 font-semibold mb-1">Total Agents</div>
-                  <div className="text-xs text-blue-300/70">AI assistants created</div>
+            <div className="mt-16 bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-1">Quick Actions</h3>
+                  <p className="text-gray-400 text-sm">Streamline your workflow</p>
                 </div>
-
-                {/* 2. Active Agents - PERFORMANCE */}
-                <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 backdrop-blur-sm border border-emerald-500/30 rounded-2xl p-8 text-center group hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-300 hover:scale-105">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-600/20 border-2 border-emerald-500/40 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-emerald-500/20">
-                    <Zap className="text-emerald-400" size={24} />
-                  </div>
-                  <div className="text-4xl font-bold text-white mb-2">{agents.filter(agent => agent.integrations && agent.integrations.length > 0).length}</div>
-                  <div className="text-emerald-200 font-semibold mb-1">Active Agents</div>
-                  <div className="text-xs text-emerald-300/70">With integrations</div>
-                </div>
-
-                {/* 3. Total Integrations - PRODUCTIVITÉ */}
-                <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 backdrop-blur-sm border border-purple-500/30 rounded-2xl p-8 text-center group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 hover:scale-105">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple-600/20 border-2 border-purple-500/40 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-purple-500/20">
-                    <Activity className="text-purple-400" size={24} />
-                  </div>
-                  <div className="text-4xl font-bold text-white mb-2">{agents.reduce((acc, agent) => acc + (agent.integrations?.length || 0), 0)}</div>
-                  <div className="text-purple-200 font-semibold mb-1">Total Integrations</div>
-                  <div className="text-xs text-purple-300/70">Connected services</div>
-                </div>
-
-                {/* 4. Total Folders - ORGANISATION */}
-                <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/10 backdrop-blur-sm border border-cyan-500/30 rounded-2xl p-8 text-center group hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-300 hover:scale-105">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-600/20 border-2 border-cyan-500/40 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-cyan-500/20">
-                    <FolderPlus className="text-cyan-400" size={24} />
-                  </div>
-                  <div className="text-4xl font-bold text-white mb-2">{folders.length}</div>
-                  <div className="text-cyan-200 font-semibold mb-1">Total Folders</div>
-                  <div className="text-xs text-cyan-300/70">Organization units</div>
-                </div>
-              </div>
-
-              {/* Quick Actions Bar */}
-              <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-bold text-white mb-1">Quick Actions</h3>
-                    <p className="text-gray-400 text-sm">Streamline your workflow</p>
-                  </div>
-                  <div className="flex gap-3 flex-wrap">
-                    <Link
-                      href="/agents/new"
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      <Plus size={16} />
-                      New Agent
-                    </Link>
-                    <button
-                      onClick={() => setShowCreateFolderModal(true)}
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      <FolderPlus size={16} />
-                      New Folder
-                    </button>
-                    <Link
-                      href="/agent-lab"
-                      className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 text-sm transform hover:scale-105"
-                    >
-                      <Settings size={16} />
-                      Agent Lab
-                    </Link>
-                  </div>
+                <div className="flex gap-3 flex-wrap">
+                  <Link
+                    href="/agents/new"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <Plus size={16} />
+                    New Agent
+                  </Link>
+                  <button
+                    onClick={() => setShowCreateFolderModal(true)}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <FolderPlus size={16} />
+                    New Folder
+                  </button>
+                  <Link
+                    href="/agent-lab"
+                    className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 text-sm transform hover:scale-105"
+                  >
+                    <Settings size={16} />
+                    Agent Lab
+                  </Link>
                 </div>
               </div>
             </div>
