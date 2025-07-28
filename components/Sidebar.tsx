@@ -212,22 +212,24 @@ export default function Sidebar() {
       {/* Enhanced Sidebar - Mobile Optimized */}
       <aside className={`fixed top-0 bottom-0 left-0 bg-gray-900/95 backdrop-blur-xl text-white z-50 transition-[width] duration-300 ease-out border-r border-gray-700/50 ${collapsed ? 'w-16' : 'w-72'} flex flex-col shadow-2xl`}>
         
-        {/* Enhanced Header with Premium Logo */}
+{/* Enhanced Header with Premium Logo */}
         <div className="h-16 flex items-center px-4 border-b border-gray-700/50 flex-shrink-0 bg-gray-900/50 backdrop-blur-sm">
           <div className="flex items-center min-w-0 w-full">
-            {/* Enhanced Premium Logo - Bot + Gradient */}
-            <div className="shrink-0 relative" style={{ marginLeft: '-4px' }}>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-105">
-                <Bot className="w-6 h-6 text-white" />
+            {/* Enhanced Premium Logo - Bot + Gradient avec Link vers /agents */}
+            <Link href="/agents" className="shrink-0 relative group" style={{ marginLeft: '-4px' }}>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-blue-500/25">
+                <Bot className="w-6 h-6 text-white transition-transform duration-300 group-hover:scale-110" />
               </div>
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-gray-900 shadow-emerald-400/50 shadow-md animate-pulse"></div>
-            </div>
+            </Link>
             
-            {/* Enhanced Brand Text */}
+            {/* Enhanced Brand Text avec Link vers /agents */}
             <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-              <span className="text-xl font-bold whitespace-nowrap bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-                TestYour<span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">AI</span> Now
-              </span>
+              <Link href="/agents" className="group">
+                <span className="text-xl font-bold whitespace-nowrap bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent transition-all duration-300 group-hover:from-blue-400 group-hover:to-cyan-400">
+                  TestYour<span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">AI</span> Now
+                </span>
+              </Link>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Calendar, X, TestTube, Wand2, Save, Key } from "lucide-react";
+import { Calendar, X, TestTube, Wand2, Save, Key, Shield, CheckCircle, Zap, Settings } from "lucide-react";
 import { AgentIntegration } from "@/types/integrations";
 
 interface CalendlyIntegrationModalProps {
@@ -18,7 +18,7 @@ export default function CalendlyIntegrationModal({
   agentId,
   initialData,
 }: CalendlyIntegrationModalProps) {
-  // ✅ Type narrowing spécifique à Calendly uniquement
+  // Type narrowing spécifique à Calendly uniquement
   const [name, setName] = useState(initialData?.name || "");
   const [description, setDescription] = useState(
     initialData?.type === "calendly" ? initialData.description || "" : ""
@@ -122,7 +122,6 @@ export default function CalendlyIntegrationModal({
         return;
       }
 
-      // ✅ Maintenant ce type est correctement défini
       onSave({ 
         type: "calendly", 
         name, 
@@ -205,7 +204,6 @@ export default function CalendlyIntegrationModal({
       }
 
       onClose();
-      // ✅ Ce type fonctionne aussi maintenant
       onSave({ 
         type: "calendly", 
         name, 
@@ -221,92 +219,109 @@ export default function CalendlyIntegrationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/70" 
-        onClick={onClose}
-      />
-      
-      {/* Modal Content */}
-      <div 
-        className="relative z-10 bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl w-full max-w-2xl text-white overflow-hidden max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {/* Modal Container */}
+      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto custom-scrollbar">
+        
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700 bg-gray-800/50">
-          <div className="flex items-center gap-3">
-            <Calendar className="text-green-400" size={24} />
-            <h2 className="text-2xl font-bold text-white">
-              Calendly Integration
-            </h2>
+        <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border-2 border-emerald-500/40 flex items-center justify-center shadow-lg backdrop-blur-sm">
+              <Calendar className="text-emerald-400" size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                Calendly Integration
+              </h2>
+              <p className="text-sm text-gray-400 mt-0.5">Connect your agent with Calendly for smart scheduling</p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700 rounded-lg"
+            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200 group"
           >
-            <X size={20} />
+            <X size={20} className="relative z-10" />
           </button>
         </div>
 
         <div className="p-6 space-y-6">
           {/* Basic Information Section */}
-          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+          <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-center gap-3 mb-4">
-              <Calendar className="text-green-400" size={20} />
-              <h3 className="text-lg font-semibold text-green-200">Integration Details</h3>
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shadow-lg">
+                <Settings className="text-emerald-400" size={18} />
+              </div>
+              <h3 className="text-lg font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Integration Details</h3>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Integration Name *</label>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">Integration Name *</label>
                 <input
-                  className="w-full px-4 py-3 border-2 border-gray-500 bg-gray-600 text-white rounded-lg outline-none focus:border-green-500 transition-colors duration-150 placeholder-gray-400"
+                  className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                   placeholder="Enter integration name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
-                {nameError && <p className="text-red-400 text-sm mt-1">{nameError}</p>}
+                {nameError && <p className="text-red-400 text-sm mt-1 font-medium">{nameError}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">Description *</label>
                 <textarea
-                  className="w-full px-4 py-3 border-2 border-gray-500 bg-gray-600 text-white rounded-lg outline-none focus:border-green-500 transition-colors duration-150 placeholder-gray-400 resize-none"
+                  className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm resize-none"
                   placeholder="Describe how this Calendly integration will be used"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                 />
-                {descError && <p className="text-red-400 text-sm mt-1">{descError}</p>}
+                {descError && <p className="text-red-400 text-sm mt-1 font-medium">{descError}</p>}
               </div>
             </div>
           </div>
 
           {/* API Configuration Section */}
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+          <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-center gap-3 mb-4">
-              <Key className="text-blue-400" size={20} />
-              <h3 className="text-lg font-semibold text-blue-200">API Configuration</h3>
+              <div className="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center shadow-lg">
+                <Key className="text-blue-400" size={18} />
+              </div>
+              <h3 className="text-lg font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">API Configuration</h3>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Calendly API Key *</label>
-              <input
-                type="password"
-                className="w-full px-4 py-3 border-2 border-gray-500 bg-gray-600 text-white rounded-lg outline-none focus:border-blue-500 transition-colors duration-150 placeholder-gray-400"
-                placeholder="Enter your Calendly Personal Access Token"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-              {apiKeyError && <p className="text-red-400 text-sm mt-1">{apiKeyError}</p>}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">Calendly API Key *</label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
+                  placeholder="Enter your Calendly Personal Access Token"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                />
+                {apiKeyError && <p className="text-red-400 text-sm mt-1 font-medium">{apiKeyError}</p>}
+              </div>
               
-              <div className="mt-3 p-3 bg-blue-900/20 rounded-lg border border-blue-500/30">
-                <p className="text-blue-200 text-sm font-medium mb-1">How to get your API Key:</p>
-                <ol className="text-blue-100/80 text-xs space-y-1 pl-4">
-                  <li>1. Go to Calendly Developer Settings</li>
-                  <li>2. Generate a Personal Access Token</li>
-                  <li>3. Copy and paste it above</li>
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-6 h-6 rounded-lg bg-blue-500/20 border border-blue-500/40 flex items-center justify-center">
+                    <Shield className="text-blue-400" size={14} />
+                  </div>
+                  <span className="text-blue-200 text-sm font-semibold">How to get your API Key:</span>
+                </div>
+                <ol className="text-blue-100/80 text-xs space-y-2 pl-4 leading-relaxed">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-400 font-bold">1.</span>
+                    <span>Go to Calendly Developer Settings in your account</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-400 font-bold">2.</span>
+                    <span>Generate a Personal Access Token with required permissions</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-400 font-bold">3.</span>
+                    <span>Copy and paste the token in the field above</span>
+                  </li>
                 </ol>
               </div>
             </div>
@@ -314,72 +329,91 @@ export default function CalendlyIntegrationModal({
 
           {/* Error Display */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-              <p className="text-red-300 text-sm">{error}</p>
+            <div className="bg-gradient-to-r from-red-500/10 to-red-600/10 border border-red-500/30 rounded-xl p-4 backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center">
+                  <X size={12} className="text-red-400" />
+                </div>
+                <p className="text-red-300 text-sm font-medium">{error}</p>
+              </div>
             </div>
           )}
 
           {/* Test Success Display */}
           {testPassed && (
-            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-              <p className="text-green-300 text-sm">✅ API Key validated successfully!</p>
+            <div className="bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-500/30 rounded-xl p-4 backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+                  <CheckCircle size={12} className="text-emerald-400" />
+                </div>
+                <p className="text-emerald-300 text-sm font-medium">✅ API Key validated successfully!</p>
+              </div>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-gray-700">
+          <div className="flex gap-3 pt-6 border-t border-gray-700/50">
             <button
               onClick={handleTestApiKey}
               disabled={isTestingKey}
-              className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-700 disabled:opacity-75 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-medium"
+              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-600 disabled:opacity-75 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105 relative overflow-hidden group"
             >
-              {isTestingKey ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Testing...
-                </>
-              ) : (
-                <>
-                  <TestTube size={16} />
-                  Test API Key
-                </>
-              )}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {isTestingKey ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Testing...
+                  </>
+                ) : (
+                  <>
+                    <TestTube size={16} />
+                    Test API Key
+                  </>
+                )}
+              </span>
             </button>
 
             <button
               onClick={handleAddInstructions}
               disabled={!testPassed || !hasBeenSaved || isAddingInstructions}
-              className="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-medium"
+              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 transform hover:scale-105 relative overflow-hidden group"
             >
-              {isAddingInstructions ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                <>
-                  <Wand2 size={16} />
-                  Add Instructions
-                </>
-              )}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {isAddingInstructions ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 size={16} />
+                    Add Instructions
+                  </>
+                )}
+              </span>
             </button>
 
             <button
               onClick={handleSave}
               disabled={!testPassed || isSaving}
-              className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-medium"
+              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden group"
             >
-              {isSaving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save size={16} />
-                  Save Integration
-                </>
-              )}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} />
+                    Save Integration
+                  </>
+                )}
+              </span>
             </button>
           </div>
         </div>

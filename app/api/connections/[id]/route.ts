@@ -1,5 +1,6 @@
 import { connectToDatabase } from '@/lib/db'
 import { Connection } from '@/models/Connection'
+import { Agent } from '@/models/Agent' // 🆕 AJOUTÉ
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/authOptions'
@@ -19,13 +20,26 @@ export async function GET(
   const connection = await Connection.findOne({
     _id: params.id,
     userId: session.user.id,
-  }).lean()
+  }) // 🔧 ENLEVÉ .lean() pour éviter les problèmes de type
 
   if (!connection) {
     return NextResponse.json({ error: 'Connection not found' }, { status: 404 })
   }
 
-  return NextResponse.json({ connection })
+  // 🆕 AJOUTÉ - Récupérer le nom de l'agent
+  let aiName = null;
+  if (connection?.aiBuildId) {
+    const agent = await Agent.findById(connection.aiBuildId);
+    aiName = agent?.name || null;
+  }
+
+  // 🆕 MODIFIÉ - Ajouter aiName à la réponse
+  return NextResponse.json({ 
+    connection: {
+      ...connection.toObject(), // 🔧 CHANGÉ de ...connection à ...connection.toObject()
+      aiName // 🆕 AJOUTÉ
+    }
+  })
 }
 
 export async function PUT(req: NextRequest, context: any) {
@@ -59,7 +73,7 @@ export async function PUT(req: NextRequest, context: any) {
   return NextResponse.json({ success: true, connection })
 }
 
-// 🔥 NOUVELLE MÉTHODE DELETE
+// 🔥 NOUVELLE MÉTHODE DELETE - RIEN CHANGÉ
 export async function DELETE(
   req: NextRequest,
   context: any

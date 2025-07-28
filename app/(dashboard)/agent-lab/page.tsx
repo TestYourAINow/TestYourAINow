@@ -477,13 +477,8 @@ export default function AgentLab() {
 
   return (
     <RequireApiKey>
-      <div className="min-h-screen bg-premium-gradient">
-        {/* Enhanced Background Effects */}
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-grid opacity-[0.02]" />
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+
 
         <div className="relative z-10 min-h-screen py-8">
           <div className="max-w-7xl mx-auto px-6">

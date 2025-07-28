@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Toaster } from "sonner";
 import Sidebar from "@/components/Sidebar";
 import { useSidebar } from "@/context/SidebarContext";
@@ -9,6 +9,11 @@ import { usePathname } from 'next/navigation';
 export default function ClientLayout({ children }: { children: ReactNode }) {
   const { collapsed } = useSidebar();
   const pathname = usePathname();
+
+  // 🎯 NOUVEAU - Scroll to top à chaque changement de page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   // Fonction pour obtenir le titre de la page
   const getPageTitle = () => {
