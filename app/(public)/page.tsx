@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Zap, Wrench, Handshake, FlaskConical, Rocket, CheckCircle, Sparkles } from 'lucide-react';
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -14,6 +14,38 @@ export default function Home() {
   // State pour la section pricing
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // ✨ EFFET DE SCROLL FADE - SIMPLE ET FLUIDE
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const fadeStart = windowHeight * 0.5; // Commence à fade à 50% du hero
+      const fadeEnd = windowHeight * 1.2; // Fini de fade après le hero
+      
+      let fadeValue = 0;
+      
+      if (scrollY >= fadeStart && scrollY <= fadeEnd) {
+        // Calcul du fade progressif
+        fadeValue = (scrollY - fadeStart) / (fadeEnd - fadeStart);
+        fadeValue = Math.min(fadeValue, 1); // Max 1
+      } else if (scrollY > fadeEnd) {
+        fadeValue = 1; // Complètement fadé
+      }
+      // Si scrollY < fadeStart, fadeValue reste 0 (pas de fade)
+      
+      // Applique l'effet sur le main
+      const main = document.querySelector('main');
+      if (main) {
+        main.style.setProperty('--fade-opacity', fadeValue.toString());
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Init
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Handler pour subscription
   const handleSubscribe = async () => {
@@ -92,10 +124,26 @@ export default function Home() {
     : "#";
 
   return (
-    <main className="bg-premium-gradient bg-grid text-white scroll-smooth relative overflow-hidden">
-      {/* Premium Background with Animated Orbs - Same as Account Settings */}
+    <main 
+      className="bg-premium-gradient bg-grid text-white scroll-smooth relative overflow-hidden"
+      style={{
+        background: `
+          linear-gradient(
+            to bottom,
+            rgba(15, 23, 42, calc(var(--fade-opacity, 0) * 0.9)),
+            rgba(17, 24, 39, calc(var(--fade-opacity, 0) * 0.95)),
+            rgba(15, 23, 42, calc(var(--fade-opacity, 0) * 0.9))
+          ),
+          radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+          radial-gradient(circle at 40% 70%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+          linear-gradient(135deg, #0a0a0b 0%, #111827 25%, #1f2937 50%, #111827 75%, #0a0a0b 100%)
+        `,
+        backgroundSize: '100% 100%, 800px 800px, 600px 600px, 400px 400px, 100% 100%'
+      }}
+    >
+      {/* Premium Background with Animated Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Enhanced Background Effects - Same as Account Settings */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
         <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
@@ -104,7 +152,16 @@ export default function Home() {
       </div>
 
       {/* HERO SECTION */}
-      <section className="relative text-white min-h-screen flex flex-col items-center justify-center px-6 sm:px-12 lg:px-20 pt-20">
+      <section 
+        className="relative text-white min-h-screen flex flex-col items-center justify-center px-6 sm:px-12 lg:px-20 pt-20"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
+        }}
+      >
         <div className="text-center max-w-5xl mx-auto">
           {/* Premium Badge */}
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-full px-6 py-3 mb-8 backdrop-blur-xl">
@@ -178,7 +235,17 @@ export default function Home() {
       </section>
 
       {/* AI PROMPT BUILDER SECTION */}
-      <section id="features" className="relative text-white py-32 px-6 sm:px-12 lg:px-20">
+      <section 
+        id="features" 
+        className="relative text-white py-32 px-6 sm:px-12 lg:px-20"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
+        }}
+      >
         <div className="max-w-6xl mx-auto text-center">
           {/* Section Badge */}
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 rounded-full px-6 py-3 mb-8 backdrop-blur-xl">
@@ -219,7 +286,16 @@ export default function Home() {
       </section>
 
       {/* FEATURE BLOCKS SECTION */}
-      <section className="relative text-white py-32 px-6 sm:px-12 lg:px-20">
+      <section 
+        className="relative text-white py-32 px-6 sm:px-12 lg:px-20"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
+        }}
+      >
         <div className="max-w-7xl mx-auto space-y-40">
           {mainFeatures.map((feature, index) => (
             <div
@@ -278,7 +354,16 @@ export default function Home() {
       </section>
 
       {/* PRICING SECTION */}
-      <section className="relative text-white py-32 px-6 sm:px-12 lg:px-20">
+      <section 
+        className="relative text-white py-32 px-6 sm:px-12 lg:px-20"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
+        }}
+      >
         <div className="max-w-5xl mx-auto text-center">
           {/* Section Badge */}
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600/20 to-green-600/20 border border-emerald-500/30 rounded-full px-6 py-3 mb-8 backdrop-blur-xl">
@@ -388,7 +473,16 @@ export default function Home() {
       </section>
 
       {/* FINAL CTA SECTION */}
-      <section className="relative text-white py-32 px-6 sm:px-12 lg:px-20 text-center">
+      <section 
+        className="relative text-white py-32 px-6 sm:px-12 lg:px-20 text-center"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
+        }}
+      >
         <div className="max-w-4xl mx-auto">
           {/* Section Badge */}
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-full px-6 py-3 mb-8 backdrop-blur-xl">

@@ -4,7 +4,7 @@ import { Agent } from "@/models/Agent";
 import { AgentKnowledge } from "@/models/AgentKnowledge";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { createUserOpenAI } from "@/lib/openai";
+import { createAgentOpenAI } from "@/lib/openai";
 
 type IntegrationFile = { name: string; size: number; path: string; url: string };
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
@@ -21,12 +21,6 @@ export async function POST(req: NextRequest, context: any) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { openai, error } = await createUserOpenAI();
-    
-    if (!openai) {
-      return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
-    }
-
     const { id } = params;
     const body = await req.json();
     const userMessage: string = body.message;
@@ -37,11 +31,18 @@ export async function POST(req: NextRequest, context: any) {
       return NextResponse.json({ error: "Message is required." }, { status: 400 });
     }
 
-    // 1. Récupérer l'agent
+    // 1. Récupérer l'agent AVANT de créer OpenAI
     const agent = await Agent.findOne({ _id: id, userId: session.user.id });
     if (!agent) return NextResponse.json({ error: "Agent not found." }, { status: 404 });
 
-    // 2. Connaissances internes (fichiers) - LIMITE INTELLIGENTE
+    // 2. MAINTENANT on peut créer OpenAI avec l'agent
+    const { openai, error } = await createAgentOpenAI(agent);
+    
+    if (!openai) {
+      return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
+    }
+
+    // 3. Connaissances internes (fichiers) - LIMITE INTELLIGENTE
     const knowledge = await AgentKnowledge.find({ agentId: id }).sort({ createdAt: -1 });
     
     const MAX_CONTENT_PER_FILE = 15000; // 15k caractères par fichier
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest, context: any) {
     
     console.log(`📊 Knowledge summary: ${totalUsedChars} chars used, ${knowledge.length} files processed`);
 
-    // 3. Intégrations
+    // 4. Intégrations
     const integrationsText = (agent.integrations || [])
       .map((i: any) => {
         if (i.type === "webhook") {
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest, context: any) {
       .filter(Boolean)
       .join("\n\n");
 
-    // 4. Construction du message avec mémoire
+    // 5. Construction du message avec mémoire
     const messages: ChatMessage[] = [
       { role: "system", content: agent.finalPrompt || "" },
       { role: "system", content: `Voici ce que tu dois savoir :\n${knowledgeText}` },
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest, context: any) {
     messages.push(...previousMessages);
     messages.push({ role: "user", content: userMessage });
 
-    // 5. Appel OpenAI
+    // 6. Appel OpenAI
     const completion = await openai.chat.completions.create({
       model: agent.openaiModel,
       temperature: agent.temperature,

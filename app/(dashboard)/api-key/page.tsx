@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { 
-  Key, Shield, ExternalLink, CheckCircle, AlertTriangle, 
+import {
+  Key, Shield, ExternalLink, CheckCircle, AlertTriangle,
   Plus, Trash2, Star, Copy, RefreshCw, Settings, Zap, Lock,
-  Activity, Globe, Crown, Sparkles
+  Activity, Globe, Crown, Sparkles, Info, Bot
 } from "lucide-react";
 
 interface ApiKey {
@@ -23,7 +23,7 @@ export default function ApiKeyPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
-  
+
   // Form state
   const [newKeyName, setNewKeyName] = useState("");
   const [newApiKey, setNewApiKey] = useState("");
@@ -37,7 +37,7 @@ export default function ApiKeyPage() {
     try {
       const response = await fetch("/api/user/api-key");
       const data = await response.json();
-      
+
       if (response.ok) {
         setApiKeys(data.apiKeys || []);
       }
@@ -58,9 +58,9 @@ export default function ApiKeyPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          name: newKeyName, 
-          apiKey: newApiKey 
+        body: JSON.stringify({
+          name: newKeyName,
+          apiKey: newApiKey
         }),
       });
 
@@ -138,7 +138,7 @@ export default function ApiKeyPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
 
-        
+
         <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-8 text-center relative z-10 max-w-md mx-4">
           <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
             <Shield className="text-white" size={28} />
@@ -169,7 +169,7 @@ export default function ApiKeyPage() {
                   <Lock className="text-white" size={12} />
                 </div>
               </div>
-              
+
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
                   API Key Management
@@ -179,7 +179,7 @@ export default function ApiKeyPage() {
                 </p>
               </div>
             </div>
-            
+
             {/* Enhanced Stats Badge */}
             <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-xl backdrop-blur-sm">
               <Activity className="text-blue-400" size={16} />
@@ -189,10 +189,10 @@ export default function ApiKeyPage() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          
+
           {/* Main Panel */}
           <div className="xl:col-span-2 space-y-6">
-            
+
             {/* Current API Keys - Enhanced */}
             <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
               <div className="flex items-center justify-between mb-6">
@@ -200,7 +200,7 @@ export default function ApiKeyPage() {
                   <Settings className="text-blue-400" size={20} />
                   <h2 className="text-xl font-bold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">Your API Keys</h2>
                 </div>
-                
+
                 <button
                   onClick={() => setShowAddForm(true)}
                   className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
@@ -232,20 +232,18 @@ export default function ApiKeyPage() {
                   apiKeys.map((apiKey) => (
                     <div
                       key={apiKey.id}
-                      className={`p-5 rounded-xl border-2 transition-all duration-300 backdrop-blur-sm hover:transform hover:scale-105 ${
-                        apiKey.isDefault
+                      className={`p-5 rounded-xl border-2 transition-all duration-300 backdrop-blur-sm hover:transform hover:scale-105 ${apiKey.isDefault
                           ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30 shadow-lg shadow-blue-500/10'
                           : 'bg-gray-800/50 border-gray-700/50 hover:border-gray-600/50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-2">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                              apiKey.isDefault 
-                                ? 'bg-gradient-to-br from-blue-600 to-cyan-600 shadow-lg shadow-blue-500/20' 
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${apiKey.isDefault
+                                ? 'bg-gradient-to-br from-blue-600 to-cyan-600 shadow-lg shadow-blue-500/20'
                                 : 'bg-gray-700/50'
-                            }`}>
+                              }`}>
                               <Key className={apiKey.isDefault ? "text-white" : "text-gray-400"} size={18} />
                             </div>
                             {apiKey.isDefault && (
@@ -270,7 +268,7 @@ export default function ApiKeyPage() {
                             </p>
                           </div>
                         </div>
-                        
+
                         {/* Enhanced Action Buttons */}
                         <div className="flex items-center gap-2">
                           <button
@@ -280,7 +278,7 @@ export default function ApiKeyPage() {
                           >
                             <Copy size={16} />
                           </button>
-                          
+
                           {!apiKey.isDefault && (
                             <button
                               onClick={() => handleSetDefault(apiKey.id)}
@@ -290,7 +288,7 @@ export default function ApiKeyPage() {
                               <Star size={16} />
                             </button>
                           )}
-                          
+
                           {apiKeys.length > 1 && (
                             <button
                               onClick={() => handleDeleteApiKey(apiKey.id)}
@@ -330,7 +328,7 @@ export default function ApiKeyPage() {
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-3">
                       OpenAI API Key
@@ -346,9 +344,9 @@ export default function ApiKeyPage() {
                     <p className="text-xs text-gray-400 mt-3 flex items-center gap-2">
                       <Globe size={12} />
                       Get your API key from{" "}
-                      <a 
-                        href="https://platform.openai.com/api-keys" 
-                        target="_blank" 
+                      <a
+                        href="https://platform.openai.com/api-keys"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1 font-medium"
                       >
@@ -377,7 +375,7 @@ export default function ApiKeyPage() {
                         </>
                       )}
                     </button>
-                    
+
                     <button
                       type="button"
                       onClick={() => {
@@ -404,7 +402,7 @@ export default function ApiKeyPage() {
                 </div>
               </div>
             )}
-            
+
             {error && (
               <div className="p-4 bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-xl backdrop-blur-sm">
                 <div className="flex items-center gap-3 text-red-400">
@@ -417,14 +415,14 @@ export default function ApiKeyPage() {
 
           {/* Enhanced Sidebar */}
           <div className="space-y-6">
-            
+
             {/* Enhanced Security Info */}
             <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Shield className="text-emerald-400" size={20} />
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-emerald-200 to-green-200 bg-clip-text text-transparent">Security</h3>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-start gap-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                   <CheckCircle size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
@@ -441,76 +439,58 @@ export default function ApiKeyPage() {
               </div>
             </div>
 
-            {/* Enhanced Usage Info */}
+            {/* NEW: How API Keys Work Explanation */}
             <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <Zap className="text-cyan-400" size={20} />
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent">Usage</h3>
+                <Info className="text-amber-400" size={20} />
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-amber-200 to-yellow-200 bg-clip-text text-transparent">
+                  How API Keys Work
+                </h3>
               </div>
-              
+
               <div className="space-y-4">
-                <p className="text-gray-300 font-medium">Your API keys enable:</p>
+                <p className="text-gray-300 text-sm mb-4">Different keys are used for different purposes:</p>
+
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0" />
-                    <span className="text-cyan-200 text-sm font-medium">AI agent conversations</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0" />
-                    <span className="text-cyan-200 text-sm font-medium">Prompt generation</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0" />
-                    <span className="text-cyan-200 text-sm font-medium">Demo interactions</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0" />
-                    <span className="text-cyan-200 text-sm font-medium">Multiple projects</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Stats */}
-            {apiKeys.length > 0 && (
-              <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Activity className="text-purple-400" size={20} />
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">Overview</h3>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-gray-800/50 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-400 font-medium">Total Keys</span>
-                    <span className="text-white font-bold text-lg">{apiKeys.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-800/50 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-400 font-medium">Default Project</span>
-                    <span className="text-white font-bold">
-                      {apiKeys.find(k => k.isDefault)?.name || "None"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-800/50 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-400 font-medium">Status</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                      <span className="text-emerald-400 font-bold">Active</span>
+                  {/* Default Key */}
+                  <div className="p-4 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                        <Star size={16} className="text-amber-400" />
+                      </div>
+                      <span className="text-amber-200 font-semibold">Default Key</span>
                     </div>
+                    <p className="text-gray-300 text-sm leading-relaxed ml-11">
+                      Used for <strong>admin tasks</strong> like creating agents, generating prompts, FAQ creation, and development tools.
+                    </p>
+                  </div>
+
+                  {/* Agent Keys */}
+                  <div className="p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                        <Bot size={16} className="text-blue-400" />
+                      </div>
+                      <span className="text-blue-200 font-semibold">Agent Keys</span>
+                    </div>
+                    <p className="text-gray-300 text-sm leading-relaxed ml-11">
+                      Each agent uses its <strong>specific key</strong> for client conversations, webhooks, and live interactions.
+                    </p>
                   </div>
                 </div>
 
-                {/* Enhanced Quick Actions */}
+                {/* Pro Tip */}
                 <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-4 mt-4 backdrop-blur-sm">
                   <div className="flex items-center gap-2 mb-2">
                     <Crown className="text-purple-400" size={16} />
                     <span className="text-purple-200 text-sm font-semibold">Pro Tip</span>
                   </div>
                   <p className="text-purple-100/80 text-xs leading-relaxed">
-                    Set different API keys for different projects to better track usage and costs.
+                    Use different agent keys for different clients to separate costs and track usage per project.
                   </p>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

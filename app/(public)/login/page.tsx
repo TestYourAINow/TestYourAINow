@@ -48,17 +48,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-white flex items-center justify-center px-4 pt-20 relative overflow-hidden">
-      {/* Premium Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-premium-gradient"></div>
-        <div className="absolute inset-0 bg-grid opacity-30"></div>
+    <div 
+      className="min-h-screen text-white flex items-center justify-center px-4 pt-20 relative overflow-hidden"
+      style={{
+        background: `
+          linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+          radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+          radial-gradient(circle at 40% 70%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+          linear-gradient(135deg, #0a0a0b 0%, #111827 25%, #1f2937 50%, #111827 75%, #0a0a0b 100%)
+        `,
+        backgroundSize: '40px 40px, 40px 40px, 800px 800px, 600px 600px, 400px 400px, 100% 100%',
+        animation: 'premiumFloat 25s ease-in-out infinite'
+      }}
+    >
+      {/* Orbes animés comme le hero */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/3 right-1/3 w-80 h-80 bg-emerald-600/4 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '6s' }} />
+        <div className="absolute bottom-1/3 left-1/6 w-72 h-72 bg-pink-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '8s' }} />
       </div>
-      
-      {/* Floating Orbs */}
-      <div className="absolute top-20 left-20 w-32 h-32 bg-blue-500/10 rounded-full blur-xl animate-pulse"></div>
-      <div className="absolute bottom-20 right-20 w-24 h-24 bg-cyan-400/10 rounded-full blur-xl animate-pulse delay-1000"></div>
-      
       <div className="relative z-10 w-full max-w-md">
         {/* Header Section */}
         <div className="text-center mb-8">
@@ -162,10 +174,6 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-
-        {/* Additional Visual Elements */}
-        <div className="absolute -top-20 -left-20 w-40 h-40 bg-gradient-to-br from-blue-500/5 to-cyan-400/5 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-20 -right-20 w-32 h-32 bg-gradient-to-br from-purple-500/5 to-blue-500/5 rounded-full blur-3xl"></div>
       </div>
     </div>
   );

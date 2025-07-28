@@ -168,15 +168,29 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-premium-gradient text-white flex items-center justify-center px-4 py-8 pt-60 relative overflow-hidden">
-      {/* Enhanced Background Pattern */}
-      <div className="absolute inset-0 bg-grid opacity-20"></div>
-      
-      {/* Floating Orbs */}
-      <div className="absolute top-10 left-10 w-40 h-40 bg-blue-500/8 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-10 right-10 w-32 h-32 bg-cyan-400/8 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-purple-500/6 rounded-full blur-2xl animate-pulse delay-500"></div>
-      
+    <div 
+      className="min-h-screen text-white flex items-center justify-center px-4 py-8 pt-32 relative overflow-hidden"
+      style={{
+        background: `
+          linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+          radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+          radial-gradient(circle at 40% 70%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+          linear-gradient(135deg, #0a0a0b 0%, #111827 25%, #1f2937 50%, #111827 75%, #0a0a0b 100%)
+        `,
+        backgroundSize: '40px 40px, 40px 40px, 800px 800px, 600px 600px, 400px 400px, 100% 100%',
+        animation: 'premiumFloat 25s ease-in-out infinite'
+      }}
+    >
+      {/* Orbes animés comme le hero */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/3 right-1/3 w-80 h-80 bg-emerald-600/4 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '6s' }} />
+        <div className="absolute bottom-1/3 left-1/6 w-72 h-72 bg-pink-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '8s' }} />
+      </div>
       <div className="relative z-10 w-full max-w-lg">
         {/* Header Section */}
         <div className="text-center mb-8">
@@ -418,10 +432,6 @@ export default function SignupPage() {
             </Link>
           </p>
         </div>
-
-        {/* Additional Visual Elements */}
-        <div className="absolute -top-32 -left-32 w-64 h-64 bg-gradient-to-br from-blue-500/3 to-cyan-400/3 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-32 -right-32 w-48 h-48 bg-gradient-to-br from-purple-500/3 to-blue-500/3 rounded-full blur-3xl"></div>
       </div>
     </div>
   );

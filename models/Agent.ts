@@ -6,6 +6,7 @@ export interface AgentDocument extends Document {
   name: string;
   template?: string;
   openaiModel: string;
+  apiKey: string; // 🆕 NOUVEAU - L'ID de l'API key à utiliser
   description: string;
   questions: string;
   tone: string;
@@ -44,6 +45,7 @@ const AgentSchema = new Schema<AgentDocument>(
     name: { type: String, required: true },
     template: { type: String },
     openaiModel: { type: String, required: true },
+    apiKey: { type: String, required: true }, // 🆕 NOUVEAU - L'ID de l'API key à utiliser
     description: { type: String },
     questions: { type: String },
     tone: { type: String },

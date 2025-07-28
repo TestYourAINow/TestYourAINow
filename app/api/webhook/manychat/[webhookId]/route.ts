@@ -3,7 +3,7 @@ import { connectToDatabase } from '@/lib/db';
 import { Connection } from '@/models/Connection';
 import { Agent } from '@/models/Agent';
 import { AgentKnowledge } from '@/models/AgentKnowledge';
-import { createUserOpenAI } from '@/lib/openai';
+import { createAgentOpenAI } from '@/lib/openai'; // ✅ CHANGÉ
 import crypto from 'crypto';
 
 // 📝 Types pour les messages OpenAI
@@ -29,8 +29,8 @@ function verifyWebhookSignature(body: string, signature: string, secret: string)
 // 🤖 Traiter le message avec l'AI
 async function processWithAI(agent: any, userMessage: string, userId: string) {
   try {
-    // 1. Créer l'instance OpenAI
-    const { openai, error } = await createUserOpenAI();
+    // 1. Créer l'instance OpenAI avec l'API key de l'agent ✅ CHANGÉ
+    const { openai, error } = await createAgentOpenAI(agent);
     if (!openai) {
       throw new Error(error || 'OpenAI setup failed');
     }
