@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Folder, MoreHorizontal, Eye, FolderEdit, Trash2 } from "lucide-react"
-import { useState, useRef, useEffect } from "react"
+import { Folder } from "lucide-react"
+import FolderCardAction from "@/components/Dropdowns/FolderCardAction"
 
 type FolderType = {
   _id: string
@@ -15,90 +15,9 @@ type FolderType = {
 
 interface FolderCardProps {
   folder: FolderType
-  onEdit: () => void  // 🆕 Nouvelle prop
+  onEdit: () => void
   onDelete: () => void
 }
-
-// Actions dropdown pour folder
-const FolderActions = ({ 
-  folder, 
-  onEdit,    // 🆕 Nouveau param
-  onDelete
-}: { 
-  folder: FolderType; 
-  onEdit: () => void;   // 🆕 Nouveau param
-  onDelete: () => void; 
-}) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showDropdown]);
-
-  return (
-    <div ref={dropdownRef} className="relative" onClick={(e) => e.stopPropagation()}>
-      <button 
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setShowDropdown(!showDropdown);
-        }}
-        className="w-8 h-8 rounded-lg bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all opacity-0 group-hover:opacity-100"
-      >
-        <MoreHorizontal size={14} />
-      </button>
-      
-      {showDropdown && (
-        <div className="absolute right-0 top-full mt-1 bg-gray-800/95 backdrop-blur-md border border-gray-600/50 rounded-xl shadow-2xl z-[100] min-w-[140px] py-2">
-          <Link href={`/folders/${folder._id}`} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors">
-            <Eye size={14} className="text-gray-400" />
-            View Folder
-          </Link>
-          
-          {/* 🆕 BOUTON EDIT FOLDER */}
-          <button 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onEdit();
-              setShowDropdown(false);
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors text-left"
-          >
-            <FolderEdit size={14} className="text-gray-400" />
-            Edit Folder
-          </button>
-          
-          <hr className="my-1 border-gray-600/50" />
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onDelete();
-              setShowDropdown(false);
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-colors text-left"
-          >
-            <Trash2 size={14} className="text-red-400" />
-            Delete Folder
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default function FolderCard({ folder, onEdit, onDelete }: FolderCardProps) {
   return (
@@ -113,9 +32,9 @@ export default function FolderCard({ folder, onEdit, onDelete }: FolderCardProps
         
         {/* Actions */}
         <div className="absolute top-4 right-4 z-10">
-          <FolderActions
+          <FolderCardAction
             folder={folder}
-            onEdit={onEdit}     // 🆕 Passer onEdit
+            onEdit={onEdit}
             onDelete={onDelete}
           />
         </div>

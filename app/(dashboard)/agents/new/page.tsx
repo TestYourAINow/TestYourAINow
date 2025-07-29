@@ -5,12 +5,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import TextareaAutosize from "react-textarea-autosize";
-import { 
-  Bot, Briefcase, Settings, User, Globe, MessageCircle, 
+import {
+  Bot, Briefcase, Settings, User, Globe, MessageCircle,
   ChevronLeft, ChevronRight, CheckCircle, Key, Zap, Info, Upload, AlertCircle,
   X, Plus, Clock, Star, TrendingUp, Shield
 } from "lucide-react";
 import { toast, Toaster } from "react-hot-toast";
+
+// ===== ÉTAPE 1: AJOUTER CES IMPORTS =====
+import AiModelDropdown from "@/components/Dropdowns/AiModelDropdown";
+import ApiKeyDropdown, { ApiKeyOption } from "@/components/Dropdowns/ApiKeyDropdown";
 
 // 🔧 CORRECTION - Import du vrai composant au lieu du mock
 import ImportWebsiteModal from "@/components/ImportWebsiteModal";
@@ -39,7 +43,7 @@ const defaultFormData: FormData = {
   language: "",
   template: "",
   openaiModel: "gpt-4o",
-  apiKey: "test",
+  apiKey: "", // On va le définir automatiquement via useEffect
   temperature: 0.3,
   top_p: 1,
   description: "",
@@ -64,73 +68,10 @@ const templatePresets: Record<string, Partial<typeof defaultFormData>> = {
   },
 };
 
-const modelOptions = [
-  {
-    id: "gpt-4o",
-    name: "GPT-4o",
-    description: "Multimodal model, excellent for complex tasks",
-    badge: "Most Popular",
-    badgeColor: "bg-blue-500",
-    inputPrice: 2.50,
-    outputPrice: 10.00,
-    contextWindow: "128K",
-  },
-  {
-    id: "gpt-4o-mini",
-    name: "GPT-4o Mini",
-    description: "Fast and cost-effective multimodal model",
-    badge: "Best Value",
-    badgeColor: "bg-green-500",
-    inputPrice: 0.15,
-    outputPrice: 0.60,
-    contextWindow: "128K",
-  },
-  {
-    id: "gpt-4-turbo",
-    name: "GPT-4 Turbo",
-    description: "Advanced reasoning with large context window",
-    badge: "",
-    badgeColor: "",
-    inputPrice: 10.00,
-    outputPrice: 30.00,
-    contextWindow: "128K",
-  },
-  {
-    id: "gpt-4",
-    name: "GPT-4",
-    description: "High-intelligence standard model",
-    badge: "",
-    badgeColor: "",
-    inputPrice: 30.00,
-    outputPrice: 60.00,
-    contextWindow: "8K",
-  },
-  {
-    id: "gpt-4-32k",
-    name: "GPT-4 32K",
-    description: "Extended context version of GPT-4",
-    badge: "",
-    badgeColor: "",
-    inputPrice: 60.00,
-    outputPrice: 120.00,
-    contextWindow: "32K",
-  },
-  {
-    id: "gpt-3.5-turbo",
-    name: "GPT-3.5 Turbo",
-    description: "Fast and efficient for most tasks",
-    badge: "",
-    badgeColor: "",
-    inputPrice: 0.50,
-    outputPrice: 1.50,
-    contextWindow: "16K",
-  },
-];
-
 const updateTemplateContent = (
-  formData: FormData, 
-  templateKey: string, 
-  industry: string, 
+  formData: FormData,
+  templateKey: string,
+  industry: string,
   language: string
 ): Partial<FormData> => {
   if (!templateKey || templateKey === "blank" || !templatePresets[templateKey]) {
@@ -176,9 +117,9 @@ const getContentQuality = (content: string, minLength: number = 50) => {
 
 const QualityIndicator = ({ content, minLength = 50 }: { content: string; minLength?: number }) => {
   const quality = getContentQuality(content, minLength);
-  
+
   if (quality.status === 'empty') return null;
-  
+
   return (
     <div className={`flex items-center gap-1.5 text-xs mt-2 ${quality.color}`}>
       {quality.status === 'short' ? (
@@ -194,7 +135,7 @@ const QualityIndicator = ({ content, minLength = 50 }: { content: string; minLen
 const CharacterCounter = ({ content, maxLength = 1000 }: { content: string; maxLength?: number }) => {
   const percentage = (content.length / maxLength) * 100;
   const isNearLimit = percentage > 80;
-  
+
   return (
     <div className={`text-xs mt-1 ${isNearLimit ? 'text-orange-400' : 'text-gray-400'}`}>
       {content.length}/{maxLength} characters
@@ -203,10 +144,10 @@ const CharacterCounter = ({ content, maxLength = 1000 }: { content: string; maxL
 };
 
 // 🎨 NOUVEAU - Modal Add API Key selon design system
-const AddApiKeyModal = ({ 
-  isOpen, 
-  onClose, 
-  onApiKeyAdded 
+const AddApiKeyModal = ({
+  isOpen,
+  onClose,
+  onApiKeyAdded
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -221,18 +162,18 @@ const AddApiKeyModal = ({
     if (!newApiKey.trim() || !newProjectName.trim()) return;
 
     setIsSubmitting(true);
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const newApiKeyData = {
         id: Date.now().toString(),
         name: newProjectName.trim(),
         maskedKey: `${newApiKey.slice(0, 3)}...${newApiKey.slice(-4)}`,
         isDefault: false
       };
-      
+
       onApiKeyAdded(newApiKeyData);
       setNewApiKey("");
       setNewProjectName("");
@@ -312,7 +253,7 @@ const AddApiKeyModal = ({
             >
               Cancel
             </button>
-            
+
             <button
               type="submit"
               disabled={!newApiKey.trim() || !newProjectName.trim() || isSubmitting}
@@ -350,248 +291,46 @@ const StepIndicator = ({ currentStep }: { currentStep: Step }) => {
             <div key={step.number} className="flex items-center flex-1">
               <div className="flex items-center">
                 {/* Circle avec gradient et effets premium */}
-                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
-                  isCompleted 
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white transform scale-110' 
-                    : isActive 
-                    ? `bg-gradient-to-r ${step.color} text-white transform scale-110 shadow-lg shadow-blue-500/30` 
-                    : 'bg-gray-800/50 text-gray-400 border border-gray-700/50'
-                }`}>
+                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white transform scale-110'
+                    : isActive
+                      ? `bg-gradient-to-r ${step.color} text-white transform scale-110 shadow-lg shadow-blue-500/30`
+                      : 'bg-gray-800/50 text-gray-400 border border-gray-700/50'
+                  }`}>
                   {/* Glow effect pour step actif */}
                   {isActive && (
                     <div className={`absolute inset-0 rounded-full bg-gradient-to-r ${step.color} blur-lg opacity-50 animate-pulse`}></div>
                   )}
-                  
+
                   {/* Icon */}
                   <div className="relative z-10">
                     {isCompleted ? <CheckCircle size={20} /> : <Icon size={20} />}
                   </div>
                 </div>
-                
+
                 {/* Text */}
                 <div className="ml-4 hidden sm:block">
-                  <div className={`text-sm font-semibold transition-colors ${
-                    isActive ? 'text-white' : isCompleted ? 'text-green-400' : 'text-gray-400'
-                  }`}>
+                  <div className={`text-sm font-semibold transition-colors ${isActive ? 'text-white' : isCompleted ? 'text-green-400' : 'text-gray-400'
+                    }`}>
                     {step.title}
                   </div>
                   <div className="text-xs text-gray-500 mt-0.5">Step {step.number}</div>
                 </div>
               </div>
-              
+
               {/* Connector Line */}
               {isConnected && (
                 <div className="flex-1 mx-4 h-0.5 transition-all duration-500">
-                  <div className={`h-full rounded-full transition-all duration-500 ${
-                    isCompleted 
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-500/20' 
+                  <div className={`h-full rounded-full transition-all duration-500 ${isCompleted
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-500/20'
                       : 'bg-gray-700/50'
-                  }`} />
+                    }`} />
                 </div>
               )}
             </div>
           );
         })}
       </div>
-    </div>
-  );
-};
-
-// 🎨 NOUVEAU - Model Dropdown Premium
-const ModelDropdown = ({ 
-  selectedModel, 
-  onModelSelect 
-}: { 
-  selectedModel: string; 
-  onModelSelect: (modelId: string) => void; 
-}) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const selectedModelData = modelOptions.find(m => m.id === selectedModel);
-
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setShowDropdown(false);
-    };
-
-    if (showDropdown) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [showDropdown]);
-
-  return (
-    <div className="relative" onClick={(e) => e.stopPropagation()}>
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setShowDropdown(!showDropdown);
-        }}
-        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 rounded-xl focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 outline-none text-white flex items-center justify-between hover:bg-gray-800/80 transition-all backdrop-blur-sm"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center shadow-lg">
-            <Bot className="w-4 h-4 text-white" />
-          </div>
-          <div className="text-left">
-            <div className="font-medium">{selectedModelData?.name || 'Select Model'}</div>
-            {selectedModelData?.badge && (
-              <div className="text-xs text-gray-400">{selectedModelData.badge}</div>
-            )}
-          </div>
-        </div>
-        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${showDropdown ? 'rotate-90' : 'rotate-0'}`} />
-      </button>
-
-      {showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-50 max-h-80 overflow-y-auto">
-          {modelOptions.map((model) => (
-            <button
-              key={model.id}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onModelSelect(model.id);
-                setShowDropdown(false);
-              }}
-              className={`w-full p-4 text-left hover:bg-gray-800/50 transition-all border-b border-gray-700/30 last:border-b-0 ${
-                selectedModel === model.id ? 'bg-blue-500/20 border-blue-500/30' : ''
-              }`}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded flex items-center justify-center">
-                  <Bot className="w-3 h-3 text-white" />
-                </div>
-                <span className="font-medium text-white">{model.name}</span>
-                {model.badge && (
-                  <span className={`px-2 py-1 text-xs rounded-full text-white ${model.badgeColor}`}>
-                    {model.badge}
-                  </span>
-                )}
-                {selectedModel === model.id && (
-                  <CheckCircle className="w-4 h-4 text-blue-400 ml-auto" />
-                )}
-              </div>
-              <p className="text-sm text-gray-400 mb-2">{model.description}</p>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <span>Input: ${model.inputPrice}/1M</span>
-                <span>Output: ${model.outputPrice}/1M</span>
-                <span>Context: {model.contextWindow}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// 🎨 NOUVEAU - API Key Dropdown Premium
-const ApiKeyDropdown = ({ 
-  selectedApiKey, 
-  onApiKeySelect,
-  onAddNewClick,
-  apiKeys
-}: { 
-  selectedApiKey: string; 
-  onApiKeySelect: (keyId: string) => void;
-  onAddNewClick: () => void;
-  apiKeys: Array<{ id: string; name: string; maskedKey: string; isDefault: boolean }>;
-}) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  
-  const selectedApiKeyData = apiKeys.find(k => k.id === selectedApiKey) || apiKeys[1];
-
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setShowDropdown(false);
-    };
-
-    if (showDropdown) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [showDropdown]);
-
-  return (
-    <div className="relative" onClick={(e) => e.stopPropagation()}>
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setShowDropdown(!showDropdown);
-        }}
-        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 rounded-xl focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 outline-none text-white flex items-center justify-between hover:bg-gray-800/80 transition-all backdrop-blur-sm"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg">
-            <Key className="w-4 h-4 text-white" />
-          </div>
-          <div className="text-left">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-medium">{selectedApiKeyData.name}</span>
-              {selectedApiKeyData.isDefault && (
-                <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
-                  Default
-                </span>
-              )}
-            </div>
-            <div className="text-xs text-gray-400 font-mono">{selectedApiKeyData.maskedKey}</div>
-          </div>
-        </div>
-        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${showDropdown ? 'rotate-90' : 'rotate-0'}`} />
-      </button>
-
-      {showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-50">
-          {apiKeys.map((apiKey) => (
-            <button
-              key={apiKey.id}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onApiKeySelect(apiKey.id);
-                setShowDropdown(false);
-              }}
-              className={`w-full p-3 text-left hover:bg-gray-800/50 transition-all border-b border-gray-700/30 last:border-b-0 ${
-                selectedApiKey === apiKey.id ? 'bg-blue-500/20 border-blue-500/30' : ''
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-white">{apiKey.name}</span>
-                    {apiKey.isDefault && (
-                      <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
-                        Default
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-gray-400 font-mono">{apiKey.maskedKey}</div>
-                </div>
-                {selectedApiKey === apiKey.id && (
-                  <CheckCircle className="text-blue-400" size={16} />
-                )}
-              </div>
-            </button>
-          ))}
-          
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setShowDropdown(false);
-              onAddNewClick();
-            }}
-            className="w-full p-3 text-left hover:bg-gray-800/50 transition-all text-blue-400 border-t border-gray-700/50"
-          >
-            <div className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              <span className="text-sm font-medium">Add New API Key</span>
-            </div>
-          </button>
-        </div>
-      )}
     </div>
   );
 };
@@ -604,11 +343,35 @@ export default function CreateAgentWizard() {
   const [formData, setFormData] = useState<FormData>(defaultFormData);
   const [loading, setLoading] = useState(false);
   const [showAddApiModal, setShowAddApiModal] = useState(false);
-  const [apiKeys, setApiKeys] = useState([
-    { id: 'default', name: 'Default Project', maskedKey: 'sk-...1VMA', isDefault: false },
-    { id: 'test', name: 'test', maskedKey: 'sk-...1VMA', isDefault: true }
-  ]);
   
+  // ===== ÉTAPE 2: METTRE À JOUR LE TYPE DES APIKEYS =====
+  const [apiKeys, setApiKeys] = useState<ApiKeyOption[]>([]);
+
+  // Ajouter useEffect pour charger les vraies API keys
+  useEffect(() => {
+    const fetchApiKeys = async () => {
+      try {
+        const response = await fetch("/api/user/api-key");
+        const data = await response.json();
+        if (response.ok) {
+          setApiKeys(data.apiKeys || []);
+
+          // Définir l'API key par défaut automatiquement
+          const defaultKey = data.apiKeys?.find((key: any) => key.isDefault);
+          if (defaultKey) {
+            updateFormData("apiKey", defaultKey._id.toString());
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching API keys:", error);
+      }
+    };
+
+    if (session) {
+      fetchApiKeys();
+    }
+  }, [session]);
+
   // 🔧 CORRECTION - Variables d'état corrigées pour correspondre à l'ancienne version
   const [showImportModal, setShowImportModal] = useState(false);
   const [faqGenerating, setFaqGenerating] = useState(false);
@@ -616,7 +379,7 @@ export default function CreateAgentWizard() {
   const [isFaqGenerated, setIsFaqGenerated] = useState(false);
 
   const handleApiKeyAdded = (newApiKeyData: { id: string; name: string; maskedKey: string; isDefault: boolean }) => {
-    setApiKeys(prev => [...prev, newApiKeyData]);
+    setApiKeys((prev: ApiKeyOption[]) => [...prev, newApiKeyData]);
     updateFormData("apiKey", newApiKeyData.id);
   };
 
@@ -636,7 +399,7 @@ export default function CreateAgentWizard() {
 
     setOriginalCompanyText(formData.companyInfo);
     setFaqGenerating(true);
-    
+
     try {
       const res = await fetch("/api/generate-faq", {
         method: "POST",
@@ -646,13 +409,13 @@ export default function CreateAgentWizard() {
           apiKey: formData.apiKey || "user_api_key",
         }),
       });
-      
+
       const data = await res.json();
       const cleaned = (data.faq || "")
         .replace(/^```markdown/, "")
         .replace(/```$/, "")
         .trim();
-        
+
       updateFormData("companyInfo", cleaned || "Could not generate FAQ.");
       setIsFaqGenerated(true);
       toast.success("FAQ generated successfully");
@@ -674,18 +437,18 @@ export default function CreateAgentWizard() {
   const updateFormData = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData(prev => {
       const newFormData = { ...prev, [field]: value };
-      
+
       if ((field === 'industry' || field === 'language') && prev.template && prev.template !== 'blank') {
         const templateUpdates = updateTemplateContent(
           { ...prev, [field]: value },
-          prev.template, 
+          prev.template,
           field === 'industry' ? value as string : prev.industry,
           field === 'language' ? value as string : prev.language
         );
-        
+
         return { ...newFormData, ...templateUpdates };
       }
-      
+
       return newFormData;
     });
   };
@@ -693,12 +456,12 @@ export default function CreateAgentWizard() {
   const handleTemplateSelect = (template: typeof formData.template) => {
     setFormData(prev => {
       const baseData: FormData = { ...prev, template };
-      
+
       if (template && template !== "blank" && templatePresets[template]) {
         const templateUpdates = updateTemplateContent(
-          baseData, 
-          template, 
-          prev.industry, 
+          baseData,
+          template,
+          prev.industry,
           prev.language
         );
         return { ...baseData, ...templateUpdates };
@@ -711,7 +474,7 @@ export default function CreateAgentWizard() {
           rules: ""
         };
       }
-      
+
       return baseData;
     });
   };
@@ -751,19 +514,19 @@ export default function CreateAgentWizard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      
+
       const data = await res.json();
-      
+
       if (!res.ok) {
         throw new Error(data?.error || "Failed to create agent");
       }
-      
+
       toast.success("Agent created successfully");
-      
+
       await fetch(`/api/agents/${data.id}/generate-prompt`, {
         method: "POST"
       });
-      
+
       setTimeout(() => router.push(`/agents/${data.id}`), 800);
     } catch (err) {
       console.error(err);
@@ -775,8 +538,8 @@ export default function CreateAgentWizard() {
 
   return (
     <>
-      <Toaster 
-        position="top-center" 
+      <Toaster
+        position="top-center"
         toastOptions={{
           style: {
             zIndex: 10000,
@@ -788,20 +551,20 @@ export default function CreateAgentWizard() {
           },
         }}
       />
-      
+
       {/* 🔧 CORRECTION - Utilisation du vrai modal avec les bonnes props */}
       <ImportWebsiteModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         onImport={handleImportWebsite}
       />
-      
+
       <AddApiKeyModal
         isOpen={showAddApiModal}
         onClose={() => setShowAddApiModal(false)}
         onApiKeyAdded={handleApiKeyAdded}
       />
-      
+
       <div className="min-h-screen bg-transparent relative">
         {/* Background Effects */}
         <div className="fixed inset-0 pointer-events-none">
@@ -811,7 +574,7 @@ export default function CreateAgentWizard() {
 
         <div className="flex justify-center min-h-screen py-8">
           <div className="w-full max-w-6xl mx-auto px-6 relative z-10">
-            
+
             {/* Header */}
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-2xl px-6 py-3 mb-6">
@@ -832,7 +595,7 @@ export default function CreateAgentWizard() {
             <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-3xl shadow-2xl p-8 text-white relative overflow-hidden">
               {/* Card Background Gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
-              
+
               <div className="relative z-10">
                 {/* STEP 1 - AI Type Selection */}
                 {currentStep === 1 && (
@@ -850,9 +613,9 @@ export default function CreateAgentWizard() {
                     {/* Template Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                       {[
-                        { 
-                          key: "sales", 
-                          title: "Sales AI", 
+                        {
+                          key: "sales",
+                          title: "Sales AI",
                           desc: "Perfect for lead generation and sales automation",
                           icon: Briefcase,
                           gradient: "from-orange-500 to-red-500",
@@ -860,9 +623,9 @@ export default function CreateAgentWizard() {
                           bgGradient: "from-orange-500/10 to-red-500/10",
                           borderGradient: "from-orange-500/30 to-red-500/30"
                         },
-                        { 
-                          key: "support", 
-                          title: "Support AI", 
+                        {
+                          key: "support",
+                          title: "Support AI",
                           desc: "Ideal for customer support and service inquiries",
                           icon: Shield,
                           gradient: "from-blue-500 to-cyan-500",
@@ -870,9 +633,9 @@ export default function CreateAgentWizard() {
                           bgGradient: "from-blue-500/10 to-cyan-500/10",
                           borderGradient: "from-blue-500/30 to-cyan-500/30"
                         },
-                        { 
-                          key: "blank", 
-                          title: "Start Blank", 
+                        {
+                          key: "blank",
+                          title: "Start Blank",
                           desc: "Start from scratch with a completely custom AI",
                           icon: Globe,
                           gradient: "from-purple-500 to-pink-500",
@@ -887,23 +650,21 @@ export default function CreateAgentWizard() {
                           <button
                             key={template.key}
                             onClick={() => handleTemplateSelect(template.key as any)}
-                            className={`group p-6 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden ${
-                              isSelected
+                            className={`group p-6 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden ${isSelected
                                 ? `bg-gradient-to-br ${template.bgGradient} border-transparent shadow-2xl transform scale-105`
                                 : "bg-gray-800/50 border-gray-700/50 hover:border-gray-600/50 hover:bg-gray-800/70"
-                            }`}
+                              }`}
                           >
                             {/* Background Gradient for selected */}
                             {isSelected && (
                               <div className={`absolute inset-0 bg-gradient-to-br ${template.bgGradient} opacity-50`}></div>
                             )}
-                            
+
                             <div className="relative z-10">
-                              <div className={`w-16 h-16 rounded-xl mb-4 flex items-center justify-center transition-all duration-300 ${
-                                isSelected 
-                                  ? `bg-gradient-to-r ${template.gradient} shadow-lg` 
+                              <div className={`w-16 h-16 rounded-xl mb-4 flex items-center justify-center transition-all duration-300 ${isSelected
+                                  ? `bg-gradient-to-r ${template.gradient} shadow-lg`
                                   : `bg-gradient-to-r ${template.gradient} opacity-70 group-hover:opacity-100`
-                              }`}>
+                                }`}>
                                 <Icon size={28} className="text-white" />
                               </div>
                               <h3 className="font-bold text-xl mb-3 text-white">{template.title}</h3>
@@ -936,7 +697,7 @@ export default function CreateAgentWizard() {
                               placeholder="e.g., Sarah Support Bot"
                             />
                           </div>
-                          
+
                           <div>
                             <label className="block text-sm font-medium mb-3 text-gray-300">Industry *</label>
                             <input
@@ -946,7 +707,7 @@ export default function CreateAgentWizard() {
                               placeholder="e.g., Technology, Healthcare"
                             />
                           </div>
-                          
+
                           <div>
                             <label className="block text-sm font-medium mb-3 text-gray-300">Language *</label>
                             <input
@@ -976,7 +737,7 @@ export default function CreateAgentWizard() {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      
+
                       {/* AI Model Section */}
                       <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-6">
@@ -985,10 +746,11 @@ export default function CreateAgentWizard() {
                           </div>
                           <h3 className="text-xl font-semibold text-white">AI Model</h3>
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium mb-3 text-gray-300">Select Model *</label>
-                          <ModelDropdown 
+                          {/* ===== ÉTAPE 4: REMPLACER PAR LE NOUVEAU COMPOSANT ===== */}
+                          <AiModelDropdown
                             selectedModel={formData.openaiModel}
                             onModelSelect={(modelId) => updateFormData("openaiModel", modelId)}
                           />
@@ -996,6 +758,69 @@ export default function CreateAgentWizard() {
 
                         {/* Model Info */}
                         {(() => {
+                          const modelOptions = [
+                            {
+                              id: "gpt-4o",
+                              name: "GPT-4o",
+                              description: "Multimodal model, excellent for complex tasks",
+                              badge: "Most Popular",
+                              badgeColor: "bg-blue-500",
+                              inputPrice: 2.50,
+                              outputPrice: 10.00,
+                              contextWindow: "128K",
+                            },
+                            {
+                              id: "gpt-4o-mini",
+                              name: "GPT-4o Mini",
+                              description: "Fast and cost-effective multimodal model",
+                              badge: "Best Value",
+                              badgeColor: "bg-green-500",
+                              inputPrice: 0.15,
+                              outputPrice: 0.60,
+                              contextWindow: "128K",
+                            },
+                            {
+                              id: "gpt-4-turbo",
+                              name: "GPT-4 Turbo",
+                              description: "Advanced reasoning with large context window",
+                              badge: "",
+                              badgeColor: "",
+                              inputPrice: 10.00,
+                              outputPrice: 30.00,
+                              contextWindow: "128K",
+                            },
+                            {
+                              id: "gpt-4",
+                              name: "GPT-4",
+                              description: "High-intelligence standard model",
+                              badge: "",
+                              badgeColor: "",
+                              inputPrice: 30.00,
+                              outputPrice: 60.00,
+                              contextWindow: "8K",
+                            },
+                            {
+                              id: "gpt-4-32k",
+                              name: "GPT-4 32K",
+                              description: "Extended context version of GPT-4",
+                              badge: "",
+                              badgeColor: "",
+                              inputPrice: 60.00,
+                              outputPrice: 120.00,
+                              contextWindow: "32K",
+                            },
+                            {
+                              id: "gpt-3.5-turbo",
+                              name: "GPT-3.5 Turbo",
+                              description: "Fast and efficient for most tasks",
+                              badge: "",
+                              badgeColor: "",
+                              inputPrice: 0.50,
+                              outputPrice: 1.50,
+                              contextWindow: "16K",
+                            },
+                          ];
+                          
                           const selectedModel = modelOptions.find(m => m.id === formData.openaiModel);
                           return selectedModel ? (
                             <div className="mt-6 p-4 bg-gray-900/50 rounded-xl">
@@ -1027,10 +852,11 @@ export default function CreateAgentWizard() {
                             </div>
                             <h3 className="text-xl font-semibold text-white">API Configuration</h3>
                           </div>
-                          
+
                           <div>
                             <label className="block text-sm font-medium mb-3 text-gray-300">API Key Project *</label>
-                            <ApiKeyDropdown 
+                            {/* ===== ÉTAPE 5: REMPLACER PAR LE NOUVEAU COMPOSANT ===== */}
+                            <ApiKeyDropdown
                               selectedApiKey={formData.apiKey}
                               onApiKeySelect={(keyId) => updateFormData("apiKey", keyId)}
                               onAddNewClick={() => setShowAddApiModal(true)}
@@ -1091,6 +917,69 @@ export default function CreateAgentWizard() {
 
                     {/* Pricing Info */}
                     {(() => {
+                      const modelOptions = [
+                        {
+                          id: "gpt-4o",
+                          name: "GPT-4o",
+                          description: "Multimodal model, excellent for complex tasks",
+                          badge: "Most Popular",
+                          badgeColor: "bg-blue-500",
+                          inputPrice: 2.50,
+                          outputPrice: 10.00,
+                          contextWindow: "128K",
+                        },
+                        {
+                          id: "gpt-4o-mini",
+                          name: "GPT-4o Mini",
+                          description: "Fast and cost-effective multimodal model",
+                          badge: "Best Value",
+                          badgeColor: "bg-green-500",
+                          inputPrice: 0.15,
+                          outputPrice: 0.60,
+                          contextWindow: "128K",
+                        },
+                        {
+                          id: "gpt-4-turbo",
+                          name: "GPT-4 Turbo",
+                          description: "Advanced reasoning with large context window",
+                          badge: "",
+                          badgeColor: "",
+                          inputPrice: 10.00,
+                          outputPrice: 30.00,
+                          contextWindow: "128K",
+                        },
+                        {
+                          id: "gpt-4",
+                          name: "GPT-4",
+                          description: "High-intelligence standard model",
+                          badge: "",
+                          badgeColor: "",
+                          inputPrice: 30.00,
+                          outputPrice: 60.00,
+                          contextWindow: "8K",
+                        },
+                        {
+                          id: "gpt-4-32k",
+                          name: "GPT-4 32K",
+                          description: "Extended context version of GPT-4",
+                          badge: "",
+                          badgeColor: "",
+                          inputPrice: 60.00,
+                          outputPrice: 120.00,
+                          contextWindow: "32K",
+                        },
+                        {
+                          id: "gpt-3.5-turbo",
+                          name: "GPT-3.5 Turbo",
+                          description: "Fast and efficient for most tasks",
+                          badge: "",
+                          badgeColor: "",
+                          inputPrice: 0.50,
+                          outputPrice: 1.50,
+                          contextWindow: "16K",
+                        },
+                      ];
+                      
                       const selectedModel = modelOptions.find(m => m.id === formData.openaiModel);
                       return selectedModel ? (
                         <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
@@ -1098,7 +987,7 @@ export default function CreateAgentWizard() {
                             <TrendingUp className="w-6 h-6 text-green-400" />
                             <h3 className="text-lg font-semibold text-green-400">Token Pricing</h3>
                           </div>
-                          
+
                           <div className="grid grid-cols-2 gap-6">
                             <div>
                               <div className="text-sm text-gray-400 mb-1">Input Cost</div>
@@ -1115,7 +1004,7 @@ export default function CreateAgentWizard() {
                               <div className="text-xs text-gray-400">per 1M tokens</div>
                             </div>
                           </div>
-                          
+
                           <div className="text-xs text-gray-500 bg-gray-900/30 rounded-xl p-3 mt-4">
                             💡 A token is approximately 4 characters or 0.75 words. You only pay for what you use.
                           </div>
@@ -1154,7 +1043,7 @@ export default function CreateAgentWizard() {
                         <QualityIndicator content={formData.description} minLength={50} />
                         <CharacterCounter content={formData.description} maxLength={500} />
                       </div>
-                      
+
                       {/* Questions */}
                       <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
                         <label className="block text-sm font-medium mb-3 text-gray-300">
@@ -1170,7 +1059,7 @@ export default function CreateAgentWizard() {
                         <QualityIndicator content={formData.questions} minLength={30} />
                         <CharacterCounter content={formData.questions} maxLength={800} />
                       </div>
-                      
+
                       {/* Tone */}
                       <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
                         <label className="block text-sm font-medium mb-3 text-gray-300">
@@ -1186,7 +1075,7 @@ export default function CreateAgentWizard() {
                         <QualityIndicator content={formData.tone} minLength={30} />
                         <CharacterCounter content={formData.tone} maxLength={400} />
                       </div>
-                      
+
                       {/* Rules */}
                       <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
                         <label className="block text-sm font-medium mb-3 text-gray-300">
@@ -1220,7 +1109,7 @@ export default function CreateAgentWizard() {
                             <Upload size={12} />
                             Import Website
                           </button>
-                          
+
                           {!isFaqGenerated ? (
                             <button
                               type="button"
@@ -1246,24 +1135,24 @@ export default function CreateAgentWizard() {
                               onClick={handleRevertFaq}
                               className="text-xs bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-red-500/20 transform hover:scale-105"
                             >
-                              <svg 
-                                xmlns="http://www.w3.org/2000/svg" 
-                                width="12" 
-                                height="12" 
-                                viewBox="0 0 24 24" 
-                                fill="none" 
-                                stroke="currentColor" 
-                                strokeWidth="2" 
-                                strokeLinecap="round" 
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
-                                <path d="M9 14L4 9l5-5"/>
-                                <path d="M4 9h16"/>
+                                <path d="M9 14L4 9l5-5" />
+                                <path d="M4 9h16" />
                               </svg>
                               Revert FAQ
                             </button>
                           )}
-                          
+
                           <button
                             type="button"
                             onClick={() => updateFormData("companyInfo", "")}
@@ -1273,7 +1162,7 @@ export default function CreateAgentWizard() {
                           </button>
                         </div>
                       </div>
-                      
+
                       <TextareaAutosize
                         value={formData.companyInfo}
                         onChange={(e) => updateFormData("companyInfo", e.target.value)}
@@ -1283,7 +1172,7 @@ export default function CreateAgentWizard() {
                       />
                       <QualityIndicator content={formData.companyInfo} minLength={100} />
                       <CharacterCounter content={formData.companyInfo} maxLength={15000} />
-                      
+
                       <p className="text-xs text-gray-400 mt-3">
                         💡 The more detailed company information you provide, the better your AI will respond to customers.
                       </p>
@@ -1313,7 +1202,7 @@ export default function CreateAgentWizard() {
                           </div>
                           <h3 className="text-xl font-semibold text-blue-200">AI Configuration</h3>
                         </div>
-                        
+
                         <div className="space-y-4">
                           <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
                             <span className="text-gray-400 text-sm">AI Name</span>
@@ -1325,12 +1214,11 @@ export default function CreateAgentWizard() {
                           </div>
                           <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
                             <span className="text-gray-400 text-sm">Template</span>
-                            <span className={`px-3 py-1 text-xs rounded-full text-white ${
-                              formData.template === 'sales' ? 'bg-orange-600' : 
-                              formData.template === 'support' ? 'bg-blue-600' : 'bg-purple-600'
-                            }`}>
-                              {formData.template === 'sales' ? 'Sales AI' : 
-                               formData.template === 'support' ? 'Support AI' : 'Custom'}
+                            <span className={`px-3 py-1 text-xs rounded-full text-white ${formData.template === 'sales' ? 'bg-orange-600' :
+                                formData.template === 'support' ? 'bg-blue-600' : 'bg-purple-600'
+                              }`}>
+                              {formData.template === 'sales' ? 'Sales AI' :
+                                formData.template === 'support' ? 'Support AI' : 'Custom'}
                             </span>
                           </div>
                           <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
@@ -1353,7 +1241,7 @@ export default function CreateAgentWizard() {
                           </div>
                           <h3 className="text-xl font-semibold text-green-200">Requirements</h3>
                         </div>
-                        
+
                         <div className="space-y-3 mb-8">
                           {[
                             { label: "AI Name", check: !!formData.name },
@@ -1395,47 +1283,6 @@ export default function CreateAgentWizard() {
                       </div>
                     </div>
 
-                    {/* Pricing Estimate */}
-                    {(() => {
-                      const selectedModel = modelOptions.find(m => m.id === formData.openaiModel);
-                      return selectedModel ? (
-                        <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-2xl p-6">
-                          <div className="flex items-center gap-3 mb-4">
-                            <TrendingUp className="w-6 h-6 text-blue-400" />
-                            <h3 className="text-xl font-semibold text-blue-200">Estimated Costs</h3>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="text-center">
-                              <div className="text-sm text-gray-400 mb-2">Input Tokens</div>
-                              <div className="text-2xl font-bold text-white mb-1">
-                                ${selectedModel.inputPrice.toFixed(2)}
-                              </div>
-                              <div className="text-xs text-gray-400">per 1M tokens</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm text-gray-400 mb-2">Output Tokens</div>
-                              <div className="text-2xl font-bold text-white mb-1">
-                                ${selectedModel.outputPrice.toFixed(2)}
-                              </div>
-                              <div className="text-xs text-gray-400">per 1M tokens</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm text-gray-400 mb-2">Estimated Monthly</div>
-                              <div className="text-2xl font-bold text-green-400 mb-1">
-                                $5-50
-                              </div>
-                              <div className="text-xs text-gray-400">typical usage</div>
-                            </div>
-                          </div>
-                          
-                          <div className="text-xs text-gray-400 text-center mt-4 p-3 bg-gray-900/30 rounded-lg">
-                            💡 Actual costs depend on usage. Most small businesses spend $10-30/month.
-                          </div>
-                        </div>
-                      ) : null;
-                    })()}
-
                     {/* Ready to Deploy */}
                     <div className="text-center">
                       <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-8">
@@ -1446,7 +1293,7 @@ export default function CreateAgentWizard() {
                         <p className="text-gray-400 mb-6 max-w-md mx-auto">
                           Your AI assistant will be created and ready to use in about 1 minute.
                         </p>
-                        
+
                         <div className="flex items-center justify-center gap-2 text-green-400 text-sm">
                           <CheckCircle className="w-4 h-4" />
                           <span>All requirements met</span>
@@ -1475,13 +1322,12 @@ export default function CreateAgentWizard() {
                       {[1, 2, 3, 4].map((step) => (
                         <div
                           key={step}
-                          className={`w-2 h-2 rounded-full transition-all ${
-                            step === currentStep
+                          className={`w-2 h-2 rounded-full transition-all ${step === currentStep
                               ? 'bg-blue-400 w-6'
                               : step < currentStep
-                              ? 'bg-green-400'
-                              : 'bg-gray-600'
-                          }`}
+                                ? 'bg-green-400'
+                                : 'bg-gray-600'
+                            }`}
                         />
                       ))}
                     </div>
@@ -1522,7 +1368,7 @@ export default function CreateAgentWizard() {
           </div>
         </div>
       </div>
-      
+
       {/* Custom Slider Styles */}
       <style jsx>{`
         .slider::-webkit-slider-thumb {

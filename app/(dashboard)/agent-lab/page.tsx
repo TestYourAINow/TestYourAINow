@@ -9,11 +9,13 @@ import WebhookIntegrationModal from "@/components/integrations/WebhookIntegratio
 import CalendlyIntegrationModal from "@/components/integrations/CalendlyIntegrationModal";
 import FileUploadIntegrationModal from "@/components/integrations/FileUploadIntegrationModal";
 import RequireApiKey from "@/components/RequireApiKey";
+import AiModelDropdown from "@/components/Dropdowns/AiModelDropdown";
+import ApiKeyDropdown, { ApiKeyOption } from "@/components/Dropdowns/ApiKeyDropdown";
 import { AgentIntegration } from "@/types/integrations";
 import { 
   Settings, User, Bot, MessageCircle, Globe, Info, Code, TestTube, Zap, X, Check, 
   Edit, Trash2, Activity, Beaker, ChevronDown, MoreVertical, Circle, Sparkles,
-  Brain, Cpu, Gauge, Layers, Save, AlertTriangle, CheckCircle
+  Brain, Cpu, Gauge, Layers, Save, AlertTriangle, CheckCircle, Key
 } from "lucide-react";
 
 type Agent = {
@@ -22,6 +24,7 @@ type Agent = {
   openaiModel: string;
   temperature: number;
   top_p: number;
+  apiKey?: string;
 };
 
 type AgentVersion = { 
@@ -129,7 +132,8 @@ const SectionCard = ({
   subtitle, 
   children, 
   className = "",
-  headerAction 
+  headerAction,
+  allowOverflow = false
 }: {
   icon: React.ReactNode;
   title: string;
@@ -137,9 +141,11 @@ const SectionCard = ({
   children: React.ReactNode;
   className?: string;
   headerAction?: React.ReactNode;
+  allowOverflow?: boolean;
 }) => (
   <div className={cn(
-    "bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden",
+    "bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl",
+    allowOverflow ? "overflow-visible" : "overflow-hidden",
     className
   )}>
     <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
@@ -199,9 +205,33 @@ export default function AgentLab() {
   const [diffPrompt, setDiffPrompt] = useState<string | null>(null);
   const [chatMessagesTestAI, setChatMessagesTestAI] = useState<{ role: "user" | "assistant", content: string }[]>([]);
   const [testMessage, setTestMessage] = useState("");
+
+  // ===== NOUVEAUX ÉTATS POUR API KEYS =====
+  const [apiKeys, setApiKeys] = useState<ApiKeyOption[]>([]);
+  const [showAddApiModal, setShowAddApiModal] = useState(false);
+  const [selectedAgentApiKey, setSelectedAgentApiKey] = useState<string>("");
   
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // ===== FONCTION POUR CHARGER LES API KEYS =====
+  const fetchApiKeys = async () => {
+    try {
+      const response = await fetch("/api/user/api-key");
+      const data = await response.json();
+      
+      if (response.ok) {
+        setApiKeys(data.apiKeys || []);
+      }
+    } catch (err) {
+      console.error("Error fetching API keys:", err);
+    }
+  };
+
+  // useEffect pour charger les API keys
+  useEffect(() => {
+    fetchApiKeys();
+  }, []);
 
   // ===== EXISTING FUNCTIONS (preserved) =====
   const refreshPrompt = async (agentId: string) => {
@@ -245,6 +275,7 @@ export default function AgentLab() {
     setOpenaiModel(selected.openaiModel);
     setTemperature(selected.temperature);
     setTopP(selected.top_p);
+    setSelectedAgentApiKey(selected.apiKey || ""); // NOUVELLE LIGNE AJOUTÉE
     
     // Réinitialiser les messages du AI Prompter
     setMessages([]);
@@ -377,6 +408,7 @@ export default function AgentLab() {
           temperature,
           top_p: topP,
           integrations,
+          apiKey: selectedAgentApiKey, // NOUVELLE LIGNE AJOUTÉE
         }),
       });
 
@@ -478,7 +510,6 @@ export default function AgentLab() {
   return (
     <RequireApiKey>
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
-
 
         <div className="relative z-10 min-h-screen py-8">
           <div className="max-w-7xl mx-auto px-6">
@@ -642,20 +673,31 @@ export default function AgentLab() {
                   icon={<Brain className="text-cyan-400" size={24} />}
                   title="Model Parameters"
                   subtitle="Fine-tune your AI model settings"
+                  allowOverflow={true}
                 >
                   <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-3">AI Model</label>
-                      <select
-                        value={openaiModel}
-                        onChange={(e) => setOpenaiModel(e.target.value)}
-                        className="w-full px-4 py-3.5 bg-gray-900/60 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm"
-                        disabled={!selectedAgentId}
-                      >
-                        <option value="gpt-4o" className="bg-gray-800 text-white">GPT-4o (Recommended)</option>
-                        <option value="gpt-4" className="bg-gray-800 text-white">GPT-4</option>
-                        <option value="gpt-3.5-turbo" className="bg-gray-800 text-white">GPT-3.5 Turbo</option>
-                      </select>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-300 mb-3">AI Model</label>
+                        <AiModelDropdown
+                          selectedModel={openaiModel}
+                          onModelSelect={(modelId) => setOpenaiModel(modelId)}
+                          disabled={!selectedAgentId}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-300 mb-3">
+                          API Key Project
+                        </label>
+                        <ApiKeyDropdown
+                          selectedApiKey={selectedAgentApiKey}
+                          onApiKeySelect={(keyId) => setSelectedAgentApiKey(keyId)}
+                          onAddNewClick={() => setShowAddApiModal(true)}
+                          apiKeys={apiKeys}
+                          disabled={!selectedAgentId}
+                        />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1266,6 +1308,45 @@ export default function AgentLab() {
                     );
                   })}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add API Key Modal */}
+        {showAddApiModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-md mx-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 border-2 border-blue-500/40 flex items-center justify-center shadow-lg">
+                    <Key className="text-blue-400" size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Add API Key</h2>
+                    <p className="text-sm text-gray-400 mt-0.5">Connect your OpenAI API key</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAddApiModal(false)}
+                  className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <p className="text-gray-300 text-center">
+                  Go to <span className="text-blue-400 font-medium">API Key page</span> to add new API keys.
+                </p>
+                <button
+                  onClick={() => setShowAddApiModal(false)}
+                  className="w-full mt-4 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold transition-all"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>

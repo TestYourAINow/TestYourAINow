@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { 
   Trash2, Bot, Plus, Settings, Calendar, Webhook, File, 
-  Search, Filter, Activity, Eye, Edit3, MoreHorizontal,
-  TrendingUp, Zap, Users, Circle, ChevronDown, Star, Clock,
+  Search, Filter, Activity, Eye, Edit3,
+  TrendingUp, Zap, Users, Circle, Star, Clock,
   FolderPlus, Folder, FolderEdit, FolderMinus
 } from "lucide-react"
 import ModalDeleteAgent from "@/components/ModalDeleteAgent"
@@ -13,6 +13,8 @@ import FadeInSection from "@/components/FadeInSection"
 import RequireApiKey from "@/components/RequireApiKey"
 import CreateFolderModal from "@/components/CreateFolderModal"
 import FolderCard from "@/components/FolderCard"
+import AgentActions from "@/components/Dropdowns/AgentActions"
+import SearchAgentsFoldersDropdown from "@/components/Dropdowns/SearchAgents&FoldersDropdown"
 
 type Agent = {
   _id: string
@@ -309,229 +311,6 @@ const DeleteFolderModal = ({
     </div>
   )
 }
-
-// Dropdown premium component - NOUVEAU DESIGN
-const PremiumDropdown = ({ 
-  value, 
-  onChange, 
-  options, 
-  placeholder = "Select...",
-  icon: Icon
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: string; icon?: any }[];
-  placeholder?: string;
-  icon?: any;
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const selectedOption = options.find(opt => opt.value === value);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isOpen]);
-
-  return (
-    <div ref={dropdownRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer hover:bg-gray-800/80 hover:border-gray-600/60 flex items-center justify-between min-w-[140px] backdrop-blur-sm"
-      >
-        <div className="flex items-center gap-2">
-          {Icon && <Icon size={16} className="text-gray-400" />}
-          <span className="text-sm font-medium">{selectedOption?.label || placeholder}</span>
-        </div>
-        <ChevronDown 
-          size={16} 
-          className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`} 
-        />
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 bg-gray-900/95 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-2xl z-[100] min-w-[160px] py-2">
-          {options.map((option) => {
-            const OptionIcon = option.icon;
-            const isSelected = value === option.value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onChange(option.value);
-                  setIsOpen(false);
-                }}
-                className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors ${
-                  isSelected 
-                    ? 'text-blue-300 bg-blue-600/20 border-r-2 border-blue-400' 
-                    : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
-                }`}
-              >
-                {OptionIcon && <OptionIcon size={14} className={isSelected ? 'text-blue-400' : 'text-gray-400'} />}
-                <span className="font-medium">{option.label}</span>
-                {isSelected && <div className="ml-auto w-2 h-2 rounded-full bg-blue-400"></div>}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// AgentActions UPDATED avec NOUVEAU DESIGN
-const AgentActions = ({ 
-  agent, 
-  onDelete,
-  folders = [],
-  onMoveToFolder
-}: { 
-  agent: Agent; 
-  onDelete: () => void;
-  folders?: FolderType[];
-  onMoveToFolder?: (agentId: string, folderId: string | null) => void;
-}) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [showMoveMenu, setShowMoveMenu] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-        setShowMoveMenu(false);
-      }
-    };
-
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showDropdown]);
-
-  return (
-    <div ref={dropdownRef} className="relative" onClick={(e) => e.stopPropagation()}>
-      <button 
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setShowDropdown(!showDropdown);
-        }}
-        className="w-8 h-8 rounded-lg bg-gray-800/80 backdrop-blur-sm border border-gray-600/50 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700/80 hover:border-gray-500/60 transition-all opacity-0 group-hover:opacity-100 duration-200"
-      >
-        <MoreHorizontal size={14} />
-      </button>
-      
-      {showDropdown && (
-        <div className="absolute right-0 top-full mt-1 bg-gray-900/95 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-2xl z-[100] min-w-[140px] py-2">
-          <Link href={`/agents/${agent._id}`} className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors font-medium">
-            <Eye size={14} className="text-gray-400" />
-            View Details
-          </Link>
-          <Link href={`/agent-lab?agentId=${agent._id}`} className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors font-medium">
-            <Edit3 size={14} className="text-gray-400" />
-            Edit in Lab
-          </Link>
-          
-          {onMoveToFolder && (
-            <>
-              <hr className="my-1 border-gray-700/50" />
-              <div className="relative">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowMoveMenu(!showMoveMenu);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors text-left font-medium"
-                >
-                  <Folder size={14} className="text-gray-400" />
-                  Move to Folder
-                  <ChevronDown size={12} className={`ml-auto transition-transform ${showMoveMenu ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {showMoveMenu && (
-                  <div className="absolute left-full top-0 ml-1 bg-gray-900/95 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-2xl min-w-[160px] py-2 z-[110]">
-                    {agent.folderId && (
-                      <>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            onMoveToFolder(agent._id, null);
-                            setShowDropdown(false);
-                            setShowMoveMenu(false);
-                          }}
-                          className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-orange-400 hover:text-orange-300 hover:bg-orange-900/20 transition-colors text-left font-medium"
-                        >
-                          <FolderMinus size={14} />
-                          Remove from Folder
-                        </button>
-                        <hr className="my-1 border-gray-700/50" />
-                      </>
-                    )}
-                    
-                    {folders.filter(f => f._id !== agent.folderId).map(folder => (
-                      <button
-                        key={folder._id}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onMoveToFolder(agent._id, folder._id);
-                          setShowDropdown(false);
-                          setShowMoveMenu(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors text-left font-medium"
-                      >
-                        <div 
-                          className="w-3 h-3 rounded-full shadow-sm"
-                          style={{ backgroundColor: folder.color }}
-                        />
-                        <span className="truncate">{folder.name}</span>
-                      </button>
-                    ))}
-                    
-                    {folders.filter(f => f._id !== agent.folderId).length === 0 && !agent.folderId && (
-                      <div className="px-3 py-2.5 text-xs text-gray-500 text-center font-medium">
-                        No folders available
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-          
-          <hr className="my-1 border-gray-700/50" />
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onDelete();
-              setShowDropdown(false);
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-colors font-medium"
-          >
-            <Trash2 size={14} className="text-red-400" />
-            Delete
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
 
 // Statut d'agent - NOUVEAU DESIGN
 const AgentStatus = ({ integrations }: { integrations?: { name: string; type: string }[] }) => {
@@ -889,7 +668,7 @@ export default function AgentsPage() {
 
                 {/* Enhanced Filters + New Folder Button */}
                 <div className="flex gap-3 flex-wrap">
-                  <PremiumDropdown
+                  <SearchAgentsFoldersDropdown
                     value={filterType}
                     onChange={(value) => setFilterType(value as typeof filterType)}
                     options={[
@@ -900,7 +679,7 @@ export default function AgentsPage() {
                     icon={Filter}
                   />
 
-                  <PremiumDropdown
+                  <SearchAgentsFoldersDropdown
                     value={sortBy}
                     onChange={(value) => setSortBy(value as typeof sortBy)}
                     options={[

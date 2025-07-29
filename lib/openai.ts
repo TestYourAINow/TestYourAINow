@@ -64,7 +64,15 @@ export async function createAgentOpenAI(agent: any): Promise<{ openai: OpenAI | 
       return { openai: null, error: "User not found" };
     }
 
-    // Trouver l'API key spécifique dans les clés de l'utilisateur
+    // Si c'est une vraie clé API (commence par sk-) - fallback pour anciennes données
+    if (typeof agent.apiKey === 'string' && agent.apiKey.startsWith('sk-')) {
+      const openai = new OpenAI({
+        apiKey: agent.apiKey,
+      });
+      return { openai, error: null };
+    }
+
+    // Trouver l'API key spécifique dans les clés de l'utilisateur (comportement normal)
     const apiKeyData = user.apiKeys?.find((key: any) => key._id.toString() === agent.apiKey);
     
     if (!apiKeyData) {
