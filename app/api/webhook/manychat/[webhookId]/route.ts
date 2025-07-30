@@ -117,9 +117,12 @@ export async function POST(req: NextRequest, context: any) {
       const conversationId = `${webhookId}_${userId}`;
 
       console.log(`🔍 Fetching response for ${conversationId}`);
+      console.log(`📋 Available responses:`, Array.from(pendingResponses.keys()));
+      console.log(`⏰ Request time difference: ${Date.now()}ms`);
 
       // Vérifier si la réponse est prête
       const aiResponse = pendingResponses.get(conversationId);
+      console.log(`🎯 Found response:`, aiResponse ? 'YES' : 'NO');
       
       if (aiResponse) {
         // Nettoyer la réponse utilisée
@@ -192,11 +195,11 @@ export async function POST(req: NextRequest, context: any) {
         pendingResponses.set(conversationId, aiResponse);
         console.log(`✅ AI response ready for ${conversationId}: "${aiResponse.substring(0, 100)}..."`);
         
-        // Auto-cleanup après 5 minutes
+        // Auto-cleanup après 5 minutes (augmenté pour debug)
         setTimeout(() => {
           pendingResponses.delete(conversationId);
           console.log(`🧹 Cleaned up response for ${conversationId}`);
-        }, 5 * 60 * 1000);
+        }, 10 * 60 * 1000); // 10 minutes au lieu de 5
       })
       .catch((error) => {
         console.error('❌ AI processing failed:', error);
