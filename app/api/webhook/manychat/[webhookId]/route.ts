@@ -4,7 +4,7 @@ import { Connection } from '@/models/Connection';
 import { Agent } from '@/models/Agent';
 import { AgentKnowledge } from '@/models/AgentKnowledge';
 import { createAgentOpenAIForWebhook } from '@/lib/openai';
-import { storeAIResponse, storeConversationHistory } from '@/lib/redisCache'; // 🚀 Redis Pro
+import { storeAIResponse, storeConversationHistory, getConversationHistory } from '@/lib/redisCache'; // 🚀 Redis Pro
 
 // 📝 Types pour les messages OpenAI
 type ChatMessage = {
@@ -16,36 +16,35 @@ type ChatMessage = {
 async function processWithAI(agent: any, userMessage: string, userId: string, conversationId: string) {
   try {
     console.log(`🤖 Processing message for agent ${agent._id} with user ${userId}`);
-    
+
     // 1. Créer l'instance OpenAI
     const { openai, error } = await createAgentOpenAIForWebhook(agent);
     if (!openai) {
       console.error(`❌ OpenAI setup failed: ${error}`);
-      await storeAIResponse(conversationId, "Désolé, problème technique.");
-      return;
+      await storeAIResponse(conversationId, "Désolé, problème technique."); return;
     }
 
     console.log(`✅ OpenAI instance created successfully for agent ${agent._id}`);
 
     // 2. Récupérer les connaissances de l'agent
     const knowledge = await AgentKnowledge.find({ agentId: agent._id }).sort({ createdAt: -1 });
-    
+
     const MAX_CONTENT_PER_FILE = 15000;
     const MAX_TOTAL_KNOWLEDGE = 80000;
-    
+
     let totalUsedChars = 0;
     const knowledgeText = knowledge
       .map((k) => {
         if (totalUsedChars >= MAX_TOTAL_KNOWLEDGE) return null;
-        
+
         const remainingChars = MAX_TOTAL_KNOWLEDGE - totalUsedChars;
         const maxForThisFile = Math.min(MAX_CONTENT_PER_FILE, remainingChars);
-        
+
         let content = k.content;
         if (content.length > maxForThisFile) {
           content = content.slice(0, maxForThisFile);
         }
-        
+
         totalUsedChars += content.length;
         return `— ${k.fileName} (${k.sourceName || 'Document'}) :\n${content}\n`;
       })
@@ -54,16 +53,27 @@ async function processWithAI(agent: any, userMessage: string, userId: string, co
 
     console.log(`📚 Knowledge loaded: ${knowledge.length} files, ${totalUsedChars} chars`);
 
-    // 3. Construire les messages
+    // 3. 🧠 Charger l'historique de la conversation pour la mémoire
+    const conversationHistory = await getConversationHistory(conversationId);
+    console.log(`🧠 Conversation history: ${conversationHistory.length} messages`);
+
+    // Convertir l'historique en format OpenAI
+    const historyMessages: ChatMessage[] = conversationHistory.slice(-10).map(msg => ({
+      role: msg.role as "user" | "assistant",
+      content: msg.content
+    }));
+
+    // 4. Construire les messages avec historique
     const messages: ChatMessage[] = [
       { role: 'system' as const, content: agent.finalPrompt || '' },
       { role: 'system' as const, content: `Voici ce que tu dois savoir :\n${knowledgeText}` },
+      ...historyMessages, // 🧠 HISTORIQUE AJOUTÉ !
       { role: 'user' as const, content: userMessage }
     ];
 
-    console.log(`💬 Calling OpenAI with model: ${agent.openaiModel}`);
+    console.log(`💬 Calling OpenAI with model: ${agent.openaiModel} (${messages.length} messages including history)`);
 
-    // 4. Appel OpenAI
+    // 5. Appel OpenAI
     const completion = await openai.chat.completions.create({
       model: agent.openaiModel,
       temperature: agent.temperature,
@@ -73,28 +83,29 @@ async function processWithAI(agent: any, userMessage: string, userId: string, co
 
     const response = completion.choices[0]?.message?.content || "Je n'ai pas pu répondre.";
     console.log(`✅ OpenAI response received: ${response.substring(0, 100)}...`);
-    
-    // 5. 🚀 Stocker la réponse dans Redis Pro
-    await storeAIResponse(conversationId, response);
-    
-    // 6. 🧠 Stocker dans l'historique pour mémoire future
+
+    // 6. 🧠 STOCKER AVANT de stocker la réponse IA
     await storeConversationHistory(conversationId, {
       role: 'user',
       content: userMessage,
       timestamp: Date.now()
     });
-    
+
+    // 7. 🚀 Stocker la réponse dans Redis Pro
+    await storeAIResponse(conversationId, response);
+
+    // 8. 🧠 Stocker la réponse IA dans l'historique
     await storeConversationHistory(conversationId, {
-      role: 'assistant', 
+      role: 'assistant',
       content: response,
       timestamp: Date.now()
     });
-    
+
   } catch (error: any) {
     console.error('❌ AI processing error:', error);
-    
+
     let errorMessage = "Désolé, je rencontre un problème technique. Réessayez dans quelques instants.";
-    
+
     if (error.status === 401) {
       errorMessage = "Configuration incorrecte de l'API key. Contactez l'administrateur.";
     } else if (error.status === 429) {
@@ -102,7 +113,7 @@ async function processWithAI(agent: any, userMessage: string, userId: string, co
     } else if (error.status === 500) {
       errorMessage = "Problème avec le service OpenAI. Réessayez plus tard.";
     }
-    
+
     // Stocker le message d'erreur
     await storeAIResponse(conversationId, errorMessage);
   }
@@ -113,10 +124,10 @@ export async function POST(req: NextRequest, context: any) {
   try {
     const params = await context.params;
     const { webhookId } = params;
-    
+
     console.log(`📨 Webhook SEND for ID: ${webhookId}`);
     console.log(`🔗 Full URL: ${req.url}`);
-    
+
     await connectToDatabase();
 
     // 1. Récupérer et parser le body
@@ -159,7 +170,7 @@ export async function POST(req: NextRequest, context: any) {
     processWithAI(agent, userMessage, userId, conversationId);
 
     // 6. Retourner immédiatement à ManyChat
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       message: 'Message received and processing',
       status: 'received'
