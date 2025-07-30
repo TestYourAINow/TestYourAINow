@@ -84,7 +84,15 @@ export async function getConversationHistory(conversationId: string): Promise<{ 
     const messages = await redis.lrange(`conversation:${conversationId}`, 0, -1);
     console.log(`🔍 [REDIS] Raw messages from Redis:`, messages);
     
+    // 🔧 FIX: Redis renvoie déjà des objets parsés !
     const parsedMessages = messages.map((msg, index) => {
+      // Si c'est déjà un objet, pas besoin de parser
+      if (typeof msg === 'object' && msg !== null) {
+        console.log(`📝 [REDIS] Message ${index} already parsed:`, msg);
+        return msg as { role: string; content: string; timestamp: number };
+      }
+      
+      // Si c'est une string, alors parser
       try {
         const parsed = JSON.parse(String(msg));
         console.log(`📝 [REDIS] Parsed message ${index}:`, parsed);
