@@ -42,7 +42,7 @@ export async function createUserOpenAI(): Promise<{ openai: OpenAI | null; error
   }
 }
 
-// Fonction pour créer une instance OpenAI avec la clé spécifique de l'agent
+// Fonction pour créer une instance OpenAI avec la clé spécifique de l'agent (avec session)
 export async function createAgentOpenAI(agent: any): Promise<{ openai: OpenAI | null; error: string | null }> {
   try {
     const session = await getServerSession(authOptions);
@@ -87,5 +87,63 @@ export async function createAgentOpenAI(agent: any): Promise<{ openai: OpenAI | 
   } catch (error) {
     console.error("Error creating agent OpenAI instance:", error);
     return { openai: null, error: "Failed to initialize OpenAI for agent" };
+  }
+}
+
+// 🆕 NOUVELLE FONCTION pour les webhooks (sans session)
+export async function createAgentOpenAIForWebhook(agent: any): Promise<{ openai: OpenAI | null; error: string | null }> {
+  try {
+    await connectToDatabase();
+    
+    if (!agent.apiKey) {
+      return { openai: null, error: "Agent has no API key configured" };
+    }
+
+    // Si c'est une vraie clé API (commence par sk-) - fallback pour anciennes données
+    if (typeof agent.apiKey === 'string' && agent.apiKey.startsWith('sk-')) {
+      const openai = new OpenAI({
+        apiKey: agent.apiKey,
+      });
+      return { openai, error: null };
+    }
+
+    // Récupérer l'utilisateur propriétaire de l'agent
+    const user = await User.findById(agent.userId);
+    if (!user) {
+      return { openai: null, error: "Agent owner not found" };
+    }
+
+    // Trouver l'API key spécifique dans les clés de l'utilisateur
+    const apiKeyData = user.apiKeys?.find((key: any) => key._id.toString() === agent.apiKey);
+    
+    if (!apiKeyData) {
+      // Fallback: essayer l'API key par défaut
+      const defaultApiKey = user.apiKeys?.find((key: any) => key.isDefault);
+      if (defaultApiKey) {
+        const openai = new OpenAI({
+          apiKey: defaultApiKey.key,
+        });
+        return { openai, error: null };
+      }
+      
+      // Dernier fallback: ancienne API key
+      if (user.openaiApiKey) {
+        const openai = new OpenAI({
+          apiKey: user.openaiApiKey,
+        });
+        return { openai, error: null };
+      }
+      
+      return { openai: null, error: "No valid API key found for this agent" };
+    }
+
+    const openai = new OpenAI({
+      apiKey: apiKeyData.key,
+    });
+
+    return { openai, error: null };
+  } catch (error) {
+    console.error("Error creating webhook OpenAI instance:", error);
+    return { openai: null, error: "Failed to initialize OpenAI for webhook" };
   }
 }

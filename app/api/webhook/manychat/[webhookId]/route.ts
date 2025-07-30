@@ -3,7 +3,7 @@ import { connectToDatabase } from '@/lib/db';
 import { Connection } from '@/models/Connection';
 import { Agent } from '@/models/Agent';
 import { AgentKnowledge } from '@/models/AgentKnowledge';
-import { createAgentOpenAI } from '@/lib/openai'; // ✅ CHANGÉ
+import { createAgentOpenAIForWebhook } from '@/lib/openai'; // ✅ CHANGÉ pour la version webhook
 import crypto from 'crypto';
 
 // 📝 Types pour les messages OpenAI
@@ -29,11 +29,16 @@ function verifyWebhookSignature(body: string, signature: string, secret: string)
 // 🤖 Traiter le message avec l'AI
 async function processWithAI(agent: any, userMessage: string, userId: string) {
   try {
-    // 1. Créer l'instance OpenAI avec l'API key de l'agent ✅ CHANGÉ
-    const { openai, error } = await createAgentOpenAI(agent);
+    console.log(`🤖 Processing message for agent ${agent._id} with user ${userId}`);
+    
+    // 1. Créer l'instance OpenAI avec l'API key de l'agent ✅ CHANGÉ pour webhook
+    const { openai, error } = await createAgentOpenAIForWebhook(agent);
     if (!openai) {
+      console.error(`❌ OpenAI setup failed: ${error}`);
       throw new Error(error || 'OpenAI setup failed');
     }
+
+    console.log(`✅ OpenAI instance created successfully for agent ${agent._id}`);
 
     // 2. Récupérer les connaissances de l'agent
     const knowledge = await AgentKnowledge.find({ agentId: agent._id }).sort({ createdAt: -1 });
@@ -60,12 +65,16 @@ async function processWithAI(agent: any, userMessage: string, userId: string) {
       .filter(Boolean)
       .join('\n');
 
+    console.log(`📚 Knowledge loaded: ${knowledge.length} files, ${totalUsedChars} chars`);
+
     // 3. Construire les messages avec types corrects
     const messages: ChatMessage[] = [
       { role: 'system' as const, content: agent.finalPrompt || '' },
       { role: 'system' as const, content: `Voici ce que tu dois savoir :\n${knowledgeText}` },
       { role: 'user' as const, content: userMessage }
     ];
+
+    console.log(`💬 Calling OpenAI with model: ${agent.openaiModel}`);
 
     // 4. Appel OpenAI
     const completion = await openai.chat.completions.create({
@@ -75,10 +84,23 @@ async function processWithAI(agent: any, userMessage: string, userId: string) {
       messages,
     });
 
-    return completion.choices[0]?.message?.content || "Je n'ai pas pu répondre.";
+    const response = completion.choices[0]?.message?.content || "Je n'ai pas pu répondre.";
+    console.log(`✅ OpenAI response received: ${response.substring(0, 100)}...`);
     
-  } catch (error) {
-    console.error('AI processing error:', error);
+    return response;
+    
+  } catch (error: any) {
+    console.error('❌ AI processing error:', error);
+    
+    // Messages d'erreur plus spécifiques
+    if (error.status === 401) {
+      return "Configuration incorrecte de l'API key. Contactez l'administrateur.";
+    } else if (error.status === 429) {
+      return "Trop de requêtes en cours. Réessayez dans quelques instants.";
+    } else if (error.status === 500) {
+      return "Problème avec le service OpenAI. Réessayez plus tard.";
+    }
+    
     return "Désolé, je rencontre un problème technique. Réessayez dans quelques instants.";
   }
 }
@@ -89,38 +111,49 @@ export async function POST(req: NextRequest, context: any) {
     const params = await context.params;
     const { webhookId } = params;
     
+    console.log(`📨 Webhook received for ID: ${webhookId}`);
+    
     await connectToDatabase();
 
     // 1. Récupérer le body
     const body = await req.text();
     const data = JSON.parse(body);
 
+    console.log(`📄 Webhook data:`, JSON.stringify(data, null, 2));
+
     // 2. Trouver la connection
     const connection = await Connection.findOne({ webhookId, isActive: true });
     if (!connection) {
+      console.error(`❌ Connection not found for webhookId: ${webhookId}`);
       return NextResponse.json({ error: 'Connection not found' }, { status: 404 });
     }
 
-    // 3. Vérifier la signature webhook (sécurité)
-    const signature = req.headers.get('x-webhook-secret') || '';
+    console.log(`✅ Connection found: ${connection.name}`);
+
+    // 3. Vérifier la signature webhook (sécurité) - commenté pour debug
+    // const signature = req.headers.get('x-webhook-secret') || '';
     // if (!verifyWebhookSignature(body, signature, connection.webhookSecret)) {
     //  return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     // }
 
-    // 4. Récupérer l'agent
+    // 4. Récupérer l'agent avec populate si besoin
     const agent = await Agent.findById(connection.aiBuildId);
     if (!agent) {
+      console.error(`❌ Agent not found for ID: ${connection.aiBuildId}`);
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
     }
+
+    console.log(`✅ Agent found: ${agent.name}, API Key: ${agent.apiKey ? 'configured' : 'missing'}`);
 
     // 5. Extraire les données du message ManyChat
     const userMessage = data.text || data.message || '';
     const userId = data.user_id || data.subscriber_id || 'anonymous';
     const conversationId = `${webhookId}_${userId}`;
 
-    console.log(`📨 Received message from ${userId}: ${userMessage}`);
+    console.log(`📨 Message from ${userId}: "${userMessage}"`);
 
     if (!userMessage) {
+      console.error(`❌ No message content found in webhook data`);
       return NextResponse.json({ error: 'No message content' }, { status: 400 });
     }
 
@@ -129,15 +162,16 @@ export async function POST(req: NextRequest, context: any) {
       .then((aiResponse) => {
         // Stocker la réponse pour le fetchresponse
         pendingResponses.set(conversationId, aiResponse);
-        console.log(`✅ AI response ready for ${conversationId}`);
+        console.log(`✅ AI response ready for ${conversationId}: "${aiResponse.substring(0, 100)}..."`);
         
         // Auto-cleanup après 5 minutes
         setTimeout(() => {
           pendingResponses.delete(conversationId);
+          console.log(`🧹 Cleaned up response for ${conversationId}`);
         }, 5 * 60 * 1000);
       })
       .catch((error) => {
-        console.error('AI processing failed:', error);
+        console.error('❌ AI processing failed:', error);
         pendingResponses.set(conversationId, "Désolé, je rencontre un problème technique.");
       });
 
@@ -148,7 +182,7 @@ export async function POST(req: NextRequest, context: any) {
     });
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('❌ Webhook error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -173,12 +207,16 @@ export async function GET(req: NextRequest, context: any) {
       // Nettoyer la réponse utilisée
       pendingResponses.delete(conversationId);
       
+      console.log(`✅ Response found and returned for ${conversationId}`);
+      
       return NextResponse.json({
         text: aiResponse,
         success: true
       });
     } else {
       // Réponse pas encore prête
+      console.log(`⏳ Response not ready yet for ${conversationId}`);
+      
       return NextResponse.json({
         text: "Je traite votre message, un instant s'il vous plaît...",
         success: false,
@@ -187,7 +225,7 @@ export async function GET(req: NextRequest, context: any) {
     }
 
   } catch (error) {
-    console.error('Fetch response error:', error);
+    console.error('❌ Fetch response error:', error);
     return NextResponse.json({
       text: "Désolé, une erreur est survenue.",
       success: false
