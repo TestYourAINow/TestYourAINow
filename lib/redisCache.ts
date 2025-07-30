@@ -82,16 +82,20 @@ export async function getConversationHistory(conversationId: string): Promise<{ 
     console.log(`📚 [REDIS] Fetching conversation history for ${conversationId}`);
     
     const messages = await redis.lrange(`conversation:${conversationId}`, 0, -1);
+    console.log(`🔍 [REDIS] Raw messages from Redis:`, messages);
     
-    const parsedMessages = messages.map(msg => {
+    const parsedMessages = messages.map((msg, index) => {
       try {
-        return JSON.parse(String(msg));
-      } catch {
+        const parsed = JSON.parse(String(msg));
+        console.log(`📝 [REDIS] Parsed message ${index}:`, parsed);
+        return parsed;
+      } catch (parseError) {
+        console.error(`❌ [REDIS] Parse error for message ${index}:`, parseError, 'Raw:', msg);
         return null;
       }
     }).filter(Boolean).reverse(); // Inverse pour avoir chronologique
     
-    console.log(`✅ [REDIS] Found ${parsedMessages.length} messages for ${conversationId}`);
+    console.log(`✅ [REDIS] Final parsed messages (${parsedMessages.length}):`, parsedMessages);
     return parsedMessages;
   } catch (error) {
     console.error(`❌ [REDIS] Error fetching conversation history for ${conversationId}:`, error);
