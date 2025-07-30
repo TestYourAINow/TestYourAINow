@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.49.4",
     "@types/cheerio": "^0.22.35",
     "@types/react-dropzone": "^4.2.2",
+    "@upstash/redis": "^1.35.2",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "cheerio": "^1.1.0",

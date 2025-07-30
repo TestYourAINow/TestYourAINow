@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getResponse, listPendingResponses } from '@/lib/responseCache'; // 🆕 Import du cache partagé
+import { getAIResponse, listPendingAIResponses } from '@/lib/redisCache'; // 🚀 Redis Pro
 
 // 🔄 POST - Récupérer la réponse (2ème External Request)
 export async function POST(req: NextRequest, context: any) {
@@ -21,10 +21,10 @@ export async function POST(req: NextRequest, context: any) {
     const conversationId = `${webhookId}_${userId}`;
 
     console.log(`🔍 Fetching response for ${conversationId}`);
-    console.log(`📋 Available responses:`, listPendingResponses());
+    console.log(`📋 Available responses:`, await listPendingAIResponses());
 
-    // 3. 🆕 Utiliser le cache partagé
-    const aiResponse = getResponse(conversationId);
+    // 3. 🚀 Utiliser Redis Pro
+    const aiResponse = await getAIResponse(conversationId);
     console.log(`🎯 Found response:`, aiResponse ? 'YES' : 'NO');
     
     if (aiResponse) {
@@ -37,9 +37,25 @@ export async function POST(req: NextRequest, context: any) {
         status: "completed"
       });
     } else {
-      // Réponse pas encore prête
-      console.log(`⏳ Response not ready yet for ${conversationId}`);
+      // 🚀 RETRY LOGIC avec Redis
+      console.log(`⏳ Response not ready yet for ${conversationId}, checking if OpenAI is still processing...`);
       
+      // Attendre 3 secondes et re-checker une fois
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      const aiResponseRetry = await getAIResponse(conversationId);
+      if (aiResponseRetry) {
+        console.log(`✅ Response found on retry for ${conversationId}: "${aiResponseRetry.substring(0, 100)}..."`);
+        
+        return NextResponse.json({
+          text: aiResponseRetry,
+          success: true,
+          response: aiResponseRetry,
+          status: "completed"
+        });
+      }
+      
+      // Toujours pas prêt après retry
       return NextResponse.json({
         text: "Je traite votre message, un instant s'il vous plaît...",
         success: false,

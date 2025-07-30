@@ -4,7 +4,7 @@ import { Connection } from '@/models/Connection';
 import { Agent } from '@/models/Agent';
 import { AgentKnowledge } from '@/models/AgentKnowledge';
 import { createAgentOpenAIForWebhook } from '@/lib/openai';
-import { storeResponse } from '@/lib/responseCache'; // 🆕 Import du cache partagé
+import { storeAIResponse, storeConversationHistory } from '@/lib/redisCache'; // 🚀 Redis Pro
 
 // 📝 Types pour les messages OpenAI
 type ChatMessage = {
@@ -21,7 +21,7 @@ async function processWithAI(agent: any, userMessage: string, userId: string, co
     const { openai, error } = await createAgentOpenAIForWebhook(agent);
     if (!openai) {
       console.error(`❌ OpenAI setup failed: ${error}`);
-      storeResponse(conversationId, "Désolé, problème de configuration. Contactez l'administrateur.");
+      await storeAIResponse(conversationId, "Désolé, problème technique.");
       return;
     }
 
@@ -74,8 +74,21 @@ async function processWithAI(agent: any, userMessage: string, userId: string, co
     const response = completion.choices[0]?.message?.content || "Je n'ai pas pu répondre.";
     console.log(`✅ OpenAI response received: ${response.substring(0, 100)}...`);
     
-    // 5. 🆕 Stocker la réponse dans le cache partagé
-    storeResponse(conversationId, response);
+    // 5. 🚀 Stocker la réponse dans Redis Pro
+    await storeAIResponse(conversationId, response);
+    
+    // 6. 🧠 Stocker dans l'historique pour mémoire future
+    await storeConversationHistory(conversationId, {
+      role: 'user',
+      content: userMessage,
+      timestamp: Date.now()
+    });
+    
+    await storeConversationHistory(conversationId, {
+      role: 'assistant', 
+      content: response,
+      timestamp: Date.now()
+    });
     
   } catch (error: any) {
     console.error('❌ AI processing error:', error);
@@ -91,7 +104,7 @@ async function processWithAI(agent: any, userMessage: string, userId: string, co
     }
     
     // Stocker le message d'erreur
-    storeResponse(conversationId, errorMessage);
+    await storeAIResponse(conversationId, errorMessage);
   }
 }
 
