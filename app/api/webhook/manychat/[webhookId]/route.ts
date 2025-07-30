@@ -4,6 +4,7 @@ import { Connection } from '@/models/Connection';
 import { Agent } from '@/models/Agent';
 import { AgentKnowledge } from '@/models/AgentKnowledge';
 import { createAgentOpenAIForWebhook } from '@/lib/openai';
+import { storeResponse } from '@/lib/responseCache'; // 🆕 Import du cache partagé
 
 // 📝 Types pour les messages OpenAI
 type ChatMessage = {
@@ -11,11 +12,8 @@ type ChatMessage = {
   content: string;
 };
 
-// 📝 Structure temporaire pour stocker les réponses en attente
-const pendingResponses = new Map<string, string>();
-
 // 🤖 Traiter le message avec l'IA
-async function processWithAI(agent: any, userMessage: string, userId: string) {
+async function processWithAI(agent: any, userMessage: string, userId: string, conversationId: string) {
   try {
     console.log(`🤖 Processing message for agent ${agent._id} with user ${userId}`);
     
@@ -23,7 +21,8 @@ async function processWithAI(agent: any, userMessage: string, userId: string) {
     const { openai, error } = await createAgentOpenAIForWebhook(agent);
     if (!openai) {
       console.error(`❌ OpenAI setup failed: ${error}`);
-      throw new Error(error || 'OpenAI setup failed');
+      storeResponse(conversationId, "Désolé, problème de configuration. Contactez l'administrateur.");
+      return;
     }
 
     console.log(`✅ OpenAI instance created successfully for agent ${agent._id}`);
@@ -75,83 +74,38 @@ async function processWithAI(agent: any, userMessage: string, userId: string) {
     const response = completion.choices[0]?.message?.content || "Je n'ai pas pu répondre.";
     console.log(`✅ OpenAI response received: ${response.substring(0, 100)}...`);
     
-    return response;
+    // 5. 🆕 Stocker la réponse dans le cache partagé
+    storeResponse(conversationId, response);
     
   } catch (error: any) {
     console.error('❌ AI processing error:', error);
     
+    let errorMessage = "Désolé, je rencontre un problème technique. Réessayez dans quelques instants.";
+    
     if (error.status === 401) {
-      return "Configuration incorrecte de l'API key. Contactez l'administrateur.";
+      errorMessage = "Configuration incorrecte de l'API key. Contactez l'administrateur.";
     } else if (error.status === 429) {
-      return "Trop de requêtes en cours. Réessayez dans quelques instants.";
+      errorMessage = "Trop de requêtes en cours. Réessayez dans quelques instants.";
     } else if (error.status === 500) {
-      return "Problème avec le service OpenAI. Réessayez plus tard.";
+      errorMessage = "Problème avec le service OpenAI. Réessayez plus tard.";
     }
     
-    return "Désolé, je rencontre un problème technique. Réessayez dans quelques instants.";
+    // Stocker le message d'erreur
+    storeResponse(conversationId, errorMessage);
   }
 }
 
-// 📨 POST - Gère les 2 types de requêtes selon l'URL
+// 📨 POST - SEULEMENT pour recevoir les messages (1er External Request)
 export async function POST(req: NextRequest, context: any) {
   try {
     const params = await context.params;
     const { webhookId } = params;
     
-    // 🔍 Détecter le type de requête selon l'URL
-    const url = new URL(req.url);
-    const isFetchRequest = url.pathname.includes('/fetchresponse') || url.searchParams.has('fetch');
-    
-    console.log(`📨 Webhook ${isFetchRequest ? 'FETCH' : 'SEND'} for ID: ${webhookId}`);
+    console.log(`📨 Webhook SEND for ID: ${webhookId}`);
     console.log(`🔗 Full URL: ${req.url}`);
     
     await connectToDatabase();
 
-    // ==================== FETCH RESPONSE (2ème POST) ====================
-    if (isFetchRequest) {
-      const body = await req.text();
-      const data = JSON.parse(body);
-      
-      // Extraire contactId du body (votre format)
-      const userId = data.contactId || data.user_id || data.subscriber_id || 'anonymous';
-      const conversationId = `${webhookId}_${userId}`;
-
-      console.log(`🔍 Fetching response for ${conversationId}`);
-      console.log(`📋 Available responses:`, Array.from(pendingResponses.keys()));
-      console.log(`⏰ Request time difference: ${Date.now()}ms`);
-
-      // Vérifier si la réponse est prête
-      const aiResponse = pendingResponses.get(conversationId);
-      console.log(`🎯 Found response:`, aiResponse ? 'YES' : 'NO');
-      
-      if (aiResponse) {
-        // Nettoyer la réponse utilisée
-        pendingResponses.delete(conversationId);
-        
-        console.log(`✅ Response found and returned for ${conversationId}`);
-        
-        return NextResponse.json({
-          text: aiResponse,
-          success: true,
-          // 🆕 Format compatible avec l'autre site
-          response: aiResponse,
-          status: "completed"
-        });
-      } else {
-        // Réponse pas encore prête
-        console.log(`⏳ Response not ready yet for ${conversationId}`);
-        
-        return NextResponse.json({
-          text: "Je traite votre message, un instant s'il vous plaît...",
-          success: false,
-          pending: true,
-          status: "processing"
-        });
-      }
-    }
-
-    // ==================== SEND MESSAGE (1er POST) ====================
-    
     // 1. Récupérer et parser le body
     const body = await req.text();
     const data = JSON.parse(body);
@@ -189,22 +143,7 @@ export async function POST(req: NextRequest, context: any) {
     }
 
     // 5. Traiter le message avec l'AI (en arrière-plan)
-    processWithAI(agent, userMessage, userId)
-      .then((aiResponse) => {
-        // Stocker la réponse pour le fetchresponse
-        pendingResponses.set(conversationId, aiResponse);
-        console.log(`✅ AI response ready for ${conversationId}: "${aiResponse.substring(0, 100)}..."`);
-        
-        // Auto-cleanup après 5 minutes (augmenté pour debug)
-        setTimeout(() => {
-          pendingResponses.delete(conversationId);
-          console.log(`🧹 Cleaned up response for ${conversationId}`);
-        }, 10 * 60 * 1000); // 10 minutes au lieu de 5
-      })
-      .catch((error) => {
-        console.error('❌ AI processing failed:', error);
-        pendingResponses.set(conversationId, "Désolé, je rencontre un problème technique.");
-      });
+    processWithAI(agent, userMessage, userId, conversationId);
 
     // 6. Retourner immédiatement à ManyChat
     return NextResponse.json({ 
@@ -219,48 +158,7 @@ export async function POST(req: NextRequest, context: any) {
   }
 }
 
-// 🔄 GET - Garde la compatibilité pour l'ancien système
-export async function GET(req: NextRequest, context: any) {
-  try {
-    const params = await context.params;
-    const { webhookId } = params;
-    
-    // Extraire user_id depuis les query params
-    const url = new URL(req.url);
-    const userId = url.searchParams.get('user_id') || url.searchParams.get('subscriber_id') || 'anonymous';
-    const conversationId = `${webhookId}_${userId}`;
-
-    console.log(`🔍 GET - Fetching response for ${conversationId}`);
-
-    // Vérifier si la réponse est prête
-    const aiResponse = pendingResponses.get(conversationId);
-    
-    if (aiResponse) {
-      // Nettoyer la réponse utilisée
-      pendingResponses.delete(conversationId);
-      
-      console.log(`✅ GET - Response found and returned for ${conversationId}`);
-      
-      return NextResponse.json({
-        text: aiResponse,
-        success: true
-      });
-    } else {
-      // Réponse pas encore prête
-      console.log(`⏳ GET - Response not ready yet for ${conversationId}`);
-      
-      return NextResponse.json({
-        text: "Je traite votre message, un instant s'il vous plaît...",
-        success: false,
-        pending: true
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ GET response error:', error);
-    return NextResponse.json({
-      text: "Désolé, une erreur est survenue.",
-      success: false
-    });
-  }
+// 🔄 GET - Pas utilisé mais on garde pour compatibilité
+export async function GET() {
+  return NextResponse.json({ message: 'Use POST method' }, { status: 405 });
 }
