@@ -266,364 +266,388 @@ export default function ConnectionDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-950">
       
-      {/* ✅ HEADER - RIEN CHANGÉ */}
-      <div className="max-w-6xl mx-auto mb-8">
-        <Link href="/launch-agent" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6">
-          <ArrowLeft size={16} />
-          <span>Back to Deployment Center</span>
-        </Link>
-        
-        <div className="flex items-center gap-4 mb-4">
-          <div className="text-3xl">{getIntegrationIcon(integrationType)}</div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">{connection.name}</h1>
-            <p className="text-gray-400">Agent ID: {connection._id} • Type: {getIntegrationDisplayName(integrationType)}</p>
-          </div>
-        </div>
+      {/* ✅ HEADER GLOBAL - SIMPLIFIÉ */}
+      <div className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-xl sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
+          <div className="flex items-center justify-between">
+            {/* Left - Back + Title */}
+            <div className="flex items-center gap-4">
+              <Link href="/launch-agent" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                <ArrowLeft size={16} />
+                <span className="hidden sm:inline">Back to Deployment Center</span>
+              </Link>
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">{getIntegrationIcon(integrationType)}</div>
+                <div>
+                  <h1 className="text-xl font-bold text-white">{connection.name}</h1>
+                  <p className="text-gray-400 text-sm hidden sm:block">{getIntegrationDisplayName(integrationType)}</p>
+                </div>
+              </div>
+            </div>
 
-        {/* 🔄 TABS FONCTIONNELS */}
-        <div className="flex gap-4 border-b border-gray-800">
-          <button 
-            onClick={() => setActiveTab('conversations')}
-            className={`px-4 py-2 transition-all ${
-              activeTab === 'conversations' 
-                ? 'text-white border-b-2 border-emerald-500 bg-emerald-500/10' 
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            💬 Conversations
-          </button>
-          <button 
-            onClick={() => setActiveTab('configuration')}
-            className={`px-4 py-2 transition-all ${
-              activeTab === 'configuration' 
-                ? 'text-white border-b-2 border-emerald-500 bg-emerald-500/10' 
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            ⚙️ Configuration
-          </button>
+            {/* Right - Tabs */}
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setActiveTab('conversations')}
+                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
+                  activeTab === 'conversations' 
+                    ? 'bg-emerald-600 text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                💬 Conversations
+              </button>
+              <button 
+                onClick={() => setActiveTab('configuration')}
+                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
+                  activeTab === 'configuration' 
+                    ? 'bg-emerald-600 text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                ⚙️ Configuration
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* ✅ ONGLET CONFIGURATION - CODE EXISTANT 100% INTACT */}
       {activeTab === 'configuration' && (
-        <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
-          {/* ✅ WEBHOOK DETAILS - RIEN CHANGÉ */}
-          <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-cyan-600/20 border border-cyan-500/40 rounded-xl flex items-center justify-center">
-                <Globe className="text-cyan-400" size={20} />
+        <div className="max-w-4xl mx-auto p-4 md:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            {/* ✅ WEBHOOK DETAILS - RIEN CHANGÉ */}
+            <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-cyan-600/20 border border-cyan-500/40 rounded-xl flex items-center justify-center">
+                  <Globe className="text-cyan-400" size={20} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Webhook Details</h2>
+                  <p className="text-gray-400 text-sm">Use these details to connect your {integrationType.replace('-', ' ')} account via ManyChat.</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">Webhook Details</h2>
-                <p className="text-gray-400 text-sm">Use these details to connect your {integrationType.replace('-', ' ')} account via ManyChat.</p>
-              </div>
-            </div>
 
-            {/* Webhook URL */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-white mb-3">
-                Webhook URL
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={connection.webhookUrl || 'Not generated'}
-                  readOnly
-                  className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl pr-12 font-mono text-sm"
-                />
-                <button
-                  onClick={() => connection.webhookUrl && copyToClipboard(connection.webhookUrl, 'url')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                  disabled={!connection.webhookUrl}
-                >
-                  {copiedUrl ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Webhook Secret */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-white mb-3">
-                Webhook Secret
-              </label>
-              <div className="relative">
-                <input
-                  type={showSecret ? "text" : "password"}
-                  value={connection.webhookSecret || 'Not generated'}
-                  readOnly
-                  className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl pr-20 font-mono text-sm"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2">
+              {/* Webhook URL */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-white mb-3">
+                  Webhook URL
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={connection.webhookUrl || 'Not generated'}
+                    readOnly
+                    className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl pr-12 font-mono text-sm"
+                  />
                   <button
-                    onClick={() => setShowSecret(!showSecret)}
-                    className="text-gray-400 hover:text-white transition-colors"
-                    disabled={!connection.webhookSecret}
+                    onClick={() => connection.webhookUrl && copyToClipboard(connection.webhookUrl, 'url')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    disabled={!connection.webhookUrl}
                   >
-                    {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                  <button
-                    onClick={() => connection.webhookSecret && copyToClipboard(connection.webhookSecret, 'secret')}
-                    className="text-gray-400 hover:text-white transition-colors"
-                    disabled={!connection.webhookSecret}
-                  >
-                    {copiedSecret ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                    {copiedUrl ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Setup Guide Button */}
-            <button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
-              <Play size={18} />
-              Show Setup Guide & Video
-            </button>
-          </div>
-
-          {/* ✅ AI BUILD CONFIGURATION - RIEN CHANGÉ */}
-          <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-emerald-600/20 border border-emerald-500/40 rounded-xl flex items-center justify-center">
-                <Bot className="text-emerald-400" size={20} />
+              {/* Webhook Secret */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-white mb-3">
+                  Webhook Secret
+                </label>
+                <div className="relative">
+                  <input
+                    type={showSecret ? "text" : "password"}
+                    value={connection.webhookSecret || 'Not generated'}
+                    readOnly
+                    className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl pr-20 font-mono text-sm"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2">
+                    <button
+                      onClick={() => setShowSecret(!showSecret)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      disabled={!connection.webhookSecret}
+                    >
+                      {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                    <button
+                      onClick={() => connection.webhookSecret && copyToClipboard(connection.webhookSecret, 'secret')}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      disabled={!connection.webhookSecret}
+                    >
+                      {copiedSecret ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">AI Build Configuration</h2>
-                <p className="text-gray-400 text-sm">Select and manage the AI build connected to this {integrationType.replace('-', ' ')} agent.</p>
+
+              {/* Setup Guide Button */}
+              <button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
+                <Play size={18} />
+                Show Setup Guide & Video
+              </button>
+            </div>
+
+            {/* ✅ AI BUILD CONFIGURATION - RIEN CHANGÉ */}
+            <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-emerald-600/20 border border-emerald-500/40 rounded-xl flex items-center justify-center">
+                  <Bot className="text-emerald-400" size={20} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">AI Build Configuration</h2>
+                  <p className="text-gray-400 text-sm">Select and manage the AI build connected to this {integrationType.replace('-', ' ')} agent.</p>
+                </div>
               </div>
-            </div>
 
-            {/* Connected AI Build */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-white mb-3">
-                Connected AI Build
-              </label>
-              <input
-                type="text"
-                value={connection.aiName || connection.aiBuildId}
-                readOnly
-                className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl"
-              />
-            </div>
+              {/* Connected AI Build */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-white mb-3">
+                  Connected AI Build
+                </label>
+                <input
+                  type="text"
+                  value={connection.aiName || connection.aiBuildId}
+                  readOnly
+                  className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl"
+                />
+              </div>
 
-            {/* Manage AI Builds Button */}
-            <Link
-              href="/agents"
-              className="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center"
-            >
-              Manage AI Builds
-            </Link>
+              {/* Manage AI Builds Button */}
+              <Link
+                href="/agents"
+                className="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center"
+              >
+                Manage AI Builds
+              </Link>
 
-            {/* Connection Info */}
-            <div className="mt-8 p-4 bg-gray-800/40 rounded-xl">
-              <p className="text-gray-400 text-sm">
-                This connection was created on {connection.createdAt ? new Date(connection.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long', 
-                  day: 'numeric'
-                }) : 'Unknown date'}.
-              </p>
-              <p className="text-gray-400 text-sm mt-1">
-                Agent Name: <span className="text-white">{connection.name}</span> (Connection Name: <span className="text-white">{connection.name}</span>)
-              </p>
+              {/* Connection Info */}
+              <div className="mt-8 p-4 bg-gray-800/40 rounded-xl">
+                <p className="text-gray-400 text-sm">
+                  This connection was created on {connection.createdAt ? new Date(connection.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long', 
+                    day: 'numeric'
+                  }) : 'Unknown date'}.
+                </p>
+                <p className="text-gray-400 text-sm mt-1">
+                  Agent Name: <span className="text-white">{connection.name}</span> (Connection Name: <span className="text-white">{connection.name}</span>)
+                </p>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* 🆕 ONGLET CONVERSATIONS - INTERFACE COMME IMAGE 1 */}
+      {/* 🆕 ONGLET CONVERSATIONS - LAYOUT MESSENGER STYLE */}
       {activeTab === 'conversations' && (
-        <div className="max-w-6xl mx-auto">
+        <div className="h-[calc(100vh-80px)]"> {/* Full height minus header */}
           {!connection.webhookId ? (
             /* Message pour connections sans webhook */
-            <div className="bg-gray-900/30 border border-gray-700/50 rounded-2xl p-12 text-center">
-              <div className="w-20 h-20 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <MessageCircle className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Conversations not available</h3>
-              <p className="text-gray-400">
-                This connection type ({integrationType}) does not support conversation history.
-              </p>
-            </div>
-          ) : selectedConversation ? (
-            /* Vue détaillée d'une conversation avec scroll infini */
-            <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl">
-              {/* Header conversation */}
-              <div className="p-6 border-b border-gray-700/50 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setSelectedConversation(null)}
-                    className="w-10 h-10 bg-gray-800/50 hover:bg-gray-700/50 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-all"
-                  >
-                    <ArrowLeft size={18} />
-                  </button>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Customer #{selectedConversation.userId}</h3>
-                    <p className="text-gray-400">{selectedConversation.totalMessages} messages • {selectedConversation.platform}</p>
-                  </div>
+            <div className="h-full flex items-center justify-center p-8">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <MessageCircle className="w-10 h-10 text-gray-400" />
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => fetchConversationDetails(selectedConversation.conversationId)}
-                    className="w-10 h-10 bg-emerald-600/20 hover:bg-emerald-600/30 rounded-xl flex items-center justify-center text-emerald-400 transition-all"
-                  >
-                    <RefreshCw size={18} />
-                  </button>
-                  <button
-                    onClick={() => deleteConversation(selectedConversation.conversationId)}
-                    className="w-10 h-10 bg-red-600/20 hover:bg-red-600/30 rounded-xl flex items-center justify-center text-red-400 transition-all"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Messages avec scroll infini */}
-              <div className="flex flex-col h-96">
-                {/* Bouton Load More en haut */}
-                {hasMoreMessages && (
-                  <div className="p-4 border-b border-gray-700/50">
-                    <button
-                      onClick={loadMoreMessages}
-                      disabled={loadingMore}
-                      className="w-full py-2 px-4 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 rounded-lg text-gray-300 transition-all text-sm"
-                    >
-                      {loadingMore ? 'Loading...' : 'Load older messages'}
-                    </button>
-                  </div>
-                )}
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                  {conversationDetailsLoading ? (
-                    <div className="text-center text-gray-400">Loading messages...</div>
-                  ) : (
-                    selectedConversation.messages.map((message, index) => (
-                      <div
-                        key={index}
-                        className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
-                      >
-                        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl relative group ${
-                          message.role === 'user'
-                            ? 'bg-gray-800/50 text-white'
-                            : 'bg-emerald-600/20 text-emerald-200 border border-emerald-500/30'
-                        }`}>
-                          <p className="text-sm">{message.content}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <p className="text-xs opacity-70">
-                              {formatTime(message.timestamp)}
-                            </p>
-                            {message.isFiltered && (
-                              <span className="text-xs opacity-50 bg-gray-700/50 px-1 rounded" title="Exclu du contexte IA">
-                                filtered
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Conversations not available</h3>
+                <p className="text-gray-400">
+                  This connection type ({integrationType}) does not support conversation history.
+                </p>
               </div>
             </div>
           ) : (
-            /* Liste des conversations - EXACTEMENT COMME IMAGE 1 */
-            <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl">
-              {/* Header */}
-              <div className="p-6 border-b border-gray-700/50 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-emerald-600/20 border border-emerald-500/40 rounded-xl flex items-center justify-center">
-                    <MessageCircle className="text-emerald-400" size={20} />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">Conversations</h2>
-                    <p className="text-gray-400 text-sm">
-                      {conversations.length} conversation{conversations.length !== 1 ? 's' : ''} found
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={fetchConversations}
-                  disabled={conversationsLoading}
-                  className="w-10 h-10 bg-emerald-600/20 hover:bg-emerald-600/30 disabled:opacity-50 rounded-xl flex items-center justify-center text-emerald-400 transition-all"
-                >
-                  <RefreshCw size={18} className={conversationsLoading ? 'animate-spin' : ''} />
-                </button>
-              </div>
-
-              {/* Liste */}
-              <div className="divide-y divide-gray-700/50">
-                {conversationsLoading ? (
-                  <div className="p-8 text-center text-gray-400">
-                    Loading conversations...
-                  </div>
-                ) : conversations.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <div className="w-16 h-16 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <MessageCircle className="w-8 h-8 text-gray-400" />
+            /* LAYOUT MESSENGER - 2 COLONNES */
+            <div className="flex h-full">
+              
+              {/* 📋 COLONNE GAUCHE - LISTE CONVERSATIONS (30%) */}
+              <div className="w-full md:w-96 border-r border-gray-800 bg-gray-950 flex flex-col">
+                {/* Header liste */}
+                <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-emerald-600/20 border border-emerald-500/40 rounded-lg flex items-center justify-center">
+                      <MessageCircle className="text-emerald-400" size={16} />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">No conversations yet</h3>
-                    <p className="text-gray-400">
-                      Conversations will appear here once users start chatting with your agent.
-                    </p>
+                    <div>
+                      <h2 className="font-bold text-white">Conversations</h2>
+                      <p className="text-gray-400 text-xs">
+                        {conversations.length} total
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  conversations.map((conv) => (
-                    <div
-                      key={conv._id}
-                      className="p-4 hover:bg-gray-800/30 transition-all group relative"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gray-700/50 rounded-xl flex items-center justify-center group-hover:bg-gray-600/50 transition-all">
-                          <User className="text-gray-400 group-hover:text-gray-300" size={20} />
-                        </div>
-                        <div 
-                          className="flex-1 min-w-0 cursor-pointer"
-                          onClick={() => fetchConversationDetails(conv.conversationId)}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <h4 className="font-medium text-white truncate">
-                              Customer #{conv.userId}
-                            </h4>
-                            <span className="text-xs text-gray-500 flex items-center gap-1">
-                              <Clock size={12} />
-                              {formatTime(conv.lastMessageTime)}
-                            </span>
+                  <button
+                    onClick={fetchConversations}
+                    disabled={conversationsLoading}
+                    className="w-8 h-8 bg-emerald-600/20 hover:bg-emerald-600/30 disabled:opacity-50 rounded-lg flex items-center justify-center text-emerald-400 transition-all"
+                  >
+                    <RefreshCw size={14} className={conversationsLoading ? 'animate-spin' : ''} />
+                  </button>
+                </div>
+
+                {/* Liste scrollable */}
+                <div className="flex-1 overflow-y-auto">
+                  {conversationsLoading ? (
+                    <div className="p-8 text-center text-gray-400">
+                      <div className="animate-spin w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                      Loading conversations...
+                    </div>
+                  ) : conversations.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <div className="w-12 h-12 bg-gray-800/50 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <MessageCircle className="w-6 h-6 text-gray-400" />
+                      </div>
+                      <h3 className="font-bold text-white mb-2">No conversations yet</h3>
+                      <p className="text-gray-400 text-sm">
+                        Conversations will appear here once users start chatting.
+                      </p>
+                    </div>
+                  ) : (
+                    conversations.map((conv) => (
+                      <div
+                        key={conv._id}
+                        onClick={() => fetchConversationDetails(conv.conversationId)}
+                        className={`p-4 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group ${
+                          selectedConversation?.conversationId === conv.conversationId 
+                            ? 'bg-emerald-900/20 border-emerald-500/30' 
+                            : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-600/50 transition-all">
+                            <User className="text-gray-400 group-hover:text-gray-300" size={16} />
                           </div>
-                          <p className="text-sm text-gray-400 truncate">{conv.lastMessage}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-gray-500">
-                              {conv.messageCount} message{conv.messageCount !== 1 ? 's' : ''}
-                            </span>
-                            <span className="text-xs text-gray-600">•</span>
-                            <span className="text-xs text-gray-500">{conv.platform}</span>
-                            {conv.isUser && (
-                              <>
-                                <span className="text-xs text-gray-600">•</span>
-                                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                              </>
-                            )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <h4 className="font-medium text-white text-sm truncate">
+                                Customer #{conv.userId}
+                              </h4>
+                              <span className="text-xs text-gray-500">
+                                {formatTime(conv.lastMessageTime)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-400 truncate">{conv.lastMessage}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="text-xs text-gray-500">
+                                {conv.messageCount}
+                              </span>
+                              <span className="text-xs text-gray-600">•</span>
+                              <span className="text-xs text-gray-500">{conv.platform}</span>
+                              {conv.isUser && (
+                                <>
+                                  <span className="text-xs text-gray-600">•</span>
+                                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        {/* Actions dropdown */}
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* Delete button */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
                               deleteConversation(conv.conversationId)
                             }}
-                            className="w-8 h-8 bg-red-600/20 hover:bg-red-600/30 rounded-lg flex items-center justify-center text-red-400 transition-all"
+                            className="opacity-0 group-hover:opacity-100 w-6 h-6 bg-red-600/20 hover:bg-red-600/30 rounded flex items-center justify-center text-red-400 transition-all"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={12} />
                           </button>
                         </div>
                       </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* 💬 COLONNE DROITE - CONVERSATION DÉTAILLÉE (70%) */}
+              <div className="flex-1 flex flex-col bg-gray-950">
+                {selectedConversation ? (
+                  <>
+                    {/* Header conversation */}
+                    <div className="p-4 border-b border-gray-800 bg-gray-900/30 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center">
+                          <User className="text-gray-300" size={18} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white">Customer #{selectedConversation.userId}</h3>
+                          <p className="text-gray-400 text-sm">{selectedConversation.totalMessages} messages • {selectedConversation.platform}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => fetchConversationDetails(selectedConversation.conversationId)}
+                          className="w-8 h-8 bg-emerald-600/20 hover:bg-emerald-600/30 rounded-lg flex items-center justify-center text-emerald-400 transition-all"
+                        >
+                          <RefreshCw size={14} />
+                        </button>
+                        <button
+                          onClick={() => deleteConversation(selectedConversation.conversationId)}
+                          className="w-8 h-8 bg-red-600/20 hover:bg-red-600/30 rounded-lg flex items-center justify-center text-red-400 transition-all"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
-                  ))
+
+                    {/* Messages avec scroll infini */}
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                      {/* Bouton Load More en haut */}
+                      {hasMoreMessages && (
+                        <div className="p-3 border-b border-gray-800/50">
+                          <button
+                            onClick={loadMoreMessages}
+                            disabled={loadingMore}
+                            className="w-full py-2 px-4 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 rounded-lg text-gray-300 transition-all text-sm"
+                          >
+                            {loadingMore ? 'Loading...' : 'Load older messages'}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Messages */}
+                      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {conversationDetailsLoading ? (
+                          <div className="text-center text-gray-400 py-8">
+                            <div className="animate-spin w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                            Loading messages...
+                          </div>
+                        ) : (
+                          selectedConversation.messages.map((message, index) => (
+                            <div
+                              key={index}
+                              className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
+                            >
+                              <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${
+                                message.role === 'user'
+                                  ? 'bg-gray-800/50 text-white'
+                                  : 'bg-emerald-600/20 text-emerald-200 border border-emerald-500/30'
+                              }`}>
+                                <p className="text-sm">{message.content}</p>
+                                <p className="text-xs mt-1 opacity-70">
+                                  {formatTime(message.timestamp)}
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* État par défaut - Aucune conversation sélectionnée */
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <MessageCircle className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <h3 className="text-lg font-bold text-white mb-2">Select a conversation</h3>
+                      <p className="text-gray-400">
+                        Choose a conversation from the list to view the chat history.
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

@@ -12,14 +12,15 @@ import {
   HelpCircle,
   Settings,
   CreditCard,
-  LogOut
+  LogOut,
+  BarChart3  // 🆕 AJOUTÉ pour Dashboard
 } from "lucide-react"
 import { useSidebar } from "@/context/SidebarContext"
 import { useSession, signOut } from "next-auth/react"
 import { useState, useRef, useEffect } from "react"
 import { usePathname } from "next/navigation"
 
-// Enhanced SidebarUserDropdown Component - Intégré
+// Enhanced SidebarUserDropdown Component - RIEN CHANGÉ
 const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
   const { data: session, update } = useSession()
   const [localProfileImage, setLocalProfileImage] = useState<string | null>(null)
@@ -193,14 +194,16 @@ export default function Sidebar() {
   const { collapsed, toggleSidebar } = useSidebar()
   const pathname = usePathname()
 
-  // Determine active states based on current path
+  // 🆕 DASHBOARD AJOUTÉ EN PREMIER + EXISTING ITEMS (RIEN CASSÉ)
   const workspaceItems = [
+    { href: "/dashboard", label: "Dashboard", icon: <BarChart3 size={20} />, isActive: pathname === "/dashboard" }, // 🆕 DASHBOARD
     { href: "/agents", label: "My Agents", icon: <Bot size={20} />, isActive: pathname === "/agents" },
     { href: "/agent-lab", label: "Improve Agent", icon: <Brain size={20} />, isActive: pathname === "/agent-lab" },
     { href: "/demo-agent", label: "Demo Agent", icon: <FlaskConical size={20} />, isActive: pathname === "/demo-agent" },
     { href: "/launch-agent", label: "Launch Agent", icon: <Rocket size={20} />, isActive: pathname === "/launch-agent" },
   ]
 
+  // 🔄 RESOURCES ITEMS - RIEN CHANGÉ
   const resourceItems = [
     { href: "/api-key", label: "API Key", icon: <Key size={20} />, isActive: pathname === "/api-key" },
     { href: "/video-guides", label: "Video Guides", icon: <PlayCircle size={20} />, isActive: pathname === "/video-guides" },
@@ -209,23 +212,23 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Enhanced Sidebar - Mobile Optimized */}
+      {/* Enhanced Sidebar - RIEN CHANGÉ */}
       <aside className={`fixed top-0 bottom-0 left-0 bg-gray-900/95 backdrop-blur-xl text-white z-50 transition-[width] duration-300 ease-out border-r border-gray-700/50 ${collapsed ? 'w-16' : 'w-72'} flex flex-col shadow-2xl`}>
         
-{/* Enhanced Header with Premium Logo */}
+        {/* Enhanced Header with Premium Logo - RIEN CHANGÉ */}
         <div className="h-16 flex items-center px-4 border-b border-gray-700/50 flex-shrink-0 bg-gray-900/50 backdrop-blur-sm">
           <div className="flex items-center min-w-0 w-full">
-            {/* Enhanced Premium Logo - Bot + Gradient avec Link vers /agents */}
-            <Link href="/agents" className="shrink-0 relative group" style={{ marginLeft: '-4px' }}>
+            {/* Enhanced Premium Logo - Bot + Gradient avec Link vers /dashboard - 🔄 CHANGÉ VERS DASHBOARD */}
+            <Link href="/dashboard" className="shrink-0 relative group" style={{ marginLeft: '-4px' }}>
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-blue-500/25">
                 <Bot className="w-6 h-6 text-white transition-transform duration-300 group-hover:scale-110" />
               </div>
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-gray-900 shadow-emerald-400/50 shadow-md animate-pulse"></div>
             </Link>
             
-            {/* Enhanced Brand Text avec Link vers /agents */}
+            {/* Enhanced Brand Text avec Link vers /dashboard - 🔄 CHANGÉ VERS DASHBOARD */}
             <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-              <Link href="/agents" className="group">
+              <Link href="/dashboard" className="group">
                 <span className="text-xl font-bold whitespace-nowrap bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent transition-all duration-300 group-hover:from-blue-400 group-hover:to-cyan-400">
                   TestYour<span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">AI</span> Now
                 </span>
@@ -234,10 +237,10 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Enhanced Navigation - Mobile Scrollable */}
+        {/* Enhanced Navigation - WORKSPACE AVEC DASHBOARD */}
         <div className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
           
-          {/* Enhanced WORKSPACE Section */}
+          {/* Enhanced WORKSPACE Section - RIEN CHANGÉ */}
           <div className={`px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 transition-opacity duration-300 ${collapsed ? 'opacity-0' : 'opacity-100'}`}>
             <span className="bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text text-transparent">WORKSPACE</span>
           </div>
@@ -304,7 +307,7 @@ export default function Sidebar() {
             ))}
           </div>
 
-          {/* Enhanced RESOURCES Section */}
+          {/* Enhanced RESOURCES Section - RIEN CHANGÉ */}
           <div className={`px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 transition-opacity duration-300 ${collapsed ? 'opacity-0' : 'opacity-100'}`}>
             <span className="bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text text-transparent">RESOURCES</span>
           </div>
@@ -372,13 +375,13 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Enhanced Footer with User Dropdown */}
+        {/* Enhanced Footer with User Dropdown - RIEN CHANGÉ */}
         <div className="border-t border-gray-700/50 p-3 flex-shrink-0 bg-gray-900/30 backdrop-blur-sm">
           <SidebarUserDropdown collapsed={collapsed} />
         </div>
       </aside>
 
-      {/* Enhanced Toggle Button - Mobile Optimized */}
+      {/* Enhanced Toggle Button - RIEN CHANGÉ */}
       <div className="group">
         <button
           onClick={toggleSidebar}
@@ -393,7 +396,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Mobile Overlay for Sidebar */}
+      {/* Mobile Overlay for Sidebar - RIEN CHANGÉ */}
       {!collapsed && (
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
