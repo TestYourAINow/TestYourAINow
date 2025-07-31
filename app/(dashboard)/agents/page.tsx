@@ -6,7 +6,7 @@ import {
   Trash2, Bot, Plus, Settings, Calendar, Webhook, File, 
   Search, Filter, Activity, Eye, Edit3,
   TrendingUp, Zap, Users, Circle, Star, Clock,
-  FolderPlus, Folder, FolderEdit, FolderMinus
+  FolderPlus, Folder, FolderEdit, FolderMinus, AlertTriangle, X, CheckCircle
 } from "lucide-react"
 import ModalDeleteAgent from "@/components/ModalDeleteAgent"
 import FadeInSection from "@/components/FadeInSection"
@@ -203,7 +203,7 @@ const EditFolderModal = ({
   )
 }
 
-// Modal Delete - NOUVEAU DESIGN PREMIUM
+// Modal Delete Folder - NOUVEAU DESIGN PREMIUM HARMONISÉ
 const DeleteFolderModal = ({ 
   folder,
   isOpen, 
@@ -235,77 +235,135 @@ const DeleteFolderModal = ({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-md mx-auto">
-        <div className="p-6 border-b border-gray-700/50">
-          <div className="flex items-center gap-3 mb-4">
-            <div 
-              className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
-              style={{ backgroundColor: folder.color + '20', border: `2px solid ${folder.color}40` }}
-            >
-              <Trash2 className="w-6 h-6 text-red-400" />
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center shadow-lg">
+              <AlertTriangle className="w-6 h-6 text-red-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Delete Folder</h2>
-              <p className="text-sm text-gray-400">This action cannot be undone</p>
+              <h2 className="text-xl font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                Delete Folder
+              </h2>
+              <p className="text-sm text-gray-400 mt-0.5">This action cannot be undone</p>
             </div>
           </div>
           
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4 backdrop-blur-sm">
-            <p className="text-red-300 text-sm font-medium">
-              You're about to delete <strong>"{folder.name}"</strong> 
-              {folder.agentCount > 0 && ` which contains ${folder.agentCount} agent${folder.agentCount > 1 ? 's' : ''}`}.
-            </p>
-          </div>
-
-          {folder.agentCount > 0 && (
-            <div className="space-y-3">
-              <p className="text-white font-semibold">What should happen to the agents?</p>
-              
-              <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-gray-800/30 transition-colors">
-                <input
-                  type="radio"
-                  name="agentAction"
-                  checked={!deleteAgents}
-                  onChange={() => setDeleteAgents(false)}
-                  className="mt-1 w-4 h-4 text-blue-600"
-                />
-                <div>
-                  <div className="text-white font-semibold">Move agents to root</div>
-                  <div className="text-sm text-gray-400">Agents will be moved out of the folder</div>
-                </div>
-              </label>
-
-              <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-red-900/10 transition-colors">
-                <input
-                  type="radio"
-                  name="agentAction"
-                  checked={deleteAgents}
-                  onChange={() => setDeleteAgents(true)}
-                  className="mt-1 w-4 h-4 text-red-600"
-                />
-                <div>
-                  <div className="text-red-300 font-semibold">Delete all agents</div>
-                  <div className="text-sm text-gray-400">⚠️ All agents in this folder will be permanently deleted</div>
-                </div>
-              </label>
-            </div>
-          )}
-        </div>
-
-        <div className="p-6 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-xl font-semibold transition-all backdrop-blur-sm"
-            disabled={isDeleting}
+            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200 group"
           >
-            Cancel
+            <X size={20} />
           </button>
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-xl font-semibold transition-all disabled:opacity-50 shadow-lg hover:shadow-xl hover:shadow-red-500/20 transform hover:scale-105"
-          >
-            {isDeleting ? 'Deleting...' : 'Delete Folder'}
-          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          
+          {/* Warning Message */}
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-red-300 text-sm font-medium mb-1">
+                  You're about to delete "{folder.name}"
+                </p>
+                <p className="text-red-400/80 text-xs">
+                  {folder.agentCount > 0 
+                    ? `This folder contains ${folder.agentCount} agent${folder.agentCount > 1 ? 's' : ''}`
+                    : 'This folder is empty'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Options for agents */}
+          {folder.agentCount > 0 && (
+            <div className="space-y-4 mb-6">
+              <p className="text-white font-medium">What should happen to the agents?</p>
+              
+              {/* Option 1 - Move to root */}
+              <button
+                type="button"
+                onClick={() => setDeleteAgents(false)}
+                className={`w-full p-4 rounded-xl border transition-all text-left cursor-pointer ${
+                  !deleteAgents 
+                    ? 'border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10' 
+                    : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 transition-all ${
+                    !deleteAgents ? 'border-blue-400 bg-blue-400' : 'border-gray-500'
+                  }`}>
+                    {!deleteAgents && <CheckCircle className="w-5 h-5 text-white -m-0.5" />}
+                  </div>
+                  <div className="flex-1">
+                    <div className={`font-medium transition-colors ${
+                      !deleteAgents ? 'text-blue-300' : 'text-white'
+                    }`}>
+                      Keep agents safe
+                    </div>
+                    <div className="text-sm text-gray-400 mt-1">
+                      Move agents to the root level (recommended)
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              {/* Option 2 - Delete all agents */}
+              <button
+                type="button"
+                onClick={() => setDeleteAgents(true)}
+                className={`w-full p-4 rounded-xl border transition-all text-left cursor-pointer ${
+                  deleteAgents 
+                    ? 'border-red-500/50 bg-red-500/10 shadow-lg shadow-red-500/10' 
+                    : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 transition-all ${
+                    deleteAgents ? 'border-red-400 bg-red-400' : 'border-gray-500'
+                  }`}>
+                    {deleteAgents && <CheckCircle className="w-5 h-5 text-white -m-0.5" />}
+                  </div>
+                  <div className="flex-1">
+                    <div className={`font-medium transition-colors ${
+                      deleteAgents ? 'text-red-300' : 'text-white'
+                    }`}>
+                      Delete all agents
+                    </div>
+                    <div className="text-sm text-gray-400 mt-1">
+                      Permanently delete all agents in this folder
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-6 border-t border-gray-700/50">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-3.5 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-xl font-semibold transition-all backdrop-blur-sm border border-gray-700/50 hover:border-gray-600/50"
+              disabled={isDeleting}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-red-500/20 transform hover:scale-105 relative overflow-hidden group disabled:opacity-50 disabled:hover:scale-100"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <span className="relative z-10">
+                {isDeleting ? 'Deleting...' : 'Delete Folder'}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -380,35 +438,43 @@ export default function AgentsPage() {
       })
   }, [])
 
-  // Filtrage et tri
-  useEffect(() => {
-    let filtered = agents.filter(agent => 
-      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !agent.folderId
-    )
+// Filtrage et tri
+useEffect(() => {
+  let filtered = agents.filter(agent => {
+    // Filtre de recherche
+    const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Filtre pour les agents sans dossier (page principale)
+    const isNotInFolder = !agent.folderId || 
+                         agent.folderId === null || 
+                         agent.folderId === undefined ||
+                         agent.folderId === '';
+    
+    return matchesSearch && isNotInFolder;
+  });
 
-    if (filterType === "active") {
-      filtered = filtered.filter(agent => agent.integrations && agent.integrations.length > 0)
-    } else if (filterType === "basic") {
-      filtered = filtered.filter(agent => !agent.integrations || agent.integrations.length === 0)
+  if (filterType === "active") {
+    filtered = filtered.filter(agent => agent.integrations && agent.integrations.length > 0)
+  } else if (filterType === "basic") {
+    filtered = filtered.filter(agent => !agent.integrations || agent.integrations.length === 0)
+  }
+
+  filtered.sort((a, b) => {
+    switch (sortBy) {
+      case "name":
+        return a.name.localeCompare(b.name)
+      case "integrations":
+        return (b.integrations?.length || 0) - (a.integrations?.length || 0)
+      case "date":
+      default:
+        const dateA = new Date(a.updatedAt || a.createdAt).getTime()
+        const dateB = new Date(b.updatedAt || b.createdAt).getTime()
+        return dateB - dateA
     }
+  })
 
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name)
-        case "integrations":
-          return (b.integrations?.length || 0) - (a.integrations?.length || 0)
-        case "date":
-        default:
-          const dateA = new Date(a.updatedAt || a.createdAt).getTime()
-          const dateB = new Date(b.updatedAt || b.createdAt).getTime()
-          return dateB - dateA
-      }
-    })
-
-    setFilteredAgents(filtered)
-  }, [agents, searchQuery, filterType, sortBy])
+  setFilteredAgents(filtered)
+}, [agents, searchQuery, filterType, sortBy])
 
   const handleDeleteAgent = (id: string) => {
     setAgents((prev) => prev.filter((a) => a._id !== id))
@@ -482,32 +548,34 @@ export default function AgentsPage() {
     }
   }
 
-  const handleMoveAgent = async (agentId: string, folderId: string | null) => {
-    try {
-      const response = await fetch(`/api/agents/${agentId}/folder`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ folderId })
-      })
+const handleMoveAgent = async (agentId: string, folderId: string | null) => {
+  try {
+    const response = await fetch(`/api/agents/${agentId}/folder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ folderId })
+    })
+    
+    if (response.ok) {
+      // Mettre à jour l'état local immédiatement
+      setAgents(prev => prev.map(agent => 
+        agent._id === agentId 
+          ? { ...agent, folderId: folderId } 
+          : agent
+      ));
       
-      if (response.ok) {
-        setAgents(prev => prev.map(agent => 
-          agent._id === agentId 
-            ? { ...agent, folderId } 
-            : agent
-        ))
-        
-        const foldersResponse = await fetch("/api/folders", { credentials: "include" })
-        if (foldersResponse.ok) {
-          const data = await foldersResponse.json()
-          setFolders(data.folders || [])
-        }
+      // Rafraîchir les dossiers pour le count
+      const foldersResponse = await fetch("/api/folders", { credentials: "include" })
+      if (foldersResponse.ok) {
+        const data = await foldersResponse.json()
+        setFolders(data.folders || [])
       }
-    } catch (error) {
-      console.error('Error moving agent:', error)
     }
+  } catch (error) {
+    console.error('Error moving agent:', error)
   }
+}
 
   const getIntegrationIcon = (type: string) => {
     switch (type) {

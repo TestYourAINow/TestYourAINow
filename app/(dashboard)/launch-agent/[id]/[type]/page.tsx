@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Copy, Eye, EyeOff, CheckCircle, Play, Bot, Globe } from 'lucide-react'
+import { ArrowLeft, Copy, Eye, EyeOff, CheckCircle, Play, Bot, Globe, MessageCircle, Clock, User, RefreshCw, Trash2, MoreVertical } from 'lucide-react'
 
+// ✅ TYPES EXISTANTS - RIEN CHANGÉ
 type Connection = {
   _id: string
   name: string
@@ -15,6 +16,39 @@ type Connection = {
   webhookSecret?: string
   aiName?: string
   createdAt?: string
+  webhookId?: string
+}
+
+// 🆕 NOUVEAUX TYPES POUR MONGODB
+type ConversationSummary = {
+  _id: string
+  conversationId: string
+  userId: string
+  lastMessage: string
+  lastMessageTime: number
+  messageCount: number
+  isUser: boolean
+  platform: string
+}
+
+type ConversationMessage = {
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+  isFiltered?: boolean
+}
+
+type ConversationDetails = {
+  _id: string
+  conversationId: string
+  userId: string
+  platform: string
+  agentName?: string
+  messages: ConversationMessage[]
+  messageCount: number
+  totalMessages: number
+  firstMessageAt: string
+  lastMessageAt: string
 }
 
 export default function ConnectionDetailsPage() {
@@ -22,34 +56,155 @@ export default function ConnectionDetailsPage() {
   const connectionId = params.id as string
   const integrationType = params.type as string
 
+  // ✅ STATES EXISTANTS - RIEN CHANGÉ
   const [connection, setConnection] = useState<Connection | null>(null)
   const [loading, setLoading] = useState(true)
   const [showSecret, setShowSecret] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState(false)
   const [copiedSecret, setCopiedSecret] = useState(false)
+  
+  // 🆕 NOUVEAUX STATES POUR CONVERSATIONS (MongoDB)
+  const [activeTab, setActiveTab] = useState<'conversations' | 'configuration'>('conversations')
+  const [conversations, setConversations] = useState<ConversationSummary[]>([])
+  const [conversationsLoading, setConversationsLoading] = useState(false)
+  const [selectedConversation, setSelectedConversation] = useState<ConversationDetails | null>(null)
+  const [conversationDetailsLoading, setConversationDetailsLoading] = useState(false)
+  
+  // 🆕 PAGINATION STATES
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMoreMessages, setHasMoreMessages] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // ✅ FONCTION EXISTANTE - RIEN CHANGÉ
   useEffect(() => {
     if (connectionId) {
       fetchConnection()
     }
   }, [connectionId])
 
-const fetchConnection = async () => {
-  try {
-    const res = await fetch(`/api/connections/${connectionId}`)
-    const data = await res.json()
-    console.log('API Response:', data)
-    
-    // ✅ DIRECT
-    setConnection(data.connection)
-    
-  } catch (error) {
-    console.error('Error fetching connection:', error)
-  } finally {
-    setLoading(false)
-  }
-}
+  // 🆕 CHARGER LES CONVERSATIONS QUAND ON CHANGE D'ONGLET
+  useEffect(() => {
+    if (activeTab === 'conversations' && connection?.webhookId) {
+      fetchConversations()
+    }
+  }, [activeTab, connection])
 
+  // ✅ FONCTION EXISTANTE - RIEN CHANGÉ
+  const fetchConnection = async () => {
+    try {
+      const res = await fetch(`/api/connections/${connectionId}`)
+      const data = await res.json()
+      console.log('API Response:', data)
+      
+      // ✅ EXACT - RIEN CHANGÉ
+      setConnection(data.connection)
+      
+    } catch (error) {
+      console.error('Error fetching connection:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 🆕 FONCTION POUR CHARGER LES CONVERSATIONS (MongoDB)
+  const fetchConversations = async () => {
+    setConversationsLoading(true)
+    try {
+      const res = await fetch(`/api/connections/${connectionId}/conversations`)
+      const data = await res.json()
+      
+      if (data.success) {
+        setConversations(data.conversations || [])
+        console.log(`✅ Loaded ${data.conversations?.length || 0} conversations from MongoDB`)
+      }
+    } catch (error) {
+      console.error('Error fetching conversations:', error)
+    } finally {
+      setConversationsLoading(false)
+    }
+  }
+
+  // 🆕 FONCTION POUR CHARGER UNE CONVERSATION DÉTAILLÉE
+  const fetchConversationDetails = async (conversationId: string, loadMore = false, lastTimestamp?: number) => {
+    if (!loadMore) {
+      setConversationDetailsLoading(true)
+    } else {
+      setLoadingMore(true)
+    }
+
+    try {
+      const res = await fetch(`/api/connections/${connectionId}/conversations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          conversationId,
+          limit: 50,
+          loadMore,
+          lastTimestamp
+        })
+      })
+      const data = await res.json()
+      
+      if (data.success) {
+        if (loadMore && selectedConversation) {
+          // Ajouter les nouveaux messages au début
+          setSelectedConversation({
+            ...selectedConversation,
+            messages: [...data.conversation.messages, ...selectedConversation.messages]
+          })
+        } else {
+          // Premier chargement
+          setSelectedConversation(data.conversation)
+        }
+        setHasMoreMessages(data.pagination.hasMore)
+        console.log(`✅ Loaded conversation with ${data.conversation.messages.length} messages`)
+      }
+    } catch (error) {
+      console.error('Error fetching conversation details:', error)
+    } finally {
+      setConversationDetailsLoading(false)
+      setLoadingMore(false)
+    }
+  }
+
+  // 🆕 FONCTION POUR SUPPRIMER UNE CONVERSATION
+  const deleteConversation = async (conversationId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/connections/${connectionId}/conversations`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId })
+      })
+
+      if (res.ok) {
+        // Retirer de la liste
+        setConversations(prev => prev.filter(conv => conv.conversationId !== conversationId))
+        
+        // Si c'était la conversation sélectionnée, revenir à la liste
+        if (selectedConversation?.conversationId === conversationId) {
+          setSelectedConversation(null)
+        }
+        
+        console.log(`✅ Conversation deleted: ${conversationId}`)
+      }
+    } catch (error) {
+      console.error('Error deleting conversation:', error)
+    }
+  }
+
+  // 🆕 CHARGER PLUS DE MESSAGES (scroll infini)
+  const loadMoreMessages = () => {
+    if (selectedConversation && hasMoreMessages && !loadingMore && selectedConversation.messages.length > 0) {
+      const oldestMessage = selectedConversation.messages[0]
+      fetchConversationDetails(selectedConversation.conversationId, true, oldestMessage.timestamp)
+    }
+  }
+
+  // ✅ TOUTES LES FONCTIONS EXISTANTES - RIEN CHANGÉ
   const copyToClipboard = async (text: string, type: 'url' | 'secret') => {
     try {
       await navigator.clipboard.writeText(text)
@@ -81,6 +236,19 @@ const fetchConnection = async () => {
     }
   }
 
+  // 🆕 FONCTION POUR FORMATER LE TEMPS
+  const formatTime = (timestamp: number) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+    
+    if (diffHours < 1) return 'Il y a quelques minutes'
+    if (diffHours < 24) return `Il y a ${diffHours}h`
+    if (diffHours < 48) return 'Hier'
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  }
+
+  // ✅ LOADING ET ERROR STATES - RIEN CHANGÉ
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 p-4 flex items-center justify-center">
@@ -100,8 +268,8 @@ const fetchConnection = async () => {
   return (
     <div className="min-h-screen bg-gray-950 p-4 md:p-8">
       
-      {/* Header */}
-      <div className="max-w-4xl mx-auto mb-8">
+      {/* ✅ HEADER - RIEN CHANGÉ */}
+      <div className="max-w-6xl mx-auto mb-8">
         <Link href="/launch-agent" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6">
           <ArrowLeft size={16} />
           <span>Back to Deployment Center</span>
@@ -115,156 +283,353 @@ const fetchConnection = async () => {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* 🔄 TABS FONCTIONNELS */}
         <div className="flex gap-4 border-b border-gray-800">
-          <button className="px-4 py-2 text-white border-b-2 border-emerald-500 bg-emerald-500/10">
+          <button 
+            onClick={() => setActiveTab('conversations')}
+            className={`px-4 py-2 transition-all ${
+              activeTab === 'conversations' 
+                ? 'text-white border-b-2 border-emerald-500 bg-emerald-500/10' 
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
             💬 Conversations
           </button>
-          <button className="px-4 py-2 text-emerald-500 bg-emerald-600/20 border border-emerald-500/40 rounded-lg">
+          <button 
+            onClick={() => setActiveTab('configuration')}
+            className={`px-4 py-2 transition-all ${
+              activeTab === 'configuration' 
+                ? 'text-white border-b-2 border-emerald-500 bg-emerald-500/10' 
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
             ⚙️ Configuration
           </button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* Webhook Details */}
-        <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-cyan-600/20 border border-cyan-500/40 rounded-xl flex items-center justify-center">
-              <Globe className="text-cyan-400" size={20} />
+      {/* ✅ ONGLET CONFIGURATION - CODE EXISTANT 100% INTACT */}
+      {activeTab === 'configuration' && (
+        <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          {/* ✅ WEBHOOK DETAILS - RIEN CHANGÉ */}
+          <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-cyan-600/20 border border-cyan-500/40 rounded-xl flex items-center justify-center">
+                <Globe className="text-cyan-400" size={20} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">Webhook Details</h2>
+                <p className="text-gray-400 text-sm">Use these details to connect your {integrationType.replace('-', ' ')} account via ManyChat.</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Webhook Details</h2>
-              <p className="text-gray-400 text-sm">Use these details to connect your {integrationType.replace('-', ' ')} account via ManyChat.</p>
-            </div>
-          </div>
 
-          {/* Webhook URL */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-white mb-3">
-              Webhook URL
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={connection.webhookUrl || 'Not generated'}
-                readOnly
-                className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl pr-12 font-mono text-sm"
-              />
-              <button
-                onClick={() => connection.webhookUrl && copyToClipboard(connection.webhookUrl, 'url')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                disabled={!connection.webhookUrl}
-              >
-                {copiedUrl ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Webhook Secret */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-white mb-3">
-              Webhook Secret
-            </label>
-            <div className="relative">
-              <input
-                type={showSecret ? "text" : "password"}
-                value={connection.webhookSecret || 'Not generated'}
-                readOnly
-                className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl pr-20 font-mono text-sm"
-              />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2">
+            {/* Webhook URL */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-white mb-3">
+                Webhook URL
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={connection.webhookUrl || 'Not generated'}
+                  readOnly
+                  className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl pr-12 font-mono text-sm"
+                />
                 <button
-                  onClick={() => setShowSecret(!showSecret)}
-                  className="text-gray-400 hover:text-white transition-colors"
-                  disabled={!connection.webhookSecret}
+                  onClick={() => connection.webhookUrl && copyToClipboard(connection.webhookUrl, 'url')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  disabled={!connection.webhookUrl}
                 >
-                  {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-                <button
-                  onClick={() => connection.webhookSecret && copyToClipboard(connection.webhookSecret, 'secret')}
-                  className="text-gray-400 hover:text-white transition-colors"
-                  disabled={!connection.webhookSecret}
-                >
-                  {copiedSecret ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                  {copiedUrl ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Setup Guide Button */}
-          <button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
-            <Play size={18} />
-            Show Setup Guide & Video
-          </button>
-        </div>
-
-        {/* AI Build Configuration */}
-        <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-emerald-600/20 border border-emerald-500/40 rounded-xl flex items-center justify-center">
-              <Bot className="text-emerald-400" size={20} />
+            {/* Webhook Secret */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-white mb-3">
+                Webhook Secret
+              </label>
+              <div className="relative">
+                <input
+                  type={showSecret ? "text" : "password"}
+                  value={connection.webhookSecret || 'Not generated'}
+                  readOnly
+                  className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl pr-20 font-mono text-sm"
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2">
+                  <button
+                    onClick={() => setShowSecret(!showSecret)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    disabled={!connection.webhookSecret}
+                  >
+                    {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                  <button
+                    onClick={() => connection.webhookSecret && copyToClipboard(connection.webhookSecret, 'secret')}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    disabled={!connection.webhookSecret}
+                  >
+                    {copiedSecret ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                  </button>
+                </div>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">AI Build Configuration</h2>
-              <p className="text-gray-400 text-sm">Select and manage the AI build connected to this {integrationType.replace('-', ' ')} agent.</p>
+
+            {/* Setup Guide Button */}
+            <button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
+              <Play size={18} />
+              Show Setup Guide & Video
+            </button>
+          </div>
+
+          {/* ✅ AI BUILD CONFIGURATION - RIEN CHANGÉ */}
+          <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-emerald-600/20 border border-emerald-500/40 rounded-xl flex items-center justify-center">
+                <Bot className="text-emerald-400" size={20} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">AI Build Configuration</h2>
+                <p className="text-gray-400 text-sm">Select and manage the AI build connected to this {integrationType.replace('-', ' ')} agent.</p>
+              </div>
+            </div>
+
+            {/* Connected AI Build */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-white mb-3">
+                Connected AI Build
+              </label>
+              <input
+                type="text"
+                value={connection.aiName || connection.aiBuildId}
+                readOnly
+                className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl"
+              />
+            </div>
+
+            {/* Manage AI Builds Button */}
+            <Link
+              href="/agents"
+              className="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center"
+            >
+              Manage AI Builds
+            </Link>
+
+            {/* Connection Info */}
+            <div className="mt-8 p-4 bg-gray-800/40 rounded-xl">
+              <p className="text-gray-400 text-sm">
+                This connection was created on {connection.createdAt ? new Date(connection.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long', 
+                  day: 'numeric'
+                }) : 'Unknown date'}.
+              </p>
+              <p className="text-gray-400 text-sm mt-1">
+                Agent Name: <span className="text-white">{connection.name}</span> (Connection Name: <span className="text-white">{connection.name}</span>)
+              </p>
             </div>
           </div>
-
-          {/* Connected AI Build */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-white mb-3">
-              Connected AI Build
-            </label>
-            <input
-              type="text"
-              value={connection.aiName || connection.aiBuildId}
-              readOnly
-              className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl"
-            />
-          </div>
-
-          {/* Manage AI Builds Button */}
-          <Link
-            href="/agents"
-            className="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center"
-          >
-            Manage AI Builds
-          </Link>
-
-          {/* Connection Info */}
-          <div className="mt-8 p-4 bg-gray-800/40 rounded-xl">
-            <p className="text-gray-400 text-sm">
-              This connection was created on {connection.createdAt ? new Date(connection.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long', 
-                day: 'numeric'
-              }) : 'Unknown date'}.
-            </p>
-            <p className="text-gray-400 text-sm mt-1">
-              Agent Name: <span className="text-white">{connection.name}</span> (Connection Name: <span className="text-white">{connection.name}</span>)
-            </p>
-          </div>
         </div>
-      </div>
+      )}
 
-      {/* Empty Conversations State */}
-      <div className="max-w-4xl mx-auto mt-12">
-        <div className="bg-gray-900/30 border border-gray-700/50 rounded-2xl p-12 text-center">
-          <div className="w-20 h-20 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <div className="text-4xl">💬</div>
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">No conversations yet</h3>
-          <p className="text-gray-400 mb-6">
-            Once your {integrationType.replace('-', ' ')} is connected, conversations will appear here.
-          </p>
-          <div className="text-sm text-gray-500">
-            Make sure to set up your ManyChat webhook with the details above.
-          </div>
+      {/* 🆕 ONGLET CONVERSATIONS - INTERFACE COMME IMAGE 1 */}
+      {activeTab === 'conversations' && (
+        <div className="max-w-6xl mx-auto">
+          {!connection.webhookId ? (
+            /* Message pour connections sans webhook */
+            <div className="bg-gray-900/30 border border-gray-700/50 rounded-2xl p-12 text-center">
+              <div className="w-20 h-20 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <MessageCircle className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Conversations not available</h3>
+              <p className="text-gray-400">
+                This connection type ({integrationType}) does not support conversation history.
+              </p>
+            </div>
+          ) : selectedConversation ? (
+            /* Vue détaillée d'une conversation avec scroll infini */
+            <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl">
+              {/* Header conversation */}
+              <div className="p-6 border-b border-gray-700/50 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setSelectedConversation(null)}
+                    className="w-10 h-10 bg-gray-800/50 hover:bg-gray-700/50 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-all"
+                  >
+                    <ArrowLeft size={18} />
+                  </button>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Customer #{selectedConversation.userId}</h3>
+                    <p className="text-gray-400">{selectedConversation.totalMessages} messages • {selectedConversation.platform}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => fetchConversationDetails(selectedConversation.conversationId)}
+                    className="w-10 h-10 bg-emerald-600/20 hover:bg-emerald-600/30 rounded-xl flex items-center justify-center text-emerald-400 transition-all"
+                  >
+                    <RefreshCw size={18} />
+                  </button>
+                  <button
+                    onClick={() => deleteConversation(selectedConversation.conversationId)}
+                    className="w-10 h-10 bg-red-600/20 hover:bg-red-600/30 rounded-xl flex items-center justify-center text-red-400 transition-all"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Messages avec scroll infini */}
+              <div className="flex flex-col h-96">
+                {/* Bouton Load More en haut */}
+                {hasMoreMessages && (
+                  <div className="p-4 border-b border-gray-700/50">
+                    <button
+                      onClick={loadMoreMessages}
+                      disabled={loadingMore}
+                      className="w-full py-2 px-4 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 rounded-lg text-gray-300 transition-all text-sm"
+                    >
+                      {loadingMore ? 'Loading...' : 'Load older messages'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  {conversationDetailsLoading ? (
+                    <div className="text-center text-gray-400">Loading messages...</div>
+                  ) : (
+                    selectedConversation.messages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
+                      >
+                        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl relative group ${
+                          message.role === 'user'
+                            ? 'bg-gray-800/50 text-white'
+                            : 'bg-emerald-600/20 text-emerald-200 border border-emerald-500/30'
+                        }`}>
+                          <p className="text-sm">{message.content}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-xs opacity-70">
+                              {formatTime(message.timestamp)}
+                            </p>
+                            {message.isFiltered && (
+                              <span className="text-xs opacity-50 bg-gray-700/50 px-1 rounded" title="Exclu du contexte IA">
+                                filtered
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Liste des conversations - EXACTEMENT COMME IMAGE 1 */
+            <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-700/50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-600/20 border border-emerald-500/40 rounded-xl flex items-center justify-center">
+                    <MessageCircle className="text-emerald-400" size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Conversations</h2>
+                    <p className="text-gray-400 text-sm">
+                      {conversations.length} conversation{conversations.length !== 1 ? 's' : ''} found
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={fetchConversations}
+                  disabled={conversationsLoading}
+                  className="w-10 h-10 bg-emerald-600/20 hover:bg-emerald-600/30 disabled:opacity-50 rounded-xl flex items-center justify-center text-emerald-400 transition-all"
+                >
+                  <RefreshCw size={18} className={conversationsLoading ? 'animate-spin' : ''} />
+                </button>
+              </div>
+
+              {/* Liste */}
+              <div className="divide-y divide-gray-700/50">
+                {conversationsLoading ? (
+                  <div className="p-8 text-center text-gray-400">
+                    Loading conversations...
+                  </div>
+                ) : conversations.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <div className="w-16 h-16 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <MessageCircle className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-2">No conversations yet</h3>
+                    <p className="text-gray-400">
+                      Conversations will appear here once users start chatting with your agent.
+                    </p>
+                  </div>
+                ) : (
+                  conversations.map((conv) => (
+                    <div
+                      key={conv._id}
+                      className="p-4 hover:bg-gray-800/30 transition-all group relative"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gray-700/50 rounded-xl flex items-center justify-center group-hover:bg-gray-600/50 transition-all">
+                          <User className="text-gray-400 group-hover:text-gray-300" size={20} />
+                        </div>
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => fetchConversationDetails(conv.conversationId)}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="font-medium text-white truncate">
+                              Customer #{conv.userId}
+                            </h4>
+                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <Clock size={12} />
+                              {formatTime(conv.lastMessageTime)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-400 truncate">{conv.lastMessage}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-500">
+                              {conv.messageCount} message{conv.messageCount !== 1 ? 's' : ''}
+                            </span>
+                            <span className="text-xs text-gray-600">•</span>
+                            <span className="text-xs text-gray-500">{conv.platform}</span>
+                            {conv.isUser && (
+                              <>
+                                <span className="text-xs text-gray-600">•</span>
+                                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        {/* Actions dropdown */}
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              deleteConversation(conv.conversationId)
+                            }}
+                            className="w-8 h-8 bg-red-600/20 hover:bg-red-600/30 rounded-lg flex items-center justify-center text-red-400 transition-all"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   )
 }

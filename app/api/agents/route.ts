@@ -4,7 +4,7 @@ import { Agent } from "@/models/Agent";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
-// GET all agents (including prompt and integrations)
+
 export async function GET(req: NextRequest) {
   await connectToDatabase();
 
@@ -13,9 +13,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Récupérer TOUS les agents (pour la page principale ET les dossiers)
   const agents = await Agent.find({ userId: session.user.id })
     .sort({ createdAt: -1 })
-    .select("_id name integrations prompt openaiModel temperature top_p createdAt updatedAt");
+    .select("_id name integrations prompt openaiModel temperature top_p folderId createdAt updatedAt");
 
   return NextResponse.json({ agents });
 }
