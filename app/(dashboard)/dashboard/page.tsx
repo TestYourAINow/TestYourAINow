@@ -8,43 +8,25 @@ import {
   Bot, Zap, Activity, Clock, Users, TrendingUp, Play, 
   Rocket, Calendar, Brain, TestTube, Eye, ArrowRight,
   MessageCircle, Globe, CheckCircle, AlertTriangle,
-  Plus, Settings, Star, Gauge, Layers, Key, FlaskConical,
-  RefreshCw, BarChart3
+  Plus, Settings, Star, Gauge, Key, FlaskConical,
+  RefreshCw
 } from 'lucide-react';
 import RequireApiKey from "@/components/RequireApiKey";
 
-// 📊 TYPES
+// 📊 TYPES - NETTOYÉS
 interface DashboardStats {
   totalAgents: number;
-  activeAgents: number;
+  activeAgents: number; // ✅ Maintenant basé sur isDeployed
   totalIntegrations: number;
-  totalVersions: number;
   totalDeployments: number;
   activeDeployments: number;
-  totalDemos: number;
   totalApiKeys: number;
+  totalConversations: number; // ✅ Conversations de mes agents
   agentsByStatus: {
     active: number;
     inactive: number;
   };
-  recentActivity: ActivityItem[];
-  chartData: ChartDataPoint[];
   lastUpdated: string;
-}
-
-interface ActivityItem {
-  id: string;
-  type: string;
-  description: string;
-  time: string;
-  status: 'success' | 'info' | 'warning' | 'error';
-}
-
-interface ChartDataPoint {
-  date: string;
-  day: string;
-  value: number;
-  height: number;
 }
 
 export default function DashboardPage() {
@@ -66,7 +48,7 @@ export default function DashboardPage() {
       const response = await fetch('/api/dashboard/stats', {
         method: 'GET',
         credentials: 'include',
-        cache: 'no-cache' // Forcer le rechargement
+        cache: 'no-cache'
       });
 
       if (!response.ok) {
@@ -103,29 +85,6 @@ export default function DashboardPage() {
 
     return () => clearInterval(interval);
   }, []);
-
-  // 🎨 HELPER FUNCTIONS
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'agent_created': return <Bot size={14} className="text-blue-400" />;
-      case 'agent_updated': return <Settings size={14} className="text-gray-400" />;
-      case 'deployment': return <Rocket size={14} className="text-emerald-400" />;
-      case 'test': return <TestTube size={14} className="text-purple-400" />;
-      case 'integration': return <Zap size={14} className="text-yellow-400" />;
-      case 'demo': return <FlaskConical size={14} className="text-cyan-400" />;
-      default: return <Activity size={14} className="text-gray-400" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'success': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-      case 'warning': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'error': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      case 'info': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-    }
-  };
 
   // 📱 QUICK ACTIONS
   const quickActions = [
@@ -233,7 +192,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 📊 MÉTRIQUES PRINCIPALES */}
+          {/* 📊 MÉTRIQUES PRINCIPALES - CORRIGÉES */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             
             {/* Total Agents */}
@@ -253,7 +212,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Active Agents */}
+            {/* ✅ Active Agents - CORRIGÉ (maintenant basé sur isDeployed) */}
             <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/5 group-hover:to-emerald-500/5 transition-all duration-300"></div>
               <div className="flex items-center justify-between mb-4 relative z-10">
@@ -301,186 +260,46 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 📈 SECTION PRINCIPALE */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* 📈 SECTION PRINCIPALE - SIMPLIFIÉE */}
+          <div className="grid grid-cols-1 xl:grid-cols-1 gap-8">
             
-            {/* Chart Section */}
-            <div className="xl:col-span-2 bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30">
-                    <BarChart3 className="text-blue-400" size={20} />
+            {/* Quick Actions - CENTRÉ ET AGRANDI */}
+            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8">
+              <div className="text-center mb-8">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
+                    <Rocket className="text-emerald-400" size={24} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Agent Activity</h3>
-                    <p className="text-gray-400 text-sm">Activity over the last 7 days</p>
+                    <h3 className="text-2xl font-bold text-white">Quick Actions</h3>
+                    <p className="text-gray-400">Fast access to common tasks</p>
                   </div>
                 </div>
               </div>
               
-              {/* Chart */}
-              <div className="h-64 relative">
-                <div className="absolute inset-0 flex items-end justify-between px-4">
-                  {stats!.chartData.map((dataPoint, i) => (
-                    <div key={i} className="flex flex-col items-center gap-2">
-                      <div 
-                        className="w-12 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg relative group cursor-pointer hover:from-blue-500 hover:to-blue-300 transition-all"
-                        style={{ height: `${dataPoint.height}%` }}
-                      >
-                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                          {dataPoint.value}
-                        </div>
-                      </div>
-                      <span className="text-xs text-gray-400">{dataPoint.day}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions & Status */}
-            <div className="space-y-6">
-              
-              {/* Quick Actions */}
-              <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
-                    <Rocket className="text-emerald-400" size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">Quick Actions</h3>
-                    <p className="text-gray-400 text-sm">Fast access to common tasks</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  {quickActions.map((action, index) => (
-                    <Link 
-                      key={index}
-                      href={action.href}
-                      className="w-full flex items-center gap-3 p-4 bg-gray-700/50 hover:bg-gray-700 rounded-xl transition-all text-left group"
-                    >
-                      <div className={`w-10 h-10 bg-${action.color}-500/20 rounded-lg flex items-center justify-center border border-${action.color}-500/30 group-hover:scale-110 transition-transform`}>
-                        {action.icon}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium text-white">{action.title}</div>
-                        <div className="text-xs text-gray-400">{action.description}</div>
-                      </div>
-                      <ArrowRight className="text-gray-400 group-hover:text-white transition-colors" size={16} />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* System Health */}
-              <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
-                    <Activity className="text-emerald-400" size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">System Health</h3>
-                    <p className="text-gray-400 text-sm">Current status overview</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="text-emerald-400" size={16} />
-                      <span className="text-sm text-emerald-200 font-medium">API Services</span>
-                    </div>
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="text-emerald-400" size={16} />
-                      <span className="text-sm text-emerald-200 font-medium">Database</span>
-                    </div>
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="text-emerald-400" size={16} />
-                      <span className="text-sm text-emerald-200 font-medium">Agents</span>
-                    </div>
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  </div>
-
-                  <div className="bg-gradient-to-br from-emerald-500/10 to-green-500/10 border border-emerald-500/20 rounded-xl p-4 mt-4 backdrop-blur-sm">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Activity className="text-emerald-400" size={16} />
-                      <span className="text-emerald-200 text-sm font-semibold">99.9% Uptime</span>
-                    </div>
-                    <p className="text-emerald-100/80 text-xs leading-relaxed">
-                      All systems operational and performing optimally
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 📋 RECENT ACTIVITY */}
-          <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30">
-                  <Clock className="text-blue-400" size={20} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Recent Activity</h3>
-                  <p className="text-gray-400 text-sm">Latest actions across your workspace</p>
-                </div>
-              </div>
-              <Link 
-                href="/agents"
-                className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
-              >
-                View all agents
-              </Link>
-            </div>
-            
-            <div className="space-y-4">
-              {stats!.recentActivity.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gray-700/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Activity className="w-8 h-8 text-gray-500" />
-                  </div>
-                  <h4 className="text-white font-medium mb-2">No recent activity</h4>
-                  <p className="text-gray-400 text-sm mb-6">Start by creating your first agent!</p>
-                  <Link
-                    href="/agents/new"
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-all"
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                {quickActions.map((action, index) => (
+                  <Link 
+                    key={index}
+                    href={action.href}
+                    className="flex flex-col items-center gap-4 p-8 bg-gray-700/50 hover:bg-gray-700 rounded-2xl transition-all text-center group hover:scale-105 duration-300"
                   >
-                    <Plus size={16} />
-                    Create Agent
+                    <div className={`w-16 h-16 bg-${action.color}-500/20 rounded-2xl flex items-center justify-center border border-${action.color}-500/30 group-hover:scale-110 transition-transform`}>
+                      <span className="text-2xl">{action.icon}</span>
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold text-white mb-2">{action.title}</div>
+                      <div className="text-sm text-gray-400">{action.description}</div>
+                    </div>
+                    <ArrowRight className="text-gray-400 group-hover:text-white transition-colors mt-2" size={20} />
                   </Link>
-                </div>
-              ) : (
-                stats!.recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center gap-4 p-4 bg-gray-900/30 rounded-xl hover:bg-gray-900/50 transition-all group">
-                    <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      {getActivityIcon(activity.type)}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-white">{activity.description}</p>
-                      <p className="text-xs text-gray-400">{activity.time}</p>
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(activity.status)}`}>
-                      {activity.status}
-                    </div>
-                  </div>
-                ))
-              )}
+                ))}
+              </div>
             </div>
           </div>
 
           {/* 📊 SECONDARY METRICS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             {/* API Keys */}
             <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-orange-500/30 transition-all group">
@@ -495,22 +314,6 @@ export default function DashboardPage() {
               <div className="space-y-1">
                 <p className="text-3xl font-bold text-white">{stats!.totalApiKeys}</p>
                 <p className="text-gray-400 text-sm">API Keys</p>
-              </div>
-            </div>
-
-            {/* Demos */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-cyan-500/30 transition-all group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform duration-300">
-                  <FlaskConical className="text-cyan-400" size={24} />
-                </div>
-                <span className="text-emerald-400 text-sm font-medium">
-                  {stats!.totalDemos > 0 ? 'Active' : 'None'}
-                </span>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-bold text-white">{stats!.totalDemos}</p>
-                <p className="text-gray-400 text-sm">Live Demos</p>
               </div>
             </div>
 
@@ -530,19 +333,19 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Versions */}
+            {/* AI Conversations */}
             <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-pink-500/30 transition-all group">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center border border-pink-500/30 group-hover:scale-110 transition-transform duration-300">
-                  <Layers className="text-pink-400" size={24} />
+                  <MessageCircle className="text-pink-400" size={24} />
                 </div>
                 <span className="text-emerald-400 text-sm font-medium">
-                  +{Math.max(0, stats!.totalVersions - stats!.totalAgents)} iterations
+                  {stats!.totalConversations > 0 ? 'Active' : 'None'}
                 </span>
               </div>
               <div className="space-y-1">
-                <p className="text-3xl font-bold text-white">{stats!.totalVersions}</p>
-                <p className="text-gray-400 text-sm">Total Versions</p>
+                <p className="text-3xl font-bold text-white">{stats!.totalConversations}</p>
+                <p className="text-gray-400 text-sm">AI Conversations</p>
               </div>
             </div>
           </div>

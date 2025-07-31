@@ -2,11 +2,11 @@ import mongoose, { Schema, Document, models, model } from "mongoose";
 
 export interface AgentDocument extends Document {
   userId: mongoose.Types.ObjectId;
-  folderId?: mongoose.Types.ObjectId; // 🆕 AJOUTÉ
+  folderId?: mongoose.Types.ObjectId;
   name: string;
   template?: string;
   openaiModel: string;
-  apiKey: string; // 🆕 NOUVEAU - L'ID de l'API key à utiliser
+  apiKey: string;
   description: string;
   questions: string;
   tone: string;
@@ -17,6 +17,10 @@ export interface AgentDocument extends Document {
   temperature: number;
   top_p: number;
   finalPrompt?: string;
+  
+  // 🆕 NOUVEAU CHAMP - SÉCURITAIRE
+  isDeployed?: boolean; // Optionnel pour ne pas casser l'existant
+  
   integrations?: {
     type: string;
     name: string;
@@ -41,11 +45,11 @@ export interface AgentDocument extends Document {
 const AgentSchema = new Schema<AgentDocument>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    folderId: { type: Schema.Types.ObjectId, ref: "Folder" }, // 🆕 AJOUTÉ
+    folderId: { type: Schema.Types.ObjectId, ref: "Folder" },
     name: { type: String, required: true },
     template: { type: String },
     openaiModel: { type: String, required: true },
-    apiKey: { type: String, required: true }, // 🆕 NOUVEAU - L'ID de l'API key à utiliser
+    apiKey: { type: String, required: true },
     description: { type: String },
     questions: { type: String },
     tone: { type: String },
@@ -56,6 +60,13 @@ const AgentSchema = new Schema<AgentDocument>(
     temperature: { type: Number },
     top_p: { type: Number },
     finalPrompt: { type: String },
+    
+    // 🆕 NOUVEAU CHAMP - SÉCURITAIRE
+    isDeployed: { 
+      type: Boolean, 
+      default: false // Défaut à false pour tous les agents existants
+    },
+    
     integrations: [
       {
         type: {

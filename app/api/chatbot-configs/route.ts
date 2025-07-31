@@ -3,6 +3,7 @@ import { ChatbotConfig } from '@/models/ChatbotConfig';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
+import { updateAgentDeploymentStatus } from '@/lib/deployment-utils'; // 🆕 IMPORT
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +24,12 @@ export async function POST(request: NextRequest) {
     });
     
     const savedConfig = await newConfig.save();
+
+    // 🆕 NOUVEAU - Mettre isDeployed = true sur l'agent choisi (Website Widget)
+    if (config.selectedAgent) {
+      await updateAgentDeploymentStatus(config.selectedAgent, true);
+      console.log(`🎉 [DEPLOYMENT] Agent ${config.selectedAgent} marked as deployed! (Website Widget)`);
+    }
     
     return NextResponse.json({
       success: true,
@@ -94,6 +101,12 @@ export async function PUT(request: NextRequest) {
         { success: false, error: 'Widget non trouvé' },
         { status: 404 }
       );
+    }
+
+    // 🆕 NOUVEAU - Mettre à jour isDeployed si l'agent change
+    if (updateData.selectedAgent) {
+      await updateAgentDeploymentStatus(updateData.selectedAgent, true);
+      console.log(`🎉 [DEPLOYMENT] Agent ${updateData.selectedAgent} marked as deployed! (Website Widget Update)`);
     }
     
     return NextResponse.json({

@@ -3,6 +3,7 @@ import { Connection } from '@/models/Connection'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/authOptions'
+import { syncAgentDeploymentStatus } from '@/lib/deployment-utils' // 🆕 IMPORT
 
 export async function PATCH(
   req: NextRequest,
@@ -27,6 +28,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Connection not found' }, { status: 404 })
     }
 
+    const agentId = currentConnection.aiBuildId;
+
     // Toggle le statut isActive
     const updatedConnection = await Connection.findOneAndUpdate(
       {
@@ -38,6 +41,12 @@ export async function PATCH(
       },
       { new: true }
     )
+
+    // 🆕 NOUVEAU - Synchroniser le statut de l'agent
+    if (agentId) {
+      await syncAgentDeploymentStatus(agentId);
+      console.log(`🔄 [TOGGLE] Agent ${agentId} deployment status synchronized`);
+    }
 
     return NextResponse.json({ 
       success: true,

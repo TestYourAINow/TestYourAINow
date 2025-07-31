@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { 
   Send, X, MessageCircle, Settings, Globe, Smartphone, Plus, RotateCcw, User, Bot, Info,
-  Monitor, Upload, Palette, Save, ExternalLink, Code
+  Monitor, Upload, Palette, Save, ExternalLink, Code, Sparkles
 } from 'lucide-react';
 import { DeploymentModal, DeployButton } from '@/components/DeploymentModal';
 
@@ -101,7 +101,7 @@ const ChatHeader: React.FC<{
             className="chat-avatar"
             onError={(e) => {
               const target = e.currentTarget as HTMLImageElement;
-              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSA5VjIyQzE5IDIyIDE3IDIxIDE1Ljk5IDE5LjM2QzE2LjA1IDE5LjkgMTYgMTkuOTEgMTYgMjBDMTYgMjEuMSAxNS4xIDIyIDE0IDIySDE0QzguOSAyMiA4IDIxLjEgOCAyMFYxNEgxMFYxMEwxMiA5TDE0IDlMMTYgMTBWMTRIMThWMTBMMjAgOUgyMSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
+              target.src = '/Default Avatar.png';
             }}
           />
           <div className="chat-status"></div>
@@ -115,14 +115,14 @@ const ChatHeader: React.FC<{
         <button
           className="chat-action-btn"
           onClick={onNewChat}
-          title="Nouvelle conversation"
+          title="New conversation"
         >
           <RotateCcw size={18} />
         </button>
         <button
           className="chat-action-btn"
           onClick={onClose}
-          title="Fermer"
+          title="Close"
         >
           <X size={18} />
         </button>
@@ -198,7 +198,7 @@ const ChatWindow: React.FC<{
                     style={{ flexShrink: 0 }}
                     onError={(e) => {
                       const target = e.currentTarget as HTMLImageElement;
-                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS44IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
+                      target.src = '/Default Avatar.png';
                     }}
                   />
                 )}
@@ -222,6 +222,10 @@ const ChatWindow: React.FC<{
                   src={config.avatar}
                   alt="Bot"
                   className="w-8 h-8 rounded-full self-start mr-2"
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.src = '/Default Avatar.png';
+                  }}
                 />
                 <div
                   className="chat-bubble bot"
@@ -347,7 +351,6 @@ const ChatWidget: React.FC<{
     setIsTyping(true);
 
     try {
-      // Si un agent est sélectionné, utiliser l'API
       if (config.selectedAgent) {
         const body: any = {
           message: inputValue,
@@ -357,7 +360,6 @@ const ChatWidget: React.FC<{
           }))
         };
 
-        // Ajouter le welcomeMessage si activé
         if (config.showWelcomeMessage && config.welcomeMessage?.trim()) {
           body.welcomeMessage = config.welcomeMessage.trim();
         }
@@ -374,28 +376,26 @@ const ChatWidget: React.FC<{
           const data = await response.json();
           const botMessage: Message = {
             id: (Date.now() + 1).toString(),
-            text: data.reply || 'Désolé, je n\'ai pas pu traiter votre demande.',
+            text: data.reply || 'Sorry, I couldn\'t process your request.',
             isBot: true,
             timestamp: new Date()
           };
           setMessages(prev => [...prev, botMessage]);
         } else {
-          throw new Error('Erreur API');
+          throw new Error('API Error');
         }
       } else {
-        // Réponse par défaut si aucun agent sélectionné
-        throw new Error('Aucun agent sélectionné');
+        throw new Error('No agent selected');
       }
     } catch (error) {
-      console.error('Erreur lors de l\'envoi du message:', error);
+      console.error('Error sending message:', error);
 
-      // Fallback avec réponses simulées
       const responses = [
-        "Merci pour votre message ! Je suis là pour vous aider.",
-        "C'est une question intéressante. Laissez-moi réfléchir à ça...",
-        "Je comprends votre préoccupation. Voici ce que je peux vous suggérer...",
-        "Excellente question ! Je serais ravi de vous aider avec ça.",
-        "Je traite votre demande. Donnez-moi un moment s'il vous plaît..."
+        "Thanks for your message! I'm here to help you.",
+        "That's an interesting question. Let me think about that...",
+        "I understand your concern. Here's what I can suggest...",
+        "Great question! I'd be happy to help you with that.",
+        "I'm processing your request. Please give me a moment..."
       ];
 
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
@@ -438,7 +438,6 @@ const ChatWidget: React.FC<{
       className="chat-widget"
       style={{
         '--primary-color': config.primaryColor,
-        // Dans le ChatBuilder, position relative au conteneur
         position: 'absolute',
         [config.placement.split('-')[0]]: '24px',
         [config.placement.split('-')[1]]: '24px',
@@ -470,11 +469,9 @@ const ChatWidget: React.FC<{
 
 // 5. Main ChatbotBuilder Component
 const ChatbotBuilder: React.FC = () => {
-  // Récupération de l'ID depuis l'URL
   const { id } = useParams();
   const connectionId = id as string;
 
-  // États contrôlables pour l'API
   const [connection, setConnection] = useState<any>(null);
   const [name, setName] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('');
@@ -487,7 +484,7 @@ const ChatbotBuilder: React.FC = () => {
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [savedWidgetId, setSavedWidgetId] = useState<string | null>(null);
 
-  // Fetch des données de connexion
+  // Fetch connection data
   useEffect(() => {
     const fetchConnection = async () => {
       try {
@@ -498,8 +495,8 @@ const ChatbotBuilder: React.FC = () => {
           setConnection(data.connection);
         }
       } catch (err) {
-        console.error('Erreur de chargement de la connexion:', err);
-        setError('Erreur lors du chargement');
+        console.error('Connection loading error:', err);
+        setError('Error loading connection');
       } finally {
         setIsLoading(false);
       }
@@ -507,28 +504,28 @@ const ChatbotBuilder: React.FC = () => {
     if (connectionId) fetchConnection();
   }, [connectionId]);
 
-  // Configuration du chatbot (mise à jour en temps réel)
+  // Configuration (real-time updates)
   const config: ChatbotConfig = {
-    name: name || 'Assistant IA',
-    avatar: settings.avatar || 'https://cdn-icons-png.flaticon.com/512/4712/4712027.png',
-    welcomeMessage: settings.welcomeMessage || 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?',
-    placeholderText: settings.placeholderText || 'Tapez votre message...',
-    typingText: settings.typingText || 'L\'IA tape...',
+    name: name || 'AI Assistant',
+    avatar: settings.avatar || '/Default Avatar.png',
+    welcomeMessage: settings.welcomeMessage || 'Hello! How can I help you today?',
+    placeholderText: settings.placeholderText || 'Type your message...',
+    typingText: settings.typingText || 'AI is typing...',
     theme: settings.theme || 'light',
-    primaryColor: settings.primaryColor || '#007bff',
+    primaryColor: settings.primaryColor || '#3b82f6',
     width: settings.width || 380,
     height: settings.height || 600,
-    placement: settings.placement || 'bottom-right',
-    popupMessage: settings.popupMessage || 'Salut ! Besoin d\'aide ?',
+    placement: 'bottom-right',
+    popupMessage: settings.popupMessage || 'Hi! Need any help?',
     popupDelay: settings.popupDelay || 2,
     showPopup: settings.showPopup !== undefined ? settings.showPopup : true,
     showWelcomeMessage: settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true,
     selectedAgent: selectedAgent,
-    chatTitle: settings.chatTitle || 'Assistant IA',
-    subtitle: settings.subtitle || 'En ligne'
+    chatTitle: settings.chatTitle || 'AI Assistant',
+    subtitle: settings.subtitle || 'Online'
   };
 
-  // Initialisation des données depuis l'API
+  // Initialize data from API
   useEffect(() => {
     if (connection) {
       setName(connection.name || '');
@@ -537,7 +534,7 @@ const ChatbotBuilder: React.FC = () => {
     }
   }, [connection]);
 
-  // Load agents depuis l'API
+  // Load agents from API
   useEffect(() => {
     const fetchAgents = async () => {
       try {
@@ -545,8 +542,8 @@ const ChatbotBuilder: React.FC = () => {
         const data = await res.json();
         setAgents(data.agents || []);
       } catch (error) {
-        console.error('Erreur lors du chargement des agents:', error);
-        setAgents([]); // Fallback en cas d'erreur
+        console.error('Error loading agents:', error);
+        setAgents([]);
       }
     };
     fetchAgents();
@@ -554,13 +551,31 @@ const ChatbotBuilder: React.FC = () => {
 
   // Color presets
   const colorPresets = [
-    '#007bff', '#28a745', '#dc3545', '#ffc107',
-    '#17a2b8', '#6f42c1', '#e83e8c', '#6c757d'
+    '#3b82f6', '#10b981', '#ef4444', '#f59e0b',
+    '#06b6d4', '#8b5cf6', '#ec4899', '#6b7280'
   ];
 
-  // Fonction de sauvegarde
+  // États avec timer pour auto-hide du toast
+  const [saveToastTimer, setSaveToastTimer] = useState<NodeJS.Timeout | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (saveToastTimer) {
+        clearTimeout(saveToastTimer);
+      }
+    };
+  }, [saveToastTimer]);
+
+  // Save function
   const saveChanges = async () => {
     if (!connectionId) return;
+
+    // Clear any existing timer
+    if (saveToastTimer) {
+      clearTimeout(saveToastTimer);
+    }
 
     setIsSaving(true);
     try {
@@ -572,13 +587,16 @@ const ChatbotBuilder: React.FC = () => {
         body: JSON.stringify({
           name,
           aiBuildId: selectedAgent,
-          settings
+          settings: {
+            ...settings,
+            placement: 'bottom-right'
+          }
         })
       });
 
       if (!connectionResponse.ok) {
         const errorData = await connectionResponse.json();
-        throw new Error(errorData.error || 'Erreur lors de la sauvegarde de la connexion');
+        throw new Error(errorData.error || 'Error saving connection');
       }
 
       const chatbotConfigResponse = await fetch('/api/chatbot-configs', {
@@ -587,23 +605,23 @@ const ChatbotBuilder: React.FC = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: name || 'Assistant IA',
-          avatar: settings.avatar || 'https://cdn-icons-png.flaticon.com/512/4712/4712027.png',
-          welcomeMessage: settings.welcomeMessage || 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?',
-          placeholderText: settings.placeholderText || 'Tapez votre message...',
-          typingText: settings.typingText || 'L\'IA tape...',
+          name: name || 'AI Assistant',
+          avatar: settings.avatar || '/Default Avatar.png',
+          welcomeMessage: settings.welcomeMessage || 'Hello! How can I help you today?',
+          placeholderText: settings.placeholderText || 'Type your message...',
+          typingText: settings.typingText || 'AI is typing...',
           theme: settings.theme || 'light',
-          primaryColor: settings.primaryColor || '#007bff',
+          primaryColor: settings.primaryColor || '#3b82f6',
           width: settings.width || 380,
           height: settings.height || 600,
-          placement: settings.placement || 'bottom-right',
-          popupMessage: settings.popupMessage || 'Salut ! Besoin d\'aide ?',
+          placement: 'bottom-right',
+          popupMessage: settings.popupMessage || 'Hi! Need any help?',
           popupDelay: settings.popupDelay || 2,
           showPopup: settings.showPopup !== undefined ? settings.showPopup : true,
           showWelcomeMessage: settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true,
           selectedAgent: selectedAgent,
-          chatTitle: settings.chatTitle || 'Assistant IA',
-          subtitle: settings.subtitle || 'En ligne'
+          chatTitle: settings.chatTitle || 'AI Assistant',
+          subtitle: settings.subtitle || 'Online'
         })
       });
 
@@ -615,21 +633,25 @@ const ChatbotBuilder: React.FC = () => {
       }
 
       setLastSaved(new Date());
+      setSaveSuccess(true);
+      
+      // Reset success state after 3 seconds
+      const timer = setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
+      setSaveToastTimer(timer);
+
     } catch (error) {
-      console.error('Erreur de sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde: ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
+      console.error('Save error:', error);
+      alert('Error saving: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Fonctions de mise à jour
+  // Update functions
   const updateName = (newName: string) => {
     setName(newName);
-  };
-
-  const updateSelectedAgent = (agentId: string) => {
-    setSelectedAgent(agentId);
   };
 
   const updateSettings = (key: string, value: any) => {
@@ -643,7 +665,7 @@ const ChatbotBuilder: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center">
-        <div className="text-white text-lg">Chargement de la configuration...</div>
+        <div className="text-white text-lg">Loading configuration...</div>
       </div>
     );
   }
@@ -652,7 +674,7 @@ const ChatbotBuilder: React.FC = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center">
-        <div className="text-red-400 text-lg">Erreur lors du chargement: {error}</div>
+        <div className="text-red-400 text-lg">Error loading: {error}</div>
       </div>
     );
   }
@@ -661,155 +683,142 @@ const ChatbotBuilder: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-transparent">
-      {/* Status de sauvegarde */}
-      <div className="fixed top-4 right-4 z-50">
-        {isSaving && (
-          <div className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            Sauvegarde...
-          </div>
-        )}
-        {lastSaved && !isSaving && (
-          <div className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg">
-            Sauvegardé à {lastSaved.toLocaleTimeString()}
-          </div>
-        )}
-      </div>
-
-      {/* Main Content - Centered Container */}
+      {/* Main Content */}
       <div className="flex justify-center min-h-screen py-6">
         <div className="w-full max-w-7xl mx-auto px-6">
-          {/* Header amélioré */}
-          <div className="mb-6">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="p-3 bg-purple-600 rounded-xl">
-                <Code className="text-white" size={24} />
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-6 mb-6">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center shadow-2xl shadow-blue-500/25 border border-blue-400/20">
+                  <Code className="text-white w-8 h-8" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center">
+                  <Sparkles className="text-white" size={12} />
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">
-                  Chatbot Builder
+              
+              <div className="flex-1">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                  Website Widget Builder
                 </h1>
-                <p className="text-sm text-gray-400">
-                  Configure your chatbot widget for deployment
+                <p className="text-gray-400 text-lg font-medium">
+                  Configure and deploy your AI assistant on your website
                 </p>
               </div>
               
-              {/* Quick info */}
-              <div className="ml-auto text-right">
-                <div className="text-sm text-gray-300">Connection ID</div>
-                <div className="text-xs text-gray-500 font-mono">{connectionId}</div>
+              {/* Agent info - Modern style */}
+              <div className="text-right">
+                <div className="text-xs text-gray-500 mb-1">Connected Agent</div>
+                <div className="flex items-center gap-2 justify-end">
+                  {selectedAgent && <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>}
+                  <span className="text-lg font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                    {selectedAgentName || 'No agent selected'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', height: 'calc(100vh - 200px)', gap: '24px' }}>
-            {/* Preview Panel - Left */}
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl relative overflow-hidden" style={{ flex: '1.4' }}>
+          <div className="flex gap-6 h-[calc(100vh-200px)]">
+            {/* Preview Panel */}
+            <div className="flex-[1.4] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl relative overflow-hidden">
               
-              {/* Device Frame */}
-              <div className="absolute top-4 left-4 bg-gray-700/50 rounded-lg p-2 flex items-center gap-2">
+              <div className="absolute top-6 left-6 bg-gray-800/80 backdrop-blur-sm rounded-xl px-4 py-2 flex items-center gap-3 border border-gray-600/50">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full" />
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                  <div className="w-3 h-3 bg-green-500 rounded-full" />
+                </div>
+                <div className="w-px h-4 bg-gray-600" />
                 <Monitor size={16} className="text-gray-400" />
-                <span className="text-xs text-gray-400">Website Preview</span>
+                <span className="text-xs text-gray-300 font-medium">Website Preview</span>
               </div>
 
-              {/* Preview Content */}
+              <div className="absolute top-6 right-6 flex items-center gap-2 px-3 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl backdrop-blur-sm">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                <span className="text-xs text-emerald-400 font-medium">Live</span>
+              </div>
+
               {!selectedAgent ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                  <div className="w-24 h-24 bg-gray-700/50 rounded-full flex items-center justify-center mb-6">
-                    <MessageCircle className="w-12 h-12 text-gray-500" />
+                <div className="flex flex-col items-center justify-center h-full text-center px-8">
+                  <div className="w-32 h-32 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full flex items-center justify-center mb-8 border border-blue-500/30">
+                    <MessageCircle className="w-16 h-16 text-blue-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-400 mb-3">Select an Agent</h3>
-                  <p className="text-gray-500 max-w-md">
-                    Choose an AI agent to see the live preview of your chatbot widget
+                  <h3 className="text-2xl font-bold text-white mb-4">Agent Required</h3>
+                  <p className="text-gray-400 max-w-md text-lg leading-relaxed">
+                    An AI agent must be connected to see the widget preview
                   </p>
-                  <div className="mt-6 text-sm text-gray-600">
-                    👈 Configure your widget settings on the right
+                  <div className="mt-8 px-6 py-3 bg-blue-600/10 border border-blue-500/30 rounded-xl">
+                    <p className="text-blue-300 text-sm">
+                      👉 Configure widget settings on the right
+                    </p>
                   </div>
                 </div>
               ) : (
                 <>
-                  {/* Watermark */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '12px',
-                    color: 'rgba(255, 255, 255, 0.1)',
-                    fontSize: '20px',
-                    fontWeight: 500,
-                    pointerEvents: 'none',
-                    zIndex: 1
-                  }}>
-                    <MessageCircle className="w-32 h-32 mb-3" />
-                    <span>Live Preview</span>
+                  <div className="absolute inset-0 bg-grid opacity-5" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[1]">
+                    <div className="flex flex-col items-center gap-4 opacity-5">
+                      <MessageCircle className="w-48 h-48" />
+                      <span className="text-2xl font-bold">Live Preview</span>
+                    </div>
                   </div>
-
                   <ChatWidget config={config} />
                 </>
               )}
             </div>
 
-            {/* Configuration Panel - Right */}
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-2xl shadow-2xl text-white overflow-hidden" style={{ width: '400px', display: 'flex', flexDirection: 'column' }}>
+            {/* Configuration Panel */}
+            <div className="w-[420px] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
 
-              {/* Configuration Section */}
+              <div className="p-6 border-b border-gray-700/50 bg-gray-800/30">
+                <div className="flex items-center gap-3">
+                  <Settings className="text-blue-400 w-6 h-6" />
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                    Widget Configuration
+                  </h2>
+                </div>
+                <p className="text-gray-400 text-sm mt-2">
+                  Customize the appearance and behavior of your assistant
+                </p>
+              </div>
+
               <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
 
-                {/* Configuration Générale */}
-                <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
+                {/* General Configuration */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
                   <div className="flex items-center gap-3 mb-4">
-                    <Settings className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">General Configuration</h3>
+                    <Settings className="text-blue-400 w-5 h-5" />
+                    <h3 className="text-lg font-semibold text-white">General Configuration</h3>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Widget Title
+                        Widget Name
                       </label>
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => updateName(e.target.value)}
-                        placeholder="Widget name"
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
+                        placeholder="My AI Assistant"
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                       />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Choose Agent
-                      </label>
-                      <select
-                        value={selectedAgent}
-                        onChange={(e) => updateSelectedAgent(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
-                      >
-                        <option value="">Select an agent...</option>
-                        {agents.map((agent) => (
-                          <option key={agent._id} value={agent._id}>
-                            {agent.name}
-                          </option>
-                        ))}
-                      </select>
                     </div>
                   </div>
                 </div>
 
-                {/* Avatar du Bot */}
-                <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
+                {/* Bot Avatar */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
                   <div className="flex items-center gap-3 mb-4">
-                    <User className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Bot Avatar</h3>
+                    <User className="text-blue-400 w-5 h-5" />
+                    <h3 className="text-lg font-semibold text-white">Bot Avatar</h3>
                   </div>
 
                   {!settings.avatar ? (
                     <div
-                      className="border-2 border-dashed border-gray-500 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-600/30"
+                      className="border-2 border-dashed border-gray-600/70 rounded-xl p-8 text-center hover:border-blue-400/50 transition-all cursor-pointer bg-gray-900/30 group relative overflow-hidden"
                       onDrop={(e) => {
                         e.preventDefault();
                         const file = e.dataTransfer.files[0];
@@ -823,7 +832,7 @@ const ChatbotBuilder: React.FC = () => {
                             };
                             reader.readAsDataURL(file);
                           } else {
-                            alert('⚠️ Avatar too large (max 1MB)');
+                            alert('⚠️ Image too large (max 1MB)');
                           }
                         } else {
                           alert('⚠️ Please select an image (.png, .jpg, .gif)');
@@ -835,6 +844,8 @@ const ChatbotBuilder: React.FC = () => {
                         fileInput?.click();
                       }}
                     >
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5 transition-all duration-300"></div>
+                      
                       <input
                         id="avatar-upload"
                         type="file"
@@ -852,36 +863,37 @@ const ChatbotBuilder: React.FC = () => {
                               };
                               reader.readAsDataURL(file);
                             } else {
-                              alert('⚠️ Avatar too large (max 1MB)');
+                              alert('⚠️ Image too large (max 1MB)');
                             }
                           }
                         }}
                       />
-                      <div className="text-gray-400">
-                        <div className="mx-auto w-16 h-16 bg-gray-500 rounded-full flex items-center justify-center mb-4">
-                          <Upload className="w-8 h-8" />
+                      
+                      <div className="relative z-10">
+                        <div className="mx-auto w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mb-4 group-hover:bg-gray-600/50 transition-colors">
+                          <Upload className="w-8 h-8 text-gray-400 group-hover:text-gray-300" />
                         </div>
-                        <p className="text-sm font-medium text-gray-300">Upload Bot Avatar</p>
-                        <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF (max 1MB)</p>
+                        <p className="text-sm font-medium text-gray-300 mb-2">Upload Bot Avatar</p>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF (max 1MB)</p>
                       </div>
                     </div>
                   ) : (
                     <div className="relative">
-                      <div className="p-6 border border-gray-500 rounded-lg bg-gray-600/30">
+                      <div className="p-6 border border-gray-600/50 rounded-xl bg-gray-900/30 backdrop-blur-sm">
                         <div className="flex items-center justify-center">
                           <img
                             src={settings.avatar}
                             alt="Avatar"
-                            className="w-20 h-20 rounded-full object-cover border-2 border-gray-400"
+                            className="w-20 h-20 rounded-full object-cover border-2 border-gray-500/50 shadow-lg"
                           />
                         </div>
-                        <p className="text-xs text-gray-400 text-center mt-3">
-                          ✅ Avatar uploaded successfully
+                        <p className="text-xs text-emerald-400 text-center mt-3 font-medium">
+                          Custom avatar uploaded
                         </p>
                       </div>
                       <button
                         onClick={() => updateSettings('avatar', '')}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm transition-all shadow-lg hover:shadow-red-500/25"
                         title="Remove avatar"
                       >
                         <X size={16} />
@@ -890,11 +902,11 @@ const ChatbotBuilder: React.FC = () => {
                   )}
                 </div>
 
-                {/* Configuration du Chat */}
-                <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
+                {/* Chat Interface */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
                   <div className="flex items-center gap-3 mb-4">
-                    <MessageCircle className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Chat Configuration</h3>
+                    <MessageCircle className="text-blue-400 w-5 h-5" />
+                    <h3 className="text-lg font-semibold text-white">Chat Interface</h3>
                   </div>
 
                   <div className="space-y-4">
@@ -906,8 +918,8 @@ const ChatbotBuilder: React.FC = () => {
                         type="text"
                         value={settings.chatTitle || ''}
                         onChange={(e) => updateSettings('chatTitle', e.target.value)}
-                        placeholder="Chat title"
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
+                        placeholder="AI Assistant"
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                       />
                     </div>
 
@@ -919,8 +931,8 @@ const ChatbotBuilder: React.FC = () => {
                         type="text"
                         value={settings.subtitle || ''}
                         onChange={(e) => updateSettings('subtitle', e.target.value)}
-                        placeholder="Subtitle"
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
+                        placeholder="Online"
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                       />
                     </div>
 
@@ -933,69 +945,50 @@ const ChatbotBuilder: React.FC = () => {
                         value={settings.placeholderText || ''}
                         onChange={(e) => updateSettings('placeholderText', e.target.value)}
                         placeholder="Type your message..."
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Dimensions
+                        Widget Dimensions
                       </label>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs text-gray-400 mb-2">Width</label>
+                          <label className="block text-xs text-gray-400 mb-2">Width (px)</label>
                           <input
                             type="number"
                             value={settings.width || 380}
                             onChange={(e) => updateSettings('width', parseInt(e.target.value) || 380)}
                             min="300"
                             max="600"
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
+                            className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium backdrop-blur-sm"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-2">Height</label>
+                          <label className="block text-xs text-gray-400 mb-2">Height (px)</label>
                           <input
                             type="number"
                             value={settings.height || 600}
                             onChange={(e) => updateSettings('height', parseInt(e.target.value) || 600)}
                             min="400"
                             max="800"
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
+                            className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium backdrop-blur-sm"
                           />
                         </div>
                       </div>
-                      <p className="text-xs text-gray-400 mt-2">
+                      <p className="text-xs text-gray-500 mt-2">
                         Width: 300-600px • Height: 400-800px
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Widget Position
-                      </label>
-                      <select
-                        value={settings.placement || 'bottom-right'}
-                        onChange={(e) => updateSettings('placement', e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
-                      >
-                        <option value="bottom-right">Bottom Right</option>
-                        <option value="bottom-left">Bottom Left</option>
-                        <option value="top-right">Top Right</option>
-                        <option value="top-left">Top Left</option>
-                      </select>
-                      <p className="text-xs text-gray-400 mt-2">
-                        Position will be applied when deployed on your website
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Message de Bienvenue */}
-                <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
+                {/* Welcome Message */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
                   <div className="flex items-center gap-3 mb-4">
-                    <Bot className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Welcome Message</h3>
+                    <Bot className="text-blue-400 w-5 h-5" />
+                    <h3 className="text-lg font-semibold text-white">Welcome Message</h3>
                   </div>
 
                   <div className="space-y-4">
@@ -1009,7 +1002,7 @@ const ChatbotBuilder: React.FC = () => {
                           id="showWelcomeMessage"
                           checked={settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true}
                           onChange={(e) => updateSettings('showWelcomeMessage', e.target.checked)}
-                          className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
                         />
                       </div>
                     </div>
@@ -1020,17 +1013,17 @@ const ChatbotBuilder: React.FC = () => {
                         value={settings.welcomeMessage || ''}
                         onChange={(e) => updateSettings('welcomeMessage', e.target.value)}
                         placeholder="Hello! How can I help you today?"
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Message Popup */}
-                <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
+                {/* Engagement Popup */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
                   <div className="flex items-center gap-3 mb-4">
-                    <MessageCircle className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Popup Message</h3>
+                    <MessageCircle className="text-blue-400 w-5 h-5" />
+                    <h3 className="text-lg font-semibold text-white">Engagement Popup</h3>
                   </div>
 
                   <div className="space-y-4">
@@ -1044,7 +1037,7 @@ const ChatbotBuilder: React.FC = () => {
                           id="showPopup"
                           checked={settings.showPopup !== undefined ? settings.showPopup : true}
                           onChange={(e) => updateSettings('showPopup', e.target.checked)}
-                          className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
                         />
                       </div>
                     </div>
@@ -1054,8 +1047,8 @@ const ChatbotBuilder: React.FC = () => {
                         type="text"
                         value={settings.popupMessage || ''}
                         onChange={(e) => updateSettings('popupMessage', e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
                         placeholder="Hi! Need any help?"
+                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                       />
                     </div>
 
@@ -1069,30 +1062,30 @@ const ChatbotBuilder: React.FC = () => {
                         onChange={(e) => updateSettings('popupDelay', parseInt(e.target.value) || 2)}
                         min="0"
                         max="30"
-                        className="w-24 px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150"
+                        className="w-32 px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium backdrop-blur-sm"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Thème et Couleurs */}
-                <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
+                {/* Theme & Colors */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
                   <div className="flex items-center gap-3 mb-4">
-                    <Palette className="text-blue-400" size={20} />
-                    <h3 className="text-lg font-semibold text-blue-200">Theme & Colors</h3>
+                    <Palette className="text-blue-400 w-5 h-5" />
+                    <h3 className="text-lg font-semibold text-white">Theme & Colors</h3>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Theme
+                        Interface Theme
                       </label>
                       <div className="flex items-center space-x-3">
                         <button
                           onClick={() => updateSettings('theme', 'light')}
-                          className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-all ${(settings.theme || 'light') === 'light'
-                            ? 'bg-blue-600 text-white border border-blue-400'
-                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all border font-medium ${(settings.theme || 'light') === 'light'
+                            ? 'bg-blue-600/20 text-white border-blue-500/50 shadow-lg shadow-blue-500/20'
+                            : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-gray-600/50 hover:border-gray-500/50'
                             }`}
                         >
                           <Globe className="w-4 h-4" />
@@ -1100,9 +1093,9 @@ const ChatbotBuilder: React.FC = () => {
                         </button>
                         <button
                           onClick={() => updateSettings('theme', 'dark')}
-                          className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-all ${settings.theme === 'dark'
-                            ? 'bg-blue-600 text-white border border-blue-400'
-                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all border font-medium ${settings.theme === 'dark'
+                            ? 'bg-blue-600/20 text-white border-blue-500/50 shadow-lg shadow-blue-500/20'
+                            : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-gray-600/50 hover:border-gray-500/50'
                             }`}
                         >
                           <Smartphone className="w-4 h-4" />
@@ -1112,7 +1105,7 @@ const ChatbotBuilder: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                      <label className="block text-sm font-medium text-gray-300 mb-4">
                         Primary Color
                       </label>
                       <div className="grid grid-cols-4 gap-3 mb-4">
@@ -1120,114 +1113,111 @@ const ChatbotBuilder: React.FC = () => {
                           <button
                             key={color}
                             onClick={() => updateSettings('primaryColor', color)}
-                            className={`w-12 h-10 rounded-lg border-2 transition-transform hover:scale-105 ${(settings.primaryColor || '#007bff') === color
-                              ? 'border-white ring-2 ring-blue-500'
-                              : 'border-gray-500'
+                            className={`w-full h-12 rounded-xl border-2 transition-all hover:scale-105 relative ${(settings.primaryColor || '#3b82f6') === color
+                              ? 'border-white ring-2 ring-blue-500/50 shadow-lg'
+                              : 'border-gray-600/50 hover:border-gray-500/50'
                               }`}
                             style={{ backgroundColor: color }}
-                          />
+                          >
+                            {(settings.primaryColor || '#3b82f6') === color && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-4 h-4 border-2 border-white rounded-full bg-white/20"></div>
+                              </div>
+                            )}
+                          </button>
                         ))}
                       </div>
                       <div className="flex items-center gap-3">
                         <input
                           type="color"
-                          value={settings.primaryColor || '#007bff'}
+                          value={settings.primaryColor || '#3b82f6'}
                           onChange={(e) => updateSettings('primaryColor', e.target.value)}
-                          className="w-10 h-10 border border-gray-600 rounded-lg cursor-pointer bg-gray-800"
+                          className="w-12 h-12 border border-gray-600/50 rounded-xl cursor-pointer bg-gray-800"
                         />
                         <input
                           type="text"
-                          value={settings.primaryColor || '#007bff'}
+                          value={settings.primaryColor || '#3b82f6'}
                           onChange={(e) => updateSettings('primaryColor', e.target.value)}
-                          className="flex-1 px-4 py-3 text-sm bg-gray-800 border border-gray-600 text-white rounded-lg outline-none focus:border-white focus:border-2 transition-colors duration-150 placeholder-gray-400"
-                          placeholder="#007bff"
+                          className="flex-1 px-4 py-3.5 text-sm bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
+                          placeholder="#3b82f6"
                         />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="space-y-4 pt-4">
-                  <button
-                    onClick={saveChanges}
-                    disabled={isSaving}
-                    className="w-full bg-green-600 text-white py-4 px-6 rounded-lg font-medium hover:bg-green-700 disabled:bg-green-700 disabled:opacity-75 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
-                  >
-                    {isSaving ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-5 h-5" />
-                        Save Configuration
-                      </>
-                    )}
-                  </button>
-
-                  {savedWidgetId && (
-                    <DeployButton
-                      widgetId={savedWidgetId}
-                      onDeploy={() => setShowDeployModal(true)}
-                      disabled={isSaving}
-                    />
-                  )}
-                </div>
-
-                {/* Informations du Widget */}
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Info className="text-blue-400" size={20} />
+                {/* Widget Information */}
+                <div className="bg-blue-600/10 backdrop-blur-sm border border-blue-500/30 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Info className="text-blue-400 w-5 h-5" />
                     <h3 className="text-lg font-semibold text-blue-200">Widget Information</h3>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="bg-gray-800/30 rounded-lg p-3">
+                    <div className="bg-gray-800/30 backdrop-blur-sm rounded-lg p-3 border border-gray-700/30">
                       <div className="text-gray-400 text-xs mb-1">Agent</div>
-                      <div className="text-white font-medium truncate">{selectedAgentName || 'None selected'}</div>
+                      <div className="text-white font-medium truncate">{selectedAgentName || 'None'}</div>
                     </div>
-                    <div className="bg-gray-800/30 rounded-lg p-3">
-                      <div className="text-gray-400 text-xs mb-1">Size</div>
-                      <div className="text-white">{settings.width || 380}×{settings.height || 600}px</div>
+                    <div className="bg-gray-800/30 backdrop-blur-sm rounded-lg p-3 border border-gray-700/30">
+                      <div className="text-gray-400 text-xs mb-1">Dimensions</div>
+                      <div className="text-white font-mono text-xs">{settings.width || 380}×{settings.height || 600}px</div>
                     </div>
-                    <div className="bg-gray-800/30 rounded-lg p-3">
+                    <div className="bg-gray-800/30 backdrop-blur-sm rounded-lg p-3 border border-gray-700/30">
                       <div className="text-gray-400 text-xs mb-1">Theme</div>
                       <div className="text-white capitalize">{(settings.theme || 'light')}</div>
                     </div>
-                    <div className="bg-gray-800/30 rounded-lg p-3">
-                      <div className="text-gray-400 text-xs mb-1">Position</div>
-                      <div className="text-white capitalize">
-                        {(settings.placement || 'bottom-right').replace('-', ' ')}
-                      </div>
-                    </div>
-                    <div className="bg-gray-800/30 rounded-lg p-3 col-span-2">
+                    <div className="bg-gray-800/30 backdrop-blur-sm rounded-lg p-3 border border-gray-700/30">
                       <div className="text-gray-400 text-xs mb-1">Primary Color</div>
                       <div className="flex items-center gap-2">
                         <div
                           className="w-3 h-3 rounded-full border border-gray-600"
-                          style={{ backgroundColor: settings.primaryColor || '#007bff' }}
+                          style={{ backgroundColor: settings.primaryColor || '#3b82f6' }}
                         />
-                        <span className="text-white text-xs font-mono">{settings.primaryColor || '#007bff'}</span>
+                        <span className="text-white text-xs font-mono">{settings.primaryColor || '#3b82f6'}</span>
                       </div>
                     </div>
-                    {lastSaved && (
-                      <div className="bg-gray-800/30 rounded-lg p-3 col-span-2">
-                        <div className="text-gray-400 text-xs mb-1">Last Saved</div>
-                        <div className="text-white text-xs">{lastSaved.toLocaleString()}</div>
-                      </div>
-                    )}
-                    {savedWidgetId && (
-                      <div className="bg-gray-800/30 rounded-lg p-3 col-span-2">
-                        <div className="text-gray-400 text-xs mb-1">Widget ID</div>
-                        <div className="text-white font-mono text-xs bg-blue-800/50 px-2 py-1 rounded">
-                          {savedWidgetId.slice(-12)}...
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="p-6 border-t border-gray-700/50 bg-gray-800/30 space-y-4">
+                <button
+                  onClick={saveChanges}
+                  disabled={isSaving}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-emerald-700 disabled:to-emerald-600 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] disabled:scale-100 disabled:opacity-75 border border-emerald-500/30 relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  
+                  {isSaving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white relative z-10"></div>
+                      <span className="relative z-10">Saving Configuration...</span>
+                    </>
+                  ) : saveSuccess ? (
+                    <>
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center relative z-10">
+                        <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span className="relative z-10">Configuration Saved!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5 relative z-10" />
+                      <span className="relative z-10">Save Configuration</span>
+                    </>
+                  )}
+                </button>
+
+                {savedWidgetId && (
+                  <DeployButton
+                    widgetId={savedWidgetId}
+                    onDeploy={() => setShowDeployModal(true)}
+                    disabled={isSaving}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -1238,7 +1228,7 @@ const ChatbotBuilder: React.FC = () => {
         isOpen={showDeployModal}
         onClose={() => setShowDeployModal(false)}
         widgetId={savedWidgetId || ''}
-        widgetName={name || 'Assistant IA'}
+        widgetName={name || 'AI Assistant'}
       />
 
       {/* Custom Styles */}
@@ -1247,14 +1237,23 @@ const ChatbotBuilder: React.FC = () => {
           width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
+          background: rgba(17, 24, 39, 0.3);
+          border-radius: 16px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #6b7280;
-          border-radius: 3px;
+          background: linear-gradient(to bottom, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6));
+          border-radius: 16px;
+          border: 1px solid rgba(75, 85, 99, 0.3);
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
+          background: linear-gradient(to bottom, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8));
+        }
+        
+        .bg-grid {
+          background-image: 
+            linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+          background-size: 40px 40px;
         }
       `}</style>
     </div>

@@ -4,7 +4,6 @@ import { Agent } from "@/models/Agent";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
-
 export async function GET(req: NextRequest) {
   await connectToDatabase();
 
@@ -13,15 +12,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Récupérer TOUS les agents (pour la page principale ET les dossiers)
+  // ✅ AJOUTÉ isDeployed au select !
   const agents = await Agent.find({ userId: session.user.id })
     .sort({ createdAt: -1 })
-    .select("_id name integrations prompt openaiModel temperature top_p folderId createdAt updatedAt");
+    .select("_id name integrations prompt openaiModel temperature top_p folderId createdAt updatedAt isDeployed");
+    //                                                                                                    ↑ AJOUTÉ !
 
   return NextResponse.json({ agents });
 }
 
-// POST - Create new agent
+// POST - Create new agent - INCHANGÉ
 export async function POST(req: NextRequest) {
   await connectToDatabase();
 

@@ -4,6 +4,7 @@ import { Connection } from '@/models/Connection';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import crypto from 'crypto';
+import { updateAgentDeploymentStatus } from '@/lib/deployment-utils'; // 🆕 IMPORT
 
 // 🆕 Fonctions pour générer webhook ID et secret
 function generateWebhookId(): string {
@@ -50,6 +51,12 @@ export async function POST(req: NextRequest) {
     ...(webhookSecret && { webhookSecret }),
     ...(webhookUrl && { webhookUrl }),
   });
+
+  // 🆕 NOUVEAU - Mettre isDeployed = true sur l'agent choisi
+  if (aiBuildId) {
+    await updateAgentDeploymentStatus(aiBuildId, true);
+    console.log(`🎉 [DEPLOYMENT] Agent ${aiBuildId} marked as deployed! (Instagram/Facebook)`);
+  }
 
   return NextResponse.json({ 
     success: true, 

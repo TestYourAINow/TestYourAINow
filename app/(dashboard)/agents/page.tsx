@@ -23,6 +23,7 @@ type Agent = {
   updatedAt?: string
   integrations?: { name: string; type: string }[]
   folderId?: string | null
+  isDeployed?: boolean // 🆕 NOUVEAU CHAMP
 }
 
 type FolderType = {
@@ -34,7 +35,7 @@ type FolderType = {
   updatedAt: string
 }
 
-// Modal Edit Folder - NOUVEAU DESIGN PREMIUM
+// Modal Edit Folder - INCHANGÉ
 const EditFolderModal = ({ 
   folder,
   isOpen, 
@@ -203,7 +204,7 @@ const EditFolderModal = ({
   )
 }
 
-// Modal Delete Folder - NOUVEAU DESIGN PREMIUM HARMONISÉ
+// Modal Delete Folder - INCHANGÉ
 const DeleteFolderModal = ({ 
   folder,
   isOpen, 
@@ -370,9 +371,11 @@ const DeleteFolderModal = ({
   )
 }
 
-// Statut d'agent - NOUVEAU DESIGN
-const AgentStatus = ({ integrations }: { integrations?: { name: string; type: string }[] }) => {
-  const isActive = integrations && integrations.length > 0;
+// ✅ AGENT STATUS - CORRIGÉ POUR UTILISER isDeployed
+const AgentStatus = ({ isDeployed }: { isDeployed?: boolean }) => {
+  console.log('🔍 Agent isDeployed:', isDeployed);
+  // 🆕 NOUVELLE LOGIQUE - Basé sur déploiement, pas intégrations
+  const isActive = isDeployed || false;
   
   return (
     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
@@ -386,7 +389,7 @@ const AgentStatus = ({ integrations }: { integrations?: { name: string; type: st
   );
 };
 
-// Skeleton card - NOUVEAU DESIGN
+// Skeleton card - INCHANGÉ
 const AgentCardSkeleton = () => (
   <div className="bg-gradient-to-br from-gray-900/40 to-gray-800/20 backdrop-blur-sm border border-gray-700/30 rounded-2xl shadow-xl p-6 h-[280px] animate-pulse">
     <div className="flex justify-between items-start mb-6">
@@ -417,7 +420,7 @@ export default function AgentsPage() {
   const [sortBy, setSortBy] = useState<"name" | "date" | "integrations">("date")
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false)
 
-  // Fetch data
+  // Fetch data - INCHANGÉ
   useEffect(() => {
     const start = Date.now()
 
@@ -438,7 +441,7 @@ export default function AgentsPage() {
       })
   }, [])
 
-// Filtrage et tri
+// ✅ FILTRAGE - CORRIGÉ POUR UTILISER isDeployed
 useEffect(() => {
   let filtered = agents.filter(agent => {
     // Filtre de recherche
@@ -453,10 +456,11 @@ useEffect(() => {
     return matchesSearch && isNotInFolder;
   });
 
+  // 🆕 NOUVELLE LOGIQUE DE FILTRAGE - Basé sur isDeployed
   if (filterType === "active") {
-    filtered = filtered.filter(agent => agent.integrations && agent.integrations.length > 0)
+    filtered = filtered.filter(agent => Boolean(agent.isDeployed))
   } else if (filterType === "basic") {
-    filtered = filtered.filter(agent => !agent.integrations || agent.integrations.length === 0)
+    filtered = filtered.filter(agent => !agent.isDeployed)
   }
 
   filtered.sort((a, b) => {
@@ -627,7 +631,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
           onDelete={handleDeleteFolderAction}
         />
 
-        {/* Page Title Section */}
+        {/* Page Title Section - INCHANGÉ */}
         {!loading && (
           <FadeInSection>
             <div className="text-center mb-12">
@@ -648,12 +652,12 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
           </FadeInSection>
         )}
 
-        {/* Enhanced Analytics Overview - PREMIUM STATS CARDS */}
+        {/* ✅ ANALYTICS OVERVIEW - CORRIGÉ */}
         {!loading && (agents.length > 0 || folders.length > 0) && (
           <FadeInSection>
             <div className="mb-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* 1. Total Agents */}
+                {/* Total Agents - INCHANGÉ */}
                 <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/30 transition-all duration-300">
@@ -665,7 +669,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
                   <div className="text-xs text-gray-500">AI assistants created</div>
                 </div>
 
-                {/* 2. Active Agents */}
+                {/* ✅ Active Agents - CORRIGÉ */}
                 <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20 group-hover:shadow-green-500/30 transition-all duration-300">
@@ -674,12 +678,12 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
                     <span className="text-gray-400 text-sm font-medium">Active Agents</span>
                   </div>
                   <div className="text-3xl font-bold text-white mb-1">
-                    {agents.filter(agent => agent.integrations && agent.integrations.length > 0).length}
+                    {agents.filter(agent => Boolean(agent.isDeployed)).length}
                   </div>
-                  <div className="text-xs text-gray-500">With integrations</div>
+                  <div className="text-xs text-gray-500">Currently deployed</div>
                 </div>
 
-                {/* 3. Total Integrations */}
+                {/* Total Integrations - INCHANGÉ */}
                 <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/30 transition-all duration-300">
@@ -693,7 +697,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
                   <div className="text-xs text-gray-500">Connected services</div>
                 </div>
 
-                {/* 4. Total Folders */}
+                {/* Total Folders - INCHANGÉ */}
                 <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/30 transition-all duration-300">
@@ -709,7 +713,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
           </FadeInSection>
         )}
 
-        {/* Enhanced Search and Filter Bar */}
+        {/* Enhanced Search and Filter Bar - INCHANGÉ */}
         {!loading && (agents.length > 0 || folders.length > 0) && (
           <FadeInSection>
             <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 mb-8 shadow-2xl">
@@ -837,7 +841,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
                 </p>
               </Link>
 
-              {/* Folders */}
+              {/* Folders - INCHANGÉ */}
               {folders.map((folder) => (
                 <FolderCard
                   key={folder._id}
@@ -850,7 +854,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
                 />
               ))}
 
-              {/* Agents */}
+              {/* ✅ AGENTS - CORRIGÉ */}
               {filteredAgents.map((agent) => (
                 <div
                   key={agent._id}
@@ -873,8 +877,9 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
                         <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/20">
                           <Bot className="w-7 h-7 text-blue-400" />
                         </div>
+                        {/* ✅ STATUT VISUEL CORRIGÉ */}
                         <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${
-                          agent.integrations && agent.integrations.length > 0 
+                          Boolean(agent.isDeployed)
                             ? 'bg-emerald-400 shadow-emerald-400/50' 
                             : 'bg-gray-500'
                         } shadow-md`} />
@@ -886,7 +891,8 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
                         <h3 className="text-white font-bold text-lg mb-3 truncate group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
                           {agent.name || "Untitled Agent"}
                         </h3>
-                        <AgentStatus integrations={agent.integrations} />
+                        {/* ✅ AGENT STATUS CORRIGÉ */}
+                        <AgentStatus isDeployed={agent.isDeployed} />
                       </div>
 
                       <div className="flex-1 mb-4">
@@ -943,7 +949,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
           </FadeInSection>
         )}
 
-        {/* Enhanced Empty State */}
+        {/* Enhanced Empty State - INCHANGÉ */}
         {!loading && agents.length === 0 && folders.length === 0 && (
           <FadeInSection>
             <div className="text-center py-20">
@@ -979,7 +985,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
           </FadeInSection>
         )}
 
-        {/* Enhanced No Results State */}
+        {/* Enhanced No Results State - INCHANGÉ */}
         {!loading && (agents.length > 0 || folders.length > 0) && filteredAgents.length === 0 && folders.length === 0 && (
           <FadeInSection>
             <div className="text-center py-20">
@@ -1005,7 +1011,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
           </FadeInSection>
         )}
 
-        {/* Quick Actions Bar */}
+        {/* Quick Actions Bar - INCHANGÉ */}
         {!loading && (agents.length > 0 || folders.length > 0) && (
           <FadeInSection>
             <div className="mt-16 bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-2xl">

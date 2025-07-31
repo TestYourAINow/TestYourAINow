@@ -3,7 +3,23 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Copy, Eye, EyeOff, CheckCircle, Play, Bot, Globe, MessageCircle, Clock, User, RefreshCw, Trash2, MoreVertical } from 'lucide-react'
+import { ArrowLeft, Copy, Eye, EyeOff, CheckCircle, Play, Bot, Globe, MessageCircle, Clock, User, RefreshCw, Trash2, Settings, Facebook } from 'lucide-react'
+
+// Custom Instagram Icon with real colors
+const InstagramIcon = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+    <defs>
+      <linearGradient id="instagram-gradient-launch" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f09433" />
+        <stop offset="25%" stopColor="#e6683c" />
+        <stop offset="50%" stopColor="#dc2743" />
+        <stop offset="75%" stopColor="#cc2366" />
+        <stop offset="100%" stopColor="#bc1888" />
+      </linearGradient>
+    </defs>
+    <path fill="url(#instagram-gradient-launch)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+  </svg>
+)
 
 // ✅ TYPES EXISTANTS - RIEN CHANGÉ
 type Connection = {
@@ -230,9 +246,9 @@ export default function ConnectionDetailsPage() {
 
   const getIntegrationIcon = (type: string) => {
     switch (type) {
-      case 'instagram-dms': return '📱'
-      case 'facebook-messenger': return '💬'
-      default: return '🔗'
+      case 'instagram-dms': return <InstagramIcon size={24} />
+      case 'facebook-messenger': return <Facebook size={24} className="text-blue-400" />
+      default: return <Globe size={24} className="text-gray-400" />
     }
   }
 
@@ -248,7 +264,7 @@ export default function ConnectionDetailsPage() {
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
   }
 
-  // ✅ LOADING ET ERROR STATES - RIEN CHANGÉ
+  // ✅ LOADING ET ERROR STATES - ARRIÈRE-PLAN ORIGINAL
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 p-4 flex items-center justify-center">
@@ -268,7 +284,7 @@ export default function ConnectionDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-950">
       
-      {/* ✅ HEADER GLOBAL - SIMPLIFIÉ */}
+      {/* 🎨 HEADER - ARRIÈRE-PLAN ORIGINAL + DESIGN SYSTEM */}
       <div className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -279,7 +295,9 @@ export default function ConnectionDetailsPage() {
                 <span className="hidden sm:inline">Back to Deployment Center</span>
               </Link>
               <div className="flex items-center gap-3">
-                <div className="text-2xl">{getIntegrationIcon(integrationType)}</div>
+                <div className="w-12 h-12 bg-gray-800/50 border border-gray-700/50 rounded-xl flex items-center justify-center">
+                  {getIntegrationIcon(integrationType)}
+                </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">{connection.name}</h1>
                   <p className="text-gray-400 text-sm hidden sm:block">{getIntegrationDisplayName(integrationType)}</p>
@@ -291,35 +309,37 @@ export default function ConnectionDetailsPage() {
             <div className="flex gap-2">
               <button 
                 onClick={() => setActiveTab('conversations')}
-                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
+                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
                   activeTab === 'conversations' 
-                    ? 'bg-emerald-600 text-white' 
+                    ? 'bg-blue-600 text-white' 
                     : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
                 }`}
               >
-                💬 Conversations
+                <MessageCircle size={16} />
+                Conversations
               </button>
               <button 
                 onClick={() => setActiveTab('configuration')}
-                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
+                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
                   activeTab === 'configuration' 
-                    ? 'bg-emerald-600 text-white' 
+                    ? 'bg-blue-600 text-white' 
                     : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
                 }`}
               >
-                ⚙️ Configuration
+                <Settings size={16} />
+                Configuration
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ✅ ONGLET CONFIGURATION - CODE EXISTANT 100% INTACT */}
+      {/* ✅ ONGLET CONFIGURATION - DESIGN SYSTEM APPLIQUÉ */}
       {activeTab === 'configuration' && (
         <div className="max-w-4xl mx-auto p-4 md:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
-            {/* ✅ WEBHOOK DETAILS - RIEN CHANGÉ */}
+            {/* 🌐 WEBHOOK DETAILS */}
             <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-cyan-600/20 border border-cyan-500/40 rounded-xl flex items-center justify-center">
@@ -333,7 +353,7 @@ export default function ConnectionDetailsPage() {
 
               {/* Webhook URL */}
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-white mb-3">
+                <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   Webhook URL
                 </label>
                 <div className="relative">
@@ -348,14 +368,14 @@ export default function ConnectionDetailsPage() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                     disabled={!connection.webhookUrl}
                   >
-                    {copiedUrl ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                    {copiedUrl ? <CheckCircle size={16} className="text-blue-400" /> : <Copy size={16} />}
                   </button>
                 </div>
               </div>
 
               {/* Webhook Secret */}
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-white mb-3">
+                <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   Webhook Secret
                 </label>
                 <div className="relative">
@@ -378,7 +398,7 @@ export default function ConnectionDetailsPage() {
                       className="text-gray-400 hover:text-white transition-colors"
                       disabled={!connection.webhookSecret}
                     >
-                      {copiedSecret ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                      {copiedSecret ? <CheckCircle size={16} className="text-blue-400" /> : <Copy size={16} />}
                     </button>
                   </div>
                 </div>
@@ -391,11 +411,11 @@ export default function ConnectionDetailsPage() {
               </button>
             </div>
 
-            {/* ✅ AI BUILD CONFIGURATION - RIEN CHANGÉ */}
+            {/* 🤖 AI BUILD CONFIGURATION */}
             <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-emerald-600/20 border border-emerald-500/40 rounded-xl flex items-center justify-center">
-                  <Bot className="text-emerald-400" size={20} />
+                <div className="w-10 h-10 bg-blue-600/20 border border-blue-500/40 rounded-xl flex items-center justify-center">
+                  <Bot className="text-blue-400" size={20} />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-white">AI Build Configuration</h2>
@@ -405,7 +425,7 @@ export default function ConnectionDetailsPage() {
 
               {/* Connected AI Build */}
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-white mb-3">
+                <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   Connected AI Build
                 </label>
                 <input
@@ -442,9 +462,9 @@ export default function ConnectionDetailsPage() {
         </div>
       )}
 
-      {/* 🆕 ONGLET CONVERSATIONS - LAYOUT MESSENGER STYLE */}
+      {/* 💬 ONGLET CONVERSATIONS - STYLE MESSENGER ORIGINAL */}
       {activeTab === 'conversations' && (
-        <div className="h-[calc(100vh-80px)]"> {/* Full height minus header */}
+        <div className="h-[calc(100vh-80px)]">
           {!connection.webhookId ? (
             /* Message pour connections sans webhook */
             <div className="h-full flex items-center justify-center p-8">
@@ -467,8 +487,8 @@ export default function ConnectionDetailsPage() {
                 {/* Header liste */}
                 <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-emerald-600/20 border border-emerald-500/40 rounded-lg flex items-center justify-center">
-                      <MessageCircle className="text-emerald-400" size={16} />
+                    <div className="w-8 h-8 bg-blue-600/20 border border-blue-500/40 rounded-lg flex items-center justify-center">
+                      <MessageCircle className="text-blue-400" size={16} />
                     </div>
                     <div>
                       <h2 className="font-bold text-white">Conversations</h2>
@@ -480,7 +500,7 @@ export default function ConnectionDetailsPage() {
                   <button
                     onClick={fetchConversations}
                     disabled={conversationsLoading}
-                    className="w-8 h-8 bg-emerald-600/20 hover:bg-emerald-600/30 disabled:opacity-50 rounded-lg flex items-center justify-center text-emerald-400 transition-all"
+                    className="w-8 h-8 bg-blue-600/20 hover:bg-blue-600/30 disabled:opacity-50 rounded-lg flex items-center justify-center text-blue-400 transition-all"
                   >
                     <RefreshCw size={14} className={conversationsLoading ? 'animate-spin' : ''} />
                   </button>
@@ -490,7 +510,7 @@ export default function ConnectionDetailsPage() {
                 <div className="flex-1 overflow-y-auto">
                   {conversationsLoading ? (
                     <div className="p-8 text-center text-gray-400">
-                      <div className="animate-spin w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                      <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                       Loading conversations...
                     </div>
                   ) : conversations.length === 0 ? (
@@ -510,7 +530,7 @@ export default function ConnectionDetailsPage() {
                         onClick={() => fetchConversationDetails(conv.conversationId)}
                         className={`p-4 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group ${
                           selectedConversation?.conversationId === conv.conversationId 
-                            ? 'bg-emerald-900/20 border-emerald-500/30' 
+                            ? 'bg-blue-900/20 border-blue-500/30' 
                             : ''
                         }`}
                       >
@@ -537,7 +557,7 @@ export default function ConnectionDetailsPage() {
                               {conv.isUser && (
                                 <>
                                   <span className="text-xs text-gray-600">•</span>
-                                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
                                 </>
                               )}
                             </div>
@@ -577,7 +597,7 @@ export default function ConnectionDetailsPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => fetchConversationDetails(selectedConversation.conversationId)}
-                          className="w-8 h-8 bg-emerald-600/20 hover:bg-emerald-600/30 rounded-lg flex items-center justify-center text-emerald-400 transition-all"
+                          className="w-8 h-8 bg-blue-600/20 hover:bg-blue-600/30 rounded-lg flex items-center justify-center text-blue-400 transition-all"
                         >
                           <RefreshCw size={14} />
                         </button>
@@ -609,7 +629,7 @@ export default function ConnectionDetailsPage() {
                       <div className="flex-1 overflow-y-auto p-4 space-y-3">
                         {conversationDetailsLoading ? (
                           <div className="text-center text-gray-400 py-8">
-                            <div className="animate-spin w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                            <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                             Loading messages...
                           </div>
                         ) : (
@@ -621,7 +641,7 @@ export default function ConnectionDetailsPage() {
                               <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${
                                 message.role === 'user'
                                   ? 'bg-gray-800/50 text-white'
-                                  : 'bg-emerald-600/20 text-emerald-200 border border-emerald-500/30'
+                                  : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
                               }`}>
                                 <p className="text-sm">{message.content}</p>
                                 <p className="text-xs mt-1 opacity-70">
