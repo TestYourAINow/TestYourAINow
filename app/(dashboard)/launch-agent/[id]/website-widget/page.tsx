@@ -320,10 +320,7 @@ const ChatWidget: React.FC<{
     }
   }, [config.showPopup, config.popupDelay, isOpen]);
 
-  // Scroll to bottom when new message
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+
 
   // Focus input when opened + animate messages
   useEffect(() => {
@@ -682,7 +679,7 @@ const ChatbotBuilder: React.FC = () => {
   const selectedAgentName = agents.find(a => a._id === selectedAgent)?.name;
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-transparent p-4 md:p-8">
       {/* Main Content */}
       <div className="flex justify-center min-h-screen py-6">
         <div className="w-full max-w-7xl mx-auto px-6">
@@ -772,7 +769,7 @@ const ChatbotBuilder: React.FC = () => {
             {/* Configuration Panel */}
             <div className="w-[420px] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
 
-              <div className="p-6 border-b border-gray-700/50 bg-gray-800/30">
+              <div className="p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10">
                 <div className="flex items-center gap-3">
                   <Settings className="text-blue-400 w-6 h-6" />
                   <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
@@ -1147,7 +1144,7 @@ const ChatbotBuilder: React.FC = () => {
                 </div>
 
                 {/* Widget Information */}
-                <div className="bg-blue-600/10 backdrop-blur-sm border border-blue-500/30 rounded-xl p-5">
+                <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl p-5 backdrop-blur-sm">
                   <div className="flex items-center gap-3 mb-4">
                     <Info className="text-blue-400 w-5 h-5" />
                     <h3 className="text-lg font-semibold text-blue-200">Widget Information</h3>

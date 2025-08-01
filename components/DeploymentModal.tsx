@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, Code, ExternalLink } from 'lucide-react';
+import { X, Copy, Check, Code, ExternalLink, Rocket, Globe, HelpCircle } from 'lucide-react';
 
 interface DeploymentModalProps {
   isOpen: boolean;
@@ -23,10 +23,13 @@ export const DeployButton: React.FC<DeployButtonProps> = ({
     <button
       onClick={onDeploy}
       disabled={disabled || !widgetId}
-      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
+      className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 relative overflow-hidden group"
     >
-      <ExternalLink className="w-5 h-5" />
-      Déployer le Widget
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+      <div className="relative z-10 flex items-center gap-3">
+        <Rocket className="w-5 h-5" />
+        Deploy Widget
+      </div>
     </button>
   );
 };
@@ -43,8 +46,7 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://testyourainow.com';
 
-  // ✅ VERSION SÉCURISÉE : utilise DOMContentLoaded pour garantir que body existe
-  const embedCode = `<!-- Ajoutez ceci avant </body> -->
+  const embedCode = `<!-- Add this before </body> -->
 <script type="text/javascript">
   window.addEventListener('DOMContentLoaded', function() {
     var s = document.createElement('script');
@@ -63,106 +65,123 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Erreur lors de la copie:', err);
+      console.error('Copy error:', err);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-2xl border border-gray-600 w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-600">
-          <div>
-            <h2 className="text-xl font-semibold text-white">Déployer le Widget</h2>
-            <p className="text-sm text-gray-400 mt-1">
-              {widgetName} • ID: {widgetId.slice(-8)}...
-            </p>
+        <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/20 border-2 border-blue-500/40 flex items-center justify-center shadow-lg">
+              <Rocket className="text-blue-400" size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                Deploy Widget
+              </h2>
+              <p className="text-sm text-gray-400 mt-0.5">
+                {widgetName} • ID: {widgetId.slice(-8)}...
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-700"
+            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200 group"
           >
-            <X className="w-6 h-6" />
+            <X size={20} className="relative z-10" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          <div className="bg-blue-900/20 border border-blue-800/30 rounded-lg p-4">
-            <h3 className="text-blue-200 font-medium mb-2 flex items-center gap-2">
-              <Code className="w-5 h-5" />
-              Comment déployer votre widget
-            </h3>
-            <ol className="text-sm text-blue-300 space-y-1 ml-6 list-decimal">
-              <li>Copiez le code HTML ci-dessous</li>
-              <li>Collez-le avant la balise &lt;/body&gt; de votre site</li>
-              <li>Le widget se chargera automatiquement</li>
+          
+          {/* Instructions Section */}
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-5 backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <Code className="text-blue-400" size={20} />
+              <h3 className="text-lg font-semibold text-blue-200">How to Deploy Your Widget</h3>
+            </div>
+            <ol className="text-blue-300 space-y-2 ml-6 list-decimal">
+              <li className="leading-relaxed">Copy the HTML code below</li>
+              <li className="leading-relaxed">Paste it before the &lt;/body&gt; tag of your website</li>
+              <li className="leading-relaxed">The widget will load automatically</li>
             </ol>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3">
-              Code HTML à intégrer
-            </label>
+          {/* Code Section */}
+          <div className="bg-gray-800/60 border border-gray-700/50 rounded-xl p-5 backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <Globe className="text-emerald-400" size={20} />
+              <h3 className="text-lg font-semibold text-emerald-200">HTML Embed Code</h3>
+            </div>
+            
             <div className="relative">
-              <pre className="bg-gray-900 border border-gray-600 rounded-lg p-4 text-sm text-gray-300 overflow-x-auto">
-                <code>{embedCode}</code>
+              <pre className="bg-gray-900/80 border border-gray-700/50 rounded-xl p-4 text-sm text-gray-300 overflow-x-auto backdrop-blur-sm custom-scrollbar">
+                <code className="font-mono">{embedCode}</code>
               </pre>
               <button
                 onClick={copyToClipboard}
-                className="absolute top-3 right-3 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors flex items-center gap-2"
+                className="absolute top-3 right-3 bg-gradient-to-r from-gray-700/80 to-gray-600/80 hover:from-gray-600/80 hover:to-gray-500/80 text-white p-2.5 rounded-lg transition-all duration-200 flex items-center gap-2 backdrop-blur-sm border border-gray-600/50 hover:border-gray-500/50"
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4" />
-                    <span className="text-xs">Copié!</span>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-medium text-emerald-400">Copied!</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    <span className="text-xs">Copier</span>
+                    <span className="text-xs font-medium">Copy</span>
                   </>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Aide */}
-          <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-600">
-            <h4 className="text-gray-300 font-medium mb-2">💡 Besoin d'aide ?</h4>
-            <p className="text-sm text-gray-400">
-              Ce code fonctionne sur WordPress, Shopify, Webflow, sites statiques, etc.
-              Placez-le avant la balise &lt;/body&gt; pour qu'il fonctionne sans erreur.
+          {/* Help Section */}
+          <div className="bg-gray-800/60 border border-gray-700/50 rounded-xl p-5 backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <HelpCircle className="text-orange-400" size={20} />
+              <h4 className="text-lg font-semibold text-orange-200">Need Help?</h4>
+            </div>
+            <p className="text-gray-300 leading-relaxed">
+              This code works on <strong className="text-white">WordPress</strong>, <strong className="text-white">Shopify</strong>, <strong className="text-white">Webflow</strong>, static sites, and more. 
+              Place it before the &lt;/body&gt; tag for proper functionality.
             </p>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-gray-600 p-6 bg-gray-900/30">
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
-            >
-              Fermer
-            </button>
-            <button
-              onClick={copyToClipboard}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-            >
+        {/* Footer Actions */}
+        <div className="flex gap-3 p-6 pt-0">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-3.5 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-xl font-semibold transition-all backdrop-blur-sm border border-gray-700/50 hover:border-gray-600/50"
+          >
+            Close
+          </button>
+          <button
+            onClick={copyToClipboard}
+            className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105 relative overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+            <div className="relative z-10 flex items-center justify-center gap-2">
               {copied ? (
                 <>
                   <Check className="w-4 h-4" />
-                  Copié !
+                  Copied!
                 </>
               ) : (
                 <>
                   <Copy className="w-4 h-4" />
-                  Copier le Code
+                  Copy Code
                 </>
               )}
-            </button>
-          </div>
+            </div>
+          </button>
         </div>
       </div>
     </div>

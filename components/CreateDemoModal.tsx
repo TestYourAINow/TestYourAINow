@@ -128,7 +128,6 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
               onClick={handleClose}
               className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200 group"
             >
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gray-500/0 to-gray-500/0 group-hover:from-gray-500/10 group-hover:to-gray-500/10 transition-all duration-200"></div>
               <X size={20} className="relative z-10" />
             </button>
           </div>
