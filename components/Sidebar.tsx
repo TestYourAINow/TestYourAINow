@@ -13,14 +13,14 @@ import {
   Settings,
   CreditCard,
   LogOut,
-  BarChart3  // 🆕 AJOUTÉ pour Dashboard
+  BarChart3
 } from "lucide-react"
 import { useSidebar } from "@/context/SidebarContext"
 import { useSession, signOut } from "next-auth/react"
 import { useState, useRef, useEffect } from "react"
 import { usePathname } from "next/navigation"
 
-// Enhanced SidebarUserDropdown Component - RIEN CHANGÉ
+// SidebarUserDropdown Component - INCHANGÉ
 const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
   const { data: session, update } = useSession()
   const [localProfileImage, setLocalProfileImage] = useState<string | null>(null)
@@ -38,7 +38,6 @@ const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  // Session updates
   useEffect(() => {
     setLocalProfileImage(session?.user?.profileImage || null)
   }, [session?.user?.profileImage])
@@ -47,7 +46,6 @@ const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
     await update()
   }
 
-  // Avatar update events
   useEffect(() => {
     const handleAvatarUpdate = (event: CustomEvent) => {
       setLocalProfileImage(event.detail.profileImage)
@@ -69,18 +67,15 @@ const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center h-12 px-3 rounded-xl text-gray-300 hover:text-white hover:bg-gray-800/60 transition-all duration-300 relative group backdrop-blur-sm border border-transparent hover:border-gray-700/50"
       >
-        {/* Enhanced Glow Effect */}
         <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5 transition-all duration-300 pointer-events-none"></div>
         
-        {/* Enhanced Point indicator */}
         {!collapsed && (
           <div className="absolute right-3 w-2 h-2 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-blue-400/50 group-hover:shadow-md"></div>
         )}
         
-        {/* Enhanced Profile Photo */}
         <div 
           className={`w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden border-2 border-gray-600/50 group-hover:border-blue-400/50 transition-all duration-300 shadow-lg ${localProfileImage ? '' : 'bg-gradient-to-r from-blue-600 to-cyan-600'}`}
-          style={{ marginLeft: collapsed ? '4px' : '-4px' }}
+          style={{ marginLeft: collapsed ? '-9px' : '-4px' }}
         >
           {localProfileImage ? (
             <img 
@@ -93,7 +88,6 @@ const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
           )}
         </div>
         
-        {/* Enhanced Name and Arrow */}
         <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
           <div className="flex items-center gap-3 flex-1">
             <span className="flex-1 text-sm font-semibold truncate whitespace-nowrap group-hover:text-white transition-colors duration-300">
@@ -106,7 +100,6 @@ const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
         </div>
       </button>
 
-      {/* Enhanced Tooltip - Mobile Optimized */}
       {collapsed && (
         <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 hidden md:block">
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white text-sm px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
@@ -116,7 +109,6 @@ const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
         </div>
       )}
 
-      {/* Enhanced Dropdown Menu - Mobile Optimized */}
       {isOpen && (
         <div className={`absolute z-50 rounded-xl shadow-2xl text-sm border bg-gray-900/95 backdrop-blur-xl border-gray-700/50 py-2 overflow-hidden ${
           collapsed
@@ -124,7 +116,6 @@ const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
             : "bottom-full mb-2 left-0 w-full"
         }`}>
           
-          {/* Enhanced Header */}
           <div className="px-4 py-3 border-b border-gray-700/50 mb-2">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 text-white rounded-full flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden border-2 border-gray-600/50 ${localProfileImage ? '' : 'bg-gradient-to-r from-blue-600 to-cyan-600'} shadow-lg`}>
@@ -149,7 +140,6 @@ const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
             </div>
           </div>
 
-          {/* Enhanced Menu Items - Mobile Touch Friendly */}
           {session?.user?.isSubscribed && (
             <Link
               href="/account-settings"
@@ -194,16 +184,14 @@ export default function Sidebar() {
   const { collapsed, toggleSidebar } = useSidebar()
   const pathname = usePathname()
 
-  // 🆕 DASHBOARD AJOUTÉ EN PREMIER + EXISTING ITEMS (RIEN CASSÉ)
   const workspaceItems = [
-    { href: "/dashboard", label: "Dashboard", icon: <BarChart3 size={20} />, isActive: pathname === "/dashboard" }, // 🆕 DASHBOARD
+    { href: "/dashboard", label: "Dashboard", icon: <BarChart3 size={20} />, isActive: pathname === "/dashboard" },
     { href: "/agents", label: "My Agents", icon: <Bot size={20} />, isActive: pathname === "/agents" },
     { href: "/agent-lab", label: "Improve Agent", icon: <Brain size={20} />, isActive: pathname === "/agent-lab" },
     { href: "/demo-agent", label: "Demo Agent", icon: <FlaskConical size={20} />, isActive: pathname === "/demo-agent" },
     { href: "/launch-agent", label: "Launch Agent", icon: <Rocket size={20} />, isActive: pathname === "/launch-agent" },
   ]
 
-  // 🔄 RESOURCES ITEMS - RIEN CHANGÉ
   const resourceItems = [
     { href: "/api-key", label: "API Key", icon: <Key size={20} />, isActive: pathname === "/api-key" },
     { href: "/video-guides", label: "Video Guides", icon: <PlayCircle size={20} />, isActive: pathname === "/video-guides" },
@@ -212,13 +200,12 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Enhanced Sidebar - RIEN CHANGÉ */}
+      {/* 🔧 SIDEBAR AVEC SCROLL - Structure modifiée */}
       <aside className={`fixed top-0 bottom-0 left-0 bg-gray-900/95 backdrop-blur-xl text-white z-50 transition-[width] duration-300 ease-out border-r border-gray-700/50 ${collapsed ? 'w-16' : 'w-72'} flex flex-col shadow-2xl`}>
         
-        {/* Enhanced Header with Premium Logo - RIEN CHANGÉ */}
+        {/* 🔧 HEADER FIXE - reste en haut */}
         <div className="h-16 flex items-center px-4 border-b border-gray-700/50 flex-shrink-0 bg-gray-900/50 backdrop-blur-sm">
           <div className="flex items-center min-w-0 w-full">
-            {/* Enhanced Premium Logo - Bot + Gradient avec Link vers /dashboard - 🔄 CHANGÉ VERS DASHBOARD */}
             <Link href="/dashboard" className="shrink-0 relative group" style={{ marginLeft: '-4px' }}>
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-blue-500/25">
                 <Bot className="w-6 h-6 text-white transition-transform duration-300 group-hover:scale-110" />
@@ -226,7 +213,6 @@ export default function Sidebar() {
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-gray-900 shadow-emerald-400/50 shadow-md animate-pulse"></div>
             </Link>
             
-            {/* Enhanced Brand Text avec Link vers /dashboard - 🔄 CHANGÉ VERS DASHBOARD */}
             <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
               <Link href="/dashboard" className="group">
                 <span className="text-xl font-bold whitespace-nowrap bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent transition-all duration-300 group-hover:from-blue-400 group-hover:to-cyan-400">
@@ -237,151 +223,143 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Enhanced Navigation - WORKSPACE AVEC DASHBOARD */}
-        <div className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
-          
-          {/* Enhanced WORKSPACE Section - RIEN CHANGÉ */}
-          <div className={`px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 transition-opacity duration-300 ${collapsed ? 'opacity-0' : 'opacity-100'}`}>
-            <span className="bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text text-transparent">WORKSPACE</span>
-          </div>
+        {/* 🔧 CONTENU SCROLLABLE - entre header et footer */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="py-6">
+            
+            {/* WORKSPACE Section */}
+            <div className={`px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 transition-opacity duration-300 ${collapsed ? 'opacity-0' : 'opacity-100'}`}>
+              <span className="bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text text-transparent">WORKSPACE</span>
+            </div>
 
-          <div className="space-y-2 mb-8 px-3">
-            {workspaceItems.map(({ href, label, icon, isActive }) => (
-              <div key={href} className="relative group">
-                <Link
-                  href={href}
-                  className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group backdrop-blur-sm min-h-[48px] ${
-                    isActive 
-                      ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
-                      : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50'
-                  }`}
-                >
-                  {/* Enhanced Glow Effect */}
-                  <div className={`absolute inset-0 rounded-xl transition-all duration-300 pointer-events-none ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10' 
-                      : 'bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5'
-                  }`}></div>
-                  
-                  {/* Enhanced Active Indicator */}
-                  {!collapsed && (
-                    <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-300 ${
+            <div className="space-y-2 mb-8 px-1">
+              {workspaceItems.map(({ href, label, icon, isActive }) => (
+                <div key={href} className="relative group">
+                  <Link
+                    href={href}
+                    className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group backdrop-blur-sm min-h-[48px] ${
                       isActive 
-                        ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md' 
-                        : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
-                    }`}></div>
-                  )}
-                  
-                  {/* Enhanced Icon */}
-                  <div 
-                    className={`w-5 h-5 shrink-0 transition-all duration-300 ${
-                      isActive 
-                        ? 'text-blue-400 scale-110' 
-                        : 'text-blue-400 group-hover:text-cyan-400 group-hover:scale-110'
-                    }`} 
-                    style={{ marginLeft: '4px' }}
+                        ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
+                        : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50'
+                    }`}
                   >
-                    {icon}
-                  </div>
-                  
-                  {/* Enhanced Text */}
-                  <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-                    <span className={`font-semibold whitespace-nowrap transition-colors duration-300 ${
-                      isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'
-                    }`}>
-                      {label}
-                    </span>
-                  </div>
-                </Link>
-                
-                {/* Enhanced Tooltip - Hidden on Mobile */}
-                {collapsed && (
-                  <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 hidden md:block">
-                    <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white text-sm px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-t border-gray-700/50 rotate-45"></div>
-                      {label}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Enhanced RESOURCES Section - RIEN CHANGÉ */}
-          <div className={`px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 transition-opacity duration-300 ${collapsed ? 'opacity-0' : 'opacity-100'}`}>
-            <span className="bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text text-transparent">RESOURCES</span>
-          </div>
-
-          <div className="space-y-2 px-3">
-            {resourceItems.map(({ href, label, icon, isActive }) => (
-              <div key={href} className="relative group">
-                <Link
-                  href={href}
-                  className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group backdrop-blur-sm min-h-[48px] ${
-                    isActive 
-                      ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
-                      : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50'
-                  }`}
-                >
-                  {/* Enhanced Glow Effect */}
-                  <div className={`absolute inset-0 rounded-xl transition-all duration-300 pointer-events-none ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10' 
-                      : 'bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5'
-                  }`}></div>
-                  
-                  {/* Enhanced Active Indicator */}
-                  {!collapsed && (
-                    <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-300 ${
+                    <div className={`absolute inset-0 rounded-xl transition-all duration-300 pointer-events-none ${
                       isActive 
-                        ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md' 
-                        : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
+                        ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10' 
+                        : 'bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5'
                     }`}></div>
-                  )}
-                  
-                  {/* Enhanced Icon */}
-                  <div 
-                    className={`w-5 h-5 shrink-0 transition-all duration-300 ${
-                      isActive 
-                        ? 'text-blue-400 scale-110' 
-                        : 'text-blue-400 group-hover:text-cyan-400 group-hover:scale-110'
-                    }`} 
-                    style={{ marginLeft: '4px' }}
-                  >
-                    {icon}
-                  </div>
-                  
-                  {/* Enhanced Text */}
-                  <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-                    <span className={`font-semibold whitespace-nowrap transition-colors duration-300 ${
-                      isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'
-                    }`}>
-                      {label}
-                    </span>
-                  </div>
-                </Link>
-                
-                {/* Enhanced Tooltip - Hidden on Mobile */}
-                {collapsed && (
-                  <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 hidden md:block">
-                    <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white text-sm px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-t border-gray-700/50 rotate-45"></div>
-                      {label}
+                    
+                    {!collapsed && (
+                      <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-300 ${
+                        isActive 
+                          ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md' 
+                          : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
+                      }`}></div>
+                    )}
+                    
+                    <div 
+                      className={`w-5 h-5 shrink-0 transition-all duration-300 ${
+                        isActive 
+                          ? 'text-blue-400 scale-110' 
+                          : 'text-blue-400 group-hover:text-cyan-400 group-hover:scale-110'
+                      }`} 
+                      style={{ marginLeft: '4px' }}
+                    >
+                      {icon}
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                    
+                    <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                      <span className={`font-semibold whitespace-nowrap transition-colors duration-300 ${
+                        isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'
+                      }`}>
+                        {label}
+                      </span>
+                    </div>
+                  </Link>
+                  
+                  {collapsed && (
+                    <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 hidden md:block">
+                      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white text-sm px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-t border-gray-700/50 rotate-45"></div>
+                        {label}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* RESOURCES Section */}
+            <div className={`px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 transition-opacity duration-300 ${collapsed ? 'opacity-0' : 'opacity-100'}`}>
+              <span className="bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text text-transparent">RESOURCES</span>
+            </div>
+
+            <div className="space-y-2 px-1">
+              {resourceItems.map(({ href, label, icon, isActive }) => (
+                <div key={href} className="relative group">
+                  <Link
+                    href={href}
+                    className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group backdrop-blur-sm min-h-[48px] ${
+                      isActive 
+                        ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
+                        : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50'
+                    }`}
+                  >
+                    <div className={`absolute inset-0 rounded-xl transition-all duration-300 pointer-events-none ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10' 
+                        : 'bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5'
+                    }`}></div>
+                    
+                    {!collapsed && (
+                      <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-300 ${
+                        isActive 
+                          ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md' 
+                          : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
+                      }`}></div>
+                    )}
+                    
+                    <div 
+                      className={`w-5 h-5 shrink-0 transition-all duration-300 ${
+                        isActive 
+                          ? 'text-blue-400 scale-110' 
+                          : 'text-blue-400 group-hover:text-cyan-400 group-hover:scale-110'
+                      }`} 
+                      style={{ marginLeft: '4px' }}
+                    >
+                      {icon}
+                    </div>
+                    
+                    <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                      <span className={`font-semibold whitespace-nowrap transition-colors duration-300 ${
+                        isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'
+                      }`}>
+                        {label}
+                      </span>
+                    </div>
+                  </Link>
+                  
+                  {collapsed && (
+                    <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 hidden md:block">
+                      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white text-sm px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-t border-gray-700/50 rotate-45"></div>
+                        {label}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Enhanced Footer with User Dropdown - RIEN CHANGÉ */}
+        {/* 🔧 FOOTER FIXE - reste en bas */}
         <div className="border-t border-gray-700/50 p-3 flex-shrink-0 bg-gray-900/30 backdrop-blur-sm">
           <SidebarUserDropdown collapsed={collapsed} />
         </div>
       </aside>
 
-      {/* Enhanced Toggle Button - RIEN CHANGÉ */}
+      {/* Toggle Button - INCHANGÉ */}
       <div className="group">
         <button
           onClick={toggleSidebar}
@@ -396,7 +374,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Mobile Overlay for Sidebar - RIEN CHANGÉ */}
+      {/* Mobile Overlay - INCHANGÉ */}
       {!collapsed && (
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"

@@ -39,7 +39,7 @@ export default function Footer() {
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-                TestYourAI
+                TestYourAI Now
               </span>
             </div>
             

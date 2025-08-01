@@ -6,6 +6,9 @@ import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { Connection } from "@/models/Connection";
 import { Conversation } from "@/models/Conversation";
+import { Folder } from "@/models/Folder";           // ✅ NOUVEAU
+import { AgentVersion } from "@/models/AgentVersion"; // ✅ NOUVEAU
+import { Demo } from "@/models/Demo";               // ✅ NOUVEAU
 import User from "@/models/User";
 
 export async function GET(request: NextRequest) {
@@ -32,10 +35,10 @@ export async function GET(request: NextRequest) {
     // 1. 🤖 AGENTS STATS
     const totalAgents = await Agent.countDocuments({ userId: userId });
     
-    // 2. ⚡ AGENTS ACTIFS - ✅ CORRIGÉ (maintenant basé sur isDeployed)
+    // 2. ⚡ AGENTS ACTIFS - Basé sur isDeployed
     const activeAgents = await Agent.countDocuments({ 
       userId: userId,
-      isDeployed: true // ✅ NOUVELLE LOGIQUE !
+      isDeployed: true
     });
 
     // 3. 🔗 TOTAL INTÉGRATIONS
@@ -58,7 +61,7 @@ export async function GET(request: NextRequest) {
       isActive: true 
     });
 
-    // 6. 💬 CONVERSATIONS - ✅ CONVERSATIONS DE MES AGENTS
+    // 6. 💬 CONVERSATIONS - Conversations de mes agents
     const userAgentIds = await Agent.find({ userId: userId }).select('_id');
     const agentObjectIds = userAgentIds.map(agent => agent._id);
     
@@ -69,30 +72,61 @@ export async function GET(request: NextRequest) {
         })
       : 0;
 
-    // 7. 📊 RÉPARTITION PAR STATUT - ✅ CORRIGÉ
+    // ✅ 7. NOUVELLES MÉTRIQUES - VRAIES DONNÉES
+
+    // 📁 FOLDERS - Nombre de dossiers créés par l'utilisateur
+    const totalFolders = await Folder.countDocuments({ userId: userId });
+    
+    // 🔄 VERSIONS - Nombre de versions d'agents sauvegardées
+    const totalVersions = agentObjectIds.length > 0 
+      ? await AgentVersion.countDocuments({ 
+          agentId: { $in: agentObjectIds } 
+        })
+      : 0;
+    
+    // 🎭 DEMOS - Nombre de demos créées (max 15)
+    const totalDemos = await Demo.countDocuments({ userId: userId });
+
+    // 8. 📊 RÉPARTITION PAR STATUT
     const agentsByStatus = {
-      active: activeAgents, // ✅ Basé sur isDeployed maintenant
+      active: activeAgents,
       inactive: totalAgents - activeAgents
     };
 
-    // 🎯 RÉPONSE FINALE - ✅ NETTOYÉE
+    // 🎯 RÉPONSE FINALE - ENHANCED avec toutes les nouvelles métriques
     const dashboardStats = {
-      // Métriques principales
+      // ✅ Métriques principales existantes
       totalAgents,
-      activeAgents, // ✅ Basé sur isDeployed
+      activeAgents,
       totalIntegrations,
       totalDeployments,
       activeDeployments,
       totalApiKeys,
-      totalConversations, // ✅ Conversations de mes agents
+      totalConversations,
       
-      // Données supplémentaires
-      agentsByStatus, // ✅ Corrigé
+      // ✅ NOUVELLES MÉTRIQUES AJOUTÉES
+      totalFolders,        // Nombre de dossiers
+      totalVersions,       // Nombre de versions d'agents
+      totalDemos,          // Nombre de demos (X/15)
       
-      // Métadonnées
+      // ✅ Données supplémentaires
+      agentsByStatus,
+      
+      // ✅ Métadonnées
       lastUpdated: new Date().toISOString(),
       userId: userId
     };
+
+    console.log(`📊 [DASHBOARD] Stats calculated for user ${userId}:`, {
+      totalAgents,
+      activeAgents,
+      totalConversations,
+      totalFolders,
+      totalVersions,
+      totalDemos: `${totalDemos}/15`,
+      totalDeployments,
+      activeDeployments
+    });
 
     return NextResponse.json({
       success: true,
@@ -100,7 +134,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Dashboard stats error:", error);
+    console.error("❌ Dashboard stats error:", error);
     return NextResponse.json(
       { error: "Failed to fetch dashboard stats" },
       { status: 500 }
