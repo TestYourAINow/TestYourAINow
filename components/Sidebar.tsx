@@ -1,4 +1,4 @@
-'use client'
+// SidebarUserDropdown Component - INCHANGÉ'use client'
 
 import Link from "next/link"
 import {
@@ -18,9 +18,52 @@ import {
 import { useSidebar } from "@/context/SidebarContext"
 import { useSession, signOut } from "next-auth/react"
 import { useState, useRef, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { usePathname } from "next/navigation"
 
-// SidebarUserDropdown Component - INCHANGÉ
+// 🆕 Composant Tooltip séparé qui utilise un portail
+const Tooltip = ({ children, text, isVisible, buttonRef }: { 
+  children: React.ReactNode
+  text: string
+  isVisible: boolean
+  buttonRef: React.RefObject<HTMLAnchorElement | null>
+}) => {
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    if (isVisible && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setPosition({
+        x: rect.right + 12, // 12px à droite du bouton
+        y: rect.top + rect.height / 2 // centré verticalement
+      })
+    }
+  }, [isVisible, buttonRef])
+
+  if (!isVisible) return <>{children}</>
+
+  return (
+    <>
+      {children}
+      {createPortal(
+        <div 
+          className="fixed pointer-events-none z-[100] hidden md:block"
+          style={{
+            left: `${position.x}px`,
+            top: `${position.y}px`,
+            transform: 'translateY(-50%)'
+          }}
+        >
+          <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white text-sm px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-t border-gray-700/50 rotate-45"></div>
+            {text}
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  )
+}
 const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
   const { data: session, update } = useSession()
   const [localProfileImage, setLocalProfileImage] = useState<string | null>(null)
@@ -183,6 +226,12 @@ const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
 export default function Sidebar() {
   const { collapsed, toggleSidebar } = useSidebar()
   const pathname = usePathname()
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const buttonRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({})
+
+  const setButtonRef = (key: string) => (ref: HTMLAnchorElement | null) => {
+    buttonRefs.current[key] = ref
+  }
 
   const workspaceItems = [
     { href: "/dashboard", label: "Dashboard", icon: <BarChart3 size={20} />, isActive: pathname === "/dashboard" },
@@ -224,7 +273,12 @@ export default function Sidebar() {
         </div>
 
         {/* 🔧 CONTENU SCROLLABLE - entre header et footer */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div 
+          className="flex-1 overflow-y-auto sidebar-scroll-container"
+          style={{ 
+            overflowX: 'visible'
+          }}
+        >
           <div className="py-6">
             
             {/* WORKSPACE Section */}
@@ -235,56 +289,56 @@ export default function Sidebar() {
             <div className="space-y-2 mb-8 px-1">
               {workspaceItems.map(({ href, label, icon, isActive }) => (
                 <div key={href} className="relative group">
-                  <Link
-                    href={href}
-                    className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group backdrop-blur-sm min-h-[48px] ${
-                      isActive 
-                        ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
-                        : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50'
-                    }`}
+                  <Tooltip 
+                    text={label}
+                    isVisible={collapsed && hoveredItem === href}
+                    buttonRef={{ current: buttonRefs.current[href] }}
                   >
-                    <div className={`absolute inset-0 rounded-xl transition-all duration-300 pointer-events-none ${
-                      isActive 
-                        ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10' 
-                        : 'bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5'
-                    }`}></div>
-                    
-                    {!collapsed && (
-                      <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-300 ${
+                    <Link
+                      ref={setButtonRef(href)}
+                      href={href}
+                      onMouseEnter={() => setHoveredItem(href)}
+                      onMouseLeave={() => setHoveredItem(null)}
+                      className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group backdrop-blur-sm min-h-[48px] ${
                         isActive 
-                          ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md' 
-                          : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
-                      }`}></div>
-                    )}
-                    
-                    <div 
-                      className={`w-5 h-5 shrink-0 transition-all duration-300 ${
-                        isActive 
-                          ? 'text-blue-400 scale-110' 
-                          : 'text-blue-400 group-hover:text-cyan-400 group-hover:scale-110'
-                      }`} 
-                      style={{ marginLeft: '4px' }}
+                          ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
+                          : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50'
+                      }`}
                     >
-                      {icon}
-                    </div>
-                    
-                    <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-                      <span className={`font-semibold whitespace-nowrap transition-colors duration-300 ${
-                        isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'
-                      }`}>
-                        {label}
-                      </span>
-                    </div>
-                  </Link>
-                  
-                  {collapsed && (
-                    <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 hidden md:block">
-                      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white text-sm px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-t border-gray-700/50 rotate-45"></div>
-                        {label}
+                      <div className={`absolute inset-0 rounded-xl transition-all duration-300 pointer-events-none ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10' 
+                          : 'bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5'
+                      }`}></div>
+                      
+                      {!collapsed && (
+                        <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-300 ${
+                          isActive 
+                            ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md' 
+                            : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
+                        }`}></div>
+                      )}
+                      
+                      <div 
+                        className={`w-5 h-5 shrink-0 transition-all duration-300 ${
+                          isActive 
+                            ? 'text-blue-400 scale-110' 
+                            : 'text-blue-400 group-hover:text-cyan-400 group-hover:scale-110'
+                        }`} 
+                        style={{ marginLeft: '4px' }}
+                      >
+                        {icon}
                       </div>
-                    </div>
-                  )}
+                      
+                      <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                        <span className={`font-semibold whitespace-nowrap transition-colors duration-300 ${
+                          isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'
+                        }`}>
+                          {label}
+                        </span>
+                      </div>
+                    </Link>
+                  </Tooltip>
                 </div>
               ))}
             </div>
@@ -297,56 +351,56 @@ export default function Sidebar() {
             <div className="space-y-2 px-1">
               {resourceItems.map(({ href, label, icon, isActive }) => (
                 <div key={href} className="relative group">
-                  <Link
-                    href={href}
-                    className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group backdrop-blur-sm min-h-[48px] ${
-                      isActive 
-                        ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
-                        : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50'
-                    }`}
+                  <Tooltip 
+                    text={label}
+                    isVisible={collapsed && hoveredItem === href}
+                    buttonRef={{ current: buttonRefs.current[href] }}
                   >
-                    <div className={`absolute inset-0 rounded-xl transition-all duration-300 pointer-events-none ${
-                      isActive 
-                        ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10' 
-                        : 'bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5'
-                    }`}></div>
-                    
-                    {!collapsed && (
-                      <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-300 ${
+                    <Link
+                      ref={setButtonRef(href)}
+                      href={href}
+                      onMouseEnter={() => setHoveredItem(href)}
+                      onMouseLeave={() => setHoveredItem(null)}
+                      className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group backdrop-blur-sm min-h-[48px] ${
                         isActive 
-                          ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md' 
-                          : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
-                      }`}></div>
-                    )}
-                    
-                    <div 
-                      className={`w-5 h-5 shrink-0 transition-all duration-300 ${
-                        isActive 
-                          ? 'text-blue-400 scale-110' 
-                          : 'text-blue-400 group-hover:text-cyan-400 group-hover:scale-110'
-                      }`} 
-                      style={{ marginLeft: '4px' }}
+                          ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
+                          : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50'
+                      }`}
                     >
-                      {icon}
-                    </div>
-                    
-                    <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-                      <span className={`font-semibold whitespace-nowrap transition-colors duration-300 ${
-                        isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'
-                      }`}>
-                        {label}
-                      </span>
-                    </div>
-                  </Link>
-                  
-                  {collapsed && (
-                    <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 hidden md:block">
-                      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white text-sm px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-t border-gray-700/50 rotate-45"></div>
-                        {label}
+                      <div className={`absolute inset-0 rounded-xl transition-all duration-300 pointer-events-none ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10' 
+                          : 'bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5'
+                      }`}></div>
+                      
+                      {!collapsed && (
+                        <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-300 ${
+                          isActive 
+                            ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md' 
+                            : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
+                        }`}></div>
+                      )}
+                      
+                      <div 
+                        className={`w-5 h-5 shrink-0 transition-all duration-300 ${
+                          isActive 
+                            ? 'text-blue-400 scale-110' 
+                            : 'text-blue-400 group-hover:text-cyan-400 group-hover:scale-110'
+                        }`} 
+                        style={{ marginLeft: '4px' }}
+                      >
+                        {icon}
                       </div>
-                    </div>
-                  )}
+                      
+                      <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                        <span className={`font-semibold whitespace-nowrap transition-colors duration-300 ${
+                          isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'
+                        }`}>
+                          {label}
+                        </span>
+                      </div>
+                    </Link>
+                  </Tooltip>
                 </div>
               ))}
             </div>

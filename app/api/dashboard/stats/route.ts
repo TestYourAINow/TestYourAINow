@@ -1,4 +1,4 @@
-// app/api/dashboard/stats/route.ts
+// app/api/dashboard/stats/route.ts - VERSION ENHANCED CORRIGÉE
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -6,9 +6,9 @@ import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { Connection } from "@/models/Connection";
 import { Conversation } from "@/models/Conversation";
-import { Folder } from "@/models/Folder";           // ✅ NOUVEAU
-import { AgentVersion } from "@/models/AgentVersion"; // ✅ NOUVEAU
-import { Demo } from "@/models/Demo";               // ✅ NOUVEAU
+import { Folder } from "@/models/Folder";
+import { AgentVersion } from "@/models/AgentVersion";
+import { Demo } from "@/models/Demo";
 import User from "@/models/User";
 
 export async function GET(request: NextRequest) {
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     // 4. 🔑 API KEYS
     const totalApiKeys = user.apiKeys?.length || 0;
 
-    // 5. 🚀 DÉPLOIEMENTS
+    // 5. 🚀 DÉPLOIEMENTS - SEULEMENT Connections (comme Launch Agent)
     const totalDeployments = await Connection.countDocuments({ userId: userId });
     const activeDeployments = await Connection.countDocuments({ 
       userId: userId, 
@@ -72,45 +72,67 @@ export async function GET(request: NextRequest) {
         })
       : 0;
 
-    // ✅ 7. NOUVELLES MÉTRIQUES - VRAIES DONNÉES
-
-    // 📁 FOLDERS - Nombre de dossiers créés par l'utilisateur
+    // 7. 📁 FOLDERS - Nombre de dossiers créés par l'utilisateur
     const totalFolders = await Folder.countDocuments({ userId: userId });
     
-    // 🔄 VERSIONS - Nombre de versions d'agents sauvegardées
+    // 8. 🔄 VERSIONS - Nombre de versions d'agents sauvegardées
     const totalVersions = agentObjectIds.length > 0 
       ? await AgentVersion.countDocuments({ 
           agentId: { $in: agentObjectIds } 
         })
       : 0;
     
-    // 🎭 DEMOS - Nombre de demos créées (max 15)
+    // 9. 🎭 DEMOS - Nombre de demos créées (max 15)
     const totalDemos = await Demo.countDocuments({ userId: userId });
 
-    // 8. 📊 RÉPARTITION PAR STATUT
+    // 10. 📊 RÉPARTITION PAR STATUT
     const agentsByStatus = {
       active: activeAgents,
       inactive: totalAgents - activeAgents
     };
 
-    // 🎯 RÉPONSE FINALE - ENHANCED avec toutes les nouvelles métriques
+    // 🔧 11. PLATFORM BREAKDOWN - SEULEMENT Connections (comme Launch Agent)
+    const platformBreakdown = {
+      'website-widget': { total: 0, active: 0 },
+      'instagram-dms': { total: 0, active: 0 },
+      'facebook-messenger': { total: 0, active: 0 },
+      'sms': { total: 0, active: 0 }
+    };
+
+    // Compter TOUTES les connections par type (identique à Launch Agent)
+    const connections = await Connection.find({ userId: userId });
+    for (const conn of connections) {
+      if (platformBreakdown[conn.integrationType as keyof typeof platformBreakdown]) {
+        platformBreakdown[conn.integrationType as keyof typeof platformBreakdown].total++;
+        if (conn.isActive) {
+          platformBreakdown[conn.integrationType as keyof typeof platformBreakdown].active++;
+        }
+      }
+    }
+
+    console.log(`📊 [PLATFORM BREAKDOWN] Calculated:`, platformBreakdown);
+
+    // 🎯 RÉPONSE FINALE - CORRIGÉE avec vraies données
     const dashboardStats = {
       // ✅ Métriques principales existantes
       totalAgents,
       activeAgents,
       totalIntegrations,
-      totalDeployments,
-      activeDeployments,
+      totalDeployments, // 🔧 CORRIGÉ - seulement connections
+      activeDeployments, // 🔧 CORRIGÉ - seulement connections
       totalApiKeys,
       totalConversations,
       
-      // ✅ NOUVELLES MÉTRIQUES AJOUTÉES
-      totalFolders,        // Nombre de dossiers
-      totalVersions,       // Nombre de versions d'agents
-      totalDemos,          // Nombre de demos (X/15)
+      // ✅ Métriques secondaires
+      totalFolders,
+      totalVersions,
+      totalDemos,
       
       // ✅ Données supplémentaires
       agentsByStatus,
+      
+      // 🔧 CORRIGÉ - Platform Breakdown basé sur vraies Connections
+      platformBreakdown,
       
       // ✅ Métadonnées
       lastUpdated: new Date().toISOString(),
@@ -124,8 +146,9 @@ export async function GET(request: NextRequest) {
       totalFolders,
       totalVersions,
       totalDemos: `${totalDemos}/15`,
-      totalDeployments,
-      activeDeployments
+      totalDeployments, // 🔧 CORRIGÉ
+      activeDeployments, // 🔧 CORRIGÉ
+      platformBreakdown
     });
 
     return NextResponse.json({
