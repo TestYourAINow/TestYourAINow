@@ -6,44 +6,239 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { 
   User, Lock, Shield, Trash2, Save, CheckCircle, AlertCircle, 
-  Camera, Upload, X, Settings, Crown, Zap, Activity, Clock
+  Camera, Upload, X, Settings, Edit, Eye, EyeOff, AlertTriangle, Database, Clock
 } from "lucide-react"
 
+// Modal Component
+interface DeleteAccountModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  userName?: string
+  userEmail?: string
+  isDeleting?: boolean
+  profileImage?: string | null
+}
+
+const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  userName = 'User',
+  userEmail = '',
+  isDeleting = false,
+  profileImage = null
+}) => {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-lg mx-auto">
+        
+        {/* Enhanced Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-red-500/10 border-2 border-red-500/30 flex items-center justify-center shadow-lg">
+              <AlertTriangle className="w-6 h-6 text-red-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                Delete Account
+              </h2>
+              <p className="text-sm text-gray-400 mt-0.5">This action is permanent and irreversible</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={isDeleting}
+            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200 group disabled:opacity-50"
+          >
+            <X size={20} className="relative z-10" />
+          </button>
+        </div>
+
+        {/* Enhanced Content */}
+        <div className="p-6 space-y-6">
+          
+          {/* Question Section */}
+          <div>
+            <p className="text-gray-300 text-base font-medium mb-4">
+              Are you absolutely sure you want to delete your account?
+            </p>
+            
+            {/* Account Info Card */}
+            <div className="bg-gray-800/60 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-200">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md text-white font-bold border-2 border-gray-600/50 ${
+                  profileImage 
+                    ? 'bg-gray-800' 
+                    : 'bg-gradient-to-br from-blue-600 to-cyan-600'
+                }`}>
+                  {profileImage ? (
+                    <img 
+                      src={profileImage} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    userName.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-semibold truncate">{userName}</p>
+                  <p className="text-sm text-gray-400 truncate">{userEmail}</p>
+                </div>
+                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced Warning Section */}
+          <div className="bg-gradient-to-r from-red-900/20 to-red-800/20 backdrop-blur-sm border border-red-500/30 rounded-xl p-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-red-400" />
+              <h4 className="text-red-200 font-bold">Critical Warning</h4>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <User className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-red-300 text-sm font-medium">Personal Data</p>
+                  <p className="text-red-300/80 text-xs">Your profile, settings, and preferences will be <strong className="text-red-200">permanently deleted</strong></p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <Database className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-red-300 text-sm font-medium">All Data & Content</p>
+                  <p className="text-red-300/80 text-xs">AI agents, integrations, conversations, and files will be <strong className="text-red-200">completely removed</strong></p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <Clock className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-red-300 text-sm font-medium">Immediate Effect</p>
+                  <p className="text-red-300/80 text-xs">You will be <strong className="text-red-200">immediately signed out</strong> and lose access to all services</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Final Warning */}
+            <div className="mt-4 p-3 bg-red-950/50 border border-red-500/40 rounded-lg">
+              <p className="text-red-200 text-center text-sm font-bold">
+                ⚠️ This action cannot be undone. All data will be lost forever.
+              </p>
+            </div>
+          </div>
+
+          {/* Type Confirmation */}
+          <div className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/40 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 flex-shrink-0"></div>
+              <div>
+                <p className="text-gray-300 text-sm">
+                  <strong className="text-yellow-400">Note:</strong> If you're having issues with your account, consider contacting support instead of deleting your account.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced Actions */}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={onClose}
+              disabled={isDeleting}
+              className="flex-1 px-4 py-3.5 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-xl font-semibold transition-all backdrop-blur-sm border border-gray-700/50 hover:border-gray-600/50 disabled:opacity-50"
+            >
+              Keep My Account
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={isDeleting}
+              className="flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-red-600/50 disabled:to-red-500/50 text-white px-4 py-3.5 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-red-500/20 transform hover:scale-105 relative overflow-hidden group"
+            >
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              
+              {isDeleting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin relative z-10"></div>
+                  <span className="relative z-10">Deleting Account...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 relative z-10" />
+                  <span className="relative z-10">Delete Forever</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Main Component
 export default function AccountSettingsPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  // Profile change states
+  const [isChangingName, setIsChangingName] = useState(false)
+  const [newName, setNewName] = useState("")
   const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState(false)
-  const [saving, setSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
+
+  // Email change states
+  const [isChangingEmail, setIsChangingEmail] = useState(false)
+  const [newEmail, setNewEmail] = useState("")
+  const [confirmEmail, setConfirmEmail] = useState("")
+
+  // Password change states
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Loading states
+  const [deleting, setDeleting] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [savingEmail, setSavingEmail] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
 
   useEffect(() => {
     if (session?.user) {
       setName(session.user.name || "")
-      setEmail(session.user.email || "")
       setProfileImage(session.user.profileImage || null)
     }
   }, [session])
 
-  const rules = [
-    { label: "Contains at least 1 lowercase letter", valid: /[a-z]/.test(password) },
-    { label: "Contains at least 1 uppercase letter", valid: /[A-Z]/.test(password) },
-    { label: "Contains at least 1 number", valid: /\d/.test(password) },
-    { label: "Contains at least 1 special character", valid: /[^A-Za-z0-9]/.test(password) },
-    { label: "Is at least 8 characters long", valid: password.length >= 8 },
+  // Password validation rules
+  const passwordRules = [
+    { label: "Contains at least 1 lowercase letter", valid: /[a-z]/.test(newPassword) },
+    { label: "Contains at least 1 uppercase letter", valid: /[A-Z]/.test(newPassword) },
+    { label: "Contains at least 1 number", valid: /\d/.test(newPassword) },
+    { label: "Contains at least 1 special character", valid: /[^A-Za-z0-9]/.test(newPassword) },
+    { label: "Is at least 8 characters long", valid: newPassword.length >= 8 },
   ]
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Vérifications côté client
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File too large (max 5MB)")
       return
@@ -54,7 +249,6 @@ export default function AccountSettingsPage() {
       return
     }
 
-    // Preview
     const reader = new FileReader()
     reader.onload = (e: ProgressEvent<FileReader>) => {
       if (e.target?.result && typeof e.target.result === 'string') {
@@ -86,7 +280,6 @@ export default function AccountSettingsPage() {
           fileInputRef.current.value = ''
         }
         
-        // Déclencher un événement pour notifier les autres composants
         window.dispatchEvent(new CustomEvent('profileImageUpdated', {
           detail: { profileImage: data.profileImage }
         }))
@@ -116,7 +309,6 @@ export default function AccountSettingsPage() {
           fileInputRef.current.value = ''
         }
         
-        // Déclencher un événement pour notifier les autres composants
         window.dispatchEvent(new CustomEvent('profileImageUpdated', {
           detail: { profileImage: null }
         }))
@@ -139,29 +331,70 @@ export default function AccountSettingsPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!name || !email) {
-      toast.error("Name and email are required.")
+    if (!newName.trim()) {
+      toast.error("Name is required.")
       return
     }
 
-    if (password) {
-      const validations = rules.map((r) => r.valid)
-      if (!validations.every(Boolean)) {
-        toast.error("Password doesn't meet requirements.")
-        return
-      }
+    if (newName === session?.user?.name) {
+      toast.error("New name must be different from current name.")
+      return
     }
 
-    setSaving(true)
+    setSavingProfile(true)
 
     try {
       const res = await fetch("/api/account/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name: newName }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success("Profile updated successfully!")
+        setIsChangingName(false)
+        setNewName("")
+        setName(newName) // Update local state
+      } else {
+        toast.error(data.error || "Something went wrong.")
+      }
+    } catch (error) {
+      toast.error("Something went wrong.")
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  const handleEmailUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!newEmail || !confirmEmail) {
+      toast.error("Please fill in all email fields.")
+      return
+    }
+
+    if (newEmail !== confirmEmail) {
+      toast.error("Email addresses don't match.")
+      return
+    }
+
+    if (newEmail === session?.user?.email) {
+      toast.error("New email must be different from current email.")
+      return
+    }
+
+    setSavingEmail(true)
+
+    try {
+      const res = await fetch("/api/account/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newEmail }),
       })
 
       const data = await res.json()
@@ -171,28 +404,71 @@ export default function AccountSettingsPage() {
         return
       }
 
-      if (data.field === "username") {
-        toast.error("This username is already taken.")
-        return
-      }
-
       if (res.ok) {
-        toast.success("Profile updated successfully!")
-        setPassword("")
+        toast.success("Email updated successfully!")
+        setIsChangingEmail(false)
+        setNewEmail("")
+        setConfirmEmail("")
       } else {
         toast.error(data.error || "Something went wrong.")
       }
     } catch (error) {
       toast.error("Something went wrong.")
     } finally {
-      setSaving(false)
+      setSavingEmail(false)
+    }
+  }
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Please fill in all password fields.")
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords don't match.")
+      return
+    }
+
+    const validations = passwordRules.map((r) => r.valid)
+    if (!validations.every(Boolean)) {
+      toast.error("New password doesn't meet requirements.")
+      return
+    }
+
+    setSavingPassword(true)
+
+    try {
+      const res = await fetch("/api/account/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          currentPassword, 
+          password: newPassword 
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success("Password updated successfully!")
+        setIsChangingPassword(false)
+        setCurrentPassword("")
+        setNewPassword("")
+        setConfirmPassword("")
+      } else {
+        toast.error(data.error || "Something went wrong.")
+      }
+    } catch (error) {
+      toast.error("Something went wrong.")
+    } finally {
+      setSavingPassword(false)
     }
   }
 
   const handleDeleteAccount = async () => {
-    const confirmed = confirm("Are you sure you want to delete your account? This action is irreversible.")
-    if (!confirmed) return
-
     setDeleting(true)
 
     try {
@@ -212,16 +488,24 @@ export default function AccountSettingsPage() {
       toast.error("Failed to delete account.")
     } finally {
       setDeleting(false)
+      setShowDeleteModal(false)
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (session?.user?.name) {
+      return session.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    }
+    return 'U'
+  }
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
-        {/* Enhanced Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+  return (
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+          {/* Header */}
+          <div className="mb-8">
             <div className="flex items-center gap-6">
               <div className="relative">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-600/20">
@@ -232,7 +516,7 @@ export default function AccountSettingsPage() {
                 </div>
               </div>
               
-              <div>
+              <div className="flex-1">
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
                   Account Settings
                 </h1>
@@ -241,422 +525,472 @@ export default function AccountSettingsPage() {
                 </p>
               </div>
             </div>
-            
-            {/* Account Status Badge */}
-            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl backdrop-blur-sm">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              <span className="text-emerald-400 font-medium">Active</span>
-            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Main Settings Panel */}
-          <div className="xl:col-span-2">
-            <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6 space-y-6">
-              
-              {/* Profile Photo Section - Enhanced */}
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <Camera className="text-purple-400" size={20} />
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">Profile Photo</h3>
-                </div>
+          <div className="max-w-4xl mx-auto">
+            {/* Main Settings Panel */}
+            <div>
+              <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6 space-y-6">
                 
-                <div className="flex items-center gap-6">
-                  {/* Enhanced Current/Preview Image */}
-                  <div className="relative">
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center border-2 border-gray-600/50 shadow-xl">
-                      {previewImage ? (
-                        <img 
-                          src={previewImage} 
-                          alt="Preview" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : profileImage ? (
-                        <img 
-                          src={profileImage} 
-                          alt="Profile" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="text-gray-400" size={36} />
-                      )}
-                    </div>
-                    
-                    {/* Enhanced Upload indicator */}
-                    {uploadingImage && (
-                      <div className="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      </div>
-                    )}
+                {/* Profile Photo Section */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Camera className="text-blue-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">Profile Photo</h3>
                   </div>
-
-                  {/* Enhanced Controls */}
-                  <div className="flex-1 space-y-3">
-                    {previewImage ? (
-                      <div className="flex gap-3">
-                        <button
-                          onClick={handleImageUpload}
-                          disabled={uploadingImage}
-                          className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 disabled:opacity-50"
-                        >
-                          <Upload size={16} />
-                          {uploadingImage ? "Uploading..." : "Upload"}
-                        </button>
-                        <button
-                          onClick={cancelPreview}
-                          disabled={uploadingImage}
-                          className="flex items-center gap-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-700/50 disabled:bg-gray-800/30 text-white rounded-xl transition-all duration-300 text-sm font-semibold border border-gray-700/50 hover:border-gray-600/50 disabled:opacity-50"
-                        >
-                          <X size={16} />
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={uploadingImage}
-                          className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/20 disabled:opacity-50"
-                        >
-                          <Upload size={16} />
-                          Choose Photo
-                        </button>
-                        
-                        {profileImage && (
-                          <button
-                            onClick={handleImageDelete}
-                            disabled={uploadingImage}
-                            className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl hover:shadow-red-500/20 disabled:opacity-50"
-                          >
-                            <Trash2 size={16} />
-                            Remove
-                          </button>
+                  
+                  <div className="flex items-center gap-6">
+                    <div className="relative">
+                      <div className={`w-24 h-24 rounded-full overflow-hidden flex items-center justify-center border-4 border-gray-600/50 shadow-xl ${
+                        previewImage || profileImage 
+                          ? 'bg-gray-800' 
+                          : 'bg-gradient-to-br from-blue-600 to-cyan-600'
+                      }`}>
+                        {previewImage ? (
+                          <img 
+                            src={previewImage} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : profileImage ? (
+                          <img 
+                            src={profileImage} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-white font-semibold text-4xl">
+                            {getUserInitials()}
+                          </span>
                         )}
                       </div>
-                    )}
-                    
-                    <p className="text-gray-400 text-xs">
-                      Max 5MB • JPEG, PNG, WebP formats supported
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Hidden file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleImageSelect}
-                  className="hidden"
-                />
-              </div>
+                      
+                      {uploadingImage && (
+                        <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center backdrop-blur-sm">
+                          <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        </div>
+                      )}
+                    </div>
 
-              {/* Profile Information Section - Enhanced */}
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <User className="text-blue-400" size={20} />
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">Profile Information</h3>
-                </div>
-                
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
-                      Display Name
-                    </label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
-                      placeholder="Enter your display name"
-                    />
+                    <div className="flex-1 space-y-3">
+                      {previewImage ? (
+                        <div className="flex gap-3">
+                          <button
+                            onClick={handleImageUpload}
+                            disabled={uploadingImage}
+                            className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/20 disabled:opacity-50"
+                          >
+                            <Upload size={16} />
+                            {uploadingImage ? "Uploading..." : "Upload"}
+                          </button>
+                          <button
+                            onClick={cancelPreview}
+                            disabled={uploadingImage}
+                            className="flex items-center gap-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-700/50 disabled:bg-gray-800/30 text-white rounded-xl transition-all duration-300 text-sm font-semibold border border-gray-700/50 hover:border-gray-600/50 disabled:opacity-50"
+                          >
+                            <X size={16} />
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingImage}
+                            className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/20 disabled:opacity-50"
+                          >
+                            <Upload size={16} />
+                            Choose Photo
+                          </button>
+                          
+                          {profileImage && (
+                            <button
+                              onClick={handleImageDelete}
+                              disabled={uploadingImage}
+                              className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl hover:shadow-red-500/20 disabled:opacity-50"
+                            >
+                              <Trash2 size={16} />
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      
+                      <p className="text-gray-400 text-xs">
+                        Max 5MB • JPEG, PNG, WebP formats supported
+                      </p>
+                    </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
-                      placeholder="Enter your email address"
-                    />
-                  </div>
-                </form>
-              </div>
-
-              {/* Security Section - Enhanced */}
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <Lock className="text-orange-400" size={20} />
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-200 to-yellow-200 bg-clip-text text-transparent">Security Settings</h3>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
-                    New Password (optional)
-                  </label>
+                  
                   <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
-                    placeholder="Enter new password to change it"
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageSelect}
+                    className="hidden"
                   />
                 </div>
 
-                {/* Enhanced Password Requirements */}
-                {password && (
-                  <div className="mt-4 p-4 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-xl">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Shield className="text-orange-400" size={16} />
-                      <span className="text-sm font-medium bg-gradient-to-r from-orange-200 to-yellow-200 bg-clip-text text-transparent">Password Requirements</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {rules.map((rule, idx) => (
-                        <div key={idx} className={`flex items-center gap-2 text-sm p-2 rounded-lg transition-all ${rule.valid ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-gray-800/30 border border-gray-700/30'}`}>
-                          {rule.valid ? (
-                            <CheckCircle className="text-emerald-400 flex-shrink-0" size={16} />
-                          ) : (
-                            <AlertCircle className="text-gray-500 flex-shrink-0" size={16} />
-                          )}
-                          <span className={rule.valid ? "text-emerald-300" : "text-gray-500"}>
-                            {rule.label}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                {/* Profile Information Section */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <User className="text-blue-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">Profile Information</h3>
                   </div>
-                )}
-              </div>
 
-              {/* Enhanced Action Buttons */}
-              <div className="space-y-4 pt-4">
-                <button
-                  type="submit"
-                  onClick={handleSubmit}
-                  disabled={saving}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center justify-center gap-3 relative overflow-hidden group"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                  {saving ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin relative z-10" />
-                      <span className="relative z-10">Saving Changes...</span>
-                    </>
+                  {!isChangingName ? (
+                    <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-xl border border-gray-700/30">
+                      <div>
+                        <p className="text-white font-medium">{session?.user?.name || name}</p>
+                        <p className="text-gray-400 text-sm">Your display name</p>
+                      </div>
+                      <button
+                        onClick={() => setIsChangingName(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg transition-all duration-300 text-sm font-semibold"
+                      >
+                        <Edit size={14} />
+                        Change
+                      </button>
+                    </div>
                   ) : (
-                    <>
-                      <Save className="w-5 h-5 relative z-10" />
-                      <span className="relative z-10">Save Changes</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleDeleteAccount}
-                  disabled={deleting}
-                  className="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-gray-700 disabled:to-gray-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-red-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center justify-center gap-3 relative overflow-hidden group"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                  {deleting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin relative z-10" />
-                      <span className="relative z-10">Deleting Account...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-5 h-5 relative z-10" />
-                      <span className="relative z-10">Delete My Account</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Enhanced Sidebar Information */}
-          <div className="space-y-6">
-            {/* Enhanced Account Overview */}
-            <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Crown className="text-yellow-400" size={20} />
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-yellow-200 to-orange-200 bg-clip-text text-transparent">Account Overview</h3>
-              </div>
-              
-              <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden text-white font-bold text-xl border-2 border-gray-600/50 shadow-xl ${profileImage ? '' : 'bg-gradient-to-br from-blue-600 to-cyan-600'}`}>
-                      {profileImage ? (
-                        <img 
-                          src={profileImage} 
-                          alt="Profile" 
-                          className="w-full h-full object-cover"
+                    <form onSubmit={handleProfileUpdate} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          New Display Name
+                        </label>
+                        <input
+                          type="text"
+                          value={newName}
+                          onChange={(e) => setNewName(e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400"
+                          placeholder="Enter new display name"
                         />
-                      ) : (
-                        session?.user?.name?.charAt(0).toUpperCase() || "U"
+                      </div>
+                      
+                      <div className="flex gap-3">
+                        <button
+                          type="submit"
+                          disabled={savingProfile}
+                          className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          {savingProfile ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <Save size={16} />
+                              Update Name
+                            </>
+                          )}
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsChangingName(false)
+                            setNewName("")
+                          }}
+                          disabled={savingProfile}
+                          className="px-6 py-3 bg-gray-800/50 hover:bg-gray-700/50 disabled:bg-gray-800/30 text-white rounded-xl transition-all duration-300 font-semibold border border-gray-700/50 hover:border-gray-600/50 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+
+                {/* Email Section */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <User className="text-blue-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">Email Address</h3>
+                  </div>
+
+                  {!isChangingEmail ? (
+                    <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-xl border border-gray-700/30">
+                      <div>
+                        <p className="text-white font-medium">{session?.user?.email}</p>
+                        <p className="text-gray-400 text-sm">Your current email address</p>
+                      </div>
+                      <button
+                        onClick={() => setIsChangingEmail(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg transition-all duration-300 text-sm font-semibold"
+                      >
+                        <Edit size={14} />
+                        Change
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleEmailUpdate} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          New Email Address
+                        </label>
+                        <input
+                          type="email"
+                          value={newEmail}
+                          onChange={(e) => setNewEmail(e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400"
+                          placeholder="Enter new email address"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Confirm New Email
+                        </label>
+                        <input
+                          type="email"
+                          value={confirmEmail}
+                          onChange={(e) => setConfirmEmail(e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400"
+                          placeholder="Confirm new email address"
+                        />
+                      </div>
+                      
+                      <div className="flex gap-3">
+                        <button
+                          type="submit"
+                          disabled={savingEmail}
+                          className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          {savingEmail ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <Save size={16} />
+                              Update Email
+                            </>
+                          )}
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsChangingEmail(false)
+                            setNewEmail("")
+                            setConfirmEmail("")
+                          }}
+                          disabled={savingEmail}
+                          className="px-6 py-3 bg-gray-800/50 hover:bg-gray-700/50 disabled:bg-gray-800/30 text-white rounded-xl transition-all duration-300 font-semibold border border-gray-700/50 hover:border-gray-600/50 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+
+                {/* Password Section */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Lock className="text-blue-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">Password</h3>
+                  </div>
+
+                  {!isChangingPassword ? (
+                    <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-xl border border-gray-700/30">
+                      <div>
+                        <p className="text-white font-medium">••••••••••••</p>
+                        <p className="text-gray-400 text-sm">Your password is secure</p>
+                      </div>
+                      <button
+                        onClick={() => setIsChangingPassword(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg transition-all duration-300 text-sm font-semibold"
+                      >
+                        <Edit size={14} />
+                        Change
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Current Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showCurrentPassword ? "text" : "password"}
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            className="w-full px-4 py-3 pr-12 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400"
+                            placeholder="Enter current password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                          >
+                            {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          New Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showNewPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full px-4 py-3 pr-12 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400"
+                            placeholder="Enter new password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                          >
+                            {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Confirm New Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full px-4 py-3 pr-12 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400"
+                            placeholder="Confirm new password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                          >
+                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Password Requirements */}
+                      {newPassword && (
+                        <div className="p-4 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-xl">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Shield className="text-blue-400" size={16} />
+                            <span className="text-sm font-medium bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">Password Requirements</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {passwordRules.map((rule, idx) => (
+                              <div key={idx} className={`flex items-center gap-2 text-sm p-2 rounded-lg transition-all ${rule.valid ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-gray-800/30 border border-gray-700/30'}`}>
+                                {rule.valid ? (
+                                  <CheckCircle className="text-emerald-400 flex-shrink-0" size={16} />
+                                ) : (
+                                  <AlertCircle className="text-gray-500 flex-shrink-0" size={16} />
+                                )}
+                                <span className={rule.valid ? "text-emerald-300" : "text-gray-500"}>
+                                  {rule.label}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       )}
+                      
+                      <div className="flex gap-3">
+                        <button
+                          type="submit"
+                          disabled={savingPassword}
+                          className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          {savingPassword ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <Save size={16} />
+                              Update Password
+                            </>
+                          )}
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsChangingPassword(false)
+                            setCurrentPassword("")
+                            setNewPassword("")
+                            setConfirmPassword("")
+                          }}
+                          disabled={savingPassword}
+                          className="px-6 py-3 bg-gray-800/50 hover:bg-gray-700/50 disabled:bg-gray-800/30 text-white rounded-xl transition-all duration-300 font-semibold border border-gray-700/50 hover:border-gray-600/50 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+
+                {/* Delete Account Section */}
+                <div className="bg-red-900/20 backdrop-blur-sm border border-red-500/30 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Trash2 className="text-red-400" size={20} />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-red-200 to-pink-200 bg-clip-text text-transparent">Danger Zone</h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="p-4 bg-red-950/30 rounded-xl border border-red-500/20">
+                      <h4 className="text-red-200 font-semibold mb-2">Delete Account</h4>
+                      <p className="text-red-300/80 text-sm mb-4">
+                        Once you delete your account, there is no going back. This will permanently delete your account and remove your data from our servers.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setShowDeleteModal(true)}
+                        disabled={deleting}
+                        className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-gray-700 disabled:to-gray-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-red-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center gap-3"
+                      >
+                        <Trash2 size={16} />
+                        Delete My Account
+                      </button>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-400 rounded-full border-2 border-gray-900 flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-white font-semibold text-lg">{session?.user?.name || 'User'}</p>
-                    <p className="text-gray-400 text-sm">{session?.user?.email || 'No email'}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                      <span className="text-emerald-400 text-xs font-medium">Online Now</span>
-                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3 border border-gray-700/30">
-                  <div className="text-gray-400 text-xs mb-1">Status</div>
-                  <div className="text-emerald-400 font-semibold flex items-center gap-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full" />
-                    Active
-                  </div>
-                </div>
-                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3 border border-gray-700/30">
-                  <div className="text-gray-400 text-xs mb-1">Member Since</div>
-                  <div className="text-white font-semibold">{new Date().getFullYear()}</div>
-                </div>
-                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3 border border-gray-700/30">
-                  <div className="text-gray-400 text-xs mb-1">Last Login</div>
-                  <div className="text-white font-semibold">Today</div>
-                </div>
-                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3 border border-gray-700/30">
-                  <div className="text-gray-400 text-xs mb-1">Plan</div>
-                  <div className="text-yellow-400 font-semibold flex items-center gap-1">
-                    <Crown size={12} />
-                    Creator
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Security Status */}
-            <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Shield className="text-emerald-400" size={20} />
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-emerald-200 to-green-200 bg-clip-text text-transparent">Security Status</h3>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                {/* Security Notice */}
+                <div className="bg-gradient-to-r from-blue-500/10 via-cyan-500/5 to-blue-500/10 border border-blue-500/20 rounded-2xl p-4 backdrop-blur-sm">
                   <div className="flex items-center gap-3">
-                    <CheckCircle className="text-emerald-400" size={16} />
-                    <span className="text-sm text-emerald-200 font-medium">Email verified</span>
-                  </div>
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="text-emerald-400" size={16} />
-                    <span className="text-sm text-emerald-200 font-medium">Strong password</span>
-                  </div>
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="text-emerald-400" size={16} />
-                    <span className="text-sm text-emerald-200 font-medium">Account secured</span>
-                  </div>
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-emerald-500/10 to-green-500/10 border border-emerald-500/20 rounded-xl p-4 mt-4 backdrop-blur-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield className="text-emerald-400" size={16} />
-                  <span className="text-emerald-200 text-sm font-semibold">Account Protected</span>
-                </div>
-                <p className="text-emerald-100/80 text-xs leading-relaxed">
-                  Your account is secured with industry-standard encryption and security measures.
-                </p>
-              </div>
-            </div>
-
-            {/* Enhanced Activity Stats */}
-            <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Activity className="text-cyan-400" size={20} />
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent">Activity Overview</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-gray-800/50 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center">
-                      <Zap className="text-white" size={14} />
+                    <div className="p-2 bg-blue-500/20 rounded-lg">
+                      <Shield className="text-blue-400" size={16} />
                     </div>
                     <div>
-                      <p className="text-white text-sm font-medium">Sessions Today</p>
-                      <p className="text-gray-400 text-xs">Active usage</p>
+                      <p className="text-blue-200/90 text-sm font-medium">Enterprise Security</p>
+                      <p className="text-blue-100/70 text-xs">Your account is secured with enterprise-grade encryption and advanced security protocols.</p>
                     </div>
                   </div>
-                  <div className="text-blue-400 font-bold">3</div>
                 </div>
-
-                <div className="flex items-center justify-between p-3 bg-gray-800/50 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-green-600 rounded-lg flex items-center justify-center">
-                      <CheckCircle className="text-white" size={14} />
-                    </div>
-                    <div>
-                      <p className="text-white text-sm font-medium">Tasks Completed</p>
-                      <p className="text-gray-400 text-xs">This week</p>
-                    </div>
-                  </div>
-                  <div className="text-emerald-400 font-bold">12</div>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-gray-800/50 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                      <Clock className="text-white" size={14} />
-                    </div>
-                    <div>
-                      <p className="text-white text-sm font-medium">Time Saved</p>
-                      <p className="text-gray-400 text-xs">This month</p>
-                    </div>
-                  </div>
-                  <div className="text-purple-400 font-bold">24h</div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl p-4 mt-4 backdrop-blur-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <Activity className="text-blue-400" size={16} />
-                  <span className="text-blue-200 text-sm font-semibold">Great Progress!</span>
-                </div>
-                <p className="text-blue-100/80 text-xs leading-relaxed">
-                  You're actively using the platform and making great progress on your goals.
-                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Enhanced Custom Styles */}
-      <style jsx>{`
-        .bg-grid {
-          background-image: 
-            linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
-          background-size: 40px 40px;
-        }
-      `}</style>
-    </div>
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
+        userName={session?.user?.name || name}
+        userEmail={session?.user?.email || ''}
+        isDeleting={deleting}
+        profileImage={profileImage}
+      />
+    </>
   )
 }

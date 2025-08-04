@@ -15,8 +15,7 @@ export async function GET(req: NextRequest) {
   // ✅ AJOUTÉ isDeployed au select !
   const agents = await Agent.find({ userId: session.user.id })
     .sort({ createdAt: -1 })
-    .select("_id name integrations prompt openaiModel temperature top_p folderId createdAt updatedAt isDeployed");
-    //                                                                                                    ↑ AJOUTÉ !
+    .select("_id name integrations prompt openaiModel temperature top_p folderId createdAt updatedAt isDeployed apiKey");
 
   return NextResponse.json({ agents });
 }

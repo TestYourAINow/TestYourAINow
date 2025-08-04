@@ -1,4 +1,4 @@
-// app/api/account/update/route.ts
+// app/api/account/update/route.ts - VERSION SÉCURISÉE
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/authOptions"
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { name, email, password } = await req.json()
+  const { name, email, password, currentPassword } = await req.json()
 
   try {
     await connectToDatabase()
@@ -25,6 +25,24 @@ export async function POST(req: NextRequest) {
     const currentUser = await User.findById(session.user.id)
     if (!currentUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // 🔐 NOUVELLE SÉCURITÉ : Vérifier mot de passe actuel si on veut changer le password
+    if (password) {
+      if (!currentPassword) {
+        return NextResponse.json(
+          { error: "Current password is required to change password" },
+          { status: 400 }
+        )
+      }
+
+      const isValidCurrentPassword = await bcrypt.compare(currentPassword, currentUser.password)
+      if (!isValidCurrentPassword) {
+        return NextResponse.json(
+          { error: "Current password is incorrect" },
+          { status: 400 }
+        )
+      }
     }
 
     // Vérifie si email est déjà utilisé par un autre
@@ -49,17 +67,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const updateData: any = {
-      email,
-      username: name,
-    }
-
+    // 🏗️ Construire l'objet de mise à jour dynamiquement
+    const updateData: any = {}
+    
+    if (name) updateData.username = name
+    if (email) updateData.email = email
     if (password) {
       const hashed = await bcrypt.hash(password, 10)
       updateData.password = hashed
     }
 
-    await User.findByIdAndUpdate(session.user.id, updateData)
+    // ⚡ Mise à jour seulement si il y a des changements
+    if (Object.keys(updateData).length > 0) {
+      await User.findByIdAndUpdate(session.user.id, updateData)
+    }
 
     // 🔁 Si l'utilisateur a un compte Stripe, on met à jour son email/nom aussi
     if (currentUser.stripeCustomerId && (email || name)) {

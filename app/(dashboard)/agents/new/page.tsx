@@ -57,13 +57,13 @@ const templatePresets: Record<string, Partial<typeof defaultFormData>> = {
   support: {
     description: "Create an AI that should work as a support agent for a (INDUSTRY) Company. Friendly, engaging, with great support skills and empathy.",
     questions: "The AI should handle any objections and questions from (INDUSTRY) customers. Then ask a variation of is there anything else I can help you with?",
-    tone: "The AI should speak (LANGUAGE). The prompt should be written in (LANGUAGE). AI should speak Informal and friendly tone. Like 2 friends texting on SMS. Grade 3 according to the Hemingway app.",
+    tone: "The AI should speak (LANGUAGE). The prompt should be written in (LANGUAGE). AI should speak In a formal and friendly tone. Like 2 friends texting on SMS. Grade 3 according to the Hemingway app.",
     rules: "1. Handle questions with empathy and understanding.\n2. Never repeat a customer's question back to them.\n3. Don't use !'s extensively.\n4. Use smiley emojis sometimes.",
   },
   sales: {
     description: "Create an AI that works as a receptionist for a (INDUSTRY) Company. Friendly, engaging, but also have the sales skills of Jeremy Miner.",
     questions: "The AI should ALWAYS answer any questions and objections first, AND ALWAYS ask this question in first response:\n1. (Add a sales question)\nThen continue with structured questions.",
-    tone: "The AI should speak (LANGUAGE). The prompt should be written in (LANGUAGE). AI should speak Informal and friendly tone. Like 2 friends texting on SMS. Grade 3 according to the Hemingway app.",
+    tone: "The AI should speak (LANGUAGE). The prompt should be written in (LANGUAGE). AI should speak In a formal and friendly tone. Like 2 friends texting on SMS. Grade 3 according to the Hemingway app.",
     rules: "1. Only ask one question at a time.\n2. Never repeat a question.\n3. Don't use !'s extensively.\n4. Use smiley emojis sometimes.",
   },
 };
