@@ -1352,23 +1352,6 @@ export default function AgentLab() {
 
       {/* ===== ENHANCED STYLES ===== */}
       <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(17, 24, 39, 0.3);
-          border-radius: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6));
-          border-radius: 8px;
-          border: 1px solid rgba(75, 85, 99, 0.3);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8));
-        }
-        
         .slider-enhanced::-webkit-slider-thumb {
           appearance: none;
           height: 18px;

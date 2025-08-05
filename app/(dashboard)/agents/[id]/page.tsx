@@ -107,7 +107,7 @@ export default function AgentPromptPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent relative">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-transparent relative">
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse"></div>
@@ -467,25 +467,6 @@ export default function AgentPromptPage() {
           </div>
         </div>
       </div>
-
-      {/* Enhanced Custom Scrollbar Styles */}
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(17, 24, 39, 0.3);
-          border-radius: 16px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6));
-          border-radius: 16px;
-          border: 1px solid rgba(75, 85, 99, 0.3);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8));
-        }
-      `}</style>
     </div>
   );
 }

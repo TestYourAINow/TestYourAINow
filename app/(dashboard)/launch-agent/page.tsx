@@ -446,7 +446,7 @@ export default function LaunchAgentPage() {
 
   return (
     <RequireApiKey>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+      <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
         
         {/* Hero Section avec Stats en Live */}
         <FadeInSection>

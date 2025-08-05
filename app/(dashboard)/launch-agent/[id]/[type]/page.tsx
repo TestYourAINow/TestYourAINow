@@ -282,7 +282,7 @@ export default function ConnectionDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gray-950">
       
       {/* 🎨 HEADER - ARRIÈRE-PLAN ORIGINAL + DESIGN SYSTEM */}
       <div className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-xl sticky top-0 z-50">

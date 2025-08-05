@@ -731,7 +731,7 @@ const ChatbotBuilder: React.FC = () => {
   const selectedAgentName = agents.find(a => a._id === selectedAgent)?.name;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
         {/* Header - Style demo-agent */}
@@ -1267,21 +1267,6 @@ const ChatbotBuilder: React.FC = () => {
 
       {/* Custom Styles */}
       <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6));
-          border-radius: 16px;
-          border: 1px solid rgba(75, 85, 99, 0.3);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8));
-        }
-        
         .bg-grid {
           background-image: 
             linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),

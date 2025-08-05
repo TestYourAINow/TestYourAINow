@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { 
-  Trash2, Bot, Plus, Settings, Calendar, Webhook, File, 
+import {
+  Trash2, Bot, Plus, Settings, Calendar, Webhook, File,
   Search, Filter, Activity, Eye, Edit3,
   TrendingUp, Zap, Users, Circle, Star, Clock,
   FolderPlus, Folder, FolderEdit, FolderMinus, AlertTriangle, X, CheckCircle
@@ -36,11 +36,11 @@ type FolderType = {
 }
 
 // Modal Edit Folder - INCHANGÉ
-const EditFolderModal = ({ 
+const EditFolderModal = ({
   folder,
-  isOpen, 
-  onClose, 
-  onUpdate 
+  isOpen,
+  onClose,
+  onUpdate
 }: {
   folder: FolderType | null
   isOpen: boolean
@@ -73,11 +73,11 @@ const EditFolderModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!name.trim()) return
 
     setIsSubmitting(true)
-    
+
     try {
       await onUpdate({
         name: name.trim(),
@@ -99,7 +99,7 @@ const EditFolderModal = ({
       <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-md mx-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
           <div className="flex items-center gap-3">
-            <div 
+            <div
               className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
               style={{ backgroundColor: selectedColor + '20', border: `2px solid ${selectedColor}40` }}
             >
@@ -162,11 +162,10 @@ const EditFolderModal = ({
                   key={color}
                   type="button"
                   onClick={() => setSelectedColor(color)}
-                  className={`w-10 h-10 rounded-full transition-all duration-200 ${
-                    selectedColor === color
+                  className={`w-10 h-10 rounded-full transition-all duration-200 ${selectedColor === color
                       ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900 scale-110 shadow-lg'
                       : 'hover:scale-105 shadow-md'
-                  }`}
+                    }`}
                   style={{ backgroundColor: color, boxShadow: selectedColor === color ? `0 0 20px ${color}40` : undefined }}
                 />
               ))}
@@ -187,11 +186,11 @@ const EditFolderModal = ({
               disabled={!name.trim() || isSubmitting}
               className="flex-1 px-4 py-3 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 transform hover:scale-105"
               style={{
-                background: !name.trim() || isSubmitting 
-                  ? '#374151' 
+                background: !name.trim() || isSubmitting
+                  ? '#374151'
                   : `linear-gradient(135deg, ${selectedColor}, ${selectedColor}CC)`,
-                boxShadow: !name.trim() || isSubmitting 
-                  ? 'none' 
+                boxShadow: !name.trim() || isSubmitting
+                  ? 'none'
                   : `0 4px 20px ${selectedColor}30`
               }}
             >
@@ -205,11 +204,11 @@ const EditFolderModal = ({
 }
 
 // Modal Delete Folder - INCHANGÉ
-const DeleteFolderModal = ({ 
+const DeleteFolderModal = ({
   folder,
-  isOpen, 
-  onClose, 
-  onDelete 
+  isOpen,
+  onClose,
+  onDelete
 }: {
   folder: FolderType | null
   isOpen: boolean
@@ -236,7 +235,7 @@ const DeleteFolderModal = ({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-md mx-auto">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
           <div className="flex items-center gap-4">
@@ -250,7 +249,7 @@ const DeleteFolderModal = ({
               <p className="text-sm text-gray-400 mt-0.5">This action cannot be undone</p>
             </div>
           </div>
-          
+
           <button
             onClick={onClose}
             className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200 group"
@@ -261,7 +260,7 @@ const DeleteFolderModal = ({
 
         {/* Content */}
         <div className="p-6">
-          
+
           {/* Warning Message */}
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
             <div className="flex items-start gap-3">
@@ -271,7 +270,7 @@ const DeleteFolderModal = ({
                   You're about to delete "{folder.name}"
                 </p>
                 <p className="text-red-400/80 text-xs">
-                  {folder.agentCount > 0 
+                  {folder.agentCount > 0
                     ? `This folder contains ${folder.agentCount} agent${folder.agentCount > 1 ? 's' : ''}`
                     : 'This folder is empty'
                   }
@@ -284,27 +283,24 @@ const DeleteFolderModal = ({
           {folder.agentCount > 0 && (
             <div className="space-y-4 mb-6">
               <p className="text-white font-medium">What should happen to the agents?</p>
-              
+
               {/* Option 1 - Move to root */}
               <button
                 type="button"
                 onClick={() => setDeleteAgents(false)}
-                className={`w-full p-4 rounded-xl border transition-all text-left cursor-pointer ${
-                  !deleteAgents 
-                    ? 'border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10' 
+                className={`w-full p-4 rounded-xl border transition-all text-left cursor-pointer ${!deleteAgents
+                    ? 'border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10'
                     : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 transition-all ${
-                    !deleteAgents ? 'border-blue-400 bg-blue-400' : 'border-gray-500'
-                  }`}>
+                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 transition-all ${!deleteAgents ? 'border-blue-400 bg-blue-400' : 'border-gray-500'
+                    }`}>
                     {!deleteAgents && <CheckCircle className="w-5 h-5 text-white -m-0.5" />}
                   </div>
                   <div className="flex-1">
-                    <div className={`font-medium transition-colors ${
-                      !deleteAgents ? 'text-blue-300' : 'text-white'
-                    }`}>
+                    <div className={`font-medium transition-colors ${!deleteAgents ? 'text-blue-300' : 'text-white'
+                      }`}>
                       Keep agents safe
                     </div>
                     <div className="text-sm text-gray-400 mt-1">
@@ -318,22 +314,19 @@ const DeleteFolderModal = ({
               <button
                 type="button"
                 onClick={() => setDeleteAgents(true)}
-                className={`w-full p-4 rounded-xl border transition-all text-left cursor-pointer ${
-                  deleteAgents 
-                    ? 'border-red-500/50 bg-red-500/10 shadow-lg shadow-red-500/10' 
+                className={`w-full p-4 rounded-xl border transition-all text-left cursor-pointer ${deleteAgents
+                    ? 'border-red-500/50 bg-red-500/10 shadow-lg shadow-red-500/10'
                     : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 transition-all ${
-                    deleteAgents ? 'border-red-400 bg-red-400' : 'border-gray-500'
-                  }`}>
+                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 transition-all ${deleteAgents ? 'border-red-400 bg-red-400' : 'border-gray-500'
+                    }`}>
                     {deleteAgents && <CheckCircle className="w-5 h-5 text-white -m-0.5" />}
                   </div>
                   <div className="flex-1">
-                    <div className={`font-medium transition-colors ${
-                      deleteAgents ? 'text-red-300' : 'text-white'
-                    }`}>
+                    <div className={`font-medium transition-colors ${deleteAgents ? 'text-red-300' : 'text-white'
+                      }`}>
                       Delete all agents
                     </div>
                     <div className="text-sm text-gray-400 mt-1">
@@ -376,13 +369,12 @@ const AgentStatus = ({ isDeployed }: { isDeployed?: boolean }) => {
   console.log('🔍 Agent isDeployed:', isDeployed);
   // 🆕 NOUVELLE LOGIQUE - Basé sur déploiement, pas intégrations
   const isActive = isDeployed || false;
-  
+
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
-      isActive 
-        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${isActive
+        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
         : 'bg-gray-500/15 text-gray-400 border border-gray-500/30'
-    }`}>
+      }`}>
       <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-gray-400'}`} />
       {isActive ? 'Active' : 'Inactive'}
     </div>
@@ -410,11 +402,11 @@ export default function AgentsPage() {
   const [filteredAgents, setFilteredAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(true)
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null)
-  
+
   const [folderToEdit, setFolderToEdit] = useState<FolderType | null>(null)
   const [showEditFolderModal, setShowEditFolderModal] = useState(false)
   const [showDeleteFolderModal, setShowDeleteFolderModal] = useState(false)
-  
+
   const [searchQuery, setSearchQuery] = useState("")
   const [filterType, setFilterType] = useState<"all" | "active" | "basic">("all")
   const [sortBy, setSortBy] = useState<"name" | "date" | "integrations">("date")
@@ -441,44 +433,44 @@ export default function AgentsPage() {
       })
   }, [])
 
-// ✅ FILTRAGE - CORRIGÉ POUR UTILISER isDeployed
-useEffect(() => {
-  let filtered = agents.filter(agent => {
-    // Filtre de recherche
-    const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Filtre pour les agents sans dossier (page principale)
-    const isNotInFolder = !agent.folderId || 
-                         agent.folderId === null || 
-                         agent.folderId === undefined ||
-                         agent.folderId === '';
-    
-    return matchesSearch && isNotInFolder;
-  });
+  // ✅ FILTRAGE - CORRIGÉ POUR UTILISER isDeployed
+  useEffect(() => {
+    let filtered = agents.filter(agent => {
+      // Filtre de recherche
+      const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase());
 
-  // 🆕 NOUVELLE LOGIQUE DE FILTRAGE - Basé sur isDeployed
-  if (filterType === "active") {
-    filtered = filtered.filter(agent => Boolean(agent.isDeployed))
-  } else if (filterType === "basic") {
-    filtered = filtered.filter(agent => !agent.isDeployed)
-  }
+      // Filtre pour les agents sans dossier (page principale)
+      const isNotInFolder = !agent.folderId ||
+        agent.folderId === null ||
+        agent.folderId === undefined ||
+        agent.folderId === '';
 
-  filtered.sort((a, b) => {
-    switch (sortBy) {
-      case "name":
-        return a.name.localeCompare(b.name)
-      case "integrations":
-        return (b.integrations?.length || 0) - (a.integrations?.length || 0)
-      case "date":
-      default:
-        const dateA = new Date(a.updatedAt || a.createdAt).getTime()
-        const dateB = new Date(b.updatedAt || b.createdAt).getTime()
-        return dateB - dateA
+      return matchesSearch && isNotInFolder;
+    });
+
+    // 🆕 NOUVELLE LOGIQUE DE FILTRAGE - Basé sur isDeployed
+    if (filterType === "active") {
+      filtered = filtered.filter(agent => Boolean(agent.isDeployed))
+    } else if (filterType === "basic") {
+      filtered = filtered.filter(agent => !agent.isDeployed)
     }
-  })
 
-  setFilteredAgents(filtered)
-}, [agents, searchQuery, filterType, sortBy])
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name)
+        case "integrations":
+          return (b.integrations?.length || 0) - (a.integrations?.length || 0)
+        case "date":
+        default:
+          const dateA = new Date(a.updatedAt || a.createdAt).getTime()
+          const dateB = new Date(b.updatedAt || b.createdAt).getTime()
+          return dateB - dateA
+      }
+    })
+
+    setFilteredAgents(filtered)
+  }, [agents, searchQuery, filterType, sortBy])
 
   const handleDeleteAgent = (id: string) => {
     setAgents((prev) => prev.filter((a) => a._id !== id))
@@ -493,7 +485,7 @@ useEffect(() => {
         credentials: 'include',
         body: JSON.stringify(folderData)
       })
-      
+
       if (response.ok) {
         const newFolder = await response.json()
         setFolders(prev => [...prev, { ...newFolder, agentCount: 0 }])
@@ -510,7 +502,7 @@ useEffect(() => {
 
   const handleUpdateFolder = async (folderData: { name: string; description: string; color: string }) => {
     if (!folderToEdit) return
-    
+
     try {
       const response = await fetch(`/api/folders/${folderToEdit._id}`, {
         method: 'PUT',
@@ -518,7 +510,7 @@ useEffect(() => {
         credentials: 'include',
         body: JSON.stringify(folderData)
       })
-      
+
       if (response.ok) {
         const data = await response.json()
         setFolders(prev => prev.map(f => f._id === folderToEdit._id ? data.folder : f))
@@ -532,13 +524,13 @@ useEffect(() => {
 
   const handleDeleteFolderAction = async (deleteAgents: boolean) => {
     if (!folderToEdit) return
-    
+
     try {
       const response = await fetch(`/api/folders?id=${folderToEdit._id}&deleteAgents=${deleteAgents}`, {
         method: 'DELETE',
         credentials: 'include'
       })
-      
+
       if (response.ok) {
         setFolders(prev => prev.filter(f => f._id !== folderToEdit._id))
         if (deleteAgents) {
@@ -552,34 +544,34 @@ useEffect(() => {
     }
   }
 
-const handleMoveAgent = async (agentId: string, folderId: string | null) => {
-  try {
-    const response = await fetch(`/api/agents/${agentId}/folder`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ folderId })
-    })
-    
-    if (response.ok) {
-      // Mettre à jour l'état local immédiatement
-      setAgents(prev => prev.map(agent => 
-        agent._id === agentId 
-          ? { ...agent, folderId: folderId } 
-          : agent
-      ));
-      
-      // Rafraîchir les dossiers pour le count
-      const foldersResponse = await fetch("/api/folders", { credentials: "include" })
-      if (foldersResponse.ok) {
-        const data = await foldersResponse.json()
-        setFolders(data.folders || [])
+  const handleMoveAgent = async (agentId: string, folderId: string | null) => {
+    try {
+      const response = await fetch(`/api/agents/${agentId}/folder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ folderId })
+      })
+
+      if (response.ok) {
+        // Mettre à jour l'état local immédiatement
+        setAgents(prev => prev.map(agent =>
+          agent._id === agentId
+            ? { ...agent, folderId: folderId }
+            : agent
+        ));
+
+        // Rafraîchir les dossiers pour le count
+        const foldersResponse = await fetch("/api/folders", { credentials: "include" })
+        if (foldersResponse.ok) {
+          const data = await foldersResponse.json()
+          setFolders(data.folders || [])
+        }
       }
+    } catch (error) {
+      console.error('Error moving agent:', error)
     }
-  } catch (error) {
-    console.error('Error moving agent:', error)
   }
-}
 
   const getIntegrationIcon = (type: string) => {
     switch (type) {
@@ -596,7 +588,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
 
   return (
     <RequireApiKey>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+      <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
         {agentToDelete && (
           <ModalDeleteAgent
             agent={agentToDelete}
@@ -813,7 +805,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
                 <p className="text-xl font-bold text-white mb-2">Create Agent</p>
                 <p className="text-sm text-gray-400">Start building your AI</p>
               </div>
-              
+
               {/* Loading Skeletons */}
               {[...Array(9)].map((_, i) => (
                 <AgentCardSkeleton key={i} />
@@ -823,7 +815,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
         ) : (
           <FadeInSection>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-              
+
               {/* Create Agent Card - Enhanced */}
               <Link
                 href="/agents/new"
@@ -861,7 +853,7 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
                   className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-6 h-[280px] hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer"
                 >
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none"></div>
-                  
+
                   <div className="absolute top-4 right-4 z-10">
                     <AgentActions
                       agent={agent}
@@ -878,11 +870,10 @@ const handleMoveAgent = async (agentId: string, folderId: string | null) => {
                           <Bot className="w-7 h-7 text-blue-400" />
                         </div>
                         {/* ✅ STATUT VISUEL CORRIGÉ */}
-                        <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${
-                          Boolean(agent.isDeployed)
-                            ? 'bg-emerald-400 shadow-emerald-400/50' 
+                        <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${Boolean(agent.isDeployed)
+                            ? 'bg-emerald-400 shadow-emerald-400/50'
                             : 'bg-gray-500'
-                        } shadow-md`} />
+                          } shadow-md`} />
                       </div>
                     </div>
 

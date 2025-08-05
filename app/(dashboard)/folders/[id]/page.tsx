@@ -707,7 +707,7 @@ export default function FolderDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent relative">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-transparent relative">
       
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none">

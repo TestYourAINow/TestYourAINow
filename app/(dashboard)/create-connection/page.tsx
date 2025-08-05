@@ -304,7 +304,7 @@ export default function CreateConnectionPage() {
   const canSubmit = canProceedToStep3 && aiBuildId !== '';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
       
       {/* Header */}
       <FadeInSection>
