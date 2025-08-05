@@ -1,19 +1,14 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Bot, ChevronRight, Plus } from 'lucide-react'
+import { Bot, ChevronRight, Plus, Menu } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
+import MobileMenu from '@/components/MobileMenu'
 
-interface TopBarProps {
-  stats?: {
-    totalAgents?: number
-    activeAgents?: number
-    totalIntegrations?: number
-  }
-}
-
-export default function DynamicTopBar({ stats }: TopBarProps) {
+export default function DynamicTopBar() {
   const pathname = usePathname()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Génération intelligente du breadcrumb
   const getBreadcrumb = () => {
@@ -79,81 +74,57 @@ export default function DynamicTopBar({ stats }: TopBarProps) {
   const pageInfo = getPageInfo()
 
   return (
-    <header className="h-16 bg-gray-900/50 backdrop-blur-sm border-b border-gray-700/50 flex items-center justify-between px-6 sticky top-0 z-40">
-      {/* Left side - Breadcrumb + Page info */}
-      <div className="flex items-center gap-4">
-        {/* Page icon */}
-        <div className="w-8 h-8 rounded-lg bg-gray-800 border border-gray-600 flex items-center justify-center">
-          {pageInfo.icon}
-        </div>
-        
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2">
-          {breadcrumb.map((item, index) => (
-            <div key={item.href} className="flex items-center gap-2">
-              {index > 0 && <ChevronRight size={14} className="text-gray-500" />}
-              {item.isActive ? (
-                <span className="text-white font-medium text-sm">{item.label}</span>
-              ) : (
-                <Link
-                  href={item.href}
-                  className="text-gray-400 hover:text-white text-sm transition-colors"
-                >
-                  {item.label}
-                </Link>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Page subtitle */}
-        <div className="hidden md:block text-gray-400 text-sm ml-2">
-          {pageInfo.subtitle}
-        </div>
-      </div>
-      
-      {/* Right side - Stats en temps réel (pour la page agents) */}
-      {pathname === '/agents' && stats && (
-        <div className="flex items-center gap-6">
-          <div className="text-center">
-            <div className="text-lg font-bold text-white">{stats.totalAgents || 0}</div>
-            <div className="text-xs text-gray-400 uppercase tracking-wide">Total</div>
-          </div>
-          <div className="w-px h-6 bg-gray-600"></div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-emerald-400">{stats.activeAgents || 0}</div>
-            <div className="text-xs text-gray-400 uppercase tracking-wide">Active</div>
-          </div>
-          <div className="w-px h-6 bg-gray-600"></div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-blue-400">{stats.totalIntegrations || 0}</div>
-            <div className="text-xs text-gray-400 uppercase tracking-wide">Integrations</div>
+    <>
+      <header className="h-16 bg-gray-900/50 backdrop-blur-sm border-b border-gray-700/50 flex items-center justify-between px-6 sticky top-0 z-40">
+        {/* Left side - Breadcrumb + Page info */}
+        <div className="flex items-center gap-4">
+          {/* Page icon */}
+          <div className="w-8 h-8 rounded-lg bg-gray-800 border border-gray-600 flex items-center justify-center">
+            {pageInfo.icon}
           </div>
           
-          {/* Action button */}
-          <Link
-            href="/agents/new"
-            className="ml-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2"
-          >
-            <Plus size={16} />
-            New Agent
-          </Link>
-        </div>
-      )}
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2">
+            {breadcrumb.map((item, index) => (
+              <div key={item.href} className="flex items-center gap-2">
+                {index > 0 && <ChevronRight size={14} className="text-gray-500" />}
+                {item.isActive ? (
+                  <span className="text-white font-medium text-sm">{item.label}</span>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className="text-gray-400 hover:text-white text-sm transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
 
-      {/* Right side - Actions pour autres pages */}
-      {pathname !== '/agents' && (
-        <div className="flex items-center gap-4">
-          {pathname === '/agents/new' && (
-            <Link
-              href="/agents"
-              className="text-gray-400 hover:text-white text-sm transition-colors"
-            >
-              ← Back to Agents
-            </Link>
-          )}
+          {/* Page subtitle */}
+          <div className="hidden md:block text-gray-400 text-sm ml-2">
+            {pageInfo.subtitle}
+          </div>
         </div>
-      )}
-    </header>
+        
+        {/* 🔧 Right side - SEULEMENT Menu Hamburger */}
+        <div className="flex items-center gap-4">
+          {/* 🔧 MENU HAMBURGER - TEST: Visible partout pour debug */}
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="w-10 h-10 flex items-center justify-center bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white rounded-xl transition-all duration-300 border border-gray-700/50 hover:border-blue-500/50 shadow-lg"
+          >
+            <Menu size={20} />
+          </button>
+        </div>
+      </header>
+
+      {/* 🔧 MOBILE MENU COMPONENT */}
+      <MobileMenu 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)} 
+      />
+    </>
   )
 }

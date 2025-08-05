@@ -1,4 +1,4 @@
-// SidebarUserDropdown Component - INCHANGÉ'use client'
+'use client'
 
 import Link from "next/link"
 import {
@@ -64,6 +64,7 @@ const Tooltip = ({ children, text, isVisible, buttonRef }: {
     </>
   )
 }
+
 const SidebarUserDropdown = ({ collapsed }: { collapsed: boolean }) => {
   const { data: session, update } = useSession()
   const [localProfileImage, setLocalProfileImage] = useState<string | null>(null)
@@ -233,6 +234,27 @@ export default function Sidebar() {
     buttonRefs.current[key] = ref
   }
 
+  // 🔧 CORRECTION : Body overflow SEULEMENT sur mobile ET seulement si sidebar ouverte
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 768
+      
+      if (isMobile && !collapsed) {
+        // SEULEMENT sur mobile quand sidebar ouverte
+        document.body.style.overflow = 'hidden'
+      } else {
+        // Sinon, scroll normal
+        document.body.style.overflow = 'unset'
+      }
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        document.body.style.overflow = 'unset'
+      }
+    }
+  }, [collapsed])
+
   const workspaceItems = [
     { href: "/dashboard", label: "Dashboard", icon: <BarChart3 size={20} />, isActive: pathname === "/dashboard" },
     { href: "/agents", label: "My Agents", icon: <Bot size={20} />, isActive: pathname === "/agents" },
@@ -249,11 +271,11 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* 🔧 SIDEBAR AVEC SCROLL - Structure modifiée */}
-      <aside className={`fixed top-0 bottom-0 left-0 bg-gray-900/95 backdrop-blur-xl text-white z-50 transition-[width] duration-300 ease-out border-r border-gray-700/50 ${collapsed ? 'w-16' : 'w-72'} flex flex-col shadow-2xl`}>
+      {/* 🔧 SIDEBAR - Visible sur desktop, cachée sur mobile */}
+      <aside className={`hidden md:flex fixed top-0 bottom-0 left-0 bg-gray-900/95 md:backdrop-blur-xl text-white z-50 transition-[width] duration-300 ease-out border-r border-gray-700/50 ${collapsed ? 'w-16' : 'w-72'} flex-col shadow-2xl`}>
         
-        {/* 🔧 HEADER FIXE - reste en haut */}
-        <div className="h-16 flex items-center px-4 border-b border-gray-700/50 flex-shrink-0 bg-gray-900/50 backdrop-blur-sm">
+        {/* Header fixe */}
+        <div className="h-16 flex items-center px-4 border-b border-gray-700/50 flex-shrink-0 bg-gray-900/50 md:backdrop-blur-sm">
           <div className="flex items-center min-w-0 w-full">
             <Link href="/dashboard" className="shrink-0 relative group" style={{ marginLeft: '-4px' }}>
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-blue-500/25">
@@ -272,7 +294,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* 🔧 CONTENU SCROLLABLE - entre header et footer */}
+        {/* Contenu scrollable */}
         <div 
           className="flex-1 overflow-y-auto sidebar-scroll-container"
           style={{ 
@@ -299,7 +321,7 @@ export default function Sidebar() {
                       href={href}
                       onMouseEnter={() => setHoveredItem(href)}
                       onMouseLeave={() => setHoveredItem(null)}
-                      className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group backdrop-blur-sm min-h-[48px] ${
+                      className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group md:backdrop-blur-sm min-h-[48px] ${
                         isActive 
                           ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
                           : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50'
@@ -311,13 +333,14 @@ export default function Sidebar() {
                           : 'bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5'
                       }`}></div>
                       
-                      {!collapsed && (
-                        <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-300 ${
-                          isActive 
-                            ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md' 
-                            : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
-                        }`}></div>
-                      )}
+                      {/* 🔧 CORRECTION : Points bleus avec delay et logique améliorée */}
+                      <div className={`absolute right-3 w-2 h-2 rounded-full transition-all ${
+                        collapsed 
+                          ? 'opacity-0 scale-0' 
+                          : isActive 
+                            ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md scale-100' 
+                            : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md scale-100'
+                      }`}></div>
                       
                       <div 
                         className={`w-5 h-5 shrink-0 transition-all duration-300 ${
@@ -361,7 +384,7 @@ export default function Sidebar() {
                       href={href}
                       onMouseEnter={() => setHoveredItem(href)}
                       onMouseLeave={() => setHoveredItem(null)}
-                      className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group backdrop-blur-sm min-h-[48px] ${
+                      className={`flex items-center h-12 px-3 rounded-xl transition-all duration-300 relative group md:backdrop-blur-sm min-h-[48px] ${
                         isActive 
                           ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
                           : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50'
@@ -373,13 +396,14 @@ export default function Sidebar() {
                           : 'bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5'
                       }`}></div>
                       
-                      {!collapsed && (
-                        <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-300 ${
-                          isActive 
-                            ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md' 
-                            : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
-                        }`}></div>
-                      )}
+                      {/* 🔧 CORRECTION : Points bleus avec delay et logique améliorée */}
+                      <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-500 ${
+                        collapsed 
+                          ? 'opacity-0 scale-0' 
+                          : isActive 
+                            ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md scale-100' 
+                            : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md scale-100 delay-300'
+                      }`}></div>
                       
                       <div 
                         className={`w-5 h-5 shrink-0 transition-all duration-300 ${
@@ -407,17 +431,17 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* 🔧 FOOTER FIXE - reste en bas */}
-        <div className="border-t border-gray-700/50 p-3 flex-shrink-0 bg-gray-900/30 backdrop-blur-sm">
+        {/* Footer fixe */}
+        <div className="border-t border-gray-700/50 p-3 flex-shrink-0 bg-gray-900/30 md:backdrop-blur-sm">
           <SidebarUserDropdown collapsed={collapsed} />
         </div>
       </aside>
 
-      {/* Toggle Button - INCHANGÉ */}
-      <div className="group">
+      {/* 🔧 TOGGLE BUTTON - DESKTOP SEULEMENT */}
+      <div className="group hidden md:block">
         <button
           onClick={toggleSidebar}
-          className="fixed top-1/2 -translate-y-1/2 z-[60] w-10 h-10 md:w-10 md:h-10 flex items-center justify-center bg-gray-900/95 backdrop-blur-xl hover:bg-gray-800/95 text-gray-300 hover:text-white rounded-full transition-all duration-300 border border-gray-700/50 hover:border-blue-500/50 shadow-2xl hover:shadow-blue-500/20 hover:scale-110 group touch-manipulation"
+          className="fixed top-1/2 -translate-y-1/2 z-[60] w-10 h-10 flex items-center justify-center bg-gray-900/95 backdrop-blur-xl hover:bg-gray-800/95 text-gray-300 hover:text-white rounded-full transition-all duration-300 border border-gray-700/50 hover:border-blue-500/50 shadow-2xl hover:shadow-blue-500/20 hover:scale-110 group touch-manipulation"
           style={{ left: collapsed ? '56px' : '280px' }}
         >
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/10 group-hover:to-cyan-500/10 transition-all duration-300 pointer-events-none"></div>
@@ -427,14 +451,6 @@ export default function Sidebar() {
           />
         </button>
       </div>
-
-      {/* Mobile Overlay - INCHANGÉ */}
-      {!collapsed && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
-          onClick={toggleSidebar}
-        />
-      )}
     </>
   )
 }

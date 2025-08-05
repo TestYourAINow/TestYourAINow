@@ -1,16 +1,19 @@
 'use client'
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import Sidebar from "@/components/Sidebar";
 import { useSidebar } from "@/context/SidebarContext";
 import { usePathname } from 'next/navigation';
+import { Menu } from "lucide-react";
+import MobileMenu from "@/components/MobileMenu";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
   const { collapsed } = useSidebar();
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // 🔧 AJOUT état menu
 
-  // 🎯 NOUVEAU - Scroll to top à chaque changement de page
+  // Scroll to top à chaque changement de page
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -63,13 +66,19 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar - SEULEMENT SUR DESKTOP */}
       <Sidebar />
 
-      {/* Main Layout */}
+      {/* 🔧 MAIN LAYOUT - CSS responsive pur (SANS JavaScript pour éviter l'hydration) */}
       <div 
-        className="transition-all duration-300 ease-out relative z-10"
-        style={{ marginLeft: collapsed ? '64px' : '288px' }}
+        className={`
+          transition-all duration-300 ease-out relative z-10
+          ml-0
+          ${collapsed 
+            ? 'md:ml-16' 
+            : 'md:ml-72'
+          }
+        `}
       >
         {/* Enhanced TopBar */}
         <header className="h-16 bg-gray-900/80 backdrop-blur-xl border-b border-gray-700/50 flex items-center px-6 sticky top-0 z-40 shadow-lg">
@@ -88,9 +97,14 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
           
-          {/* Enhanced Stats Section (placeholder pour stats futures) */}
+          {/* 🔧 MENU HAMBURGER - FONCTIONNEL et responsive */}
           <div className="flex items-center gap-6">
-            {/* Les stats viendront ici plus tard selon la page */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)} // 🔧 AJOUT fonction
+              className="md:hidden w-10 h-10 flex items-center justify-center bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white rounded-xl transition-all duration-300 border border-gray-700/50 hover:border-blue-500/50 shadow-lg"
+            >
+              <Menu size={20} />
+            </button>
           </div>
         </header>
 
@@ -122,6 +136,12 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
+
+      {/* 🔧 MOBILE MENU COMPONENT */}
+      <MobileMenu 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)} 
+      />
 
       {/* CSS Animations */}
       <style jsx>{`
