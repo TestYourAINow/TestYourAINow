@@ -733,7 +733,7 @@ const ChatbotBuilder: React.FC = () => {
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
       {/* Main Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+      <div className="relative z-10 w-full px-6 py-8">
         {/* Header - Style demo-agent */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
