@@ -1001,43 +1001,6 @@ export default function AgentsPage() {
             </div>
           </FadeInSection>
         )}
-
-        {/* Quick Actions Bar - INCHANGÉ */}
-        {!loading && (agents.length > 0 || folders.length > 0) && (
-          <FadeInSection>
-            <div className="mt-16 bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Quick Actions</h3>
-                  <p className="text-gray-400 text-sm">Streamline your workflow</p>
-                </div>
-                <div className="flex gap-3 flex-wrap">
-                  <Link
-                    href="/agents/new"
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    <Plus size={16} />
-                    New Agent
-                  </Link>
-                  <button
-                    onClick={() => setShowCreateFolderModal(true)}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    <FolderPlus size={16} />
-                    New Folder
-                  </button>
-                  <Link
-                    href="/agent-lab"
-                    className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 text-sm transform hover:scale-105"
-                  >
-                    <Settings size={16} />
-                    Agent Lab
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </FadeInSection>
-        )}
       </div>
     </RequireApiKey>
   )

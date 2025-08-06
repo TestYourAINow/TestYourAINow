@@ -658,235 +658,238 @@ export default function DemoAgentPage() {
 
   return (
     <RequireApiKey>
-      <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+      <div className="h-[calc(100vh-64px)] overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+        
+        {/* Structure principale - 2 colonnes fixes */}
+        <div className="flex h-full">
+          
+          {/* COLONNE GAUCHE - Preview Panel (flex-1 pour prendre tout l'espace) */}
+          <div className="flex-1 bg-gray-900/95 backdrop-blur-xl border-r border-gray-700/50 relative overflow-hidden bg-grid-pattern">
+            
+            {/* Enhanced Device Frame - repositionné */}
+            <div className="absolute top-4 left-4 bg-gray-800/50 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center gap-3 border border-gray-700/50 z-10">
+              <div className="flex gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full" />
+                <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                <div className="w-3 h-3 bg-green-500 rounded-full" />
+              </div>
+              <div className="w-px h-4 bg-gray-600" />
+              <Monitor size={16} className="text-gray-400" />
+              <span className="text-xs text-gray-400 font-medium">Live Preview</span>
+            </div>
 
-        <div className="relative z-10 w-full px-6 py-8">
-          {/* Enhanced Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-6">
+            {/* Enhanced Live Indicator - repositionné */}
+            <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl backdrop-blur-sm z-10">
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              <span className="text-xs text-emerald-400 font-medium">Live</span>
+            </div>
+
+            {/* Your Demos Button - Premium flottant */}
+            <div className="absolute top-16 left-4 z-10">
+              <button
+                onClick={() => setShowDemosModal(true)}
+                className="group flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 border border-blue-500/30 hover:border-blue-400/50 rounded-xl backdrop-blur-xl transition-all duration-300 shadow-lg hover:shadow-blue-500/20 transform hover:scale-105"
+              >
                 <div className="relative">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-emerald-600/20">
-                    <Smartphone className="text-white" size={28} />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center">
-                    <Sparkles className="text-white" size={12} />
-                  </div>
+                  <Smartphone size={18} className="text-blue-300 group-hover:text-blue-200 transition-colors" />
                 </div>
-                
-                <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
-                    Demo Agent Builder
-                  </h1>
-                  <p className="text-gray-400 text-lg">
-                    Create stunning interactive demos for your AI agents
-                  </p>
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-semibold text-white group-hover:text-blue-100 transition-colors">
+                    Your Demos
+                  </span>
+                  {userDemos.length > 0 ? (
+                    <span className="text-xs text-blue-300/70 group-hover:text-blue-200/80 transition-colors">
+                      {userDemos.length} {userDemos.length === 1 ? 'demo' : 'demos'} created
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
+                      No demos yet
+                    </span>
+                  )}
+                </div>
+                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ChevronRight size={14} className="text-blue-300" />
+                </div>
+              </button>
+            </div>
+
+            {/* Preview Content - logique identique, juste repositionnée */}
+            {!config.agentId ? (
+              <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                <div className="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-800 rounded-3xl flex items-center justify-center mb-8 shadow-2xl border border-gray-600/50">
+                  <MessageCircle className="w-16 h-16 text-gray-500" />
+                </div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
+                  Select an Agent to Preview
+                </h3>
+                <p className="text-gray-400 max-w-md leading-relaxed">
+                  Choose an AI agent from the configuration panel to see your demo come to life with real-time interactions
+                </p>
+                <div className="mt-8 flex items-center gap-2 text-blue-400">
+                  <span className="text-2xl">👉</span>
+                  <span className="font-medium">Configure your demo settings</span>
                 </div>
               </div>
-              
-              {/* Enhanced Stats */}
-              {userDemos.length > 0 && (
-                <div className="flex items-center gap-8">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-white">{userDemos.length}</div>
-                    <div className="text-sm text-gray-400">Active Demos</div>
-                  </div>
-                  <div className="w-px h-12 bg-gray-700" />
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-400">{agents.length}</div>
-                    <div className="text-sm text-gray-400">Available Agents</div>
-                  </div>
+            ) : (
+              <>
+                {/* Background Pattern */}
+                <div className="absolute inset-0 bg-grid opacity-5" />
+                
+                {/* Enhanced Watermark */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '12px',
+                  color: 'rgba(255, 255, 255, 0.08)',
+                  fontSize: '20px',
+                  fontWeight: 500,
+                  pointerEvents: 'none',
+                  zIndex: 1
+                }}>
+                  <MessageCircle className="w-32 h-32 mb-3" />
+                  <span>Interactive Preview</span>
                 </div>
-              )}
-            </div>
+
+                {/* Chat Widget Preview - logique identique */}
+                <div
+                  className="chat-widget"
+                  style={{
+                    '--primary-color': config.primaryColor,
+                    position: 'absolute',
+                    bottom: '24px',
+                    right: '24px',
+                  } as React.CSSProperties}
+                >
+                  <ChatButton
+                    isOpen={isOpen}
+                    onClick={toggleChat}
+                    config={config}
+                    showPopup={showPopupBubble}
+                  />
+                  <ChatWindow
+                    isOpen={isOpen}
+                    config={config}
+                    messages={messages}
+                    isTyping={isTyping}
+                    inputValue={inputValue}
+                    onInputChange={setInputValue}
+                    onSendMessage={sendMessage}
+                    onNewChat={startNewChat}
+                    onClose={toggleChat}
+                    messagesEndRef={messagesEndRef}
+                    inputRef={inputRef}
+                    animateMessages={animateMessages}
+                  />
+                </div>
+              </>
+            )}
           </div>
 
-          <div style={{ display: 'flex', height: 'calc(100vh - 200px)', gap: '24px' }}>
-            {/* Preview Panel - HAUTEUR COMPLÈTE */}
-            <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl relative overflow-hidden" style={{ flex: '1.4' }}>
-              
-              {/* Enhanced Device Frame */}
-              <div className="absolute top-4 left-4 bg-gray-800/50 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center gap-3 border border-gray-700/50">
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full" />
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                  <div className="w-3 h-3 bg-green-500 rounded-full" />
-                </div>
-                <div className="w-px h-4 bg-gray-600" />
-                <Monitor size={16} className="text-gray-400" />
-                <span className="text-xs text-gray-400 font-medium">Live Preview</span>
+          {/* COLONNE DROITE - Configuration Panel fixe */}
+          <div className="w-96 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white flex flex-col h-full">
+
+            {/* Header Configuration Panel */}
+            <div className="p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 flex-shrink-0">
+              <div className="flex items-center gap-3 mb-2">
+                <Settings className="text-blue-400" size={24} />
+                <h2 className="text-xl font-bold text-white">Configuration Panel</h2>
               </div>
-
-              {/* Enhanced Live Indicator */}
-              <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl backdrop-blur-sm">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-xs text-emerald-400 font-medium">Live</span>
-              </div>
-
-              {/* Preview Content - keeping original logic */}
-              {!config.agentId ? (
-                <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                  <div className="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-800 rounded-3xl flex items-center justify-center mb-8 shadow-2xl border border-gray-600/50">
-                    <MessageCircle className="w-16 h-16 text-gray-500" />
-                  </div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
-                    Select an Agent to Preview
-                  </h3>
-                  <p className="text-gray-400 max-w-md leading-relaxed">
-                    Choose an AI agent from the configuration panel to see your demo come to life with real-time interactions
-                  </p>
-                  <div className="mt-8 flex items-center gap-2 text-blue-400">
-                    <span className="text-2xl">👉</span>
-                    <span className="font-medium">Configure your demo settings</span>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {/* Background Pattern */}
-                  <div className="absolute inset-0 bg-grid opacity-5" />
-                  
-                  {/* Enhanced Watermark */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '12px',
-                    color: 'rgba(255, 255, 255, 0.08)',
-                    fontSize: '20px',
-                    fontWeight: 500,
-                    pointerEvents: 'none',
-                    zIndex: 1
-                  }}>
-                    <MessageCircle className="w-32 h-32 mb-3" />
-                    <span>Interactive Preview</span>
-                  </div>
-
-                  {/* Chat Widget Preview - keeping original */}
-                  <div
-                    className="chat-widget"
-                    style={{
-                      '--primary-color': config.primaryColor,
-                      position: 'absolute',
-                      bottom: '24px',
-                      right: '24px',
-                    } as React.CSSProperties}
-                  >
-                    <ChatButton
-                      isOpen={isOpen}
-                      onClick={toggleChat}
-                      config={config}
-                      showPopup={showPopupBubble}
-                    />
-                    <ChatWindow
-                      isOpen={isOpen}
-                      config={config}
-                      messages={messages}
-                      isTyping={isTyping}
-                      inputValue={inputValue}
-                      onInputChange={setInputValue}
-                      onSendMessage={sendMessage}
-                      onNewChat={startNewChat}
-                      onClose={toggleChat}
-                      messagesEndRef={messagesEndRef}
-                      inputRef={inputRef}
-                      animateMessages={animateMessages}
-                    />
-                  </div>
-                </>
-              )}
+              <p className="text-gray-400 text-sm">Customize your demo experience</p>
             </div>
 
-            {/* Configuration Panel - Enhanced but keeping structure */}
-            <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl text-white overflow-hidden" style={{ width: '400px', display: 'flex', flexDirection: 'column' }}>
-
-              {/* Enhanced Header avec bouton Your Demos */}
-              <div className="p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <Settings className="text-blue-400" size={24} />
-                    <h2 className="text-xl font-bold text-white">Configuration Panel</h2>
+            {/* Configuration Sections - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+              
+              {/* General Configuration - logique identique */}
+              <CollapsibleSection
+                title="General Configuration"
+                icon={<Settings className="text-blue-400" size={20} />}
+                defaultOpen={true}
+              >
+                <div className="space-y-4">
+                  <div>
+                    <input
+                      type="text"
+                      value={config.name}
+                      onChange={(e) => updateConfig('name', e.target.value)}
+                      placeholder="Demo name"
+                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                    />
                   </div>
-                  
-                  {/* Bouton Your Demos */}
-                  <button
-                    onClick={() => setShowDemosModal(true)}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg transition-all text-blue-300 hover:text-blue-200"
-                  >
-                    <Smartphone size={16} />
-                    <span className="text-sm font-medium">Your Demos</span>
-                    {userDemos.length > 0 && (
-                      <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
-                        {userDemos.length}
-                      </span>
-                    )}
-                  </button>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                      Choose Agent
+                    </label>
+                    <select
+                      value={config.agentId}
+                      onChange={(e) => updateConfig('agentId', e.target.value)}
+                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm font-medium"
+                    >
+                      <option value="">Select an agent...</option>
+                      {agents.map((agent) => (
+                        <option key={agent._id} value={agent._id}>
+                          {agent.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <p className="text-gray-400 text-sm">Customize your demo experience</p>
-              </div>
+              </CollapsibleSection>
 
-              {/* Configuration Section with Collapsible Structure */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                
-                {/* General Configuration */}
-                <CollapsibleSection
-                  title="General Configuration"
-                  icon={<Settings className="text-blue-400" size={20} />}
-                  defaultOpen={true}
-                >
-                  <div className="space-y-4">
-                    <div>
-                      <input
-                        type="text"
-                        value={config.name}
-                        onChange={(e) => updateConfig('name', e.target.value)}
-                        placeholder="Demo name"
-                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Choose Agent
-                      </label>
-                      <select
-                        value={config.agentId}
-                        onChange={(e) => updateConfig('agentId', e.target.value)}
-                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm font-medium"
+              {/* Appearance Section - logique identique avec Bot Avatar AVANT Theme */}
+              <CollapsibleSection
+                title="Appearance"
+                icon={<Palette className="text-blue-400" size={20} />}
+                defaultOpen={false}
+              >
+                <div className="space-y-6">
+                  {/* Bot Avatar - logique identique */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                      Bot Avatar
+                    </label>
+                    {config.avatar === '/Default Avatar.png' ? (
+                      <div
+                        className="border-2 border-dashed border-gray-600/50 rounded-xl p-8 text-center hover:border-blue-400/50 transition-all cursor-pointer bg-gray-900/30 backdrop-blur-sm group"
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const file = e.dataTransfer.files[0];
+                          if (file && file.type.startsWith('image/')) {
+                            if (file.size <= 1024 * 1024) {
+                              const reader = new FileReader();
+                              reader.onload = (e) => {
+                                if (e.target?.result) {
+                                  updateConfig('avatar', e.target.result);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            } else {
+                              alert('⚠️ Avatar too large (max 1MB)');
+                            }
+                          } else {
+                            alert('⚠️ Please select an image (.png, .jpg, .gif)');
+                          }
+                        }}
+                        onDragOver={(e) => e.preventDefault()}
+                        onClick={() => {
+                          const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
+                          fileInput?.click();
+                        }}
                       >
-                        <option value="">Select an agent...</option>
-                        {agents.map((agent) => (
-                          <option key={agent._id} value={agent._id}>
-                            {agent.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </CollapsibleSection>
-
-                {/* Appearance - Bot Avatar AVANT Theme */}
-                <CollapsibleSection
-                  title="Appearance"
-                  icon={<Palette className="text-blue-400" size={20} />}
-                  defaultOpen={false}
-                >
-                  <div className="space-y-6">
-                    {/* Bot Avatar AVANT */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Bot Avatar
-                      </label>
-                      {config.avatar === '/Default Avatar.png' ? (
-                        <div
-                          className="border-2 border-dashed border-gray-600/50 rounded-xl p-8 text-center hover:border-blue-400/50 transition-all cursor-pointer bg-gray-900/30 backdrop-blur-sm group"
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            const file = e.dataTransfer.files[0];
-                            if (file && file.type.startsWith('image/')) {
+                        <input
+                          id="avatar-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target?.files?.[0];
+                            if (file) {
                               if (file.size <= 1024 * 1024) {
                                 const reader = new FileReader();
                                 reader.onload = (e) => {
@@ -898,347 +901,294 @@ export default function DemoAgentPage() {
                               } else {
                                 alert('⚠️ Avatar too large (max 1MB)');
                               }
-                            } else {
-                              alert('⚠️ Please select an image (.png, .jpg, .gif)');
                             }
                           }}
-                          onDragOver={(e) => e.preventDefault()}
-                          onClick={() => {
-                            const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
-                            fileInput?.click();
-                          }}
-                        >
-                          <input
-                            id="avatar-upload"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target?.files?.[0];
-                              if (file) {
-                                if (file.size <= 1024 * 1024) {
-                                  const reader = new FileReader();
-                                  reader.onload = (e) => {
-                                    if (e.target?.result) {
-                                      updateConfig('avatar', e.target.result);
-                                    }
-                                  };
-                                  reader.readAsDataURL(file);
-                                } else {
-                                  alert('⚠️ Avatar too large (max 1MB)');
-                                }
-                              }
+                        />
+                        <div className="text-gray-400 group-hover:text-gray-300 transition-colors">
+                          <div className="mx-auto w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mb-4 group-hover:bg-gray-600/50 transition-colors">
+                            <Upload className="w-8 h-8" />
+                          </div>
+                          <p className="text-sm font-medium">Upload Bot Avatar</p>
+                          <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF (max 1MB)</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative bg-gray-900/30 backdrop-blur-sm rounded-xl p-4 border border-gray-700/30">
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={config.avatar}
+                            alt="Avatar"
+                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-600/50"
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.src = '/Default Avatar.png';
                             }}
                           />
-                          <div className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                            <div className="mx-auto w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mb-4 group-hover:bg-gray-600/50 transition-colors">
-                              <Upload className="w-8 h-8" />
-                            </div>
-                            <p className="text-sm font-medium">Upload Bot Avatar</p>
-                            <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF (max 1MB)</p>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-white">✅ Avatar uploaded successfully</p>
+                            <p className="text-xs text-gray-400 mt-1">Ready to use in your demo</p>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="relative bg-gray-900/30 backdrop-blur-sm rounded-xl p-4 border border-gray-700/30">
-                          <div className="flex items-center gap-4">
-                            <img
-                              src={config.avatar}
-                              alt="Avatar"
-                              className="w-16 h-16 rounded-full object-cover border-2 border-gray-600/50"
-                              onError={(e) => {
-                                const target = e.currentTarget as HTMLImageElement;
-                                target.src = '/Default Avatar.png';
-                              }}
-                            />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-white">✅ Avatar uploaded successfully</p>
-                              <p className="text-xs text-gray-400 mt-1">Ready to use in your demo</p>
-                            </div>
-                            <button
-                              onClick={() => updateConfig('avatar', '/Default Avatar.png')}
-                              className="w-8 h-8 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg flex items-center justify-center transition-colors"
-                              title="Remove avatar"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Theme APRÈS */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Theme
-                      </label>
-                      <div className="flex items-center space-x-3">
-                        <button
-                          onClick={() => updateConfig('theme', 'light')}
-                          className={`flex items-center gap-2 px-4 py-3.5 rounded-xl transition-all duration-300 backdrop-blur-sm ${config.theme === 'light'
-                            ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
-                            : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
-                            }`}
-                        >
-                          <Sun className="w-4 h-4" />
-                          Light
-                        </button>
-                        <button
-                          onClick={() => updateConfig('theme', 'dark')}
-                          className={`flex items-center gap-2 px-4 py-3.5 rounded-xl transition-all duration-300 backdrop-blur-sm ${config.theme === 'dark'
-                            ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
-                            : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
-                            }`}
-                        >
-                          <Moon className="w-4 h-4" />
-                          Dark
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Primary Color */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Primary Color
-                      </label>
-                      <div className="grid grid-cols-4 gap-3 mb-4">
-                        {colorPresets.map((color) => (
                           <button
-                            key={color}
-                            onClick={() => updateConfig('primaryColor', color)}
-                            className={`w-full h-12 rounded-xl border-2 transition-all hover:scale-105 relative ${config.primaryColor === color
-                              ? 'border-white ring-2 ring-blue-500 shadow-xl'
-                              : 'border-gray-600/50 hover:border-gray-500'
-                              }`}
-                            style={{ backgroundColor: color }}
+                            onClick={() => updateConfig('avatar', '/Default Avatar.png')}
+                            className="w-8 h-8 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg flex items-center justify-center transition-colors"
+                            title="Remove avatar"
                           >
-                            {config.primaryColor === color && (
-                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                            )}
+                            <X size={16} />
                           </button>
-                        ))}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={config.primaryColor}
-                          onChange={(e) => updateConfig('primaryColor', e.target.value)}
-                          className="w-12 h-10 border border-gray-700/50 rounded-xl cursor-pointer bg-gray-900/80 backdrop-blur-sm"
-                        />
-                        <input
-                          type="text"
-                          value={config.primaryColor}
-                          onChange={(e) => updateConfig('primaryColor', e.target.value)}
-                          className="flex-1 px-4 py-3 text-sm bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-pink-500/60 focus:ring-2 focus:ring-pink-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-mono"
-                          placeholder="#3B82F6"
-                        />
-                      </div>
+                    )}
+                  </div>
+
+                  {/* Theme - logique identique */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                      Theme
+                    </label>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => updateConfig('theme', 'light')}
+                        className={`flex items-center gap-2 px-4 py-3.5 rounded-xl transition-all duration-300 backdrop-blur-sm ${config.theme === 'light'
+                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
+                          : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
+                          }`}
+                      >
+                        <Sun className="w-4 h-4" />
+                        Light
+                      </button>
+                      <button
+                        onClick={() => updateConfig('theme', 'dark')}
+                        className={`flex items-center gap-2 px-4 py-3.5 rounded-xl transition-all duration-300 backdrop-blur-sm ${config.theme === 'dark'
+                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
+                          : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
+                          }`}
+                      >
+                        <Moon className="w-4 h-4" />
+                        Dark
+                      </button>
                     </div>
                   </div>
-                </CollapsibleSection>
 
-                {/* Messages */}
-                <CollapsibleSection
-                  title="Messages"
-                  icon={<MessageCircle className="text-blue-400" size={20} />}
-                  defaultOpen={false}
-                >
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Chat Title
-                      </label>
-                      <input
-                        type="text"
-                        value={config.chatTitle}
-                        onChange={(e) => updateConfig('chatTitle', e.target.value)}
-                        placeholder="Chat title"
-                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
-                      />
+                  {/* Primary Color - logique identique */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                      Primary Color
+                    </label>
+                    <div className="grid grid-cols-4 gap-3 mb-4">
+                      {colorPresets.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => updateConfig('primaryColor', color)}
+                          className={`w-full h-12 rounded-xl border-2 transition-all hover:scale-105 relative ${config.primaryColor === color
+                            ? 'border-white ring-2 ring-blue-500 shadow-xl'
+                            : 'border-gray-600/50 hover:border-gray-500'
+                            }`}
+                          style={{ backgroundColor: color }}
+                        >
+                          {config.primaryColor === color && (
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                          )}
+                        </button>
+                      ))}
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Subtitle
-                      </label>
+                    <div className="flex items-center gap-3">
                       <input
-                        type="text"
-                        value={config.subtitle}
-                        onChange={(e) => updateConfig('subtitle', e.target.value)}
-                        placeholder="Subtitle"
-                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                        type="color"
+                        value={config.primaryColor}
+                        onChange={(e) => updateConfig('primaryColor', e.target.value)}
+                        className="w-12 h-10 border border-gray-700/50 rounded-xl cursor-pointer bg-gray-900/80 backdrop-blur-sm"
                       />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Input Placeholder
-                      </label>
                       <input
                         type="text"
-                        value={config.placeholderText}
-                        onChange={(e) => updateConfig('placeholderText', e.target.value)}
-                        placeholder="Type your message..."
-                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <label className="text-sm font-medium text-gray-300">
-                          Show Welcome Message
-                        </label>
-                        <input
-                          type="checkbox"
-                          checked={config.showWelcomeMessage}
-                          onChange={(e) => updateConfig('showWelcomeMessage', e.target.checked)}
-                          className="w-4 h-4 text-emerald-600 bg-gray-800 border-gray-600 rounded focus:ring-emerald-500"
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={config.welcomeMessage}
-                        onChange={(e) => updateConfig('welcomeMessage', e.target.value)}
-                        placeholder="Hello! How can I help you today?"
-                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                        value={config.primaryColor}
+                        onChange={(e) => updateConfig('primaryColor', e.target.value)}
+                        className="flex-1 px-4 py-3 text-sm bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-pink-500/60 focus:ring-2 focus:ring-pink-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-mono"
+                        placeholder="#3B82F6"
                       />
                     </div>
                   </div>
-                </CollapsibleSection>
+                </div>
+              </CollapsibleSection>
 
-                {/* Client Message */}
-                <CollapsibleSection
-                  title="Client Message"
-                  icon={<Bot className="text-blue-400" size={20} />}
-                  defaultOpen={false}
-                >
-                  <div className="space-y-4">
+              {/* Messages Section - logique identique */}
+              <CollapsibleSection
+                title="Messages"
+                icon={<MessageCircle className="text-blue-400" size={20} />}
+                defaultOpen={false}
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">Chat Title</label>
+                    <input
+                      type="text"
+                      value={config.chatTitle}
+                      onChange={(e) => updateConfig('chatTitle', e.target.value)}
+                      placeholder="Chat title"
+                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">Subtitle</label>
+                    <input
+                      type="text"
+                      value={config.subtitle}
+                      onChange={(e) => updateConfig('subtitle', e.target.value)}
+                      placeholder="Subtitle"
+                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">Input Placeholder</label>
+                    <input
+                      type="text"
+                      value={config.placeholderText}
+                      onChange={(e) => updateConfig('placeholderText', e.target.value)}
+                      placeholder="Type your message..."
+                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                    />
+                  </div>
+                  <div>
                     <div className="flex items-center justify-between mb-3">
-                      <label className="text-sm font-medium text-gray-300">
-                        Enable Popup
-                      </label>
+                      <label className="text-sm font-medium text-gray-300">Show Welcome Message</label>
                       <input
                         type="checkbox"
-                        checked={config.showPopup}
-                        onChange={(e) => updateConfig('showPopup', e.target.checked)}
-                        className="w-4 h-4 text-orange-600 bg-gray-800 border-gray-600 rounded focus:ring-orange-500"
+                        checked={config.showWelcomeMessage}
+                        onChange={(e) => updateConfig('showWelcomeMessage', e.target.checked)}
+                        className="w-4 h-4 text-emerald-600 bg-gray-800 border-gray-600 rounded focus:ring-emerald-500"
                       />
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Popup Message
-                      </label>
-                      <input
-                        type="text"
-                        value={config.popupMessage}
-                        onChange={(e) => updateConfig('popupMessage', e.target.value)}
-                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
-                        placeholder="Hello! Need any help?"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Delay (seconds)
-                      </label>
-                      <input
-                        type="number"
-                        value={config.popupDelay}
-                        onChange={(e) => updateConfig('popupDelay', parseInt(e.target.value) || 2)}
-                        min="0"
-                        max="30"
-                        className="w-24 px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm font-medium"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      value={config.welcomeMessage}
+                      onChange={(e) => updateConfig('welcomeMessage', e.target.value)}
+                      placeholder="Hello! How can I help you today?"
+                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                    />
                   </div>
-                </CollapsibleSection>
+                </div>
+              </CollapsibleSection>
 
-                {/* Create Demo comme une section collapsible */}
-                <div className="border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm overflow-hidden">
-                  <div className="p-4">
-                    <button
-                      onClick={() => setShowCreateModal(true)}
-                      disabled={!config.agentId}
-                      className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center justify-center gap-3 relative overflow-hidden group"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                      <CheckCircle className="w-5 h-5 relative z-10" />
-                      <span className="relative z-10">Create Demo</span>
-                    </button>
+              {/* Client Message Section - logique identique */}
+              <CollapsibleSection
+                title="Client Message"
+                icon={<Bot className="text-blue-400" size={20} />}
+                defaultOpen={false}
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-medium text-gray-300">Enable Popup</label>
+                    <input
+                      type="checkbox"
+                      checked={config.showPopup}
+                      onChange={(e) => updateConfig('showPopup', e.target.checked)}
+                      className="w-4 h-4 text-orange-600 bg-gray-800 border-gray-600 rounded focus:ring-orange-500"
+                    />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">Popup Message</label>
+                    <input
+                      type="text"
+                      value={config.popupMessage}
+                      onChange={(e) => updateConfig('popupMessage', e.target.value)}
+                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      placeholder="Hello! Need any help?"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">Delay (seconds)</label>
+                    <input
+                      type="number"
+                      value={config.popupDelay}
+                      onChange={(e) => updateConfig('popupDelay', parseInt(e.target.value) || 2)}
+                      min="0"
+                      max="30"
+                      className="w-24 px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm font-medium"
+                    />
+                  </div>
+                </div>
+              </CollapsibleSection>
+
+              {/* Create Demo Button */}
+              <div className="border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm overflow-hidden">
+                <div className="p-4">
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    disabled={!config.agentId}
+                    className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center justify-center gap-3 relative overflow-hidden group"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                    <CheckCircle className="w-5 h-5 relative z-10" />
+                    <span className="relative z-10">Create Demo</span>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Modal Your Demos */}
-          {showDemosModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-              <div className="bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-                {/* Header Modal */}
-                <div className="p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Smartphone className="text-blue-400" size={24} />
-                      <h2 className="text-xl font-bold text-white">Your Demos</h2>
-                      {userDemos.length > 0 && (
-                        <span className="bg-blue-500/20 text-blue-400 text-sm px-3 py-1 rounded-full font-medium border border-blue-500/30">
-                          {userDemos.length}
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setShowDemosModal(false)}
-                      className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Contenu Modal */}
-                <div className="p-6 max-h-96 overflow-y-auto custom-scrollbar">
-                  {userDemos.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-600/50">
-                        <Smartphone className="w-8 h-8 text-gray-500" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-white mb-2">No demos created yet</h3>
-                      <p className="text-gray-400">Create your first demo to get started</p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-4">
-                      {userDemos.map((demo) => (
-                        <div key={demo._id} className="bg-gray-800/50 backdrop-blur-sm border border-gray-600/50 rounded-xl p-4 hover:bg-gray-700/50 transition-all duration-300 group">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-white font-medium truncate group-hover:text-blue-300 transition-colors">{demo.name}</h4>
-                              <p className="text-xs text-gray-400 mt-1">Interactive demo widget</p>
-                            </div>
-                            
-                            <DemoActions
-                              demo={demo}
-                              onView={() => {
-                                setShowDemosModal(false);
-                                openInfoModal(demo._id);
-                              }}
-                              onDelete={() => {
-                                setShowDemosModal(false);
-                                openDeleteDemoModal(demo._id, demo.name);
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Modals - keeping all original functionality */}
+        {/* Tous les modals restent identiques - logique inchangée */}
+        {showDemosModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+              <div className="p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Smartphone className="text-blue-400" size={24} />
+                    <h2 className="text-xl font-bold text-white">Your Demos</h2>
+                    {userDemos.length > 0 && (
+                      <span className="bg-blue-500/20 text-blue-400 text-sm px-3 py-1 rounded-full font-medium border border-blue-500/30">
+                        {userDemos.length}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowDemosModal(false)}
+                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+              <div className="p-6 max-h-96 overflow-y-auto custom-scrollbar">
+                {userDemos.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-600/50">
+                      <Smartphone className="w-8 h-8 text-gray-500" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-2">No demos created yet</h3>
+                    <p className="text-gray-400">Create your first demo to get started</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {userDemos.map((demo) => (
+                      <div key={demo._id} className="bg-gray-800/50 backdrop-blur-sm border border-gray-600/50 rounded-xl p-4 hover:bg-gray-700/50 transition-all duration-300 group">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-white font-medium truncate group-hover:text-blue-300 transition-colors">{demo.name}</h4>
+                            <p className="text-xs text-gray-400 mt-1">Interactive demo widget</p>
+                          </div>
+                          <DemoActions
+                            demo={demo}
+                            onView={() => {
+                              setShowDemosModal(false);
+                              openInfoModal(demo._id);
+                            }}
+                            onDelete={() => {
+                              setShowDemosModal(false);
+                              openDeleteDemoModal(demo._id, demo.name);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tous les autres modals - logique inchangée */}
         <CreateDemoModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
@@ -1285,6 +1235,13 @@ export default function DemoAgentPage() {
               linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
               linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
             background-size: 40px 40px;
+          }
+          
+          .bg-grid-pattern {
+            background-image: 
+              linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 24px 24px;
           }
         `}</style>
       </div>
