@@ -8,6 +8,7 @@ interface DeleteAccountModalProps {
   userName?: string
   userEmail?: string
   isDeleting?: boolean
+  profileImage?: string | null  // Ajout de cette prop
 }
 
 export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
@@ -16,7 +17,8 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
   onConfirm,
   userName = 'User',
   userEmail = '',
-  isDeleting = false
+  isDeleting = false,
+  profileImage = null  // Ajout de cette prop
 }) => {
   if (!isOpen) return null
 
@@ -27,7 +29,7 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         {/* Enhanced Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center border-4 border-gray-600/50 shadow-x">
+            <div className="w-12 h-12 rounded-xl bg-red-500/10 border-2 border-red-500/30 flex items-center justify-center shadow-lg">
               <AlertTriangle className="w-6 h-6 text-red-400" />
             </div>
             <div>
@@ -58,8 +60,20 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             {/* Account Info Card */}
             <div className="bg-gray-800/60 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-200">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-md text-white font-bold">
-                  {userName.charAt(0).toUpperCase()}
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md text-white font-bold border-2 border-gray-600/50 ${
+                  profileImage 
+                    ? 'bg-gray-800' 
+                    : 'bg-gradient-to-br from-blue-600 to-cyan-600'
+                }`}>
+                  {profileImage ? (
+                    <img 
+                      src={profileImage} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    userName.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-semibold truncate">{userName}</p>
@@ -106,7 +120,7 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             {/* Final Warning */}
             <div className="mt-4 p-3 bg-red-950/50 border border-red-500/40 rounded-lg">
               <p className="text-red-200 text-center text-sm font-bold">
-                This action cannot be undone. All data will be lost forever.
+                ⚠️ This action cannot be undone. All data will be lost forever.
               </p>
             </div>
           </div>

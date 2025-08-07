@@ -359,7 +359,7 @@ export default function CreateAgentWizard() {
           // Définir l'API key par défaut automatiquement
           const defaultKey = data.apiKeys?.find((key: any) => key.isDefault);
           if (defaultKey) {
-            updateFormData("apiKey", defaultKey._id.toString());
+            updateFormData("apiKey", defaultKey.id);
           }
         }
       } catch (error) {

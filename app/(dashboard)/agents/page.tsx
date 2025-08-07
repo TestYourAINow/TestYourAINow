@@ -623,88 +623,6 @@ export default function AgentsPage() {
           onDelete={handleDeleteFolderAction}
         />
 
-        {/* Page Title Section - INCHANGÉ */}
-        {!loading && (
-          <FadeInSection>
-            <div className="text-center mb-12">
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                  <Bot className="w-8 h-8 text-blue-400" />
-                </div>
-                <div className="text-left">
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
-                    AI Agent Hub
-                  </h1>
-                  <p className="text-gray-400 text-lg mt-1">
-                    Manage your intelligent AI agents
-                  </p>
-                </div>
-              </div>
-            </div>
-          </FadeInSection>
-        )}
-
-        {/* ✅ ANALYTICS OVERVIEW - CORRIGÉ */}
-        {!loading && (agents.length > 0 || folders.length > 0) && (
-          <FadeInSection>
-            <div className="mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Total Agents - INCHANGÉ */}
-                <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/30 transition-all duration-300">
-                      <Bot className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-gray-400 text-sm font-medium">Total Agents</span>
-                  </div>
-                  <div className="text-3xl font-bold text-white mb-1">{agents.length}</div>
-                  <div className="text-xs text-gray-500">AI assistants created</div>
-                </div>
-
-                {/* ✅ Active Agents - CORRIGÉ */}
-                <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20 group-hover:shadow-green-500/30 transition-all duration-300">
-                      <Zap className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-gray-400 text-sm font-medium">Active Agents</span>
-                  </div>
-                  <div className="text-3xl font-bold text-white mb-1">
-                    {agents.filter(agent => Boolean(agent.isDeployed)).length}
-                  </div>
-                  <div className="text-xs text-gray-500">Currently deployed</div>
-                </div>
-
-                {/* Total Integrations - INCHANGÉ */}
-                <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/30 transition-all duration-300">
-                      <Activity className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-gray-400 text-sm font-medium">Integrations</span>
-                  </div>
-                  <div className="text-3xl font-bold text-white mb-1">
-                    {agents.reduce((acc, agent) => acc + (agent.integrations?.length || 0), 0)}
-                  </div>
-                  <div className="text-xs text-gray-500">Connected services</div>
-                </div>
-
-                {/* Total Folders - INCHANGÉ */}
-                <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:bg-gray-800/40 transition-all duration-300 group">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/30 transition-all duration-300">
-                      <FolderPlus className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-gray-400 text-sm font-medium">Folders</span>
-                  </div>
-                  <div className="text-3xl font-bold text-white mb-1">{folders.length}</div>
-                  <div className="text-xs text-gray-500">Organization units</div>
-                </div>
-              </div>
-            </div>
-          </FadeInSection>
-        )}
-
         {/* Enhanced Search and Filter Bar - INCHANGÉ */}
         {!loading && (agents.length > 0 || folders.length > 0) && (
           <FadeInSection>
@@ -712,18 +630,18 @@ export default function AgentsPage() {
               <div className="flex flex-col lg:flex-row gap-4">
                 {/* Enhanced Search */}
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={20} />
                   <input
                     type="text"
                     placeholder="Search agents and folders..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors z-10"
                     >
                       ×
                     </button>
@@ -756,7 +674,7 @@ export default function AgentsPage() {
 
                   <button
                     onClick={() => setShowCreateFolderModal(true)}
-                    className="px-4 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 whitespace-nowrap shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105"
+                    className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 whitespace-nowrap shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
                   >
                     <FolderPlus size={16} />
                     New Folder
@@ -959,7 +877,7 @@ export default function AgentsPage() {
               <div className="flex gap-4 justify-center flex-wrap">
                 <button
                   onClick={() => setShowCreateFolderModal(true)}
-                  className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105"
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
                 >
                   <FolderPlus size={20} />
                   Create Folder

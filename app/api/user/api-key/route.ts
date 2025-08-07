@@ -42,13 +42,13 @@ export async function GET() {
       await user.save();
     }
 
-    const apiKeys = (user.apiKeys || []).map((apiKey: ApiKeyDoc) => ({
-      id: apiKey._id,
-      name: apiKey.name,
-      maskedKey: `sk-...${apiKey.key.slice(-4)}`,
-      isDefault: apiKey.isDefault,
-      createdAt: apiKey.createdAt
-    }));
+const apiKeys = (user.apiKeys || []).map((apiKey: ApiKeyDoc) => ({
+  id: apiKey._id?.toString() || "unknown",
+  name: apiKey.name,
+  maskedKey: `sk-...${apiKey.key.slice(-4)}`,
+  isDefault: apiKey.isDefault,
+  createdAt: apiKey.createdAt
+}));
 
     return NextResponse.json({ apiKeys });
   } catch (error) {

@@ -397,12 +397,12 @@ export default function Sidebar() {
                       }`}></div>
                       
                       {/* 🔧 CORRECTION : Points bleus avec delay et logique améliorée */}
-                      <div className={`absolute right-3 w-2 h-2 rounded-full transition-all duration-500 ${
+                      <div className={`absolute right-3 w-2 h-2 rounded-full transition-all ${
                         collapsed 
                           ? 'opacity-0 scale-0' 
                           : isActive 
                             ? 'bg-blue-400 opacity-100 shadow-blue-400/50 shadow-md scale-100' 
-                            : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md scale-100 delay-300'
+                            : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md scale-100'
                       }`}></div>
                       
                       <div 
