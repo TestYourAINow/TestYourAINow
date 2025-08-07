@@ -24,6 +24,21 @@ const DemoSchema = new Schema({
   popupMessage: { type: String, default: 'Hello! Need any help?' },
   popupDelay: { type: Number, default: 2 },
   
+  // Custom Domain (SIMPLE ET FONCTIONNEL)
+  customDomain: {
+    type: String,
+    required: false
+  },
+  domainStatus: {
+    type: String,
+    enum: ['pending', 'verified', 'failed', 'disabled'],
+    default: 'pending'
+  },
+  domainVerifiedAt: {
+    type: Date,
+    default: null
+  },
+  
   // Usage
   usageLimit: { type: Number, default: 150 },
   usedCount: { type: Number, default: 0 },

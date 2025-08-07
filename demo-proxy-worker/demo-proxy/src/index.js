@@ -11,8 +11,8 @@ export default {
     // Log pour debug
     console.log(`🌐 Request pour: ${hostname}`);
     
-    // Si c'est notre workers.dev, afficher les infos de debug
-    if (hostname.includes('workers.dev')) {
+    // Si c'est notre workers.dev OU notre proxy domain, afficher les infos de debug
+    if (hostname.includes('workers.dev') || hostname === 'proxy.testyourainow.com') {
       return new Response(`
         <h1>🚀 Demo Proxy Worker Active!</h1>
         <p><strong>Worker URL:</strong> ${hostname}</p>

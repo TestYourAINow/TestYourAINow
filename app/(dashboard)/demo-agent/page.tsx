@@ -11,6 +11,10 @@ import CreateDemoModal from '@/components/CreateDemoModal';
 import InfoDemoModal from '@/components/InfoDemoModal';
 import { DeleteDemoModal } from '@/components/DeleteDemoModal';
 import RequireApiKey from "@/components/RequireApiKey";
+import AddCustomDomainModal from '@/components/DemoDomain/AddCustomDomainModal';
+import ConfigureDNSModal from '@/components/DemoDomain/ConfigureDNSModal';
+import ManageDomainsModal from '@/components/DemoDomain/ManageDomainsModal';
+import DomainSelector from '@/components/DemoDomain/DomainSelector';
 
 // Types
 interface DemoConfig {
@@ -27,6 +31,8 @@ interface DemoConfig {
   showWelcomeMessage: boolean;
   chatTitle: string;
   subtitle: string;
+  customDomain?: string;
+  domainStatus?: 'pending' | 'verified' | 'failed';
 }
 
 interface Message {
@@ -390,6 +396,8 @@ export default function DemoAgentPage() {
     showWelcomeMessage: true,
     chatTitle: 'AI Assistant',
     subtitle: 'Online',
+    customDomain: '',
+    domainStatus: 'pending',
   });
 
   // Chat states
@@ -424,6 +432,16 @@ export default function DemoAgentPage() {
     demoName: ''
   });
   const [isDeletingDemo, setIsDeletingDemo] = useState(false);
+
+  // Domain verification state
+  const [isVerifyingDomain, setIsVerifyingDomain] = useState(false);
+
+  // New Domain Management States
+  const [showAddDomainModal, setShowAddDomainModal] = useState(false);
+  const [showConfigureDNSModal, setShowConfigureDNSModal] = useState(false);
+  const [showManageDomainsModal, setShowManageDomainsModal] = useState(false);
+  const [configureDNSDomain, setConfigureDNSDomain] = useState('');
+  const [domainRefresh, setDomainRefresh] = useState(0);
 
   // Color picker state
   const [customColor, setCustomColor] = useState('');
@@ -645,6 +663,85 @@ export default function DemoAgentPage() {
     } finally {
       setIsDeletingDemo(false);
     }
+  };
+
+  // Domain verification function
+  const handleVerifyDomain = async () => {
+    if (!config.customDomain || !config.agentId) {
+      alert('Please select an agent and enter a domain first');
+      return;
+    }
+    setIsVerifyingDomain(true);
+    
+    try {
+      // D'abord créer une demo temporaire pour tester
+      const demoResponse = await fetch('/api/demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: config.name + ' (Test)',
+          agentId: config.agentId,
+          theme: config.theme,
+          color: config.primaryColor,
+          avatarUrl: config.avatar,
+          showWelcome: config.showWelcomeMessage,
+          welcomeMessage: config.welcomeMessage,
+          placeholderText: config.placeholderText,
+          chatTitle: config.chatTitle,
+          subtitle: config.subtitle,
+          showPopup: config.showPopup,
+          popupMessage: config.popupMessage,
+          popupDelay: config.popupDelay,
+          usageLimit: 50, // Limite réduite pour les tests
+        })
+      });
+      if (!demoResponse.ok) {
+        throw new Error('Failed to create test demo');
+      }
+      const { id: demoId } = await demoResponse.json();
+      // Maintenant configurer le domaine
+      const domainResponse = await fetch(`/api/demo/${demoId}/domain`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customDomain: config.customDomain
+        })
+      });
+      const result = await domainResponse.json();
+      if (result.success) {
+        updateConfig('domainStatus', 'verified');
+        alert('✅ Domain verified successfully! Your demo is now available at https://' + config.customDomain);
+      } else {
+        updateConfig('domainStatus', 'failed');
+        alert('❌ Domain verification failed: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Domain verification error:', error);
+      updateConfig('domainStatus', 'failed');
+      alert('❌ Domain verification failed. Please check your DNS configuration and try again.');
+    } finally {
+      setIsVerifyingDomain(false);
+    }
+  };
+
+  // New Domain Management Functions
+  const handleAddDomainSuccess = (domain: string) => {
+    setDomainRefresh(prev => prev + 1);
+    setConfigureDNSDomain(domain);
+    setShowConfigureDNSModal(true);
+  };
+
+  const handleConfigureDNS = (domain: string) => {
+    setConfigureDNSDomain(domain);
+    setShowConfigureDNSModal(true);
+  };
+
+  const handleDNSVerifySuccess = () => {
+    setDomainRefresh(prev => prev + 1);
+  };
+
+  const handleDomainsChange = () => {
+    setDomainRefresh(prev => prev + 1);
   };
 
   // Predefined colors
@@ -1010,6 +1107,21 @@ export default function DemoAgentPage() {
                 </div>
               </CollapsibleSection>
 
+              {/* Domain Settings - Nouvelle section */}
+              <CollapsibleSection
+                title="Domain Settings"
+                icon={<Globe className="text-blue-400" size={20} />}
+                defaultOpen={false}
+              >
+                <DomainSelector
+                  selectedDomain={config.customDomain || ''}
+                  onDomainChange={(domain) => updateConfig('customDomain', domain)}
+                  onAddDomain={() => setShowAddDomainModal(true)}
+                  onManageAll={() => setShowManageDomainsModal(true)}
+                  refresh={domainRefresh}
+                />
+              </CollapsibleSection>
+
               {/* Messages Section - logique identique */}
               <CollapsibleSection
                 title="Messages"
@@ -1126,7 +1238,28 @@ export default function DemoAgentPage() {
           </div>
         </div>
 
-        {/* Tous les modals restent identiques - logique inchangée */}
+        {/* Domain Management Modals */}
+        <AddCustomDomainModal
+          isOpen={showAddDomainModal}
+          onClose={() => setShowAddDomainModal(false)}
+          onSuccess={handleAddDomainSuccess}
+        />
+
+        <ConfigureDNSModal
+          isOpen={showConfigureDNSModal}
+          onClose={() => setShowConfigureDNSModal(false)}
+          domain={configureDNSDomain}
+          onVerifySuccess={handleDNSVerifySuccess}
+        />
+
+        <ManageDomainsModal
+          isOpen={showManageDomainsModal}
+          onClose={() => setShowManageDomainsModal(false)}
+          onConfigureDNS={handleConfigureDNS}
+          onDomainsChange={handleDomainsChange}
+        />
+
+        {/* Tous les autres modals - logique inchangée */}
         {showDemosModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div className="bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
