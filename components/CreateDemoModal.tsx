@@ -2,7 +2,7 @@
 
 import { Dialog } from '@headlessui/react';
 import { useState } from 'react';
-import { X, Settings, Copy, ExternalLink, Rocket, CheckCircle, Plus, Minus } from 'lucide-react';
+import { X, Settings, Copy, ExternalLink, Rocket, CheckCircle, Plus, Minus, Globe } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -22,6 +22,7 @@ interface Props {
     showPopup: boolean;
     popupMessage: string;
     popupDelay: number;
+    customDomain?: string; // ← Ajout du custom domain
   };
 }
 
@@ -40,6 +41,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
         body: JSON.stringify({
           ...agentConfig,
           usageLimit,
+          customDomain: agentConfig.customDomain || undefined, // ← Envoi du custom domain
         }),
       });
 
@@ -51,9 +53,15 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
       }
 
       const data = await res.json();
+      
+      // ← Génération de l'URL correcte (custom domain ou défaut)
+      const demoLink = agentConfig.customDomain 
+        ? `https://${agentConfig.customDomain}`
+        : `${window.location.origin}/shared/${data.id}`;
+      
       setCreatedDemo({
         id: data.id,
-        link: `${window.location.origin}/shared/${data.id}`
+        link: demoLink
       });
 
       if (onCreateSuccess) {
@@ -153,6 +161,16 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                       <div className="flex justify-between">
                         <span className="text-gray-400 text-sm">Theme:</span>
                         <span className="text-white capitalize">{agentConfig.theme}</span>
+                      </div>
+                      {/* ← Affichage du custom domain */}
+                      <div className="flex justify-between">
+                        <span className="text-gray-400 text-sm">Domain:</span>
+                        <div className="flex items-center gap-2">
+                          <Globe className="text-blue-400" size={12} />
+                          <span className="text-white text-sm font-mono">
+                            {agentConfig.customDomain || 'Default'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="space-y-3">
@@ -265,7 +283,10 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                       Demo Created Successfully!
                     </h3>
                     <p className="text-gray-300">
-                      Your demo is ready to share with clients
+                      {agentConfig.customDomain 
+                        ? `Your demo is live at your custom domain`
+                        : `Your demo is ready to share with clients`
+                      }
                     </p>
                   </div>
                 </div>
@@ -273,8 +294,9 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                 {/* Enhanced Share Link Section */}
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-white mb-3">
-                      Share Link
+                    <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                      {agentConfig.customDomain && <Globe className="text-blue-400" size={16} />}
+                      {agentConfig.customDomain ? 'Custom Domain Link' : 'Share Link'}
                     </label>
                     <div className="flex gap-3">
                       <input
@@ -301,9 +323,10 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                     <div className="space-y-2">
                       {[
                         "Copy the link above",
-                        "Share it with your clients or prospects",
+                        "Share it with your clients or prospects", 
                         "They can test your AI agent directly",
-                        `Demo is limited to ${usageLimit} responses`
+                        `Demo is limited to ${usageLimit} responses`,
+                        ...(agentConfig.customDomain ? ["Using your professional custom domain"] : [])
                       ].map((step, index) => (
                         <div key={index} className="flex items-start gap-2">
                           <span className="text-blue-400 font-bold text-sm mt-0.5">{index + 1}.</span>
