@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     popupMessage,
     popupDelay,
     usageLimit,
+    customDomain, // ← Extraction du customDomain
   } = body;
 
   const finalLimit = Math.min(Number(usageLimit || 150), 150);
@@ -61,6 +62,10 @@ export async function POST(req: NextRequest) {
     showPopup: showPopup !== undefined ? showPopup : true,
     popupMessage: popupMessage || 'Hello! Need any help?',
     popupDelay: popupDelay || 2,
+    
+    // Custom Domain ← Ajout de la sauvegarde
+    customDomain: customDomain || undefined,
+    domainStatus: customDomain ? 'pending' : 'pending', // Status par défaut
     
     // Usage
     usageLimit: finalLimit,
