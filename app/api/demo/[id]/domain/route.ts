@@ -1,4 +1,4 @@
-// app/api/demo/[id]/domain/route.ts - Complete Updated API
+// app/api/demo/[id]/domain/route.ts - Updated for Cloudflare for SaaS
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { getServerSession } from 'next-auth';
@@ -9,13 +9,11 @@ import { promisify } from 'util';
 
 const resolveCname = promisify(dns.resolveCname);
 
-// Variables Cloudflare
 const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 const CF_ZONE_ID = process.env.CLOUDFLARE_ZONE_ID; // Zone ID pour testyourainow.com
 const KV_NAMESPACE_ID = 'dc4e744e9b4b4164bdcff1a618c39622';
 
-// PUT - Ajouter/Mettre à jour un domaine personnalisé
 export async function PUT(req: NextRequest, context: any) {
   const params = await context.params;
   await connectToDatabase();
@@ -34,7 +32,7 @@ export async function PUT(req: NextRequest, context: any) {
       return NextResponse.json({ error: 'Invalid domain format' }, { status: 400 });
     }
 
-    // Vérifier que la demo existe et appartient à l'utilisateur
+    // Vérifier que la demo existe
     const demo = await Demo.findOne({ 
       _id: demoId, 
       userId: session.user.id 
@@ -56,7 +54,7 @@ export async function PUT(req: NextRequest, context: any) {
       }, { status: 409 });
     }
 
-    // 1. Vérifier la configuration DNS
+    // 1. Vérifier la configuration DNS (garde ta logique existante)
     let dnsValid = false;
     try {
       const records = await resolveCname(customDomain);
@@ -79,17 +77,21 @@ export async function PUT(req: NextRequest, context: any) {
 
     console.log(`🚀 Creating Custom Hostname for ${customDomain}`);
 
-    // 2. Créer Custom Hostname dans Cloudflare for SaaS
+    // 2. Créer Custom Hostname dans Cloudflare for SaaS (ou vérifier s'il existe)
     const customHostnameResponse = await createCustomHostname(customDomain);
     
-    if (!customHostnameResponse.success) {
+    if (!customHostnameResponse.success && !customHostnameResponse.error.includes('Duplicate')) {
       console.error('❌ Failed to create custom hostname:', customHostnameResponse.error);
       return NextResponse.json({
-        error: 'Failed to configure domain in Cloudflare: ' + customHostnameResponse.error
+        error: 'Failed to configure domain in Cloudflare'
       }, { status: 500 });
     }
 
-    // 3. Ajouter le mapping dans Cloudflare KV
+    if (customHostnameResponse.error && customHostnameResponse.error.includes('Duplicate')) {
+      console.log(`✅ Custom Hostname already exists for ${customDomain}`);
+    }
+
+    // 3. Ajouter le mapping dans KV (garde tes functions existantes)
     const mapping = {
       demoId: demoId,
       userId: session.user.id,
@@ -119,7 +121,7 @@ export async function PUT(req: NextRequest, context: any) {
       domain: customDomain,
       status: 'verified',
       demoUrl: `https://${customDomain}/shared/${demoId}`,
-      customHostnameId: customHostnameResponse.id
+      customHostnameId: customHostnameResponse.id || 'existing'
     });
 
   } catch (error) {
@@ -199,12 +201,6 @@ export async function DELETE(req: NextRequest, context: any) {
   }
 }
 
-// Helper Functions
-function isValidDomain(domain: string): boolean {
-  const regex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
-  return regex.test(domain) && domain.length <= 253;
-}
-
 // Fonction pour créer un Custom Hostname
 async function createCustomHostname(hostname: string) {
   if (!CF_ZONE_ID || !CF_API_TOKEN) {
@@ -255,6 +251,12 @@ async function createCustomHostname(hostname: string) {
     console.error('❌ Custom Hostname creation error:', error);
     return { success: false, error: error?.message || 'Network error' };
   }
+}
+
+// Helper Functions (garde tes functions existantes + nouvelles)
+function isValidDomain(domain: string): boolean {
+  const regex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+  return regex.test(domain) && domain.length <= 253;
 }
 
 async function addDomainMapping(domain: string, mapping: any) {
