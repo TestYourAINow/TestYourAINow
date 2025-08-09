@@ -1,4 +1,4 @@
-// app/api/demo/[id]/domain/route.ts
+// app/api/demo/[id]/domain/route.ts - Complete Updated API
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { getServerSession } from 'next-auth';
@@ -9,10 +9,11 @@ import { promisify } from 'util';
 
 const resolveCname = promisify(dns.resolveCname);
 
-// Variables Cloudflare (à ajouter dans tes variables d'environnement)
+// Variables Cloudflare
 const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
-const KV_NAMESPACE_ID = 'dc4e744e9b4b4164bdcff1a618c39622'; // Ton ID KV
+const CF_ZONE_ID = process.env.CLOUDFLARE_ZONE_ID; // Zone ID pour testyourainow.com
+const KV_NAMESPACE_ID = 'dc4e744e9b4b4164bdcff1a618c39622';
 
 // PUT - Ajouter/Mettre à jour un domaine personnalisé
 export async function PUT(req: NextRequest, context: any) {
@@ -55,7 +56,7 @@ export async function PUT(req: NextRequest, context: any) {
       }, { status: 409 });
     }
 
-    // Vérifier la configuration DNS
+    // 1. Vérifier la configuration DNS
     let dnsValid = false;
     try {
       const records = await resolveCname(customDomain);
@@ -76,7 +77,19 @@ export async function PUT(req: NextRequest, context: any) {
       }, { status: 400 });
     }
 
-    // Ajouter le mapping dans Cloudflare KV
+    console.log(`🚀 Creating Custom Hostname for ${customDomain}`);
+
+    // 2. Créer Custom Hostname dans Cloudflare for SaaS
+    const customHostnameResponse = await createCustomHostname(customDomain);
+    
+    if (!customHostnameResponse.success) {
+      console.error('❌ Failed to create custom hostname:', customHostnameResponse.error);
+      return NextResponse.json({
+        error: 'Failed to configure domain in Cloudflare: ' + customHostnameResponse.error
+      }, { status: 500 });
+    }
+
+    // 3. Ajouter le mapping dans Cloudflare KV
     const mapping = {
       demoId: demoId,
       userId: session.user.id,
@@ -93,19 +106,20 @@ export async function PUT(req: NextRequest, context: any) {
       }, { status: 500 });
     }
 
-    // Mettre à jour la demo dans MongoDB
+    // 4. Mettre à jour la demo dans MongoDB
     demo.customDomain = customDomain;
     demo.domainStatus = 'verified';
     demo.domainVerifiedAt = new Date();
     await demo.save();
 
-    console.log(`✅ Domain ${customDomain} configured for demo ${demoId}`);
+    console.log(`✅ Domain ${customDomain} configured with Cloudflare for SaaS`);
 
     return NextResponse.json({
       success: true,
       domain: customDomain,
       status: 'verified',
-      demoUrl: `https://${customDomain}`
+      demoUrl: `https://${customDomain}/shared/${demoId}`,
+      customHostnameId: customHostnameResponse.id
     });
 
   } catch (error) {
@@ -139,7 +153,7 @@ export async function GET(req: NextRequest, context: any) {
     customDomain: demo.customDomain,
     domainStatus: demo.domainStatus || 'pending',
     domainVerifiedAt: demo.domainVerifiedAt,
-    demoUrl: demo.customDomain ? `https://${demo.customDomain}` : null
+    demoUrl: demo.customDomain ? `https://${demo.customDomain}/shared/${params.id}` : null
   });
 }
 
@@ -162,6 +176,9 @@ export async function DELETE(req: NextRequest, context: any) {
     if (!demo || !demo.customDomain) {
       return NextResponse.json({ error: 'Demo or domain not found' }, { status: 404 });
     }
+
+    // Supprimer le Custom Hostname dans Cloudflare
+    await removeCustomHostname(demo.customDomain);
 
     // Supprimer le mapping dans Cloudflare KV
     await removeDomainMapping(demo.customDomain);
@@ -186,6 +203,58 @@ export async function DELETE(req: NextRequest, context: any) {
 function isValidDomain(domain: string): boolean {
   const regex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
   return regex.test(domain) && domain.length <= 253;
+}
+
+// Fonction pour créer un Custom Hostname
+async function createCustomHostname(hostname: string) {
+  if (!CF_ZONE_ID || !CF_API_TOKEN) {
+    console.error('❌ Missing Cloudflare credentials for SaaS');
+    return { success: false, error: 'Missing Cloudflare configuration' };
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/custom_hostnames`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${CF_API_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          hostname: hostname,
+          ssl: {
+            method: 'http',
+            type: 'dv',
+            settings: {
+              http2: 'on',
+              min_tls_version: '1.2',
+              tls_1_3: 'on'
+            }
+          }
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('❌ Cloudflare Custom Hostname error:', data);
+      return { success: false, error: data.errors?.[0]?.message || 'API error' };
+    }
+
+    console.log(`✅ Custom Hostname created: ${hostname} → ${data.result.id}`);
+    return { 
+      success: true, 
+      id: data.result.id,
+      status: data.result.status,
+      verification_errors: data.result.verification_errors
+    };
+
+  } catch (error: any) {
+    console.error('❌ Custom Hostname creation error:', error);
+    return { success: false, error: error?.message || 'Network error' };
+  }
 }
 
 async function addDomainMapping(domain: string, mapping: any) {
@@ -239,5 +308,42 @@ async function removeDomainMapping(domain: string) {
     console.log(`🗑️ Removed KV mapping: ${domain}`);
   } catch (error) {
     console.error('❌ Failed to remove KV mapping:', error);
+  }
+}
+
+async function removeCustomHostname(hostname: string) {
+  if (!CF_ZONE_ID || !CF_API_TOKEN) return;
+
+  try {
+    // D'abord, chercher l'ID du Custom Hostname
+    const listResponse = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/custom_hostnames?hostname=${hostname}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${CF_API_TOKEN}`
+        }
+      }
+    );
+
+    if (listResponse.ok) {
+      const listData = await listResponse.json();
+      const customHostname = listData.result?.[0];
+      
+      if (customHostname) {
+        // Supprimer le Custom Hostname
+        await fetch(
+          `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/custom_hostnames/${customHostname.id}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${CF_API_TOKEN}`
+            }
+          }
+        );
+        console.log(`🗑️ Removed Custom Hostname: ${hostname}`);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Failed to remove Custom Hostname:', error);
   }
 }
