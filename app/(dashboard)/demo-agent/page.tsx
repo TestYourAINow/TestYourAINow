@@ -601,6 +601,7 @@ export default function DemoAgentPage() {
 
   // Utility functions
   const updateConfig = (key: keyof DemoConfig, value: any) => {
+    console.log('🔍 updateConfig appelé:', key, '=', value);
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
@@ -1322,6 +1323,7 @@ export default function DemoAgentPage() {
         )}
 
         {/* Tous les autres modals - logique inchangée */}
+        console.log('🔍 AVANT CreateDemoModal - config.customDomain:', config.customDomain);
         <CreateDemoModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
@@ -1339,6 +1341,7 @@ export default function DemoAgentPage() {
             showPopup: config.showPopup,
             popupMessage: config.popupMessage,
             popupDelay: config.popupDelay,
+            customDomain: config.customDomain,
           }}
           onCreateSuccess={async () => {
             const res = await fetch('/api/demo/list');

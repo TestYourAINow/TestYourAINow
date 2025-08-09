@@ -54,15 +54,48 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
 
       const data = await res.json();
       
-      // ← Génération de l'URL correcte (custom domain ou défaut)
-      const demoLink = agentConfig.customDomain 
-        ? `https://${agentConfig.customDomain}`
-        : `${window.location.origin}/shared/${data.id}`;
-      
-      setCreatedDemo({
-        id: data.id,
-        link: demoLink
-      });
+      // ← Si custom domain, configurer le domaine via l'API existante
+      if (agentConfig.customDomain) {
+        try {
+          const domainResponse = await fetch(`/api/demo/${data.id}/domain`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customDomain: agentConfig.customDomain
+            })
+          });
+
+          const domainResult = await domainResponse.json();
+          
+          if (domainResult.success) {
+            // Utiliser l'URL custom domain AVEC le path /shared/
+            setCreatedDemo({
+              id: data.id,
+              link: `https://${agentConfig.customDomain}/shared/${data.id}`
+            });
+          } else {
+            // Fallback sur URL par défaut si domain config échoue
+            console.warn('Domain configuration failed:', domainResult.error);
+            setCreatedDemo({
+              id: data.id,
+              link: `${window.location.origin}/shared/${data.id}`
+            });
+          }
+        } catch (domainError) {
+          console.error('Domain configuration error:', domainError);
+          // Fallback sur URL par défaut
+          setCreatedDemo({
+            id: data.id,
+            link: `${window.location.origin}/shared/${data.id}`
+          });
+        }
+      } else {
+        // Pas de custom domain, utiliser l'URL par défaut
+        setCreatedDemo({
+          id: data.id,
+          link: `${window.location.origin}/shared/${data.id}`
+        });
+      }
 
       if (onCreateSuccess) {
         await onCreateSuccess();

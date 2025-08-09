@@ -198,6 +198,7 @@ export default function DomainSelector({
                         <button
                           key={domain._id}
                           onClick={() => {
+                            console.log('🔍 Domaine sélectionné:', domain.domain);
                             onDomainChange(domain.domain);
                             setIsOpen(false);
                           }}
@@ -226,6 +227,7 @@ export default function DomainSelector({
                         <button
                           key={domain._id}
                           onClick={() => {
+                            console.log('🔍 Domaine sélectionné:', domain.domain);
                             onDomainChange(domain.domain);
                             setIsOpen(false);
                           }}
@@ -254,6 +256,7 @@ export default function DomainSelector({
                         <button
                           key={domain._id}
                           onClick={() => {
+                            console.log('🔍 Domaine sélectionné:', domain.domain);
                             onDomainChange(domain.domain);
                             setIsOpen(false);
                           }}
