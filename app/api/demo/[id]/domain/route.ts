@@ -1,4 +1,4 @@
-// app/api/demo/[id]/domain/route.ts - CODE COMPLET CORRIGÉ
+// app/api/demo/[id]/domain/route.ts - SOLUTION BÉTON AUTOMATIQUE
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { getServerSession } from 'next-auth';
@@ -9,13 +9,12 @@ import { promisify } from 'util';
 
 const resolveCname = promisify(dns.resolveCname);
 
-// ✅ VARIABLES D'ENVIRONNEMENT AVEC VALIDATION
+// ✅ VARIABLES D'ENVIRONNEMENT
 const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 const CF_ZONE_ID = process.env.CLOUDFLARE_ZONE_ID;
 const KV_NAMESPACE_ID = process.env.CLOUDFLARE_KV_NAMESPACE_ID || 'dc4e744e9b4b4164bdcff1a618c39622';
 
-// ✅ VALIDATION DES VARIABLES D'ENVIRONNEMENT
 function validateCloudflareConfig() {
   const missing = [];
   if (!CF_ACCOUNT_ID) missing.push('CLOUDFLARE_ACCOUNT_ID');
@@ -38,7 +37,6 @@ export async function PUT(req: NextRequest, context: any) {
   }
 
   try {
-    // ✅ VALIDATION DES VARIABLES D'ENVIRONNEMENT EN PREMIER
     validateCloudflareConfig();
 
     const { customDomain } = await req.json();
@@ -46,13 +44,11 @@ export async function PUT(req: NextRequest, context: any) {
 
     console.log(`🔍 Processing domain request for demo ${demoId}, domain: ${customDomain}`);
 
-    // Validation du domaine
     if (!customDomain || !isValidDomain(customDomain)) {
       console.error('❌ Invalid domain format:', customDomain);
       return NextResponse.json({ error: 'Invalid domain format' }, { status: 400 });
     }
 
-    // Vérifier que la demo existe
     const demo = await Demo.findOne({ 
       _id: demoId, 
       userId: session.user.id 
@@ -63,7 +59,6 @@ export async function PUT(req: NextRequest, context: any) {
       return NextResponse.json({ error: 'Demo not found' }, { status: 404 });
     }
 
-    // Vérifier que le domaine n'est pas déjà utilisé
     const existingDemo = await Demo.findOne({ 
       customDomain: customDomain,
       _id: { $ne: demoId }
@@ -101,13 +96,12 @@ export async function PUT(req: NextRequest, context: any) {
 
     console.log(`🚀 Creating Custom Hostname for ${customDomain}`);
 
-    // 2. Créer Custom Hostname dans Cloudflare for SaaS
+    // 2. ✅ SOLUTION BÉTON : Créer Custom Hostname avec configuration automatique
     const customHostnameResponse = await createCustomHostname(customDomain);
     
     if (!customHostnameResponse.success) {
       console.error('❌ Failed to create custom hostname:', customHostnameResponse.error);
       
-      // ✅ GESTION PLUS FINE DES ERREURS CLOUDFLARE
       if (customHostnameResponse.error.includes('already exists') || 
           customHostnameResponse.error.includes('Duplicate')) {
         console.log(`✅ Custom Hostname already exists for ${customDomain}, continuing...`);
@@ -138,13 +132,16 @@ export async function PUT(req: NextRequest, context: any) {
       }, { status: 500 });
     }
 
-    // 4. Mettre à jour la demo dans MongoDB
+    // 4. ✅ CONFIGURER UN PAGE RULE AUTOMATIQUE pour ce domaine
+    await createPageRule(customDomain);
+
+    // 5. Mettre à jour la demo dans MongoDB
     demo.customDomain = customDomain;
     demo.domainStatus = 'verified';
     demo.domainVerifiedAt = new Date();
     await demo.save();
 
-    console.log(`✅ Domain ${customDomain} configured successfully`);
+    console.log(`✅ Domain ${customDomain} configured successfully with automatic SSL`);
 
     return NextResponse.json({
       success: true,
@@ -157,7 +154,6 @@ export async function PUT(req: NextRequest, context: any) {
   } catch (error: any) {
     console.error('❌ Domain configuration error:', error);
     
-    // ✅ RETOUR D'ERREUR PLUS DÉTAILLÉ
     return NextResponse.json({
       error: 'Failed to configure domain',
       details: error.message || 'Unknown error',
@@ -218,13 +214,11 @@ export async function DELETE(req: NextRequest, context: any) {
       return NextResponse.json({ error: 'Demo or domain not found' }, { status: 404 });
     }
 
-    // Supprimer le Custom Hostname dans Cloudflare
+    // Supprimer Custom Hostname, KV mapping ET Page Rule
     await removeCustomHostname(demo.customDomain);
-
-    // Supprimer le mapping dans Cloudflare KV
     await removeDomainMapping(demo.customDomain);
+    await removePageRule(demo.customDomain);
 
-    // Nettoyer la demo
     demo.customDomain = null;
     demo.domainStatus = 'pending';
     demo.domainVerifiedAt = null;
@@ -240,14 +234,15 @@ export async function DELETE(req: NextRequest, context: any) {
   }
 }
 
-// ✅ FONCTION AMÉLIORÉE POUR CRÉER UN CUSTOM HOSTNAME
+// ✅ SOLUTION BÉTON : Custom Hostname avec SSL FLEXIBLE automatique
 async function createCustomHostname(hostname: string) {
-  console.log(`🔧 Creating Custom Hostname: ${hostname}`);
+  console.log(`🔧 Creating Custom Hostname with FLEXIBLE SSL: ${hostname}`);
   
   try {
     const requestBody = {
       hostname: hostname,
       ssl: {
+        // ✅ MODE FLEXIBLE = Cloudflare gère SSL côté client, HTTP vers l'origine
         method: 'http',
         type: 'dv',
         settings: {
@@ -255,7 +250,10 @@ async function createCustomHostname(hostname: string) {
           min_tls_version: '1.2',
           tls_1_3: 'on'
         }
-      }
+      },
+      // ✅ CONFIGURATION ORIGIN pour éviter les conflits SSL
+      custom_origin_server: 'testyourainow.com',
+      custom_origin_sni: 'testyourainow.com'
     };
 
     console.log('📤 Cloudflare API Request:', {
@@ -321,7 +319,101 @@ async function createCustomHostname(hostname: string) {
   }
 }
 
-// ✅ FONCTION AMÉLIORÉE POUR AJOUTER LE MAPPING KV
+// ✅ CRÉATION AUTOMATIQUE DE PAGE RULE pour forcer FLEXIBLE SSL
+async function createPageRule(hostname: string) {
+  console.log(`📋 Creating Page Rule for SSL Flexible: ${hostname}`);
+  
+  try {
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/pagerules`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${CF_API_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          targets: [
+            {
+              target: 'url',
+              constraint: {
+                operator: 'matches',
+                value: `${hostname}/*`
+              }
+            }
+          ],
+          actions: [
+            {
+              id: 'ssl',
+              value: 'flexible'
+            },
+            {
+              id: 'always_use_https',
+              value: 'on'
+            }
+          ],
+          priority: 1,
+          status: 'active'
+        })
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log(`✅ Page Rule created for ${hostname}: ${data.result?.id}`);
+    } else {
+      const errorText = await response.text();
+      console.log(`⚠️ Page Rule creation failed (non-critical): ${errorText}`);
+    }
+  } catch (error) {
+    console.log(`⚠️ Page Rule creation error (non-critical):`, error);
+  }
+}
+
+// ✅ SUPPRESSION DE PAGE RULE
+async function removePageRule(hostname: string) {
+  if (!CF_ZONE_ID || !CF_API_TOKEN) return;
+
+  try {
+    console.log(`🗑️ Removing Page Rules for: ${hostname}`);
+    
+    // Lister les page rules pour trouver celles du domaine
+    const listResponse = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/pagerules`,
+      {
+        headers: {
+          'Authorization': `Bearer ${CF_API_TOKEN}`
+        }
+      }
+    );
+
+    if (listResponse.ok) {
+      const listData = await listResponse.json();
+      const pageRules = listData.result || [];
+      
+      for (const rule of pageRules) {
+        const target = rule.targets?.[0]?.constraint?.value;
+        if (target && target.includes(hostname)) {
+          // Supprimer cette rule
+          await fetch(
+            `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/pagerules/${rule.id}`,
+            {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${CF_API_TOKEN}`
+              }
+            }
+          );
+          console.log(`✅ Removed Page Rule for ${hostname}: ${rule.id}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ Failed to remove Page Rules:', error);
+  }
+}
+
+// ✅ KV MAPPING
 async function addDomainMapping(domain: string, mapping: any) {
   console.log(`📝 Adding KV mapping: ${domain}`);
   
@@ -370,7 +462,6 @@ async function removeCustomHostname(hostname: string) {
   try {
     console.log(`🗑️ Removing Custom Hostname: ${hostname}`);
     
-    // D'abord, chercher l'ID du Custom Hostname
     const listResponse = await fetch(
       `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/custom_hostnames?hostname=${hostname}`,
       {
@@ -385,7 +476,6 @@ async function removeCustomHostname(hostname: string) {
       const customHostname = listData.result?.[0];
       
       if (customHostname) {
-        // Supprimer le Custom Hostname
         const deleteResponse = await fetch(
           `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/custom_hostnames/${customHostname.id}`,
           {
