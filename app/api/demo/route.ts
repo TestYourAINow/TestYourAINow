@@ -4,7 +4,6 @@ import { connectToDatabase } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import { Demo } from '@/models/Demo';
-import { makeToken } from "@/lib/makeToken";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -66,10 +65,6 @@ export async function POST(req: NextRequest) {
     // Usage
     usageLimit: finalLimit,
     usedCount: 0,
-    
-    // Public access
-    publicEnabled: true,
-    demoToken: makeToken(),
     
     // Dates
     createdAt: new Date(),

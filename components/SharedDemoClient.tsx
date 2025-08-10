@@ -21,8 +21,6 @@ interface DemoConfig {
   popupDelay: number;
   usageLimit: number;
   usedCount: number;
-  demoToken?: string;
-  publicEnabled?: boolean;
 }
 
 interface Message {
@@ -35,6 +33,7 @@ interface Message {
 interface Props {
   demo: DemoConfig;
   demoId: string;
+  demoToken: string;
 }
 
 // Composant TypingDots
@@ -302,7 +301,7 @@ const ChatWindow: React.FC<{
     );
   };
 
-export default function SharedDemoClient({ demo, demoId }: Props) {
+export default function SharedDemoClient({ demo, demoId, demoToken }: Props) {
   // États pour le chat
   const [messages, setMessages] = useState<Message[]>(() => {
     if (demo.showWelcome && demo.welcomeMessage) {
@@ -386,12 +385,14 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-public-kind': 'demo',        // 👈 nouveau
-          'x-demo-id': demoId,            // 👈 nouveau
-          'x-demo-token': demo.demoToken ?? '', // 👈 nouveau
+          // 🆕 Headers pour le mode public
+          'x-public-kind': 'demo',
+          'x-demo-id': demoId,
+          'x-demo-token': demoToken
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(body)
       });
+
       if (response.ok) {
         const data = await response.json();
 

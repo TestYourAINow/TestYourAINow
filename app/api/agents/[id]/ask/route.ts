@@ -2,60 +2,61 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { AgentKnowledge } from "@/models/AgentKnowledge";
-import { Demo } from "@/models/Demo"; // +++
+import { Demo } from "@/models/Demo";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { createAgentOpenAI } from "@/lib/openai";
+import { createAgentOpenAI, createAgentOpenAIForWebhook } from "@/lib/openai";
 
 type IntegrationFile = { name: string; size: number; path: string; url: string };
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
-type DemoType = {
+
+// 🆕 Interface pour typer le Demo
+interface DemoDocument {
   _id: string;
+  userId: string;
+  name: string;
   agentId: string;
   demoToken: string;
-  publicEnabled?: boolean;
-};
+  publicEnabled: boolean;
+  // ... autres champs si nécessaire
+}
 
 export async function POST(req: NextRequest, context: any) {
   try {
     // Récupérer les paramètres
     const params = await context.params;
+    const { id } = params;
     
     await connectToDatabase();
 
-    const agentId = params.id;
-
-    // --- Accès public via token de démo ---
-    const kind = req.headers.get("x-public-kind");
-    const demoId = req.headers.get("x-demo-id") || "";
-    const demoToken = req.headers.get("x-demo-token") || "";
-
+    // 🆕 ÉTAPE 1: Vérifier si c'est un appel public (demo)
+    const publicKind = req.headers.get('x-public-kind');
+    const demoId = req.headers.get('x-demo-id');
+    const demoToken = req.headers.get('x-demo-token');
+    
     let isPublicOK = false;
-    if (kind === "demo" && demoId && demoToken) {
-      try {
-        const demo = await Demo.findById(demoId).lean() as DemoType | null;
-        if (
-          demo &&
-          (demo.publicEnabled ?? true) && // ← défaut à true si undefined
-          String(demo.agentId) === String(agentId) &&
-          demo.demoToken === demoToken
-        ) {
-          isPublicOK = true;
-          // (optionnel) rate-limit ici
-        }
-      } catch {
-        /* ignore */
-      }
-    }
+    let session = null;
 
-    // --- Auth seulement si pas public ---
-    let userId: string | null = null;
-    if (!isPublicOK) {
-      const session = await getServerSession(authOptions);
-      if (!session?.user?.id) {
+    if (publicKind === 'demo' && demoId && demoToken) {
+      // Mode public : valider le token de la démo
+      console.log('🔓 Mode public détecté, validation du token...');
+      
+      // ✅ Fix TypeScript : typer le demo
+      const demo = await Demo.findById(demoId).lean() as DemoDocument | null;
+      
+      if (demo && demo.demoToken === demoToken && demo.publicEnabled) {
+        isPublicOK = true;
+        console.log('✅ Token valide, accès public autorisé');
+      } else {
+        console.log('❌ Token invalide ou démo désactivée');
+        return NextResponse.json({ error: "Invalid demo token" }, { status: 401 });
+      }
+    } else {
+      // Mode privé : vérifier la session
+      session = await getServerSession(authOptions);
+      if (!session || !session.user?.email || !session.user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-      userId = session.user.id;
     }
 
     const body = await req.json();
@@ -67,39 +68,74 @@ export async function POST(req: NextRequest, context: any) {
       return NextResponse.json({ error: "Message is required." }, { status: 400 });
     }
 
-    // 1. Récupérer l'agent selon le mode (public ou privé)
-    const agent = isPublicOK
-      ? await Agent.findOne({ _id: agentId }) // public: pas de filtre userId
-      : await Agent.findOne({ _id: agentId, userId }); // privé: comme avant
+    // 🆕 ÉTAPE 2: Récupérer l'agent selon le mode (public ou privé)
+    let agent;
     
+    if (isPublicOK) {
+      // Mode public : récupérer l'agent sans vérifier le userId
+      agent = await Agent.findOne({ _id: id });
+      console.log('🔓 Agent récupéré en mode public:', !!agent);
+    } else {
+      // Mode privé : récupérer l'agent avec vérification du userId
+      // ✅ Fix TypeScript : vérifier que session n'est pas null
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      agent = await Agent.findOne({ _id: id, userId: session.user.id });
+    }
+
     if (!agent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+      return NextResponse.json({ error: "Agent not found." }, { status: 404 });
     }
 
-    // 2. MAINTENANT on peut créer OpenAI avec l'agent
-    const { openai, error } = await createAgentOpenAI(agent);
+    // 🆕 ÉTAPE 3: Créer l'instance OpenAI selon le mode
+    let openaiResult;
     
-    if (!openai) {
-      return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
+    if (isPublicOK) {
+      // Mode public : utiliser la fonction webhook (sans session)
+      console.log('🔓 Création OpenAI en mode public...');
+      openaiResult = await createAgentOpenAIForWebhook(agent);
+    } else {
+      // Mode privé : utiliser la fonction normale (avec session)
+      openaiResult = await createAgentOpenAI(agent);
     }
 
-    // 3. Connaissances internes (fichiers) - LIMITE INTELLIGENTE
-    const knowledge = await AgentKnowledge.find({ agentId }).sort({ createdAt: -1 });
+    // Gérer les erreurs OpenAI
+    if (!openaiResult.openai) {
+      console.error('❌ Erreur création OpenAI:', openaiResult.error);
+      
+      if (isPublicOK) {
+        return NextResponse.json(
+          { error: `Mode public: ${openaiResult.error}` },
+          { status: 400 }
+        );
+      } else {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+    }
+
+    const openai = openaiResult.openai;
+    console.log('✅ Instance OpenAI créée avec succès');
+
+    // Le reste du code reste identique...
+    // Connaissances internes (fichiers) - LIMITE INTELLIGENTE
+    const knowledge = await AgentKnowledge.find({ agentId: id }).sort({ createdAt: -1 });
     
-    const MAX_CONTENT_PER_FILE = 15000; // 15k caractères par fichier
-    const MAX_TOTAL_KNOWLEDGE = 80000;  // 80k caractères total (pour éviter de dépasser les limites OpenAI)
+    const MAX_CONTENT_PER_FILE = 15000;
+    const MAX_TOTAL_KNOWLEDGE = 80000;
     
-    console.log(`📚 Found ${knowledge.length} knowledge entries for agent ${agentId}`);
+    console.log(`📚 Found ${knowledge.length} knowledge entries for agent ${id}`);
     
     let totalUsedChars = 0;
     const knowledgeText = knowledge
       .map((k) => {
-        // Si on a déjà atteint la limite totale, arrêter
         if (totalUsedChars >= MAX_TOTAL_KNOWLEDGE) {
           return null;
         }
         
-        // Calculer combien on peut encore utiliser
         const remainingChars = MAX_TOTAL_KNOWLEDGE - totalUsedChars;
         const maxForThisFile = Math.min(MAX_CONTENT_PER_FILE, remainingChars);
         
@@ -118,12 +154,12 @@ export async function POST(req: NextRequest, context: any) {
         
         return `${header}\n${content}${footer}\n`;
       })
-      .filter(Boolean) // Enlever les null
+      .filter(Boolean)
       .join("\n");
     
     console.log(`📊 Knowledge summary: ${totalUsedChars} chars used, ${knowledge.length} files processed`);
 
-    // 4. Intégrations
+    // Intégrations
     const integrationsText = (agent.integrations || [])
       .map((i: any) => {
         if (i.type === "webhook") {
@@ -139,7 +175,7 @@ export async function POST(req: NextRequest, context: any) {
       .filter(Boolean)
       .join("\n\n");
 
-    // 5. Construction du message avec mémoire
+    // Construction du message avec mémoire
     const messages: ChatMessage[] = [
       { role: "system", content: agent.finalPrompt || "" },
       { role: "system", content: `Voici ce que tu dois savoir :\n${knowledgeText}` },
@@ -156,7 +192,7 @@ export async function POST(req: NextRequest, context: any) {
     messages.push(...previousMessages);
     messages.push({ role: "user", content: userMessage });
 
-    // 6. Appel OpenAI
+    // Appel OpenAI
     const completion = await openai.chat.completions.create({
       model: agent.openaiModel,
       temperature: agent.temperature,
@@ -166,6 +202,7 @@ export async function POST(req: NextRequest, context: any) {
 
     const reply = completion.choices[0]?.message?.content || "Je n'ai pas pu répondre.";
     return NextResponse.json({ reply });
+    
   } catch (error: any) {
     console.error("Agent ask error:", error);
     

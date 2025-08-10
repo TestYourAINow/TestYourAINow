@@ -13,6 +13,8 @@ interface DemoDocument {
   userId: string;
   name: string;
   agentId: string;
+  demoToken: string; // 🆕
+  publicEnabled: boolean; // 🆕
   theme: string;
   color: string;
   avatarUrl?: string;
@@ -26,8 +28,6 @@ interface DemoDocument {
   popupDelay?: number;
   usageLimit: number;
   usedCount?: number;
-  demoToken?: string;
-  publicEnabled?: boolean;
   createdAt: Date;
   expiresAt: Date;
   __v: number;
@@ -41,6 +41,11 @@ export default async function SharedDemoPage({ params }: Props) {
   const demoDoc = await Demo.findById(id).lean() as DemoDocument | null;
   
   if (!demoDoc || new Date(demoDoc.expiresAt).getTime() < Date.now()) {
+    return notFound();
+  }
+
+  // 🆕 Vérifier si l'accès public est activé
+  if (!demoDoc.publicEnabled) {
     return notFound();
   }
 
@@ -61,11 +66,13 @@ export default async function SharedDemoPage({ params }: Props) {
     popupDelay: demoDoc.popupDelay || 2,
     usageLimit: demoDoc.usageLimit,
     usedCount: demoDoc.usedCount || 0,
-    demoToken: demoDoc.demoToken,
-    publicEnabled: demoDoc.publicEnabled !== false,
   };
 
   return (
-    <SharedDemoClient demo={demo} demoId={id} />
+    <SharedDemoClient 
+      demo={demo} 
+      demoId={id} 
+      demoToken={demoDoc.demoToken} // 🆕 Passer le token au client
+    />
   );
 }
