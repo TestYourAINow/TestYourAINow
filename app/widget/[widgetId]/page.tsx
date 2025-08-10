@@ -1,5 +1,3 @@
-'use client'
-
 import { ChatbotConfig } from "@/models/ChatbotConfig";
 import { connectToDatabase } from "@/lib/db";
 import { ChatWidgetConfig } from "@/types/ChatWidgetConfig";
@@ -14,28 +12,9 @@ export default async function WidgetPage({ params }: { params: Promise<{ widgetI
   const config = JSON.parse(JSON.stringify(rawConfig));
 
   return (
-    <>
-      <style jsx global>{`
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          background: transparent !important;
-          overflow: hidden;
-        }
-        
-        /* Widget en position relative dans l'iframe */
-        .chat-widget {
-          position: relative !important;
-          bottom: auto !important;
-          right: auto !important;
-          top: auto !important;
-          left: auto !important;
-        }
-      `}</style>
-      
-      <main className="w-full h-full overflow-hidden">
-        <ChatWidget config={config} />
-      </main>
-    </>
+    <main style={{ background: 'transparent' }} className="w-full h-full overflow-hidden">
+      {/* Ici on ne met QUE la fenêtre, PAS le bouton */}
+      <ChatWidget config={config} />
+    </main>
   );
 }

@@ -19,6 +19,11 @@ window.AIChatWidget = {
     iframe.style.borderRadius = "18px";
     iframe.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.3)";
     iframe.style.transition = "all 0.3s ease";
+    
+    // 🆕 AJOUTÉ - Rendre l'iframe transparente
+    iframe.style.backgroundColor = "transparent";
+    iframe.setAttribute('allowtransparency', 'true');
+    iframe.style.overflow = "hidden";
 
     const mediaQuery = window.matchMedia("(max-width: 600px)");
     function adaptSize() {
