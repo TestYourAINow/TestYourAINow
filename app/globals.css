@@ -13,10 +13,13 @@ body {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-body:has(.widget-page) {
+.widget-page {
   background: transparent !important;
 }
 
+html:has(.widget-page) body {
+  background: transparent !important;
+}
 
 html {
   scroll-behavior: smooth;
