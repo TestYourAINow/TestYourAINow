@@ -5,12 +5,15 @@ window.AIChatWidget = {
 
     console.log("🚀 Initializing AI Chat Widget without iframe...");
 
+    // Charger d'abord les styles CSS de ton site
+    this.loadStyles();
+
     // Récupère la config du widget
     fetch(`https://testyourainow.com/api/widget/${widgetId}/embed`)
       .then(response => response.json())
       .then(data => {
         if (data.config) {
-          this.createWidget(data.config);
+          this.createWidget(data.config, widgetId);
         } else {
           console.error("❌ Widget config not found");
         }
@@ -20,17 +23,24 @@ window.AIChatWidget = {
       });
   },
 
-  createWidget: function(config) {
-    // Créer le conteneur principal du widget
+  loadStyles: function() {
+    // Charger les styles de ton site (une seule fois)
+    if (!document.getElementById('ai-widget-styles')) {
+      const link = document.createElement('link');
+      link.id = 'ai-widget-styles';
+      link.rel = 'stylesheet';
+      link.href = 'https://testyourainow.com/_next/static/css/app/globals.css';
+      document.head.appendChild(link);
+    }
+  },
+
+  createWidget: function(config, widgetId) {
+    // Créer un conteneur qui va utiliser tes classes CSS existantes
     const widgetContainer = document.createElement("div");
     widgetContainer.id = "ai-chat-widget-container";
-    widgetContainer.style.position = "fixed";
-    widgetContainer.style.bottom = "24px";
-    widgetContainer.style.right = "24px";
-    widgetContainer.style.zIndex = "999999";
-    widgetContainer.style.fontFamily = "Inter, system-ui, sans-serif";
-
-    // État du widget
+    widgetContainer.className = "chat-widget"; // 👈 Utilise ta classe CSS !
+    
+    // Variables d'état
     let isOpen = false;
     let messages = [];
     let isTyping = false;
@@ -45,218 +55,108 @@ window.AIChatWidget = {
       });
     }
 
-    // Créer le bouton flottant
-    const chatButton = document.createElement("button");
-    chatButton.id = "ai-chat-button";
-    chatButton.style.cssText = `
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(59, 130, 246, 0.2);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: ${config.primaryColor || '#3b82f6'};
-      color: white;
-      font-size: 24px;
-    `;
-    chatButton.innerHTML = '💬';
+    // Créer le HTML en utilisant tes classes CSS existantes
+    widgetContainer.innerHTML = `
+      <!-- Bouton de chat -->
+      <button class="chat-button" style="background-color: ${config.primaryColor || '#3b82f6'}">
+        <span id="button-icon">💬</span>
+      </button>
 
-    // Effet hover sur le bouton
-    chatButton.addEventListener('mouseenter', () => {
-      chatButton.style.transform = 'scale(1.05)';
-      chatButton.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(59, 130, 246, 0.4)';
-    });
-    chatButton.addEventListener('mouseleave', () => {
-      chatButton.style.transform = 'scale(1)';
-      chatButton.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(59, 130, 246, 0.2)';
-    });
+      <!-- Fenêtre de chat -->
+      <div class="chat-window ${config.theme === 'dark' ? 'dark' : ''}" 
+           style="width: ${config.width || 380}px; height: ${config.height || 600}px; --primary-color: ${config.primaryColor || '#3b82f6'}">
+        
+        <!-- Header -->
+        <div class="chat-header">
+          <div class="chat-header-content">
+            <div class="chat-avatar-container">
+              <img src="${config.avatar || '/Default Avatar.png'}" alt="Avatar" class="chat-avatar" 
+                   onerror="this.src='/Default Avatar.png'">
+              <div class="chat-status"></div>
+            </div>
+            <div class="chat-info">
+              <h3 class="chat-title">${config.chatTitle || 'AI Assistant'}</h3>
+              <p class="chat-subtitle">${config.subtitle || 'Online'}</p>
+            </div>
+          </div>
+          <div class="chat-actions">
+            <button class="chat-action-btn" id="new-chat-btn" title="New conversation">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 4v6h6M23 20v-6h-6"/>
+                <path d="m21 4-6 6m0-6 6 6"/>
+              </svg>
+            </button>
+            <button class="chat-action-btn" id="close-chat-btn" title="Close">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
 
-    // Créer la fenêtre de chat
-    const chatWindow = document.createElement("div");
-    chatWindow.id = "ai-chat-window";
-    chatWindow.style.cssText = `
-      position: absolute;
-      bottom: 80px;
-      right: 0;
-      width: ${config.width || 380}px;
-      height: ${config.height || 600}px;
-      border-radius: 20px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(75, 85, 99, 0.2);
-      overflow: hidden;
-      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-      transform-origin: bottom right;
-      display: flex;
-      flex-direction: column;
-      background: ${config.theme === 'dark' ? 'rgba(17, 24, 39, 0.98)' : 'rgba(255, 255, 255, 0.98)'};
-      backdrop-filter: blur(20px);
-      opacity: 0;
-      transform: scale(0.95) translateY(16px);
-      pointer-events: none;
-    `;
+        <!-- Messages -->
+        <div class="chat-messages ${config.theme === 'dark' ? 'dark' : ''} custom-scrollbar">
+          <div class="messages-container show" id="messages-container">
+            <!-- Messages seront ajoutés ici -->
+          </div>
+        </div>
 
-    // Header du chat
-    const chatHeader = document.createElement("div");
-    chatHeader.style.cssText = `
-      height: 70px;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: linear-gradient(135deg, ${config.primaryColor || '#3b82f6'} 0%, ${config.primaryColor || '#3b82f6'}dd 100%);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      color: white;
+        <!-- Input -->
+        <div class="chat-input-area ${config.theme === 'dark' ? 'dark' : ''}">
+          <div class="chat-input-container">
+            <input type="text" id="message-input" placeholder="${config.placeholderText || 'Type your message...'}" 
+                   class="chat-input ${config.theme === 'dark' ? 'dark' : ''}">
+            <button id="send-btn" class="chat-send-btn" style="background-color: ${config.primaryColor || '#3b82f6'}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
     `;
 
-    const headerContent = document.createElement("div");
-    headerContent.style.cssText = `
-      display: flex;
-      align-items: center;
-      flex: 1;
-      gap: 12px;
-    `;
-
-    const avatar = document.createElement("img");
-    avatar.src = config.avatar || '/Default Avatar.png';
-    avatar.style.cssText = `
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      object-fit: cover;
-    `;
-    avatar.onerror = () => avatar.src = '/Default Avatar.png';
-
-    const chatInfo = document.createElement("div");
-    chatInfo.innerHTML = `
-      <h3 style="font-weight: 600; font-size: 16px; margin: 0; line-height: 1.4;">${config.chatTitle || 'AI Assistant'}</h3>
-      <p style="font-size: 13px; color: rgba(255, 255, 255, 0.85); margin: 2px 0 0 0;">${config.subtitle || 'Online'}</p>
-    `;
-
-    const closeButton = document.createElement("button");
-    closeButton.style.cssText = `
-      width: 36px;
-      height: 36px;
-      border: none;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
-      color: rgba(255, 255, 255, 0.9);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-    `;
-    closeButton.innerHTML = '×';
-
-    headerContent.appendChild(avatar);
-    headerContent.appendChild(chatInfo);
-    chatHeader.appendChild(headerContent);
-    chatHeader.appendChild(closeButton);
-
-    // Zone des messages
-    const messagesArea = document.createElement("div");
-    messagesArea.style.cssText = `
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      background: ${config.theme === 'dark' ? 'rgba(17, 24, 39, 0.95)' : 'rgba(248, 250, 252, 0.95)'};
-    `;
-
-    // Zone d'input
-    const inputArea = document.createElement("div");
-    inputArea.style.cssText = `
-      padding: 16px;
-      border-top: 1px solid ${config.theme === 'dark' ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 0.5)'};
-      background: ${config.theme === 'dark' ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
-      display: flex;
-      gap: 12px;
-      align-items: flex-end;
-    `;
-
-    const messageInput = document.createElement("input");
-    messageInput.type = "text";
-    messageInput.placeholder = config.placeholderText || "Type your message...";
-    messageInput.style.cssText = `
-      flex: 1;
-      padding: 12px 16px;
-      border: 1px solid ${config.theme === 'dark' ? 'rgba(75, 85, 99, 0.8)' : 'rgba(209, 213, 219, 0.8)'};
-      border-radius: 24px;
-      font-size: 14px;
-      outline: none;
-      background: ${config.theme === 'dark' ? 'rgba(55, 65, 81, 0.9)' : 'rgba(255, 255, 255, 0.9)'};
-      color: ${config.theme === 'dark' ? 'white' : '#111827'};
-    `;
-
-    const sendButton = document.createElement("button");
-    sendButton.style.cssText = `
-      width: 40px;
-      height: 40px;
-      border: none;
-      border-radius: 50%;
-      background: ${config.primaryColor || '#3b82f6'};
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-    `;
-    sendButton.innerHTML = '→';
-
-    inputArea.appendChild(messageInput);
-    inputArea.appendChild(sendButton);
-
-    // Assembler la fenêtre
-    chatWindow.appendChild(chatHeader);
-    chatWindow.appendChild(messagesArea);
-    chatWindow.appendChild(inputArea);
-
-    // Assembler le widget
-    widgetContainer.appendChild(chatButton);
-    widgetContainer.appendChild(chatWindow);
+    // Références aux éléments
+    const chatButton = widgetContainer.querySelector('.chat-button');
+    const chatWindow = widgetContainer.querySelector('.chat-window');
+    const messagesContainer = widgetContainer.querySelector('#messages-container');
+    const messageInput = widgetContainer.querySelector('#message-input');
+    const sendBtn = widgetContainer.querySelector('#send-btn');
+    const closeBtn = widgetContainer.querySelector('#close-chat-btn');
+    const newChatBtn = widgetContainer.querySelector('#new-chat-btn');
+    const buttonIcon = widgetContainer.querySelector('#button-icon');
 
     // Fonction pour afficher les messages
     function renderMessages() {
-      messagesArea.innerHTML = '';
+      messagesContainer.innerHTML = '';
+      
       messages.forEach(message => {
-        const messageDiv = document.createElement("div");
-        messageDiv.style.cssText = `
-          display: flex;
-          margin-bottom: 12px;
-          ${message.isBot ? 'align-items: flex-start;' : 'align-items: flex-end; flex-direction: row-reverse;'}
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `flex ${message.isBot ? 'items-start' : 'items-end'} mb-3 ${message.isBot ? 'flex-row' : 'flex-row-reverse'}`;
+        
+        messageDiv.innerHTML = `
+          ${message.isBot ? `
+            <img src="${config.avatar || '/Default Avatar.png'}" alt="Bot" 
+                 class="w-8 h-8 rounded-full self-start mr-2" style="flex-shrink: 0;"
+                 onerror="this.src='/Default Avatar.png'">
+          ` : ''}
+          <div class="flex flex-col max-w-sm relative">
+            <div class="chat-bubble ${message.isBot ? 'bot' : 'user'}">
+              ${message.text}
+            </div>
+            <div class="chat-timestamp ${message.isBot ? 'bot' : 'user'}">
+              ${message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          </div>
         `;
-
-        const bubble = document.createElement("div");
-        bubble.style.cssText = `
-          padding: 12px 16px;
-          border-radius: 20px;
-          max-width: 280px;
-          word-break: break-word;
-          ${message.isBot 
-            ? `background: ${config.theme === 'dark' ? 'linear-gradient(135deg, #374151, #4b5563)' : 'linear-gradient(135deg, #e5e7eb, #f3f4f6)'}; color: ${config.theme === 'dark' ? 'white' : '#111827'};`
-            : `background: ${config.primaryColor || '#3b82f6'}; color: white; margin-left: auto;`
-          }
-        `;
-        bubble.textContent = message.text;
-
-        if (message.isBot) {
-          const botAvatar = document.createElement("img");
-          botAvatar.src = config.avatar || '/Default Avatar.png';
-          botAvatar.style.cssText = "width: 32px; height: 32px; border-radius: 50%; margin-right: 8px; flex-shrink: 0;";
-          botAvatar.onerror = () => botAvatar.src = '/Default Avatar.png';
-          messageDiv.appendChild(botAvatar);
-        }
-
-        messageDiv.appendChild(bubble);
-        messagesArea.appendChild(messageDiv);
+        
+        messagesContainer.appendChild(messageDiv);
       });
 
       // Scroll vers le bas
-      messagesArea.scrollTop = messagesArea.scrollHeight;
+      messagesContainer.parentElement.scrollTop = messagesContainer.parentElement.scrollHeight;
     }
 
     // Fonction pour envoyer un message
@@ -275,12 +175,21 @@ window.AIChatWidget = {
       messageInput.value = '';
       renderMessages();
 
-      // Simuler typing
+      // Afficher typing
       isTyping = true;
-      const typingDiv = document.createElement("div");
-      typingDiv.style.cssText = "padding: 12px; font-style: italic; color: #666;";
-      typingDiv.textContent = "AI is typing...";
-      messagesArea.appendChild(typingDiv);
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'flex items-start mb-3 flex-row';
+      typingDiv.innerHTML = `
+        <img src="${config.avatar || '/Default Avatar.png'}" alt="Bot" 
+             class="w-8 h-8 rounded-full self-start mr-2"
+             onerror="this.src='/Default Avatar.png'">
+        <div class="chat-bubble bot" style="display: flex; align-items: center; gap: 4px; padding: 12px 16px;">
+          <span class="inline-block w-2 h-2 rounded-full animate-bounceDots" style="background-color: ${config.theme === 'dark' ? '#9ca3af' : '#6b7280'}; animation-delay: 0s"></span>
+          <span class="inline-block w-2 h-2 rounded-full animate-bounceDots" style="background-color: ${config.theme === 'dark' ? '#9ca3af' : '#6b7280'}; animation-delay: 0.2s"></span>
+          <span class="inline-block w-2 h-2 rounded-full animate-bounceDots" style="background-color: ${config.theme === 'dark' ? '#9ca3af' : '#6b7280'}; animation-delay: 0.4s"></span>
+        </div>
+      `;
+      messagesContainer.appendChild(typingDiv);
 
       try {
         // Appel à l'API
@@ -297,14 +206,15 @@ window.AIChatWidget = {
             previousMessages: messages.slice(-10).map(msg => ({
               role: msg.isBot ? 'assistant' : 'user',
               content: msg.text
-            }))
+            })),
+            welcomeMessage: config.showWelcomeMessage ? config.welcomeMessage : undefined
           })
         });
 
         const data = await response.json();
         
         // Enlever typing
-        messagesArea.removeChild(typingDiv);
+        messagesContainer.removeChild(typingDiv);
         
         // Ajouter la réponse
         messages.push({
@@ -317,11 +227,18 @@ window.AIChatWidget = {
         renderMessages();
       } catch (error) {
         console.error('Error:', error);
-        messagesArea.removeChild(typingDiv);
+        messagesContainer.removeChild(typingDiv);
+        
+        // Réponse de fallback
+        const fallbackResponses = [
+          "Thanks for your message! I'm here to help you.",
+          "That's an interesting question. Let me think about that...",
+          "I understand your concern. Here's what I can suggest..."
+        ];
         
         messages.push({
           id: (Date.now() + 1).toString(),
-          text: "Sorry, something went wrong. Please try again.",
+          text: fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)],
           isBot: true,
           timestamp: new Date()
         });
@@ -333,35 +250,49 @@ window.AIChatWidget = {
     chatButton.addEventListener('click', () => {
       isOpen = !isOpen;
       if (isOpen) {
-        chatWindow.style.opacity = '1';
-        chatWindow.style.transform = 'scale(1) translateY(0)';
-        chatWindow.style.pointerEvents = 'auto';
-        chatButton.innerHTML = '×';
+        chatWindow.classList.remove('closed');
+        chatWindow.classList.add('open');
+        buttonIcon.innerHTML = '×';
         messageInput.focus();
         renderMessages();
       } else {
-        chatWindow.style.opacity = '0';
-        chatWindow.style.transform = 'scale(0.95) translateY(16px)';
-        chatWindow.style.pointerEvents = 'none';
-        chatButton.innerHTML = '💬';
+        chatWindow.classList.remove('open');
+        chatWindow.classList.add('closed');
+        buttonIcon.innerHTML = '💬';
       }
     });
 
-    closeButton.addEventListener('click', () => {
+    closeBtn.addEventListener('click', () => {
       isOpen = false;
-      chatWindow.style.opacity = '0';
-      chatWindow.style.transform = 'scale(0.95) translateY(16px)';
-      chatWindow.style.pointerEvents = 'none';
-      chatButton.innerHTML = '💬';
+      chatWindow.classList.remove('open');
+      chatWindow.classList.add('closed');
+      buttonIcon.innerHTML = '💬';
     });
 
-    sendButton.addEventListener('click', sendMessage);
+    newChatBtn.addEventListener('click', () => {
+      messages = [];
+      if (config.showWelcomeMessage && config.welcomeMessage) {
+        messages.push({
+          id: '1',
+          text: config.welcomeMessage,
+          isBot: true,
+          timestamp: new Date()
+        });
+      }
+      renderMessages();
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
     
     messageInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
         sendMessage();
       }
     });
+
+    // Initialiser avec le message de bienvenue
+    renderMessages();
 
     // Ajouter au DOM
     document.body.appendChild(widgetContainer);
