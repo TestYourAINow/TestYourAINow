@@ -26,6 +26,8 @@ interface DemoDocument {
   popupDelay?: number;
   usageLimit: number;
   usedCount?: number;
+  demoToken?: string;
+  publicEnabled?: boolean;
   createdAt: Date;
   expiresAt: Date;
   __v: number;
@@ -59,6 +61,8 @@ export default async function SharedDemoPage({ params }: Props) {
     popupDelay: demoDoc.popupDelay || 2,
     usageLimit: demoDoc.usageLimit,
     usedCount: demoDoc.usedCount || 0,
+    demoToken: demoDoc.demoToken,
+    publicEnabled: demoDoc.publicEnabled !== false,
   };
 
   return (

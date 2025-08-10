@@ -21,6 +21,8 @@ interface DemoConfig {
   popupDelay: number;
   usageLimit: number;
   usedCount: number;
+  demoToken?: string;
+  publicEnabled?: boolean;
 }
 
 interface Message {
@@ -97,7 +99,7 @@ const ChatHeader: React.FC<{
   onClose: () => void;
 }> = ({ config, onNewChat, onClose }) => {
   const defaultAvatarSrc = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSA5VjIyQzE5IDIyIDE3IDIxIDE1Ljk5IDE5LjM2QzE2LjA1IDE5LjkgMTYgMTkuOTEgMTYgMjBDMTYgMjEuMSAxNS4xIDIyIDE0IDIySDE0QzguOSAyMiA4IDIxLjEgOCAyMFYxNEgxMFYxMEwxMiA5TDE0IDlMMTYgMTBWMTRIMThWMTBMMjAgOUgyMSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
-  
+
   return (
     <div className="chat-header">
       <div className="chat-header-content">
@@ -166,139 +168,139 @@ const ChatWindow: React.FC<{
   messagesEndRef,
   inputRef
 }) => {
-  const defaultBotAvatarSrc = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS44IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
-  
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      onSendMessage();
-    }
-  };
+    const defaultBotAvatarSrc = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS44IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
 
-  const isLimitReached = usedCount >= config.usageLimit;
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        onSendMessage();
+      }
+    };
 
-  return (
-    <div
-      className={`chat-window ${isOpen ? 'open' : 'closed'} ${config.theme === 'dark' ? 'dark' : ''}`}
-      style={{
-        width: `480px`,
-        height: `650px`,
-        '--primary-color': config.color
-      } as React.CSSProperties}
-    >
-      {/* Header */}
-      <ChatHeader
-        config={config}
-        onNewChat={onNewChat}
-        onClose={onClose}
-      />
+    const isLimitReached = usedCount >= config.usageLimit;
 
-      {/* Usage Counter */}
-      <div className={`px-4 py-2 border-b text-xs ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-        <div className="flex items-center justify-between">
-          <span>Messages used: {usedCount} / {config.usageLimit}</span>
-          <div className="flex items-center gap-1">
-            <div className={`w-2 h-2 rounded-full ${isLimitReached ? 'bg-red-500' : usedCount / config.usageLimit > 0.8 ? 'bg-yellow-500' : 'bg-green-500'}`} />
-            <span className={isLimitReached ? 'text-red-500' : usedCount / config.usageLimit > 0.8 ? 'text-yellow-500' : 'text-green-500'}>
-              {isLimitReached ? 'Limite atteinte' : 'Available'}
-            </span>
+    return (
+      <div
+        className={`chat-window ${isOpen ? 'open' : 'closed'} ${config.theme === 'dark' ? 'dark' : ''}`}
+        style={{
+          width: `480px`,
+          height: `650px`,
+          '--primary-color': config.color
+        } as React.CSSProperties}
+      >
+        {/* Header */}
+        <ChatHeader
+          config={config}
+          onNewChat={onNewChat}
+          onClose={onClose}
+        />
+
+        {/* Usage Counter */}
+        <div className={`px-4 py-2 border-b text-xs ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+          <div className="flex items-center justify-between">
+            <span>Messages used: {usedCount} / {config.usageLimit}</span>
+            <div className="flex items-center gap-1">
+              <div className={`w-2 h-2 rounded-full ${isLimitReached ? 'bg-red-500' : usedCount / config.usageLimit > 0.8 ? 'bg-yellow-500' : 'bg-green-500'}`} />
+              <span className={isLimitReached ? 'text-red-500' : usedCount / config.usageLimit > 0.8 ? 'text-yellow-500' : 'text-green-500'}>
+                {isLimitReached ? 'Limite atteinte' : 'Available'}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Messages */}
-      <div className={`chat-messages ${config.theme === 'dark' ? 'dark' : ''} custom-scrollbar`} style={{ height: 'calc(100% - 140px)' }}>
-        <div className="messages-container show">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.isBot ? 'items-start' : 'items-end'} mb-3 ${message.isBot ? 'flex-row' : 'flex-row-reverse'}`}
-            >
-              {message.isBot && (
+        {/* Messages */}
+        <div className={`chat-messages ${config.theme === 'dark' ? 'dark' : ''} custom-scrollbar`} style={{ height: 'calc(100% - 140px)' }}>
+          <div className="messages-container show">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.isBot ? 'items-start' : 'items-end'} mb-3 ${message.isBot ? 'flex-row' : 'flex-row-reverse'}`}
+              >
+                {message.isBot && (
+                  <img
+                    src={config.avatarUrl || defaultBotAvatarSrc}
+                    alt="Bot"
+                    className="w-8 h-8 rounded-full self-start mr-2"
+                    style={{ flexShrink: 0 }}
+                    onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                      const target = e.currentTarget;
+                      target.src = defaultBotAvatarSrc;
+                    }}
+                  />
+                )}
+                <div className="flex flex-col max-w-sm relative">
+                  <div className={`chat-bubble ${message.isBot ? 'bot' : 'user'}`}>
+                    {message.text}
+                  </div>
+                  <div className={`chat-timestamp ${message.isBot ? 'bot' : 'user'}`}>
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {isTyping && (
+              <div className="flex items-start mb-3 flex-row">
                 <img
                   src={config.avatarUrl || defaultBotAvatarSrc}
                   alt="Bot"
                   className="w-8 h-8 rounded-full self-start mr-2"
-                  style={{ flexShrink: 0 }}
-                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                    const target = e.currentTarget;
-                    target.src = defaultBotAvatarSrc;
-                  }}
                 />
-              )}
-              <div className="flex flex-col max-w-sm relative">
-                <div className={`chat-bubble ${message.isBot ? 'bot' : 'user'}`}>
-                  {message.text}
-                </div>
-                <div className={`chat-timestamp ${message.isBot ? 'bot' : 'user'}`}>
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                <div
+                  className="chat-bubble bot"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '12px 16px'
+                  }}
+                >
+                  {[0, 1, 2].map(i => (
+                    <span
+                      key={i}
+                      className="inline-block w-2 h-2 rounded-full animate-bounceDots"
+                      style={{
+                        backgroundColor: config.theme === 'dark' ? '#9ca3af' : '#6b7280',
+                        animationDelay: `${i * 0.2}s`
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
-            </div>
-          ))}
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
 
-          {isTyping && (
-            <div className="flex items-start mb-3 flex-row">
-              <img
-                src={config.avatarUrl || defaultBotAvatarSrc}
-                alt="Bot"
-                className="w-8 h-8 rounded-full self-start mr-2"
-              />
-              <div 
-                className="chat-bubble bot"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '12px 16px'
-                }}
-              >
-                {[0, 1, 2].map(i => (
-                  <span
-                    key={i}
-                    className="inline-block w-2 h-2 rounded-full animate-bounceDots"
-                    style={{ 
-                      backgroundColor: config.theme === 'dark' ? '#9ca3af' : '#6b7280',
-                      animationDelay: `${i * 0.2}s` 
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+        {/* Input Area */}
+        <div className={`chat-input-area ${config.theme === 'dark' ? 'dark' : ''}`}>
+          <div className="chat-input-container">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => onInputChange(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={isLimitReached ? 'Limite de messages atteinte' : config.placeholderText}
+              className={`chat-input ${config.theme === 'dark' ? 'dark' : ''}`}
+              disabled={isLimitReached}
+            />
+            <button
+              onClick={onSendMessage}
+              disabled={!inputValue.trim() || isLimitReached}
+              className="chat-send-btn"
+              style={{ backgroundColor: config.color }}
+            >
+              <Send size={18} />
+            </button>
+          </div>
         </div>
       </div>
-
-      {/* Input Area */}
-      <div className={`chat-input-area ${config.theme === 'dark' ? 'dark' : ''}`}>
-        <div className="chat-input-container">
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => onInputChange(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={isLimitReached ? 'Limite de messages atteinte' : config.placeholderText}
-            className={`chat-input ${config.theme === 'dark' ? 'dark' : ''}`}
-            disabled={isLimitReached}
-          />
-          <button
-            onClick={onSendMessage}
-            disabled={!inputValue.trim() || isLimitReached}
-            className="chat-send-btn"
-            style={{ backgroundColor: config.color }}
-          >
-            <Send size={18} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+    );
+  };
 
 export default function SharedDemoClient({ demo, demoId }: Props) {
   // États pour le chat
@@ -313,7 +315,7 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
     }
     return [];
   });
-  
+
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [usedCount, setUsedCount] = useState(demo.usedCount || 0);
@@ -383,17 +385,19 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
       const response = await fetch(`/api/agents/${demo.agentId}/ask`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-public-kind': 'demo',        // 👈 nouveau
+          'x-demo-id': demoId,            // 👈 nouveau
+          'x-demo-token': demo.demoToken ?? '', // 👈 nouveau
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
-
       if (response.ok) {
         const data = await response.json();
-        
+
         // IMPORTANT: Arrêter typing AVANT d'ajouter le message
         setIsTyping(false);
-        
+
         // Petit délai pour éviter le flash
         setTimeout(() => {
           const botMessage: Message = {
@@ -415,10 +419,10 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
       }
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
-      
+
       // IMPORTANT: Arrêter typing AVANT d'ajouter le message d'erreur
       setIsTyping(false);
-      
+
       setTimeout(() => {
         const botMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -478,7 +482,7 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-7xl mx-auto">
-          
+
           {/* Mobile/Tablet Layout */}
           <div className="block lg:hidden">
             {mobileView === 'info' ? (
@@ -510,12 +514,10 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
                       <h3 className="font-semibold text-purple-200 text-sm">Status</h3>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${
-                        usedCount >= demo.usageLimit ? 'bg-red-500' : 'bg-green-500'
-                      }`} />
-                      <span className={`text-xs ${
-                        usedCount >= demo.usageLimit ? 'text-red-400' : 'text-green-400'
-                      }`}>
+                      <div className={`w-2 h-2 rounded-full ${usedCount >= demo.usageLimit ? 'bg-red-500' : 'bg-green-500'
+                        }`} />
+                      <span className={`text-xs ${usedCount >= demo.usageLimit ? 'text-red-400' : 'text-green-400'
+                        }`}>
                         {usedCount >= demo.usageLimit ? 'Limite' : 'Actif'}
                       </span>
                     </div>
@@ -576,11 +578,10 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
                   <button
                     onClick={toggleChatMobile}
                     disabled={isLimitReached}
-                    className={`w-full py-4 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-3 text-lg ${
-                      isLimitReached 
+                    className={`w-full py-4 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-3 text-lg ${isLimitReached
                         ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                         : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
-                    }`}
+                      }`}
                   >
                     <MessageCircle size={24} />
                     {isLimitReached ? 'Limite atteinte' : 'Ouvrir le Chat'}
@@ -591,9 +592,9 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
               // PAGE 2 - Chat Fullscreen
               <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
                 {/* Header Chat Mobile avec couleur */}
-                <div 
+                <div
                   className="border-b border-gray-700 p-4"
-                  style={{ 
+                  style={{
                     backgroundColor: demo.color,
                     background: `linear-gradient(135deg, ${demo.color} 0%, ${demo.color}dd 100%)`
                   }}
@@ -624,7 +625,7 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
                       <RotateCcw size={18} className="text-white" />
                     </button>
                   </div>
-                  
+
                   {/* Usage Counter Mobile */}
                   <div className="mt-3 pt-3 border-t border-white/20">
                     <div className="flex items-center justify-between text-xs">
@@ -655,11 +656,10 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
                           />
                         )}
                         <div className="flex flex-col max-w-xs relative">
-                          <div className={`px-4 py-3 rounded-2xl ${
-                            message.isBot 
-                              ? 'bg-gray-700 text-white' 
+                          <div className={`px-4 py-3 rounded-2xl ${message.isBot
+                              ? 'bg-gray-700 text-white'
                               : 'bg-blue-600 text-white'
-                          }`}>
+                            }`}>
                             {message.text}
                           </div>
                           <div className={`text-xs text-gray-400 mt-1 ${message.isBot ? 'text-left' : 'text-right'}`}>
@@ -724,7 +724,7 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
           {/* Desktop Layout */}
           <div className="hidden lg:block">
             <div className="grid grid-cols-12 gap-8 items-start min-h-[80vh]">
-              
+
               {/* Left Side - Info (5 colonnes) */}
               <div className="col-span-5 text-white space-y-6">
                 <div>
@@ -750,10 +750,9 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
                       </div>
                       <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
                         <div
-                          className={`h-full transition-all duration-300 ${
-                            usagePercentage >= 100 ? 'bg-red-500' : 
-                            usagePercentage >= 80 ? 'bg-yellow-500' : 'bg-green-500'
-                          }`}
+                          className={`h-full transition-all duration-300 ${usagePercentage >= 100 ? 'bg-red-500' :
+                              usagePercentage >= 80 ? 'bg-yellow-500' : 'bg-green-500'
+                            }`}
                           style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                         />
                       </div>
@@ -766,12 +765,10 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
                       <h3 className="font-semibold text-purple-200">Status</h3>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${
-                        usedCount >= demo.usageLimit ? 'bg-red-500' : 'bg-green-500'
-                      }`} />
-                      <span className={`text-sm font-medium ${
-                        usedCount >= demo.usageLimit ? 'text-red-400' : 'text-green-400'
-                      }`}>
+                      <div className={`w-3 h-3 rounded-full ${usedCount >= demo.usageLimit ? 'bg-red-500' : 'bg-green-500'
+                        }`} />
+                      <span className={`text-sm font-medium ${usedCount >= demo.usageLimit ? 'text-red-400' : 'text-green-400'
+                        }`}>
                         {usedCount >= demo.usageLimit ? 'Limite atteinte' : 'Available'}
                       </span>
                     </div>
@@ -810,7 +807,7 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
                     Ready to get started ?
                   </h3>
                   <p className="text-gray-300 text-sm mb-4">
-                    {isOpen 
+                    {isOpen
                       ? 'The chat is open! Start asking your questions.'
                       : 'Click the chat button to start the conversation.'
                     }
@@ -833,7 +830,7 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
               {/* Right Side - Chat Widget Container Fixe (5 colonnes) */}
               <div className="col-span-5">
                 {/* Conteneur invisible fixe comme demo-agent */}
-                <div 
+                <div
                   className="relative"
                   style={{
                     position: 'sticky',
@@ -845,7 +842,7 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
                     justifyContent: 'center'
                   }}
                 >
-                  <div 
+                  <div
                     className="chat-widget"
                     style={{
                       '--primary-color': demo.color,
@@ -860,7 +857,7 @@ export default function SharedDemoClient({ demo, demoId }: Props) {
                       config={demo}
                       showPopup={showPopupBubble}
                     />
-                    
+
                     <ChatWindow
                       isOpen={isOpen}
                       config={demo}
