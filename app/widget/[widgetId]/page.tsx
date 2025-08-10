@@ -1,3 +1,5 @@
+'use client'
+
 import { ChatbotConfig } from "@/models/ChatbotConfig";
 import { connectToDatabase } from "@/lib/db";
 import { ChatWidgetConfig } from "@/types/ChatWidgetConfig";
