@@ -12,7 +12,12 @@ export default async function WidgetPage({ params }: { params: Promise<{ widgetI
   const config = JSON.parse(JSON.stringify(rawConfig));
 
   return (
-    <main className="widget-page w-full h-full overflow-hidden" style={{ background: 'transparent' }}>
+    <main className="widget-page" style={{ 
+      background: 'transparent', 
+      width: '100%', 
+      height: '100vh',
+      position: 'relative' // Important !
+    }}>
       <ChatWidget config={config} />
     </main>
   );
