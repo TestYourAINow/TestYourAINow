@@ -29,28 +29,37 @@ export async function POST(req: NextRequest, context: any) {
     
     await connectToDatabase();
 
-    // 🆕 ÉTAPE 1: Vérifier si c'est un appel public (demo)
+    // 🆕 ÉTAPE 1: Vérifier si c'est un appel public (demo ou widget)
     const publicKind = req.headers.get('x-public-kind');
     const demoId = req.headers.get('x-demo-id');
     const demoToken = req.headers.get('x-demo-token');
+    const widgetId = req.headers.get('x-widget-id');
+    const widgetToken = req.headers.get('x-widget-token');
     
     let isPublicOK = false;
     let session = null;
 
     if (publicKind === 'demo' && demoId && demoToken) {
-      // Mode public : valider le token de la démo
-      console.log('🔓 Mode public détecté, validation du token...');
+      // Mode public DEMO : valider le token de la démo
+      console.log('🔓 Mode public DEMO détecté, validation du token...');
       
-      // ✅ Fix TypeScript : typer le demo
       const demo = await Demo.findById(demoId).lean() as DemoDocument | null;
       
       if (demo && demo.demoToken === demoToken && demo.publicEnabled) {
         isPublicOK = true;
-        console.log('✅ Token valide, accès public autorisé');
+        console.log('✅ Token démo valide, accès public autorisé');
       } else {
-        console.log('❌ Token invalide ou démo désactivée');
+        console.log('❌ Token démo invalide ou démo désactivée');
         return NextResponse.json({ error: "Invalid demo token" }, { status: 401 });
       }
+    } else if (publicKind === 'widget' && widgetId && widgetToken === 'public') {
+      // Mode public WIDGET : validation simplifiée
+      console.log('🔓 Mode public WIDGET détecté, validation...');
+      
+      // Pour l'instant, on accepte tous les widgets avec token "public"
+      // Plus tard, on pourra ajouter une validation plus stricte
+      isPublicOK = true;
+      console.log('✅ Widget public autorisé');
     } else {
       // Mode privé : vérifier la session
       session = await getServerSession(authOptions);
@@ -74,7 +83,7 @@ export async function POST(req: NextRequest, context: any) {
     if (isPublicOK) {
       // Mode public : récupérer l'agent sans vérifier le userId
       agent = await Agent.findOne({ _id: id });
-      console.log('🔓 Agent récupéré en mode public:', !!agent);
+      console.log('🔓 Agent récupéré en mode public:', !!agent, `(${publicKind})`);
     } else {
       // Mode privé : récupérer l'agent avec vérification du userId
       // ✅ Fix TypeScript : vérifier que session n'est pas null
@@ -93,7 +102,7 @@ export async function POST(req: NextRequest, context: any) {
     
     if (isPublicOK) {
       // Mode public : utiliser la fonction webhook (sans session)
-      console.log('🔓 Création OpenAI en mode public...');
+      console.log(`🔓 Création OpenAI en mode public (${publicKind})...`);
       openaiResult = await createAgentOpenAIForWebhook(agent);
     } else {
       // Mode privé : utiliser la fonction normale (avec session)

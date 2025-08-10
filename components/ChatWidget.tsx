@@ -86,9 +86,18 @@ export default function ChatWidget({ config }: { config: ChatWidgetConfig }) {
         content: msg.text,
       }));
 
+      // 🆕 MODIFICATION : Ajouter les headers publics pour le widget
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        // Headers pour le mode public widget
+        'x-public-kind': 'widget',
+        'x-widget-id': config._id,
+        'x-widget-token': 'public' // Pour l'instant, on utilise "public" comme token simple
+      };
+
       const res = await fetch(`/api/agents/${config.selectedAgent}/ask`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           message: trimmed,
           previousMessages: history,
