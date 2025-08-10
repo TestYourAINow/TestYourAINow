@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import { Demo } from '@/models/Demo';
+import crypto from 'crypto'; // 🆕 Ajouter cet import
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -42,6 +43,10 @@ export async function POST(req: NextRequest) {
     userId: session.user.id,
     name,
     agentId,
+    
+    // 🆕 NOUVEAUX CHAMPS - Ajouter ces deux lignes
+    demoToken: crypto.randomBytes(16).toString('hex'),
+    publicEnabled: true,
     
     // Apparence
     theme: theme || 'dark',

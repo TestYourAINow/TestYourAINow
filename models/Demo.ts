@@ -1,4 +1,5 @@
 import mongoose, { Schema, model, models } from 'mongoose';
+import crypto from 'crypto'; // 🆕 Import correct pour Node.js
 
 const DemoSchema = new Schema({
   userId: { type: String, required: true },
@@ -37,13 +38,11 @@ const DemoSchema = new Schema({
   expiresAt: { type: Date, required: true }
 });
 
-// 🆕 Middleware pour générer automatiquement un token à la création
+// 🆕 Middleware pour générer automatiquement un token à la création - VERSION CORRIGÉE
 DemoSchema.pre('save', function(next) {
   if (this.isNew && !this.demoToken) {
-    // Générer un token unique (32 caractères aléatoires)
-    this.demoToken = Array.from(crypto.getRandomValues(new Uint8Array(16)))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+    // Générer un token unique avec crypto Node.js
+    this.demoToken = crypto.randomBytes(16).toString('hex');
   }
   next();
 });
