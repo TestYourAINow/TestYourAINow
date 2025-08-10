@@ -12,9 +12,21 @@ export default async function WidgetPage({ params }: { params: Promise<{ widgetI
   const config = JSON.parse(JSON.stringify(rawConfig));
 
   return (
-    <main className="w-full h-full overflow-hidden">
-      {/* Ici on ne met QUE la fenêtre, PAS le bouton */}
-      <ChatWidget config={config} />
-    </main>
+    <>
+      <style jsx global>{`
+        html, body {
+          background: transparent !important;
+          margin: 0;
+          padding: 0;
+        }
+        .chat-widget {
+          position: absolute !important;
+        }
+      `}</style>
+      
+      <main className="w-full h-full overflow-hidden">
+        <ChatWidget config={config} />
+      </main>
+    </>
   );
 }
