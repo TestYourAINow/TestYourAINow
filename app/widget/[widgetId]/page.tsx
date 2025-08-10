@@ -12,21 +12,26 @@ export default async function WidgetPage({ params }: { params: Promise<{ widgetI
   const config = JSON.parse(JSON.stringify(rawConfig));
 
   return (
-    <>
-      <style jsx global>{`
-        html, body {
-          background: transparent !important;
-          margin: 0;
-          padding: 0;
-        }
-        .chat-widget {
-          position: absolute !important;
-        }
-      `}</style>
-      
-      <main className="w-full h-full overflow-hidden">
-        <ChatWidget config={config} />
-      </main>
-    </>
+    <html>
+      <head>
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            html, body {
+              background: transparent !important;
+              margin: 0;
+              padding: 0;
+            }
+            .chat-widget {
+              position: absolute !important;
+            }
+          `
+        }} />
+      </head>
+      <body>
+        <main className="w-full h-full overflow-hidden">
+          <ChatWidget config={config} />
+        </main>
+      </body>
+    </html>
   );
 }
