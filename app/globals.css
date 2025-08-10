@@ -13,6 +13,11 @@ body {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+body:has(.widget-page) {
+  background: transparent !important;
+}
+
+
 html {
   scroll-behavior: smooth;
 }
