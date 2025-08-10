@@ -6,7 +6,7 @@ window.AIChatWidget = {
     // Crée un <iframe> pour charger ton widget SSR
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
-    iframe.src = `${window.location.origin}/widget/${widgetId}`;
+    iframe.src = `https://testyourainow.com/widget/${widgetId}`;
     iframe.style.position = "fixed";
     iframe.style.bottom = "24px";
     iframe.style.right = "24px";
