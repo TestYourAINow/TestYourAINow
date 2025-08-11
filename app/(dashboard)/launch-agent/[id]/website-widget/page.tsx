@@ -324,7 +324,8 @@ const ChatWindow: React.FC<{
     );
   };
 
-// ChatWidget Component - LOGIQUE IDENTIQUE
+// ChatWidget avec scroll automatique - remplace dans ton page.tsx
+
 const ChatWidget: React.FC<{
   config: ChatbotConfig;
 }> = ({ config }) => {
@@ -338,6 +339,7 @@ const ChatWidget: React.FC<{
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // LOGIQUE EXISTANTE
   useEffect(() => {
     if (config.showWelcomeMessage && messages.length === 0) {
       setMessages([{
@@ -364,12 +366,25 @@ const ChatWidget: React.FC<{
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setTimeout(() => inputRef.current?.focus(), 200);
       setAnimateMessages(true);
     } else {
       setAnimateMessages(false);
     }
   }, [isOpen]);
+
+  // 🔧 CORRECTION : Scroll automatique amélioré
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      // Petit délai pour laisser l'animation se terminer
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end'
+        });
+      }, 100);
+    }
+  }, [messages, isTyping]); // Scroll quand messages changent OU quand typing change
 
   const sendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -383,7 +398,11 @@ const ChatWidget: React.FC<{
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
-    setIsTyping(true);
+    
+    // 🔧 CORRECTION : Petit délai avant de montrer typing pour que l'animation du user message se termine
+    setTimeout(() => {
+      setIsTyping(true);
+    }, 200);
 
     try {
       if (config.selectedAgent) {
@@ -409,13 +428,18 @@ const ChatWidget: React.FC<{
 
         if (response.ok) {
           const data = await response.json();
-          const botMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            text: data.reply || 'Sorry, I couldn\'t process your request.',
-            isBot: true,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, botMessage]);
+          
+          // 🔧 CORRECTION : Délai minimum pour voir l'animation typing
+          setTimeout(() => {
+            const botMessage: Message = {
+              id: (Date.now() + 1).toString(),
+              text: data.reply || 'Sorry, I couldn\'t process your request.',
+              isBot: true,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, botMessage]);
+            setIsTyping(false);
+          }, 800); // Délai pour voir les points bouger
         } else {
           throw new Error('API Error');
         }
@@ -435,15 +459,17 @@ const ChatWidget: React.FC<{
 
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
 
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: randomResponse,
-        isBot: true,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, botMessage]);
-    } finally {
-      setIsTyping(false);
+      // 🔧 CORRECTION : Même délai pour les réponses d'erreur
+      setTimeout(() => {
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: randomResponse,
+          isBot: true,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botMessage]);
+        setIsTyping(false);
+      }, 800);
     }
   };
 
@@ -476,26 +502,192 @@ const ChatWidget: React.FC<{
         [config.placement.split('-')[1]]: '24px',
       } as React.CSSProperties}
     >
-      <ChatButton
-        isOpen={isOpen}
-        onClick={toggleChat}
-        config={config}
-        showPopup={showPopupBubble}
-      />
-      <ChatWindow
-        isOpen={isOpen}
-        config={config}
-        messages={messages}
-        isTyping={isTyping}
-        inputValue={inputValue}
-        onInputChange={setInputValue}
-        onSendMessage={sendMessage}
-        onNewChat={startNewChat}
-        onClose={toggleChat}
-        messagesEndRef={messagesEndRef}
-        inputRef={inputRef}
-        animateMessages={animateMessages}
-      />
+      {/* Popup */}
+      {showPopupBubble && !isOpen && (
+        <div
+          className="chat-popup"
+          style={{ backgroundColor: config.primaryColor }}
+        >
+          {config.popupMessage}
+        </div>
+      )}
+
+      {/* Bouton */}
+      {!isOpen && (
+        <button
+          className="chat-button animate-bounce-in"
+          onClick={toggleChat}
+          style={{ backgroundColor: config.primaryColor }}
+        >
+          <MessageCircle size={24} color="white" />
+        </button>
+      )}
+
+      {/* Chat Window */}
+      {isOpen && (
+        <div
+          className={`chat-window animate-expand-from-button ${config.theme === 'dark' ? 'dark' : ''}`}
+          style={{
+            width: `${config.width}px`,
+            height: `${config.height}px`,
+            '--primary-color': config.primaryColor
+          } as React.CSSProperties}
+        >
+          {/* Header */}
+          <div className="chat-header">
+            <div className="chat-header-content">
+              <div className="chat-avatar-container">
+                <img
+                  src={config.avatar}
+                  alt="Bot"
+                  className="chat-avatar"
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.src = '/Default Avatar.png';
+                  }}
+                />
+                <div className="chat-status"></div>
+              </div>
+              <div className="chat-info">
+                <h3 className="chat-title">{config.chatTitle}</h3>
+                <p className="chat-subtitle">{config.subtitle}</p>
+              </div>
+            </div>
+            <div className="chat-actions">
+              <button
+                className="chat-action-btn"
+                onClick={startNewChat}
+                title="New conversation"
+              >
+                <RotateCcw size={18} />
+              </button>
+              <button
+                className="chat-action-btn"
+                onClick={toggleChat}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div className={`chat-messages ${config.theme === 'dark' ? 'dark' : ''} custom-scrollbar`}>
+            <div className={`messages-container ${animateMessages ? 'show' : ''}`}>
+              {messages.map((message, index) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.isBot ? 'items-start' : 'items-end'} mb-3 ${message.isBot ? 'flex-row' : 'flex-row-reverse'} animate-slide-in-message`}
+                  style={{
+                    animationDelay: `${index * 0.05}s`,
+                    animationFillMode: 'both'
+                  }}
+                >
+                  {message.isBot && (
+                    <img
+                      src={config.avatar}
+                      alt="Bot"
+                      className="w-8 h-8 rounded-full self-start mr-2 animate-avatar-pop"
+                      style={{ 
+                        flexShrink: 0,
+                        animationDelay: `${index * 0.05 + 0.05}s`,
+                        animationFillMode: 'both'
+                      }}
+                      onError={(e) => {
+                        const target = e.currentTarget as HTMLImageElement;
+                        target.src = '/Default Avatar.png';
+                      }}
+                    />
+                  )}
+                  <div className="flex flex-col max-w-sm relative">
+                    <div className={`chat-bubble ${message.isBot ? 'bot' : 'user'}`}>
+                      {message.text}
+                    </div>
+                    <div className={`chat-timestamp ${message.isBot ? 'bot' : 'user'}`}>
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Typing indicator avec animation smooth */}
+              {isTyping && (
+                <div className="flex items-start mb-3 flex-row animate-slide-in-message">
+                  <img
+                    src={config.avatar}
+                    alt="Bot"
+                    className="w-8 h-8 rounded-full self-start mr-2 animate-avatar-pop"
+                    style={{
+                      animationDelay: '0.1s',
+                      animationFillMode: 'both'
+                    }}
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      target.src = '/Default Avatar.png';
+                    }}
+                  />
+                  <div
+                    className="chat-bubble bot animate-typing-bubble"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '12px 16px',
+                      animationDelay: '0.2s',
+                      animationFillMode: 'both'
+                    }}
+                  >
+                    {[0, 1, 2].map(i => (
+                      <span
+                        key={i}
+                        className="inline-block w-2 h-2 rounded-full animate-bounceDots"
+                        style={{
+                          backgroundColor: config.theme === 'dark' ? '#9ca3af' : '#6b7280',
+                          animationDelay: `${0.5 + (i * 0.2)}s`
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* 🔧 CORRECTION : Div pour scroll automatique */}
+              <div ref={messagesEndRef} style={{ height: '1px' }} />
+            </div>
+          </div>
+
+          {/* Input */}
+          <div className={`chat-input-area ${config.theme === 'dark' ? 'dark' : ''} animate-slide-up`}>
+            <div className="chat-input-container">
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                placeholder={config.placeholderText}
+                className={`chat-input ${config.theme === 'dark' ? 'dark' : ''}`}
+              />
+              <button
+                onClick={sendMessage}
+                disabled={!inputValue.trim()}
+                className="chat-send-btn animate-button-hover"
+                style={{ backgroundColor: config.primaryColor }}
+              >
+                <Send size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

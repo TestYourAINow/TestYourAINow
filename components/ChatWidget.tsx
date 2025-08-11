@@ -29,7 +29,6 @@ export default function ChatWidget({ config }: { config: ChatWidgetConfig }) {
     if (messages.length > previousMessageCount.current) {
       setAnimateNewMessages(true);
       previousMessageCount.current = messages.length;
-      // Reset animation state after a short delay
       setTimeout(() => setAnimateNewMessages(false), 1000);
     }
   }, [messages.length]);
@@ -54,16 +53,25 @@ export default function ChatWidget({ config }: { config: ChatWidgetConfig }) {
     }
   }, [config.showPopup, config.popupDelay, isOpen]);
 
+  // 🔧 NOUVEAU : Scroll automatique amélioré
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (messagesEndRef.current) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end'
+        });
+      }, 100);
+    }
+  }, [messages, isTyping]);
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setTimeout(() => inputRef.current?.focus(), 200);
     }
   }, [isOpen]);
 
+  // 🔧 NOUVEAU : sendMessage avec timing amélioré
   const handleSend = async () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
@@ -78,7 +86,11 @@ export default function ChatWidget({ config }: { config: ChatWidgetConfig }) {
     const updatedMessages = [...messages, newUserMessage];
     setMessages(updatedMessages);
     setInputValue('');
-    setIsTyping(true);
+    
+    // Délai avant typing pour laisser l'animation user finir
+    setTimeout(() => {
+      setIsTyping(true);
+    }, 200);
 
     try {
       const history = updatedMessages.map((msg) => ({
@@ -86,13 +98,11 @@ export default function ChatWidget({ config }: { config: ChatWidgetConfig }) {
         content: msg.text,
       }));
 
-      // 🆕 MODIFICATION : Ajouter les headers publics pour le widget
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        // Headers pour le mode public widget
         'x-public-kind': 'widget',
         'x-widget-id': config._id,
-        'x-widget-token': 'public' // Pour l'instant, on utilise "public" comme token simple
+        'x-widget-token': 'public'
       };
 
       const res = await fetch(`/api/agents/${config.selectedAgent}/ask`, {
@@ -106,23 +116,30 @@ export default function ChatWidget({ config }: { config: ChatWidgetConfig }) {
       });
 
       const data = await res.json();
-      const botMessage: Message = {
-        id: crypto.randomUUID(),
-        text: data.reply || 'Erreur de réponse.',
-        isBot: true,
-        timestamp: new Date()
-      };
-      setMessages((prev) => [...prev, botMessage]);
+      
+      // Délai minimum pour voir l'animation typing
+      setTimeout(() => {
+        const botMessage: Message = {
+          id: crypto.randomUUID(),
+          text: data.reply || 'Erreur de réponse.',
+          isBot: true,
+          timestamp: new Date()
+        };
+        setMessages((prev) => [...prev, botMessage]);
+        setIsTyping(false);
+      }, 800);
+      
     } catch {
-      setMessages((prev) => [...prev, {
-        id: crypto.randomUUID(),
-        text: "Erreur lors de l'envoi.",
-        isBot: true,
-        timestamp: new Date()
-      }]);
+      setTimeout(() => {
+        setMessages((prev) => [...prev, {
+          id: crypto.randomUUID(),
+          text: "Erreur lors de l'envoi.",
+          isBot: true,
+          timestamp: new Date()
+        }]);
+        setIsTyping(false);
+      }, 800);
     }
-
-    setIsTyping(false);
   };
 
   const resetChat = () => {
@@ -133,6 +150,11 @@ export default function ChatWidget({ config }: { config: ChatWidgetConfig }) {
     previousMessageCount.current = resetMessages.length;
     setAnimateNewMessages(true);
     setTimeout(() => setAnimateNewMessages(false), 1000);
+  };
+
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+    setShowPopup(false);
   };
 
   return (
@@ -154,164 +176,159 @@ export default function ChatWidget({ config }: { config: ChatWidgetConfig }) {
         </div>
       )}
 
-      {/* Chat Button */}
-      <button
-        className="chat-button"
-        onClick={() => {
-          setIsOpen(!isOpen);
-          setShowPopup(false);
-        }}
-        style={{ backgroundColor: config.primaryColor }}
-      >
-        <div
-          style={{
-            transition: 'all 0.3s ease',
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-          }}
+      {/* Chat Button - Affichage conditionnel */}
+      {!isOpen && (
+        <button
+          className="chat-button animate-bounce-in"
+          onClick={toggleChat}
+          style={{ backgroundColor: config.primaryColor }}
         >
-          {isOpen ? (
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-white" />
-              <span className="w-2 h-2 rounded-full bg-white" />
-              <span className="w-2 h-2 rounded-full bg-white" />
-            </div>
-          ) : (
-            <MessageCircle size={24} color="white" />
-          )}
-        </div>
-      </button>
+          <MessageCircle size={24} color="white" />
+        </button>
+      )}
 
-      {/* Chat Window */}
-      <div
-        className={`chat-window ${isOpen ? 'open' : 'closed'} ${isDark ? 'dark' : ''}`}
-        style={{
-          width: config.width,
-          height: config.height,
-        } as React.CSSProperties}
-      >
-        {/* Header */}
-        <div className="chat-header">
-          <div className="chat-header-content">
-            <div className="chat-avatar-container">
-              <img
-                src={config.avatar}
-                alt="Bot"
-                className="chat-avatar"
-              />
-              <span className="chat-status" />
-            </div>
-            <div className="chat-info">
-              <h3 className="chat-title">{config.chatTitle}</h3>
-              <p className="chat-subtitle">{config.subtitle}</p>
-            </div>
-          </div>
-          <div className="chat-actions">
-            <button className="chat-action-btn" onClick={resetChat} title="Nouvelle conversation">
-              <RotateCcw size={18} />
-            </button>
-            <button className="chat-action-btn" onClick={() => setIsOpen(false)} title="Fermer">
-              <X size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className={`chat-messages ${isDark ? 'dark' : ''} custom-scrollbar`}>
-          <div className="messages-container">
-            {messages.map((m, index) => {
-              const shouldAnimate = animateNewMessages && index >= previousMessageCount.current - 1;
-              return (
-                <div
-                  key={m.id}
-                  className={`flex ${m.isBot ? 'items-start' : 'items-end'} mb-3 ${m.isBot ? 'flex-row' : 'flex-row-reverse'} ${shouldAnimate ? 'animate-slide-up-fade' : ''}`}
-                  style={shouldAnimate ? {
-                    animationDelay: `${(index - (previousMessageCount.current - 1)) * 0.1}s`,
-                    animationFillMode: 'both'
-                  } : {}}
-                >
-                  {m.isBot && (
-                    <img
-                      src={config.avatar}
-                      alt="Bot Avatar"
-                      className="w-8 h-8 rounded-full self-start mr-2"
-                      style={{ flexShrink: 0 }}
-                    />
-                  )}
-                  <div className="flex flex-col max-w-sm relative">
-                    <div className={`chat-bubble ${m.isBot ? 'bot' : 'user'}`}>
-                      {m.text}
-                    </div>
-                    <div className={`chat-timestamp ${m.isBot ? 'bot' : 'user'}`}>
-                      {new Date(m.timestamp).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            {isTyping && (
-              <div 
-                className={`flex items-start mb-3 flex-row ${animateNewMessages ? 'animate-slide-up-fade' : ''}`}
-                style={animateNewMessages ? {
-                  animationDelay: `0.2s`,
-                  animationFillMode: 'both'
-                } : {}}
-              >
+      {/* Chat Window - Affichage conditionnel */}
+      {isOpen && (
+        <div
+          className={`chat-window animate-expand-from-button ${isDark ? 'dark' : ''}`}
+          style={{
+            width: config.width,
+            height: config.height,
+          } as React.CSSProperties}
+        >
+          {/* Header */}
+          <div className="chat-header">
+            <div className="chat-header-content">
+              <div className="chat-avatar-container">
                 <img
                   src={config.avatar}
-                  alt="Bot Avatar"
-                  className="w-8 h-8 rounded-full self-start mr-2"
+                  alt="Bot"
+                  className="chat-avatar"
                 />
-                <div 
-                  className="chat-bubble bot"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '12px 16px'
-                  }}
-                >
-                  {[0, 1, 2].map(i => (
-                    <span
-                      key={i}
-                      className="inline-block w-2 h-2 rounded-full animate-bounceDots"
-                      style={{ 
-                        backgroundColor: isDark ? '#9ca3af' : '#6b7280',
-                        animationDelay: `${i * 0.2}s` 
-                      }}
-                    />
-                  ))}
-                </div>
+                <span className="chat-status" />
               </div>
-            )}
-            <div ref={messagesEndRef} />
+              <div className="chat-info">
+                <h3 className="chat-title">{config.chatTitle}</h3>
+                <p className="chat-subtitle">{config.subtitle}</p>
+              </div>
+            </div>
+            <div className="chat-actions">
+              <button className="chat-action-btn" onClick={resetChat} title="Nouvelle conversation">
+                <RotateCcw size={18} />
+              </button>
+              <button className="chat-action-btn" onClick={toggleChat} title="Fermer">
+                <X size={18} />
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Input Area */}
-        <div className={`chat-input-area ${isDark ? 'dark' : ''}`}>
-          <div className="chat-input-container">
-            <input
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={config.placeholderText}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
-              className={`chat-input ${isDark ? 'dark' : ''}`}
-            />
-            <button
-              onClick={handleSend}
-              disabled={!inputValue.trim()}
-              className="chat-send-btn"
-              style={{ backgroundColor: config.primaryColor }}
-            >
-              <Send size={18} />
-            </button>
+          {/* Messages */}
+          <div className={`chat-messages ${isDark ? 'dark' : ''} custom-scrollbar`}>
+            <div className="messages-container">
+              {messages.map((m, index) => {
+                const shouldAnimate = animateNewMessages && index >= previousMessageCount.current - 1;
+                return (
+                  <div
+                    key={m.id}
+                    className={`flex ${m.isBot ? 'items-start' : 'items-end'} mb-3 ${m.isBot ? 'flex-row' : 'flex-row-reverse'} ${shouldAnimate ? 'animate-slide-up-fade' : 'animate-slide-in-message'}`}
+                    style={shouldAnimate ? {
+                      animationDelay: `${(index - (previousMessageCount.current - 1)) * 0.1}s`,
+                      animationFillMode: 'both'
+                    } : {
+                      animationDelay: `${index * 0.05}s`,
+                      animationFillMode: 'both'
+                    }}
+                  >
+                    {m.isBot && (
+                      <img
+                        src={config.avatar}
+                        alt="Bot Avatar"
+                        className="w-8 h-8 rounded-full self-start mr-2 animate-avatar-pop"
+                        style={{ 
+                          flexShrink: 0,
+                          animationDelay: shouldAnimate ? `${(index - (previousMessageCount.current - 1)) * 0.1 + 0.05}s` : `${index * 0.05 + 0.05}s`,
+                          animationFillMode: 'both'
+                        }}
+                      />
+                    )}
+                    <div className="flex flex-col max-w-sm relative">
+                      <div className={`chat-bubble ${m.isBot ? 'bot' : 'user'}`}>
+                        {m.text}
+                      </div>
+                      <div className={`chat-timestamp ${m.isBot ? 'bot' : 'user'}`}>
+                        {new Date(m.timestamp).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {/* Typing indicator avec animations */}
+              {isTyping && (
+                <div className="flex items-start mb-3 flex-row animate-slide-in-message">
+                  <img
+                    src={config.avatar}
+                    alt="Bot Avatar"
+                    className="w-8 h-8 rounded-full self-start mr-2 animate-avatar-pop"
+                    style={{
+                      animationDelay: '0.1s',
+                      animationFillMode: 'both'
+                    }}
+                  />
+                  <div 
+                    className="chat-bubble bot animate-typing-bubble"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '12px 16px',
+                      animationDelay: '0.2s',
+                      animationFillMode: 'both'
+                    }}
+                  >
+                    {[0, 1, 2].map(i => (
+                      <span
+                        key={i}
+                        className="inline-block w-2 h-2 rounded-full animate-bounceDots"
+                        style={{ 
+                          backgroundColor: isDark ? '#9ca3af' : '#6b7280',
+                          animationDelay: `${0.5 + (i * 0.2)}s` 
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} style={{ height: '1px' }} />
+            </div>
+          </div>
+
+          {/* Input Area */}
+          <div className={`chat-input-area ${isDark ? 'dark' : ''} animate-slide-up`}>
+            <div className="chat-input-container">
+              <input
+                ref={inputRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={config.placeholderText}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
+                className={`chat-input ${isDark ? 'dark' : ''}`}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!inputValue.trim()}
+                className="chat-send-btn animate-button-hover"
+                style={{ backgroundColor: config.primaryColor }}
+              >
+                <Send size={18} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -70,7 +70,7 @@ html {
   }
 }
 
-/* ===== ENHANCED CHATBOT WIDGET STYLES ===== */
+/* ===== CHAT WIDGET STYLES ===== */
 .chat-widget {
   position: fixed;
   bottom: 24px;
@@ -92,27 +92,7 @@ html {
   z-index: 10000 !important;
 }
 
-/* Enhanced Custom scrollbar styles */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(17, 24, 39, 0.3);
-  border-radius: 16px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6));
-  border-radius: 16px;
-  border: 1px solid rgba(75, 85, 99, 0.3);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8));
-}
-
-/* ===== ENHANCED CHAT BUTTON ===== */
+/* ===== CHAT BUTTON ===== */
 .chat-button {
   width: 64px;
   height: 64px;
@@ -138,7 +118,7 @@ html {
     0 0 20px rgba(59, 130, 246, 0.3);
 }
 
-/* ===== ENHANCED POPUP BUBBLE ===== */
+/* ===== POPUP BUBBLE ===== */
 .chat-popup {
   position: absolute;
   bottom: 100%;
@@ -153,7 +133,6 @@ html {
   font-size: 14px;
   color: white;
   white-space: nowrap;
-  animation: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: linear-gradient(135deg, var(--primary-color, #3b82f6), color-mix(in srgb, var(--primary-color, #3b82f6) 85%, #06b6d4));
   backdrop-filter: blur(16px);
 }
@@ -169,24 +148,42 @@ html {
   transform: rotate(45deg);
 }
 
-/* ===== ENHANCED CHAT WINDOW ===== */
+/* ===== CHAT WINDOW - RESPONSIVE HEIGHT ===== */
 .chat-window {
   position: absolute;
-  bottom: 80px;
+  bottom: 0;
   right: 0;
   border-radius: 20px;
   box-shadow: 
     0 25px 50px -12px rgba(0, 0, 0, 0.25),
     0 0 0 1px rgba(75, 85, 99, 0.2);
   overflow: hidden;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: bottom right;
   display: flex;
   flex-direction: column;
   max-width: calc(100vw - 48px);
+  /* 🆕 RESPONSIVE HEIGHT: Le chat s'adapte à la taille de l'écran */
+  max-height: calc(100vh - 100px);
+  min-height: 300px;
   border: none;
   background: rgba(17, 24, 39, 0.95);
   backdrop-filter: blur(20px);
+}
+
+/* 🆕 RESPONSIVE: Pour petits écrans */
+@media (max-height: 600px) {
+  .chat-window {
+    max-height: calc(100vh - 50px);
+    min-height: 250px;
+  }
+}
+
+@media (max-height: 480px) {
+  .chat-window {
+    max-height: calc(100vh - 30px);
+    min-height: 200px;
+  }
 }
 
 .chat-window.open {
@@ -205,7 +202,7 @@ html {
   background: rgba(17, 24, 39, 0.98);
 }
 
-/* ===== ENHANCED CHAT HEADER ===== */
+/* ===== CHAT HEADER ===== */
 .chat-header {
   height: 70px;
   padding: 12px 16px;
@@ -317,14 +314,16 @@ html {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* ===== ENHANCED MESSAGES AREA ===== */
+/* ===== MESSAGES AREA - FLEXIBLE HEIGHT ===== */
 .chat-messages {
-  flex: 1;
+  flex: 1; /* Prend tout l'espace disponible */
   overflow-y: auto;
   padding: 16px;
   background: rgba(248, 250, 252, 0.95);
-  min-height: 0;
+  min-height: 0; /* Important pour que flex fonctionne */
   backdrop-filter: blur(10px);
+  /* 🆕 RESPONSIVE: Zone des messages s'adapte automatiquement */
+  max-height: none; /* Laisse flex gérer */
 }
 
 .chat-messages.dark {
@@ -337,53 +336,9 @@ html {
 
 .messages-container.show {
   opacity: 1;
-  animation: fadeInUp 0.4s ease-out;
 }
 
-.messages-container.show > div {
-  animation: fadeInUp 0.4s ease-out;
-  animation-fill-mode: both;
-}
-
-/* Enhanced Message structure */
-.message-wrapper {
-  display: flex;
-  margin-bottom: 12px;
-}
-
-.message-wrapper.bot {
-  align-items: flex-start;
-  flex-direction: row;
-}
-
-.message-wrapper.user {
-  align-items: flex-end;
-  flex-direction: row-reverse;
-}
-
-.message-content {
-  display: flex;
-  flex-direction: column;
-  max-width: 384px;
-  position: relative;
-}
-
-.message-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  object-fit: cover;
-  margin-right: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.message-wrapper.user .message-avatar {
-  margin-right: 0;
-  margin-left: 8px;
-}
-
-/* ===== ENHANCED CHAT BUBBLES ===== */
+/* ===== CHAT BUBBLES ===== */
 .chat-bubble {
   padding: 12px 16px;
   border-radius: 20px;
@@ -407,7 +362,6 @@ html {
   align-self: flex-end;
 }
 
-/* Enhanced Dark theme bubbles */
 .chat-messages.dark .chat-bubble.bot {
   background: linear-gradient(135deg, #374151, #4b5563);
   color: white;
@@ -431,7 +385,7 @@ html {
   padding-right: 4px;
 }
 
-/* ===== ENHANCED INPUT AREA ===== */
+/* ===== INPUT AREA ===== */
 .chat-input-area {
   padding: 16px;
   border-top: 1px solid rgba(229, 231, 235, 0.5);
@@ -518,11 +472,33 @@ html {
   transform: none;
 }
 
-/* ===== ENHANCED ANIMATIONS ===== */
+/* ===== ANIMATIONS SIMPLES ET FLUIDES ===== */
+
+/* 🎯 Animation bouton - Simple bounce */
+@keyframes bounceInSimple {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounceInSimple 0.4s ease-out;
+}
+
+/* 💫 Animation popup - Slide simple */
 @keyframes slideInUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -530,84 +506,143 @@ html {
   }
 }
 
-@keyframes bounce {
-  0%, 80%, 100% { 
-    transform: translateY(0);
-  } 
-  40% { 
-    transform: translateY(-8px);
+.chat-popup {
+  animation: slideInUp 0.3s ease-out;
+}
+
+/* 🏠 Animation chat - Expand simple */
+@keyframes expandSimple {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
+.animate-expand-from-button {
+  animation: expandSimple 0.3s ease-out;
+}
+
+/* 💬 Animation messages - Plus douce pour éviter le flash */
+@keyframes slideInMessage {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-message {
+  animation: slideInMessage 0.2s ease-out forwards;
+  opacity: 0;
+}
+
+/* 👤 Animation avatar - Pop simple */
+@keyframes avatarPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-avatar-pop {
+  animation: avatarPop 0.2s ease-out forwards;
+  opacity: 0;
+}
+
+/* ⌨️ Animation input - Slide up simple */
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+  animation-delay: 0.1s;
+  animation-fill-mode: both;
+  opacity: 0;
+}
+
+/* 💭 Animation typing - Plus smooth */
+@keyframes typingSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-typing-bubble {
+  animation: typingSlideIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+/* 🎪 Animation dots - Simple bounce */
 @keyframes bounceDots {
   0%, 80%, 100% { 
     transform: translateY(0);
+    opacity: 0.7;
   } 
   40% { 
-    transform: translateY(-8px);
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
+    transform: translateY(-6px);
     opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUpFade {
-  0% {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
   }
 }
 
 .animate-bounceDots {
-  animation: bounceDots 1.4s infinite ease-in-out both;
+  animation: bounceDots 1.2s infinite ease-in-out;
+}
+
+/* 🌟 Animation fade existants - Plus douce */
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-slide-up-fade {
-  animation: slideUpFade 0.6s ease-out forwards;
+  animation: slideUpFade 0.2s ease-out forwards;
 }
 
-.animate-shimmer {
-  animation: shimmer 2s infinite;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  background-size: 200px 100%;
+/* Hovers simples */
+.animate-button-hover:hover:not(:disabled) {
+  transform: scale(1.05);
 }
 
-/* Enhanced Sequential animation delays */
-.messages-container.show > div:nth-child(1) { animation-delay: 0.1s; }
-.messages-container.show > div:nth-child(2) { animation-delay: 0.2s; }
-.messages-container.show > div:nth-child(3) { animation-delay: 0.3s; }
-.messages-container.show > div:nth-child(4) { animation-delay: 0.4s; }
-.messages-container.show > div:nth-child(5) { animation-delay: 0.5s; }
-
-.sidebar-scroll-container {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+.animate-input-focus:focus {
+  transform: scale(1.01);
 }
 
-.sidebar-scroll-container::-webkit-scrollbar {
-  display: none; /* Chrome/Safari/Webkit */
-}
+/* Délais courts et fluides */
+.messages-container.show > div:nth-child(1) { animation-delay: 0.05s; }
+.messages-container.show > div:nth-child(2) { animation-delay: 0.1s; }
+.messages-container.show > div:nth-child(3) { animation-delay: 0.15s; }
+.messages-container.show > div:nth-child(4) { animation-delay: 0.2s; }
+.messages-container.show > div:nth-child(5) { animation-delay: 0.25s; }
 
 /* Custom Scrollbar Styles */
 .custom-scrollbar::-webkit-scrollbar {
@@ -628,4 +663,13 @@ html {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8));
+}
+
+.sidebar-scroll-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar-scroll-container::-webkit-scrollbar {
+  display: none;
 }
