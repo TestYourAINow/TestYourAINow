@@ -1,45 +1,43 @@
+// public/widget-client.js
 window.AIChatWidget = {
   init: function ({ widgetId }) {
-    // Évite le double chargement
     if (document.getElementById("ai-chat-widget")) return;
 
-    // Crée un <iframe> pour charger ton widget SSR
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
     iframe.src = `https://testyourainow.com/widget/${widgetId}`;
     iframe.style.position = "fixed";
     iframe.style.bottom = "24px";
-    iframe.style.right = "24px";
-    iframe.style.width = "100%";
-    iframe.style.maxWidth = "400px";
-    iframe.style.height = "600px";
-    iframe.style.maxHeight = "90vh";
+    iframe.style.right  = "24px";
+
+    // 👉 taille "fermée" = juste le bouton
+    iframe.style.width  = "72px";
+    iframe.style.height = "72px";
+
     iframe.style.border = "none";
-    iframe.style.zIndex = "999999";
+    iframe.style.zIndex = "2147483647";
     iframe.style.borderRadius = "18px";
-    iframe.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.3)";
-    iframe.style.transition = "all 0.3s ease";
+    iframe.style.background = "transparent";
+    iframe.setAttribute("allowtransparency", "true");
 
-    const mediaQuery = window.matchMedia("(max-width: 600px)");
-    function adaptSize() {
-      if (mediaQuery.matches) {
-        iframe.style.width = "95%";
-        iframe.style.height = "80vh";
-        iframe.style.right = "2.5%";
-        iframe.style.bottom = "2.5%";
-        iframe.style.borderRadius = "12px";
-      } else {
-        iframe.style.width = "100%";
-        iframe.style.maxWidth = "400px";
-        iframe.style.height = "600px";
-        iframe.style.bottom = "24px";
-        iframe.style.right = "24px";
-        iframe.style.borderRadius = "18px";
-      }
+    // Mobile offset léger
+    const mq = window.matchMedia("(max-width: 600px)");
+    function place() {
+      if (mq.matches) { iframe.style.bottom = "16px"; iframe.style.right = "16px"; }
+      else { iframe.style.bottom = "24px"; iframe.style.right = "24px"; }
     }
+    mq.addEventListener?.("change", place);
+    place();
 
-    mediaQuery.addListener(adaptSize);
-    adaptSize();
+    // 👉 écoute les messages venant du widget pour redimensionner
+    window.addEventListener("message", (event) => {
+      const d = event.data;
+      if (!d || d.source !== "TYAN_WIDGET") return;
+      if (d.type === "RESIZE" && typeof d.width === "number" && typeof d.height === "number") {
+        iframe.style.width  = d.width + "px";
+        iframe.style.height = d.height + "px";
+      }
+    });
 
     document.body.appendChild(iframe);
   }
