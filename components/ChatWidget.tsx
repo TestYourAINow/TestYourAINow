@@ -64,25 +64,6 @@ export default function ChatWidget({ config }: { config: ChatWidgetConfig }) {
     }
   }, [isOpen]);
 
-// taille initiale fermée quand ça charge
-useEffect(() => {
-  try {
-    window.parent?.postMessage({ source: "TYAN_WIDGET", type: "RESIZE", width: 72, height: 72 }, "*");
-  } catch {}
-}, []);
-
-// resize quand on ouvre/ferme
-useEffect(() => {
-  const payload = {
-    source: "TYAN_WIDGET",
-    type: "RESIZE",
-    width: isOpen ? 380 : 72,
-    height: isOpen ? 600 : 72
-  };
-  try { window.parent?.postMessage(payload, "*"); } catch {}
-}, [isOpen]);
-
-
   const handleSend = async () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
