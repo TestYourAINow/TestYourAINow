@@ -26,6 +26,22 @@ interface ChatbotConfigDocument {
   isActive: boolean;
 }
 
+// 🌐 CORS Headers - NOUVEAU
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-public-kind, x-widget-id, x-widget-token',
+  'Access-Control-Max-Age': '86400',
+};
+
+// ✅ OPTIONS handler pour preflight requests - NOUVEAU
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
+}
+
 export async function GET(
   req: NextRequest,
   context: any
@@ -42,14 +58,20 @@ export async function GET(
     if (!config) {
       return NextResponse.json({ 
         error: 'Widget not found' 
-      }, { status: 404 });
+      }, { 
+        status: 404,
+        headers: corsHeaders // 🆕 CORS ajouté
+      });
     }
 
     // Vérifier si le widget est actif
     if (!config.isActive) {
       return NextResponse.json({ 
         error: 'Widget is not active' 
-      }, { status: 403 });
+      }, { 
+        status: 403,
+        headers: corsHeaders // 🆕 CORS ajouté
+      });
     }
 
     // Retourner la config complète pour le widget
@@ -77,12 +99,17 @@ export async function GET(
     return NextResponse.json({ 
       success: true,
       config: widgetConfig 
+    }, {
+      headers: corsHeaders // 🆕 CORS ajouté
     });
     
   } catch (error) {
     console.error('Error loading widget config:', error);
     return NextResponse.json({ 
       error: 'Server error' 
-    }, { status: 500 });
+    }, { 
+      status: 500,
+      headers: corsHeaders // 🆕 CORS ajouté
+    });
   }
 }

@@ -21,6 +21,22 @@ interface DemoDocument {
   // ... autres champs si nécessaire
 }
 
+// 🌐 CORS Headers - NOUVEAU
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-public-kind, x-widget-id, x-widget-token, x-demo-id, x-demo-token',
+  'Access-Control-Max-Age': '86400',
+};
+
+// ✅ OPTIONS handler pour preflight requests - NOUVEAU
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
+}
+
 export async function POST(req: NextRequest, context: any) {
   try {
     // Récupérer les paramètres
@@ -50,7 +66,10 @@ export async function POST(req: NextRequest, context: any) {
         console.log('✅ Token démo valide, accès public autorisé');
       } else {
         console.log('❌ Token démo invalide ou démo désactivée');
-        return NextResponse.json({ error: "Invalid demo token" }, { status: 401 });
+        return NextResponse.json({ error: "Invalid demo token" }, { 
+          status: 401,
+          headers: corsHeaders // 🆕 CORS ajouté
+        });
       }
     } else if (publicKind === 'widget' && widgetId && widgetToken === 'public') {
       // Mode public WIDGET : validation simplifiée
@@ -64,7 +83,10 @@ export async function POST(req: NextRequest, context: any) {
       // Mode privé : vérifier la session
       session = await getServerSession(authOptions);
       if (!session || !session.user?.email || !session.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { 
+          status: 401,
+          headers: corsHeaders // 🆕 CORS ajouté
+        });
       }
     }
 
@@ -74,7 +96,10 @@ export async function POST(req: NextRequest, context: any) {
     const welcomeMessage: string | null = body.welcomeMessage || null;
 
     if (!userMessage || typeof userMessage !== "string") {
-      return NextResponse.json({ error: "Message is required." }, { status: 400 });
+      return NextResponse.json({ error: "Message is required." }, { 
+        status: 400,
+        headers: corsHeaders // 🆕 CORS ajouté
+      });
     }
 
     // 🆕 ÉTAPE 2: Récupérer l'agent selon le mode (public ou privé)
@@ -88,13 +113,19 @@ export async function POST(req: NextRequest, context: any) {
       // Mode privé : récupérer l'agent avec vérification du userId
       // ✅ Fix TypeScript : vérifier que session n'est pas null
       if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { 
+          status: 401,
+          headers: corsHeaders // 🆕 CORS ajouté
+        });
       }
       agent = await Agent.findOne({ _id: id, userId: session.user.id });
     }
 
     if (!agent) {
-      return NextResponse.json({ error: "Agent not found." }, { status: 404 });
+      return NextResponse.json({ error: "Agent not found." }, { 
+        status: 404,
+        headers: corsHeaders // 🆕 CORS ajouté
+      });
     }
 
     // 🆕 ÉTAPE 3: Créer l'instance OpenAI selon le mode
@@ -116,12 +147,18 @@ export async function POST(req: NextRequest, context: any) {
       if (isPublicOK) {
         return NextResponse.json(
           { error: `Mode public: ${openaiResult.error}` },
-          { status: 400 }
+          { 
+            status: 400,
+            headers: corsHeaders // 🆕 CORS ajouté
+          }
         );
       } else {
         return NextResponse.json(
           { error: "Unauthorized" },
-          { status: 401 }
+          { 
+            status: 401,
+            headers: corsHeaders // 🆕 CORS ajouté
+          }
         );
       }
     }
@@ -210,7 +247,11 @@ export async function POST(req: NextRequest, context: any) {
     });
 
     const reply = completion.choices[0]?.message?.content || "Je n'ai pas pu répondre.";
-    return NextResponse.json({ reply });
+    
+    // 🆕 CORS ajouté au success response
+    return NextResponse.json({ reply }, {
+      headers: corsHeaders
+    });
     
   } catch (error: any) {
     console.error("Agent ask error:", error);
@@ -218,13 +259,19 @@ export async function POST(req: NextRequest, context: any) {
     if (error.status === 401) {
       return NextResponse.json(
         { error: "Invalid OpenAI API key. Please check your API key in settings." },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: corsHeaders // 🆕 CORS ajouté
+        }
       );
     }
     
     return NextResponse.json(
       { error: "Something went wrong while processing your request." },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: corsHeaders // 🆕 CORS ajouté
+      }
     );
   }
 }
