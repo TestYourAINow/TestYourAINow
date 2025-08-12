@@ -1,4 +1,4 @@
-// app/api/widget/[widgetId]/config/route.ts
+// app/api/widget/[widgetId]/config/route.ts - VERSION AVEC CORS
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { ChatbotConfig } from "@/models/ChatbotConfig";
@@ -26,7 +26,7 @@ interface ChatbotConfigDocument {
   isActive: boolean;
 }
 
-// 🌐 CORS Headers - NOUVEAU
+// 🌐 CORS Headers pour permettre les requêtes cross-origin
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -34,7 +34,7 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 
-// ✅ OPTIONS handler pour preflight requests - NOUVEAU
+// ✅ OPTIONS handler pour les preflight requests
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
@@ -60,7 +60,7 @@ export async function GET(
         error: 'Widget not found' 
       }, { 
         status: 404,
-        headers: corsHeaders // 🆕 CORS ajouté
+        headers: corsHeaders 
       });
     }
 
@@ -70,7 +70,7 @@ export async function GET(
         error: 'Widget is not active' 
       }, { 
         status: 403,
-        headers: corsHeaders // 🆕 CORS ajouté
+        headers: corsHeaders 
       });
     }
 
@@ -78,7 +78,7 @@ export async function GET(
     const widgetConfig = {
       _id: config._id,
       name: config.name,
-      avatar: config.avatar || '/Default Avatar.png',
+      avatar: config.avatar || 'https://testyourainow.com/Default Avatar.png',
       welcomeMessage: config.welcomeMessage || 'Hello! How can I help you today?',
       placeholderText: config.placeholderText || 'Type your message...',
       typingText: config.typingText || 'AI is typing...',
@@ -100,7 +100,7 @@ export async function GET(
       success: true,
       config: widgetConfig 
     }, {
-      headers: corsHeaders // 🆕 CORS ajouté
+      headers: corsHeaders
     });
     
   } catch (error) {
@@ -109,7 +109,7 @@ export async function GET(
       error: 'Server error' 
     }, { 
       status: 500,
-      headers: corsHeaders // 🆕 CORS ajouté
+      headers: corsHeaders 
     });
   }
 }

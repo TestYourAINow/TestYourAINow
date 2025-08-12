@@ -465,7 +465,7 @@ window.AIChatWidget = {
       <div class="chat-window ${isDark ? 'dark' : ''}" id="chat-window">
         <div class="chat-header">
           <div class="header-content">
-            <img src="${this.config.avatar}" alt="Avatar" class="avatar" onerror="this.src='/Default Avatar.png'">
+            <img src="${this.config.avatar}" alt="Avatar" class="avatar" onerror="this.src='https://testyourainow.com/Default Avatar.png'">
             <div class="chat-info">
               <h3>${this.config.chatTitle}</h3>
               <p>${this.config.subtitle}</p>
@@ -626,7 +626,7 @@ window.AIChatWidget = {
       div.className = `message ${message.isBot ? 'bot' : 'user'}`;
       
       div.innerHTML = `
-        ${message.isBot ? `<img src="${this.config.avatar}" class="message-avatar" onerror="this.src='/Default Avatar.png'">` : ''}
+        ${message.isBot ? `<img src="${this.config.avatar}" class="message-avatar" onerror="this.src='https://testyourainow.com/Default Avatar.png'">` : ''}
         <div>
           <div class="message-bubble ${message.isBot ? 'bot' : 'user'}">${message.text}</div>
           <div class="message-time">${new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</div>
@@ -645,7 +645,7 @@ window.AIChatWidget = {
     typing.className = 'message bot';
     typing.id = 'typing';
     typing.innerHTML = `
-      <img src="${this.config.avatar}" class="message-avatar" onerror="this.src='/Default Avatar.png'">
+      <img src="${this.config.avatar}" class="message-avatar" onerror="this.src='https://testyourainow.com/Default Avatar.png'">
       <div class="typing-indicator">
         <div class="typing-dot"></div>
         <div class="typing-dot"></div>
