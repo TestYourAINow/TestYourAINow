@@ -45,19 +45,8 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://testyourainow.com';
 
-  const embedCode = `<!-- Add this before </body> -->
-<script type="text/javascript">
-  window.addEventListener('DOMContentLoaded', function() {
-    var s = document.createElement('script');
-    s.src = "${baseUrl}/widget-client.js";
-    s.async = true;
-    s.onload = function() {
-      window.AIChatWidget.init({ widgetId: "${widgetId}" });
-    };
-    document.body.appendChild(s);
-  });
-</script>`;
-
+const embedCode = `<!-- Add this to your HTML page, preferably before the closing </body> tag -->
+<script src="${baseUrl}/widget/${widgetId}/widget.js?widgetId=${widgetId}"></script>`;
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(embedCode);
