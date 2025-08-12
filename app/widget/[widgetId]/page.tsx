@@ -1,4 +1,4 @@
-// app/widget/[widgetId]/page.tsx - VERSION DIRECTE (sans WidgetClient)
+// app/widget/[widgetId]/page.tsx - 
 import { ChatbotConfig } from "@/models/ChatbotConfig";
 import { connectToDatabase } from "@/lib/db";
 import { ChatWidgetConfig } from "@/types/ChatWidgetConfig";
