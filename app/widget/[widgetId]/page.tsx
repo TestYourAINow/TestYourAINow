@@ -1,155 +1,131 @@
 // app/widget/[widgetId]/page.tsx
-import { connectToDatabase } from "@/lib/db";
-import { ChatbotConfig } from "@/models/ChatbotConfig";
-import { ChatWidgetConfig } from "@/types/ChatWidgetConfig";
-import { notFound } from "next/navigation";
+// Page iFrame ultra-safe (aucun import, aucun typage strict, pas de DB)
+// -> évite les 500, accepte les variables dynamiques (searchParams), rendu plein écran.
 
-// 🔘 BOUTON LANCEUR (optionnel si tu affiches directement le chat)
-function WidgetButton({ color, onClick }: { color: string; onClick: () => void }) {
-  return (
-    <div style={{
-      width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center"
-    }}>
-      <button
-        onClick={onClick}
-        aria-label="Open chat"
-        style={{
-          width: 56, height: 56, borderRadius: "50%", border: 0, cursor: "pointer",
-          boxShadow: "0 10px 30px rgba(0,0,0,.25)", background: color, color: "#fff", fontSize: 24, lineHeight: 1
-        }}
-      >💬</button>
-    </div>
-  );
-}
+export const dynamic = "force-dynamic"; // pas de static optimization
 
-// 🧩 CHAT UI minimal (remplace-le par ton beau “preview” si tu veux)
-function ChatUI({ config }: { config: ChatWidgetConfig }) {
-  const dark = config.theme === "dark";
-  return (
-    <div
-      style={{
-        width: "100vw", height: "100vh",
-        background: dark ? "#0b0f19" : "#ffffff",
-        color: dark ? "#e5e7eb" : "#111827",
-        fontFamily: "Inter,system-ui,Arial", display: "flex", flexDirection: "column"
-      }}
-    >
-      <div style={{
-        background: config.primaryColor, color: "#fff",
-        padding: "16px", fontWeight: 600, minHeight: 64, display: "flex", alignItems: "center"
-      }}>
-        {config.chatTitle || "Chat"}
-      </div>
+export default async function WidgetPage({ params, searchParams }: any) {
+  const widgetId = params?.widgetId;
 
-      <div id="msgs" style={{
-        flex: 1, overflow: "auto", padding: 16,
-        background: dark ? "#111827" : "#f9fafb"
-      }} />
+  // 1) Récupère les settings via ton API (relatif => même origine, pas d’URL absolue)
+  let payload: any = null;
+  try {
+    const res = await fetch(`/api/widget/${widgetId}/settings`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    payload = await res.json();
+  } catch (e: any) {
+    payload = { error: String(e?.message || e) };
+  }
 
-      <div style={{
-        display: "flex", gap: 8, padding: 12,
-        borderTop: dark ? "1px solid rgba(255,255,255,.08)" : "1px solid rgba(0,0,0,.08)"
-      }}>
-        <input
-          id="inp"
-          placeholder={config.placeholderText || "Écris ton message..."}
-          style={{
-            flex: 1, padding: "10px 12px", borderRadius: 10,
-            border: dark ? "1px solid rgba(255,255,255,.16)" : "1px solid rgba(0,0,0,.16)",
-            background: dark ? "#0f1422" : "#fff", color: "inherit"
-          }}
-        />
-        <button id="send" className="btn" style={{
-          padding: "10px 14px", borderRadius: 10, border: 0,
-          background: config.primaryColor, color: "#fff", cursor: "pointer"
-        }}>Envoyer</button>
-      </div>
+  // 2) Sécurise le chargement
+  if (!payload || payload.error) {
+    return (
+      <html>
+        <body style={{ margin: 0, fontFamily: "system-ui, Arial" }}>
+          <div style={{ padding: 16, color: "#b91c1c", background: "#fef2f2" }}>
+            <b>Widget error:</b> {payload?.error || "Failed to load settings"}
+          </div>
+        </body>
+      </html>
+    );
+  }
 
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function(){
-              var cfg = ${JSON.stringify({
-                welcomeMessage: true,
-              })};
-              var msgs = document.getElementById("msgs");
-              function addMsg(t, who){
-                var d = document.createElement("div");
-                d.style.margin = "8px 0";
-                d.style.textAlign = who === "bot" ? "left" : "right";
-                d.textContent = t;
-                msgs.appendChild(d);
-                msgs.scrollTop = msgs.scrollHeight;
-              }
-              // message d'accueil si présent
-              var wm = ${JSON.stringify(null)}; // on laisse le serveur le gérer via config ci-dessous
-              if (wm && wm.length) addMsg(wm, "bot");
+  const s = payload.settings || payload.config || {};
 
-              var inp = document.getElementById("inp");
-              var send = document.getElementById("send");
-              async function ask(){
-                var t = inp.value.trim();
-                if(!t) return;
-                addMsg(t, "me");
-                inp.value = "";
-                try{
-                  var r = await fetch("/api/widget/ask", {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ widgetId: "${/* will be injected in parent */""}", message: t })
-                  });
-                  var data = await r.json();
-                  addMsg(data.reply || "…", "bot");
-                }catch(e){
-                  addMsg("Erreur réseau.", "bot");
-                }
-              }
-              send.addEventListener("click", ask);
-              inp.addEventListener("keydown", function(e){ if(e.key==="Enter") ask(); });
-            })();`
-        }}
-      />
-    </div>
-  );
-}
+  // 3) Variables dynamiques (priorité aux searchParams passés par widget.js)
+  const themeParam = (searchParams?.theme as string) || "";
+  const theme =
+    themeParam === "dark" || themeParam === "light"
+      ? themeParam
+      : (s.theme || "light");
 
-// 🚀 PAGE SERVEUR — aucun headers(), aucun Promise dans les types de params
-export default async function WidgetPage({
-  params,
-  searchParams,
-}: {
-  params: { widgetId: string };
-  searchParams: { [k: string]: string | string[] | undefined };
-}) {
-  await connectToDatabase();
+  const themeColorParam = (searchParams?.themeColor as string) || "";
+  const themeColor =
+    themeColorParam ? decodeURIComponent(themeColorParam) : (s.themeColor || s.primaryColor || "#4f46e5");
 
-  const widgetId = params.widgetId;
-  const raw = await ChatbotConfig.findById(widgetId).lean<ChatWidgetConfig>();
-  if (!raw) return notFound();
+  const template = (searchParams?.template as string) || s.template || "professional";
 
-  // on clone proprement (lean + JSON)
-  const base = JSON.parse(JSON.stringify(raw)) as ChatWidgetConfig;
+  const dark = theme === "dark";
 
-  // ✅ Overrides dynamiques via search params (comme l’autre site)
-  const themeFromUrl = (searchParams.theme as string) || "";
-  const themeColorFromUrl = (searchParams.themeColor as string) || "";
-  const templateFromUrl = (searchParams.template as string) || ""; // prêt pour plus tard
-
-  const config: ChatWidgetConfig = {
-    ...base,
-    theme: (themeFromUrl === "dark" || themeFromUrl === "light") ? (themeFromUrl as "dark"|"light") : base.theme,
-    primaryColor: themeColorFromUrl ? decodeURIComponent(themeColorFromUrl) : base.primaryColor,
-    // tu peux aussi brancher "template" dans ta logique interne si tu en as besoin
-  };
-
+  // 4) UI minimaliste (remplace plus tard par ton “beau preview”)
   return (
     <html>
       <head>
-        <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>{config.chatTitle || "Chat"}</title>
+        <title>{s.ui?.chatTitle || "Chat"}</title>
+        <style>{`
+          :root { --pri: ${themeColor}; }
+          html, body { height: 100%; }
+          body {
+            margin: 0;
+            background: ${dark ? "#0b0f19" : "#ffffff"};
+            color: ${dark ? "#e5e7eb" : "#111827"};
+            font-family: Inter, system-ui, Arial;
+          }
+          .card { width: 100%; height: 100vh; display: flex; flex-direction: column; }
+          .header { padding: 12px 16px; font-weight: 600; background: var(--pri); color: #fff; }
+          .messages { flex: 1; overflow: auto; padding: 12px 16px; background: ${dark ? "#111827" : "#f9fafb"}; }
+          .input { display: flex; gap: 8px; padding: 12px; border-top: 1px solid ${dark ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.08)"}; }
+          .input input { flex: 1; padding: 10px 12px; border-radius: 10px; border: 1px solid ${dark ? "rgba(255,255,255,.16)" : "rgba(0,0,0,.16)"}; background: ${dark ? "#0f1422" : "#fff"}; color: inherit; }
+          .btn { padding: 10px 14px; border-radius: 10px; border: 0; background: var(--pri); color:#fff; cursor: pointer; }
+        `}</style>
       </head>
-      <body style={{ margin: 0, padding: 0, overflow: "hidden" }}>
-        <ChatUI config={config} />
+      <body>
+        <div className="card">
+          <div className="header">
+            {(s.ui?.chatTitle || "Chat")} {template !== "professional" ? `— ${template}` : ""}
+          </div>
+          <div id="msgs" className="messages"></div>
+          <div className="input">
+            <input id="inp" placeholder={s.ui?.placeholder || "Écris ton message..."} />
+            <button id="send" className="btn">Envoyer</button>
+          </div>
+        </div>
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(){
+                var msgs = document.getElementById("msgs");
+                function addMsg(t, who){
+                  var d = document.createElement("div");
+                  d.style.margin = "8px 0";
+                  d.style.textAlign = who === "bot" ? "left" : "right";
+                  d.textContent = t;
+                  msgs.appendChild(d);
+                  msgs.scrollTop = msgs.scrollHeight;
+                }
+                var welcome = ${JSON.stringify(s.ui?.welcomeMessage || "")};
+                var showWelcome = ${JSON.stringify(s.ui?.showWelcomeMessage !== false)};
+                if (showWelcome && welcome) addMsg(welcome, "bot");
+
+                var inp = document.getElementById("inp");
+                var send = document.getElementById("send");
+                async function ask(){
+                  var t = inp.value.trim();
+                  if(!t) return;
+                  addMsg(t, "me");
+                  inp.value = "";
+                  try{
+                    var r = await fetch("/api/widget/ask", {
+                      method:"POST",
+                      headers:{ "Content-Type":"application/json" },
+                      body: JSON.stringify({ widgetId: ${JSON.stringify(widgetId)}, message: t })
+                    });
+                    var data = await r.json();
+                    addMsg(data.reply || "…", "bot");
+                  }catch(e){
+                    addMsg("Erreur réseau.", "bot");
+                  }
+                }
+                send.addEventListener("click", ask);
+                inp.addEventListener("keydown", function(e){ if(e.key==="Enter") ask(); });
+              })();
+            `,
+          }}
+        />
       </body>
     </html>
   );
