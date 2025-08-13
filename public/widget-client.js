@@ -1,18 +1,41 @@
-// public/widget-client.js - VERSION MODERNE
+// 🚀 CLIENT WIDGET SCRIPT - Version Production
+// Utilisé par les clients pour intégrer le widget sur leur site
+
 window.AIChatWidget = {
   iframe: null,
   isOpen: false,
+  widgetId: null,
+  config: {
+    width: 380,
+    height: 600
+  },
   
-  init: function ({ widgetId }) {
-    // Évite le double chargement
-    if (document.getElementById("ai-chat-widget")) return;
+  // 🎯 Fonction d'initialisation principale
+  init: function(options = {}) {
+    if (!options.widgetId) {
+      console.error('AIChatWidget: widgetId requis');
+      return;
+    }
+    
+    // Éviter le double chargement
+    if (document.getElementById("ai-chat-widget")) {
+      console.warn('AIChatWidget: Widget déjà chargé');
+      return;
+    }
 
-    // 🆕 Crée un iframe INVISIBLE au début
+    this.widgetId = options.widgetId;
+    this.createIframe();
+    this.setupMessageListener();
+  },
+
+  // 📱 Créer l'iframe invisible
+  createIframe: function() {
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
-    iframe.src = `https://testyourainow.com/widget/${widgetId}`;
+    iframe.src = `https://testyourainow.com/widget/${this.widgetId}`;
+    iframe.title = "Assistant IA";
     
-    // 🎯 COMMENCE INVISIBLE - Sera redimensionné par les messages
+    // 🔧 Style initial : invisible
     iframe.style.cssText = `
       position: fixed;
       bottom: 24px;
@@ -25,44 +48,52 @@ window.AIChatWidget = {
       opacity: 0;
       pointer-events: none;
       transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border-radius: 20px;
     `;
 
     this.iframe = iframe;
     document.body.appendChild(iframe);
-
-    // 🎧 Écouter les messages du widget pour redimensionner
-    window.addEventListener('message', this.handleMessage.bind(this));
   },
 
-  // 🎧 Gestion des messages depuis l'iframe
-  handleMessage: function(event) {
-    // Sécurité : vérifier l'origine
-    if (!event.origin.includes('testyourainow.com')) return;
-    
-    const { type, data } = event.data;
-    
-    switch (type) {
-      case 'WIDGET_OPEN':
-        this.expandToChat(data.width || 380, data.height || 600);
-        break;
-        
-      case 'WIDGET_CLOSE':
-        this.shrinkToButton();
-        break;
-        
-      case 'WIDGET_READY':
-        // 🆕 Widget prêt : montrer SEULEMENT le bouton (64x64)
-        this.showButton();
-        break;
-    }
+  // 🎧 Écouter les messages de l'iframe
+  setupMessageListener: function() {
+    window.addEventListener('message', (event) => {
+      // 🔒 Sécurité : vérifier l'origine
+      if (!event.origin.includes('testyourainow.com')) return;
+      
+      const { type, data } = event.data;
+      
+      switch (type) {
+        case 'WIDGET_READY':
+          this.handleWidgetReady(data);
+          break;
+          
+        case 'WIDGET_OPEN':
+          this.handleWidgetOpen(data);
+          break;
+          
+        case 'WIDGET_CLOSE':
+          this.handleWidgetClose();
+          break;
+          
+        case 'WIDGET_ERROR':
+          this.handleWidgetError(data);
+          break;
+      }
+    });
   },
 
-  // 🔘 Montrer seulement le bouton (état initial)
-  showButton: function() {
+  // ✅ Widget prêt : afficher le bouton
+  handleWidgetReady: function(data) {
     if (!this.iframe) return;
+    
+    // Sauvegarder la config
+    if (data.width) this.config.width = data.width;
+    if (data.height) this.config.height = data.height;
     
     this.isOpen = false;
     
+    // 🔘 Afficher le bouton chat
     this.iframe.style.cssText = `
       position: fixed;
       bottom: 24px;
@@ -78,18 +109,23 @@ window.AIChatWidget = {
       transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     `;
+    
+    // ✨ Animation d'entrée
+    this.animateButtonEntrance();
   },
 
-  // 🏠 Agrandir en chat (remplace complètement le bouton)
-  expandToChat: function(width, height) {
+  // 🏠 Widget ouvert : agrandir en chat
+  handleWidgetOpen: function(data) {
     if (!this.iframe) return;
     
     this.isOpen = true;
     
-    // 📱 Responsive selon l'écran
-    const isMobile = window.innerWidth <= 600;
+    // 📱 Responsive design
+    const isMobile = window.innerWidth <= 768;
+    const maxHeight = window.innerHeight - 100;
     
     if (isMobile) {
+      // Mobile : plein écran
       this.iframe.style.cssText = `
         position: fixed;
         bottom: 0;
@@ -102,30 +138,33 @@ window.AIChatWidget = {
         z-index: 999999;
         border-radius: 20px 20px 0 0;
         background: transparent;
+        opacity: 1;
+        pointer-events: auto;
         transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.3);
-        pointer-events: auto;
       `;
     } else {
+      // Desktop : fenêtre dimensionnée
       this.iframe.style.cssText = `
         position: fixed;
         bottom: 24px;
         right: 24px;
-        width: ${width}px;
-        height: ${Math.min(height, window.innerHeight - 100)}px;
+        width: ${Math.min(this.config.width, window.innerWidth - 48)}px;
+        height: ${Math.min(this.config.height, maxHeight)}px;
         border: none;
         z-index: 999999;
         border-radius: 20px;
         background: transparent;
+        opacity: 1;
+        pointer-events: auto;
         transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-        pointer-events: auto;
       `;
     }
   },
 
-  // 🔘 Rétrécir en bouton (revenir à l'état initial)
-  shrinkToButton: function() {
+  // 🔘 Widget fermé : revenir au bouton
+  handleWidgetClose: function() {
     if (!this.iframe) return;
     
     this.isOpen = false;
@@ -147,35 +186,83 @@ window.AIChatWidget = {
     `;
   },
 
+  // 🚨 Gestion d'erreur
+  handleWidgetError: function(data) {
+    console.error('AIChatWidget Error:', data.error);
+    // Optionnel : retry logic ou fallback
+  },
+
   // ✨ Animation d'apparition du bouton
-  animateButtonIn: function() {
+  animateButtonEntrance: function() {
     if (!this.iframe) return;
     
-    // Petit effet bounce à l'apparition
+    // Effet bounce d'entrée
     this.iframe.style.transform = 'scale(0.8)';
     
     setTimeout(() => {
-      this.iframe.style.transform = 'scale(1.05)';
+      this.iframe.style.transform = 'scale(1.1)';
       setTimeout(() => {
         this.iframe.style.transform = 'scale(1)';
       }, 150);
     }, 100);
   },
 
-  // 🗑️ Fonction de nettoyage
+  // 📱 Gestion responsive
+  handleResize: function() {
+    if (this.isOpen && this.iframe) {
+      // Recalculer les dimensions si le chat est ouvert
+      this.handleWidgetOpen({ 
+        width: this.config.width, 
+        height: this.config.height 
+      });
+    }
+  },
+
+  // 🗑️ Nettoyage
   destroy: function() {
     if (this.iframe) {
       this.iframe.remove();
       this.iframe = null;
     }
-    window.removeEventListener('message', this.handleMessage.bind(this));
+    this.isOpen = false;
+    this.widgetId = null;
+  },
+
+  // 📊 API publique pour les développeurs
+  getStatus: function() {
+    return {
+      isLoaded: !!this.iframe,
+      isOpen: this.isOpen,
+      widgetId: this.widgetId
+    };
   }
 };
 
-// 📱 Écouter les resize d'écran
+// 📱 Écouter les changements de taille d'écran
 window.addEventListener('resize', function() {
-  if (window.AIChatWidget.isOpen && window.AIChatWidget.iframe) {
-    // Re-calculer les dimensions si ouvert
-    window.AIChatWidget.expandToChat(380, 600);
+  if (window.AIChatWidget && window.AIChatWidget.handleResize) {
+    window.AIChatWidget.handleResize();
   }
 });
+
+// 🔄 Auto-initialisation si un widgetId est fourni dans l'URL du script
+(function() {
+  const scripts = document.querySelectorAll('script[src*="widget-client.js"]');
+  const lastScript = scripts[scripts.length - 1];
+  
+  if (lastScript && lastScript.src) {
+    const url = new URL(lastScript.src);
+    const widgetId = url.searchParams.get('widgetId') || url.searchParams.get('id');
+    
+    if (widgetId) {
+      // Attendre que le DOM soit prêt
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+          window.AIChatWidget.init({ widgetId: widgetId });
+        });
+      } else {
+        window.AIChatWidget.init({ widgetId: widgetId });
+      }
+    }
+  }
+})();

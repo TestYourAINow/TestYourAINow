@@ -1,94 +1,148 @@
-// app/widget/[widgetId]/page.tsx - VERSION DIRECTE (sans WidgetClient)
 import { ChatbotConfig } from "@/models/ChatbotConfig";
 import { connectToDatabase } from "@/lib/db";
-import { ChatWidgetConfig } from "@/types/ChatWidgetConfig";
 import { notFound } from "next/navigation";
 import ChatWidget from "@/components/ChatWidget";
 
-// 🆕 Composant client inline
-function WidgetContainer({ config }: { config: ChatWidgetConfig }) {
-  return (
-    <>
-      {/* Import du CSS global + overrides pour iframe */}
-      <link rel="stylesheet" href="/globals.css" />
-      <style>{`
-        body {
-          margin: 0;
-          padding: 0;
-          background: transparent !important;
-          overflow: hidden;
-        }
-        :root {
-          --background: transparent;
-        }
-      `}</style>
-
-      {/* Script de communication */}
-      <script dangerouslySetInnerHTML={{
-        __html: `
-          // Communication avec le parent iframe
-          let isWidgetOpen = false;
-          
-          window.addEventListener('DOMContentLoaded', function() {
-            parent.postMessage({
-              type: 'WIDGET_READY',
-              data: { width: 380, height: 600 }
-            }, '*');
-            
-            const observer = new MutationObserver(function() {
-              const chatButton = document.querySelector('.chat-button');
-              const chatWindow = document.querySelector('.chat-window');
-              
-              const isNowOpen = !chatButton && chatWindow;
-              const isNowClosed = chatButton && !chatWindow;
-              
-              if (isNowOpen && !isWidgetOpen) {
-                isWidgetOpen = true;
-                parent.postMessage({
-                  type: 'WIDGET_OPEN',
-                  data: { width: 380, height: 600 }
-                }, '*');
-              } else if (isNowClosed && isWidgetOpen) {
-                isWidgetOpen = false;
-                parent.postMessage({
-                  type: 'WIDGET_CLOSE',
-                  data: {}
-                }, '*');
-              }
-            });
-            
-            observer.observe(document.body, {
-              childList: true,
-              subtree: true
-            });
-          });
-        `
-      }} />
-
-      {/* Le widget */}
-      <ChatWidget config={config} />
-    </>
-  );
-}
-
-export default async function WidgetPage({ params }: { params: Promise<{ widgetId: string }> }) {
+// 🎯 COMPOSANT STANDALONE - UTILISÉ DANS L'IFRAME
+export default async function WidgetStandalonePage({ 
+  params 
+}: { 
+  params: Promise<{ widgetId: string }> 
+}) {
   const resolvedParams = await params;
-  await connectToDatabase();
   
-  const rawConfig = await ChatbotConfig.findById(resolvedParams.widgetId).lean<ChatWidgetConfig>();
-  if (!rawConfig) return notFound();
-  
-  const config = JSON.parse(JSON.stringify(rawConfig));
+  try {
+    await connectToDatabase();
+    
+    // Récupérer la config depuis la DB
+    const rawConfig = await ChatbotConfig.findById(resolvedParams.widgetId).lean();
+    
+    if (!rawConfig) {
+      return notFound();
+    }
 
-  return (
-    <html>
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
-      <body>
-        <WidgetContainer config={config} />
-      </body>
-    </html>
-  );
+    // Sérialiser pour éviter les erreurs Next.js
+    const config = JSON.parse(JSON.stringify(rawConfig));
+
+    return (
+      <html lang="fr">
+        <head>
+          <meta charSet="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>{config.name || 'Chat Widget'}</title>
+          
+          {/* Import du CSS global */}
+          <link rel="stylesheet" href="/globals.css" />
+          
+          {/* Styles pour iframe */}
+          <style>{`
+            body {
+              margin: 0;
+              padding: 0;
+              background: transparent !important;
+              overflow: hidden;
+              font-family: Inter, system-ui, sans-serif;
+            }
+            
+            html, body {
+              height: 100%;
+              width: 100%;
+            }
+            
+            :root {
+              --background: transparent;
+              --foreground: #ffffff;
+            }
+            
+            /* Reset pour éviter les conflits */
+            * {
+              box-sizing: border-box;
+            }
+          `}</style>
+        </head>
+        
+        <body>
+          {/* 🎯 LE WIDGET - Mode production (isPreview=false) */}
+          <ChatWidget config={config} isPreview={false} />
+          
+          {/* 📡 Script de communication parent/iframe */}
+          <script dangerouslySetInnerHTML={{
+            __html: `
+              // Variables de communication
+              let isWidgetOpen = false;
+              let widgetConfig = {
+                width: ${config.width || 380},
+                height: ${config.height || 600}
+              };
+              
+              // Fonction d'initialisation
+              function initWidget() {
+                // Signaler que le widget est prêt
+                parent.postMessage({
+                  type: 'WIDGET_READY',
+                  data: { 
+                    width: widgetConfig.width, 
+                    height: widgetConfig.height 
+                  }
+                }, '*');
+                
+                // Observer les changements DOM pour détecter ouverture/fermeture
+                const observer = new MutationObserver(function(mutations) {
+                  const chatButton = document.querySelector('.chat-button');
+                  const chatWindow = document.querySelector('.chat-window');
+                  
+                  const isNowOpen = !chatButton && chatWindow;
+                  const isNowClosed = chatButton && !chatWindow;
+                  
+                  if (isNowOpen && !isWidgetOpen) {
+                    isWidgetOpen = true;
+                    parent.postMessage({
+                      type: 'WIDGET_OPEN',
+                      data: { 
+                        width: widgetConfig.width, 
+                        height: widgetConfig.height 
+                      }
+                    }, '*');
+                  } else if (isNowClosed && isWidgetOpen) {
+                    isWidgetOpen = false;
+                    parent.postMessage({
+                      type: 'WIDGET_CLOSE',
+                      data: {}
+                    }, '*');
+                  }
+                });
+                
+                // Observer tout le body
+                observer.observe(document.body, {
+                  childList: true,
+                  subtree: true,
+                  attributes: true,
+                  attributeFilter: ['class', 'style']
+                });
+              }
+              
+              // Lancer l'init quand le DOM est prêt
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initWidget);
+              } else {
+                initWidget();
+              }
+              
+              // Gestion des erreurs
+              window.addEventListener('error', function(e) {
+                parent.postMessage({
+                  type: 'WIDGET_ERROR',
+                  data: { error: e.message }
+                }, '*');
+              });
+            `
+          }} />
+        </body>
+      </html>
+    );
+    
+  } catch (error) {
+    console.error('Erreur chargement widget:', error);
+    return notFound();
+  }
 }
