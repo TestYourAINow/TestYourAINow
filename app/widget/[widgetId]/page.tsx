@@ -1,132 +1,184 @@
-// app/widget/[widgetId]/page.tsx
-// Page iFrame ultra-safe (aucun import, aucun typage strict, pas de DB)
-// -> évite les 500, accepte les variables dynamiques (searchParams), rendu plein écran.
+// app/widget/[widgetId]/page.tsx - VERSION AVEC COMMUNICATION
+import { ChatbotConfig } from "@/models/ChatbotConfig";
+import { connectToDatabase } from "@/lib/db";
+import { ChatWidgetConfig } from "@/types/ChatWidgetConfig";
+import { notFound } from "next/navigation";
+import ChatWidget from "@/components/ChatWidget"; // 🆕 IMPORT MANQUANT
 
-export const dynamic = "force-dynamic"; // pas de static optimization
-
-export default async function WidgetPage({ params, searchParams }: any) {
-  const widgetId = params?.widgetId;
-
-  // 1) Récupère les settings via ton API (relatif => même origine, pas d’URL absolue)
-  let payload: any = null;
-  try {
-    const res = await fetch(`/api/widget/${widgetId}/settings`, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
-    payload = await res.json();
-  } catch (e: any) {
-    payload = { error: String(e?.message || e) };
-  }
-
-  // 2) Sécurise le chargement
-  if (!payload || payload.error) {
-    return (
-      <html>
-        <body style={{ margin: 0, fontFamily: "system-ui, Arial" }}>
-          <div style={{ padding: 16, color: "#b91c1c", background: "#fef2f2" }}>
-            <b>Widget error:</b> {payload?.error || "Failed to load settings"}
-          </div>
-        </body>
-      </html>
-    );
-  }
-
-  const s = payload.settings || payload.config || {};
-
-  // 3) Variables dynamiques (priorité aux searchParams passés par widget.js)
-  const themeParam = (searchParams?.theme as string) || "";
-  const theme =
-    themeParam === "dark" || themeParam === "light"
-      ? themeParam
-      : (s.theme || "light");
-
-  const themeColorParam = (searchParams?.themeColor as string) || "";
-  const themeColor =
-    themeColorParam ? decodeURIComponent(themeColorParam) : (s.themeColor || s.primaryColor || "#4f46e5");
-
-  const template = (searchParams?.template as string) || s.template || "professional";
-
-  const dark = theme === "dark";
-
-  // 4) UI minimaliste (remplace plus tard par ton “beau preview”)
+// 🆕 Composant client pour le widget avec communication
+const WidgetWithCommunication = ({ config }: { config: ChatWidgetConfig }) => {
   return (
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>{s.ui?.chatTitle || "Chat"}</title>
-        <style>{`
-          :root { --pri: ${themeColor}; }
-          html, body { height: 100%; }
-          body {
-            margin: 0;
-            background: ${dark ? "#0b0f19" : "#ffffff"};
-            color: ${dark ? "#e5e7eb" : "#111827"};
-            font-family: Inter, system-ui, Arial;
-          }
-          .card { width: 100%; height: 100vh; display: flex; flex-direction: column; }
-          .header { padding: 12px 16px; font-weight: 600; background: var(--pri); color: #fff; }
-          .messages { flex: 1; overflow: auto; padding: 12px 16px; background: ${dark ? "#111827" : "#f9fafb"}; }
-          .input { display: flex; gap: 8px; padding: 12px; border-top: 1px solid ${dark ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.08)"}; }
-          .input input { flex: 1; padding: 10px 12px; border-radius: 10px; border: 1px solid ${dark ? "rgba(255,255,255,.16)" : "rgba(0,0,0,.16)"}; background: ${dark ? "#0f1422" : "#fff"}; color: inherit; }
-          .btn { padding: 10px 14px; border-radius: 10px; border: 0; background: var(--pri); color:#fff; cursor: pointer; }
-        `}</style>
-      </head>
-      <body>
-        <div className="card">
-          <div className="header">
-            {(s.ui?.chatTitle || "Chat")} {template !== "professional" ? `— ${template}` : ""}
-          </div>
-          <div id="msgs" className="messages"></div>
-          <div className="input">
-            <input id="inp" placeholder={s.ui?.placeholder || "Écris ton message..."} />
-            <button id="send" className="btn">Envoyer</button>
-          </div>
-        </div>
+    <>
+      {/* CSS minimal pour le widget - PAS de fond noir global */}
+      <style jsx global>{`
+        body {
+          margin: 0;
+          padding: 0;
+          background: transparent !important;
+          overflow: hidden;
+          font-family: Inter, system-ui, -apple-system, sans-serif;
+        }
+        
+        /* Import des animations nécessaires */
+        @keyframes bounceInSimple {
+          0% { opacity: 0; transform: scale(0.8); }
+          60% { opacity: 1; transform: scale(1.05); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes expandSimple {
+          0% { opacity: 0; transform: scale(0.9); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes slideInMessage {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes avatarPop {
+          0% { opacity: 0; transform: scale(0.8); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes slideUp {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes typingSlideIn {
+          0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        @keyframes bounceDots {
+          0%, 80%, 100% { transform: translateY(0); opacity: 0.7; }
+          40% { transform: translateY(-6px); opacity: 1; }
+        }
+        
+        @keyframes slideUpFade {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-bounce-in { animation: bounceInSimple 0.4s ease-out; }
+        .animate-expand-from-button { animation: expandSimple 0.3s ease-out; }
+        .animate-slide-in-message { animation: slideInMessage 0.2s ease-out forwards; opacity: 0; }
+        .animate-avatar-pop { animation: avatarPop 0.2s ease-out forwards; opacity: 0; }
+        .animate-slide-up { animation: slideUp 0.3s ease-out; animation-delay: 0.1s; animation-fill-mode: both; opacity: 0; }
+        .animate-typing-bubble { animation: typingSlideIn 0.3s ease-out forwards; opacity: 0; }
+        .animate-bounceDots { animation: bounceDots 1.2s infinite ease-in-out; }
+        .animate-slide-up-fade { animation: slideUpFade 0.2s ease-out forwards; }
+        .animate-button-hover:hover:not(:disabled) { transform: scale(1.05); }
+        .animate-input-focus:focus { transform: scale(1.01); }
+        
+        /* Styles du chat widget */
+        .chat-widget {
+          position: fixed;
+          bottom: 0;
+          right: 0;
+          z-index: 9999;
+          font-family: Inter, system-ui, sans-serif;
+        }
+        
+        .chat-button {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          background: linear-gradient(135deg, var(--primary-color, #3b82f6), color-mix(in srgb, var(--primary-color, #3b82f6) 80%, #06b6d4));
+        }
+        
+        .chat-window {
+          position: fixed;
+          bottom: 0;
+          right: 0;
+          border-radius: 20px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transform-origin: bottom right;
+          display: flex;
+          flex-direction: column;
+          width: 380px;
+          height: 600px;
+          max-height: calc(100vh - 50px);
+          background: rgba(17, 24, 39, 0.95);
+          backdrop-filter: blur(20px);
+        }
+        
+        /* Tous les autres styles nécessaires... */
+        /* (Je les abrège pour la lisibilité, mais tu peux copier depuis ton globals.css) */
+      `}</style>
 
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(){
-                var msgs = document.getElementById("msgs");
-                function addMsg(t, who){
-                  var d = document.createElement("div");
-                  d.style.margin = "8px 0";
-                  d.style.textAlign = who === "bot" ? "left" : "right";
-                  d.textContent = t;
-                  msgs.appendChild(d);
-                  msgs.scrollTop = msgs.scrollHeight;
-                }
-                var welcome = ${JSON.stringify(s.ui?.welcomeMessage || "")};
-                var showWelcome = ${JSON.stringify(s.ui?.showWelcomeMessage !== false)};
-                if (showWelcome && welcome) addMsg(welcome, "bot");
+      {/* Script de communication avec le parent */}
+      <script dangerouslySetInnerHTML={{
+        __html: `
+          // 📡 Communication avec le widget-client.js
+          let isWidgetOpen = false;
+          
+          // Signaler que le widget est prêt
+          window.addEventListener('DOMContentLoaded', function() {
+            parent.postMessage({
+              type: 'WIDGET_READY',
+              data: { width: 380, height: 600 }
+            }, '*');
+          });
+          
+          // 🆕 NOUVEAU: Détecter les changements d'état du widget
+          const observer = new MutationObserver(function(mutations) {
+            const chatButton = document.querySelector('.chat-button');
+            const chatWindow = document.querySelector('.chat-window');
+            
+            // Widget ouvert = bouton absent ET fenêtre présente
+            const isNowOpen = !chatButton && chatWindow;
+            // Widget fermé = bouton présent ET fenêtre absente  
+            const isNowClosed = chatButton && !chatWindow;
+            
+            if (isNowOpen && !isWidgetOpen) {
+              isWidgetOpen = true;
+              parent.postMessage({
+                type: 'WIDGET_OPEN',
+                data: { width: 380, height: 600 }
+              }, '*');
+            } else if (isNowClosed && isWidgetOpen) {
+              isWidgetOpen = false;
+              parent.postMessage({
+                type: 'WIDGET_CLOSE',
+                data: {}
+              }, '*');
+            }
+          });
+          
+          // Observer les changements dans le DOM
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true
+          });
+        `
+      }} />
 
-                var inp = document.getElementById("inp");
-                var send = document.getElementById("send");
-                async function ask(){
-                  var t = inp.value.trim();
-                  if(!t) return;
-                  addMsg(t, "me");
-                  inp.value = "";
-                  try{
-                    var r = await fetch("/api/widget/ask", {
-                      method:"POST",
-                      headers:{ "Content-Type":"application/json" },
-                      body: JSON.stringify({ widgetId: ${JSON.stringify(widgetId)}, message: t })
-                    });
-                    var data = await r.json();
-                    addMsg(data.reply || "…", "bot");
-                  }catch(e){
-                    addMsg("Erreur réseau.", "bot");
-                  }
-                }
-                send.addEventListener("click", ask);
-                inp.addEventListener("keydown", function(e){ if(e.key==="Enter") ask(); });
-              })();
-            `,
-          }}
-        />
-      </body>
-    </html>
+      {/* Le widget ChatWidget normal */}
+      <div style={{ background: 'transparent', height: '100vh', width: '100vw' }}>
+        <ChatWidget config={config} />
+      </div>
+    </>
   );
+};
+
+export default async function WidgetPage({ params }: { params: Promise<{ widgetId: string }> }) {
+  const resolvedParams = await params;
+  await connectToDatabase();
+  const rawConfig = await ChatbotConfig.findById(resolvedParams.widgetId).lean<ChatWidgetConfig>();
+  if (!rawConfig) return notFound();
+  const config = JSON.parse(JSON.stringify(rawConfig));
+
+  return <WidgetWithCommunication config={config} />;
 }
