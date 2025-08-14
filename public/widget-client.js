@@ -1,4 +1,6 @@
-// 🚀 CLIENT WIDGET SCRIPT - Version API Route
+// 🚀 CLIENT WIDGET SCRIPT - Version Production
+// Utilisé par les clients pour intégrer le widget sur leur site
+
 window.AIChatWidget = {
   iframe: null,
   isOpen: false,
@@ -30,8 +32,7 @@ window.AIChatWidget = {
   createIframe: function() {
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
-    // ✅ NOUVEAU: Pointer vers l'API route au lieu de la page
-    iframe.src = `https://testyourainow.com/api/widget/${this.widgetId}`;
+    iframe.src = `https://testyourainow.com/widget/${this.widgetId}`;
     iframe.title = "Assistant IA";
     
     // 🔧 Style initial : invisible
@@ -188,6 +189,7 @@ window.AIChatWidget = {
   // 🚨 Gestion d'erreur
   handleWidgetError: function(data) {
     console.error('AIChatWidget Error:', data.error);
+    // Optionnel : retry logic ou fallback
   },
 
   // ✨ Animation d'apparition du bouton
