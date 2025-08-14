@@ -43,7 +43,7 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
-  // 🎯 NOUVEAU CODE D'INTÉGRATION SIMPLIFIÉ
+  // 🎯 CODE D'INTÉGRATION (Correct)
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://testyourainow.com';
   const embedCode = `<script src="${baseUrl}/widget-client.js?widgetId=${widgetId}"></script>`;
 
@@ -198,7 +198,7 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
               </div>
             </div>
 
-            {/* 🔗 Test Link */}
+            {/* 🔗 Test Link - ✅ CORRIGÉ */}
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <div>
@@ -206,7 +206,7 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
                   <p className="text-sm text-blue-300">Preview how it looks before deploying</p>
                 </div>
                 <a
-                  href={`${baseUrl}/widget/${widgetId}`}
+                  href={`${baseUrl}/api/widget/${widgetId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 border border-blue-500/40"
