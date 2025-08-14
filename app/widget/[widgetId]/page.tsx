@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { notFound } from "next/navigation";
 import ChatWidget from "@/components/ChatWidget";
 
-// 🎯 COMPOSANT STANDALONE - UTILISÉ DANS L'IFRAME
+// 🎯 COMPOSANT STANDALONE SIMPLE - CSS EXTERNE
 export default async function WidgetStandalonePage({ 
   params 
 }: { 
@@ -31,38 +31,12 @@ export default async function WidgetStandalonePage({
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>{config.name || 'Chat Widget'}</title>
           
-          {/* Import du CSS global */}
-          <link rel="stylesheet" href="/globals.css" />
-          
-          {/* Styles pour iframe */}
-          <style>{`
-            body {
-              margin: 0;
-              padding: 0;
-              background: transparent !important;
-              overflow: hidden;
-              font-family: Inter, system-ui, sans-serif;
-            }
-            
-            html, body {
-              height: 100%;
-              width: 100%;
-            }
-            
-            :root {
-              --background: transparent;
-              --foreground: #ffffff;
-            }
-            
-            /* Reset pour éviter les conflits */
-            * {
-              box-sizing: border-box;
-            }
-          `}</style>
+          {/* ✅ CSS EXTERNE - Plus propre ! */}
+          <link rel="stylesheet" href="/widget-styles.css" />
         </head>
         
         <body>
-          {/* 🎯 LE WIDGET - Mode production (isPreview=false) */}
+          {/* 🎯 LE WIDGET - Mode production */}
           <ChatWidget config={config} isPreview={false} />
           
           {/* 📡 Script de communication parent/iframe */}
