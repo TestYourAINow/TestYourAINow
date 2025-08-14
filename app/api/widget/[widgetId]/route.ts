@@ -22,7 +22,7 @@ export async function GET(
     // Sérialiser la config
     const config = JSON.parse(JSON.stringify(rawConfig));
 
-    // 🎯 HTML COMPLET GÉNÉRÉ PAR L'API
+    // 🎯 HTML PROPRE AVEC CSS EXTERNE
     const html = `
 <!DOCTYPE html>
 <html lang="fr">
@@ -31,7 +31,7 @@ export async function GET(
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${config.name || 'Chat Widget'}</title>
   
-  <!-- CSS EXTERNE -->
+  <!-- ✅ CSS EXTERNE UNIQUEMENT -->
   <link rel="stylesheet" href="/widget-styles.css" />
 </head>
 
@@ -43,7 +43,7 @@ export async function GET(
     // Configuration du widget
     window.WIDGET_CONFIG = ${JSON.stringify(config)};
     
-    // 🎯 CLASSE WIDGET VANILLA JS
+    // 🎯 CLASSE WIDGET VANILLA JS - VERSION PROPRE
     class VanillaChatWidget {
       constructor(config) {
         this.config = config;
@@ -65,20 +65,27 @@ export async function GET(
       
       createWidget() {
         const root = document.getElementById('chat-widget-root');
+        
+        // ✅ HTML PROPRE - LAISSE LE CSS FAIRE SON TRAVAIL
         root.innerHTML = \`
-          <div class="chat-widget" style="--primary-color: \${this.config.primaryColor}; position: fixed; bottom: 24px; right: 24px;">
-            <div id="chat-popup" class="chat-popup animate-slide-in-message" style="background-color: \${this.config.primaryColor}; display: none;">
+          <div class="chat-widget" style="--primary-color: \${this.config.primaryColor};">
+            
+            <!-- Popup -->
+            <div id="chat-popup" class="chat-popup animate-slide-in-message" style="display: none;">
               \${this.config.popupMessage || 'Hi! Need any help?'}
             </div>
             
-            <button id="chat-button" class="chat-button animate-bounce-in" style="background-color: \${this.config.primaryColor};">
+            <!-- Bouton -->
+            <button id="chat-button" class="chat-button animate-bounce-in">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
             
-            <div id="chat-window" class="chat-window animate-expand-from-button \${this.config.theme === 'dark' ? 'dark' : ''}" style="width: \${this.config.width}px; height: \${this.config.height}px; --primary-color: \${this.config.primaryColor}; display: none;">
+            <!-- Chat Window -->
+            <div id="chat-window" class="chat-window animate-expand-from-button \${this.config.theme === 'dark' ? 'dark' : ''}" style="display: none; width: \${this.config.width}px; height: \${this.config.height}px;">
               
+              <!-- Header -->
               <div class="chat-header">
                 <div class="chat-header-content">
                   <div class="chat-avatar-container">
@@ -106,11 +113,12 @@ export async function GET(
                 </div>
               </div>
               
+              <!-- Messages -->
               <div id="messages-area" class="chat-messages \${this.config.theme === 'dark' ? 'dark' : ''} custom-scrollbar">
-                <div id="messages-container" class="messages-container">
-                </div>
+                <div id="messages-container" class="messages-container"></div>
               </div>
               
+              <!-- Input -->
               <div class="chat-input-area \${this.config.theme === 'dark' ? 'dark' : ''} animate-slide-up">
                 <div class="chat-input-container">
                   <input 
@@ -119,7 +127,7 @@ export async function GET(
                     placeholder="\${this.config.placeholderText || 'Tapez votre message...'}" 
                     class="chat-input \${this.config.theme === 'dark' ? 'dark' : ''}"
                   />
-                  <button id="send-btn" class="chat-send-btn animate-button-hover" style="background-color: \${this.config.primaryColor};">
+                  <button id="send-btn" class="chat-send-btn animate-button-hover">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <line x1="22" y1="2" x2="11" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                       <polygon points="22,2 15,22 11,13 2,9 22,2" fill="currentColor"/>
@@ -139,12 +147,12 @@ export async function GET(
         const sendBtn = document.getElementById('send-btn');
         const messageInput = document.getElementById('message-input');
         
-        chatButton.addEventListener('click', () => this.toggleChat());
-        closeBtn.addEventListener('click', () => this.toggleChat());
-        resetBtn.addEventListener('click', () => this.resetChat());
-        sendBtn.addEventListener('click', () => this.sendMessage());
+        chatButton?.addEventListener('click', () => this.toggleChat());
+        closeBtn?.addEventListener('click', () => this.toggleChat());
+        resetBtn?.addEventListener('click', () => this.resetChat());
+        sendBtn?.addEventListener('click', () => this.sendMessage());
         
-        messageInput.addEventListener('keydown', (e) => {
+        messageInput?.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             this.sendMessage();
@@ -196,8 +204,8 @@ export async function GET(
         const chatWindow = document.getElementById('chat-window');
         
         if (this.isOpen) {
-          chatButton.style.display = 'none';
-          chatWindow.style.display = 'flex';
+          if (chatButton) chatButton.style.display = 'none';
+          if (chatWindow) chatWindow.style.display = 'flex';
           this.hidePopupBubble();
           
           setTimeout(() => {
@@ -210,8 +218,8 @@ export async function GET(
             data: { width: this.config.width, height: this.config.height }
           }, '*');
         } else {
-          chatButton.style.display = 'flex';
-          chatWindow.style.display = 'none';
+          if (chatButton) chatButton.style.display = 'flex';
+          if (chatWindow) chatWindow.style.display = 'none';
           
           // Communication avec parent
           parent.postMessage({
@@ -223,7 +231,7 @@ export async function GET(
       
       async sendMessage() {
         const input = document.getElementById('message-input');
-        const text = input.value.trim();
+        const text = input?.value?.trim();
         if (!text) return;
         
         // Message utilisateur
@@ -234,7 +242,7 @@ export async function GET(
           timestamp: new Date()
         });
         
-        input.value = '';
+        if (input) input.value = '';
         this.renderMessages();
         
         // Typing indicator
@@ -383,11 +391,13 @@ export async function GET(
     
     // 🚀 INITIALISER LE WIDGET
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 Initializing chat widget...', window.WIDGET_CONFIG);
       window.chatWidget = new VanillaChatWidget(window.WIDGET_CONFIG);
     });
     
     // Gestion des erreurs
     window.addEventListener('error', function(e) {
+      console.error('Widget error:', e);
       parent.postMessage({
         type: 'WIDGET_ERROR',
         data: { error: e.message }
