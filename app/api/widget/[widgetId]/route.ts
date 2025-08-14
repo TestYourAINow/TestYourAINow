@@ -31,8 +31,8 @@ export async function GET(
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${config.name || 'Chat Widget'}</title>
   
-  <!-- ✅ TAILWIND CDN - IDENTIQUE AU DASHBOARD -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- ✅ TON TAILWIND EXACT VIA ENDPOINT -->
+  <link rel="stylesheet" href="/api/tailwind.css" />
   
   <!-- ✅ GLOBALS CSS - IDENTIQUE AU DASHBOARD -->
   <style>
