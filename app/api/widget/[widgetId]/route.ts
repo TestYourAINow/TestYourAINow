@@ -59,7 +59,9 @@ export async function GET(
   </style>
 </head>
 
- 
+<body>
+  <!-- WIDGET CONTAINER -->
+  <div id="widget-root"></div>
   
   <script>
     // Configuration du widget
