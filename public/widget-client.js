@@ -1,4 +1,6 @@
-// 🚀 CLIENT WIDGET SCRIPT - Version API Route
+// 🚀 CLIENT WIDGET SCRIPT - Version Production
+// Utilisé par les clients pour intégrer le widget sur leur site
+
 window.AIChatWidget = {
   iframe: null,
   isOpen: false,
@@ -30,8 +32,7 @@ window.AIChatWidget = {
   createIframe: function() {
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
-    // ✅ NOUVEAU: Pointer vers l'API route au lieu de la page
-    iframe.src = `https://testyourainow.com/api/widget/${this.widgetId}`;
+    iframe.src = `https://testyourainow.com/widget/${this.widgetId}`;
     iframe.title = "Assistant IA";
     
     // 🔧 Style initial : invisible
@@ -102,7 +103,7 @@ window.AIChatWidget = {
       border: none;
       z-index: 999999;
       border-radius: 50%;
-      background: transparent; !important;
+      background: transparent;
       opacity: 1;
       pointer-events: auto;
       transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -136,7 +137,7 @@ window.AIChatWidget = {
         border: none;
         z-index: 999999;
         border-radius: 20px 20px 0 0;
-        background: transparent;!important;
+        background: transparent;
         opacity: 1;
         pointer-events: auto;
         transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -153,7 +154,7 @@ window.AIChatWidget = {
         border: none;
         z-index: 999999;
         border-radius: 20px;
-        background: transparent; !important;
+        background: transparent;
         opacity: 1;
         pointer-events: auto;
         transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -177,7 +178,7 @@ window.AIChatWidget = {
       border: none;
       z-index: 999999;
       border-radius: 50%;
-      background: transparent; !important;
+      background: transparent;
       opacity: 1;
       pointer-events: auto;
       transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -188,6 +189,7 @@ window.AIChatWidget = {
   // 🚨 Gestion d'erreur
   handleWidgetError: function(data) {
     console.error('AIChatWidget Error:', data.error);
+    // Optionnel : retry logic ou fallback
   },
 
   // ✨ Animation d'apparition du bouton

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { DeploymentModal, DeployButton } from '@/components/DeploymentModal';
 // ✅ NOUVEAU - Import du ChatWidget propre
-import UnifiedChatWidget from '@/components/UnifiedChatWidget';
+import ChatWidget from '@/components/ChatWidget';
 
 // Types - LOGIQUE IDENTIQUE
 interface ChatbotConfig {
@@ -379,7 +379,7 @@ const ChatbotBuilder: React.FC = () => {
               </div>
 
               {/* ✅ NOUVEAU - Utilise le ChatWidget composant avec isPreview=true */}
-              <UnifiedChatWidget config={widgetConfig} mode="dashboard" />
+              <ChatWidget config={widgetConfig} isPreview={true} />
             </>
           )}
         </div>
