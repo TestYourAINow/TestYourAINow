@@ -34,6 +34,29 @@ export async function GET(
   
   <!-- CSS IDENTIQUE AU DASHBOARD -->
   <link rel="stylesheet" href="${baseUrl}/widget-styles.css" />
+  
+  <!-- STYLES POUR IFRAME TRANSPARENT -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      background: transparent !important;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+    }
+    
+    #widget-root {
+      background: transparent !important;
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+    }
+  </style>
 </head>
 
 <body>

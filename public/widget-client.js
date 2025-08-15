@@ -102,7 +102,7 @@ window.AIChatWidget = {
       border: none;
       z-index: 999999;
       border-radius: 50%;
-      background: transparent;
+      background: transparent; !important;
       opacity: 1;
       pointer-events: auto;
       transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -136,7 +136,7 @@ window.AIChatWidget = {
         border: none;
         z-index: 999999;
         border-radius: 20px 20px 0 0;
-        background: transparent;
+        background: transparent;!important;
         opacity: 1;
         pointer-events: auto;
         transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -153,7 +153,7 @@ window.AIChatWidget = {
         border: none;
         z-index: 999999;
         border-radius: 20px;
-        background: transparent;
+        background: transparent; !important;
         opacity: 1;
         pointer-events: auto;
         transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -177,7 +177,7 @@ window.AIChatWidget = {
       border: none;
       z-index: 999999;
       border-radius: 50%;
-      background: transparent;
+      background: transparent; !important;
       opacity: 1;
       pointer-events: auto;
       transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
