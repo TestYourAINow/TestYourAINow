@@ -1,12 +1,9 @@
-// components/UnifiedChatWidget.tsx
-// CRÉER CE FICHIER EXACTEMENT COMME CA
-
+// components/UnifiedChatWidget.tsx - VERSION CORRIGÉE IDENTIQUE
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, RotateCcw, Send } from 'lucide-react';
 
-// ✨ TYPES - Compatible avec ton système existant
 interface ChatWidgetConfig {
   _id: string;
   name: string;
@@ -40,31 +37,26 @@ interface UnifiedChatWidgetProps {
   baseUrl?: string;
 }
 
-// 🎯 COMPOSANT UNIFIÉ - UTILISÉ PARTOUT
 export default function UnifiedChatWidget({ 
   config, 
   mode,
   baseUrl = '' 
 }: UnifiedChatWidgetProps) {
   
-  // ========== ÉTATS IDENTIQUES ==========
+  // ========== ÉTATS ==========
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
-  // ========== REFS ==========
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ========== COMPUTED ==========
   const isDark = config.theme === 'dark';
   const primaryColor = config.primaryColor || '#3b82f6';
 
-  // ========== EFFETS IDENTIQUES ==========
-  
-  // 🏁 Message de bienvenue initial
+  // ========== EFFETS ==========
   useEffect(() => {
     if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
       setMessages([{
@@ -76,7 +68,6 @@ export default function UnifiedChatWidget({
     }
   }, [config.showWelcomeMessage, config.welcomeMessage]);
 
-  // 💬 Popup automatique (seulement en production)
   useEffect(() => {
     if (config.showPopup && config.popupMessage && !isOpen && mode === 'production') {
       const timer = setTimeout(() => {
@@ -88,7 +79,6 @@ export default function UnifiedChatWidget({
     }
   }, [config.showPopup, config.popupMessage, config.popupDelay, isOpen, mode]);
 
-  // 🔄 Auto-scroll des messages
   useEffect(() => {
     if (messagesEndRef.current) {
       setTimeout(() => {
@@ -100,14 +90,13 @@ export default function UnifiedChatWidget({
     }
   }, [messages, isTyping]);
 
-  // 🎯 Focus automatique quand ouvert
   useEffect(() => {
     if (isOpen && mode !== 'dashboard') {
       setTimeout(() => inputRef.current?.focus(), 300);
     }
   }, [isOpen, mode]);
 
-  // 📨 Envoyer un message
+  // ========== FONCTIONS ==========
   const sendMessage = async () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
@@ -186,7 +175,6 @@ export default function UnifiedChatWidget({
     }
   };
 
-  // 🔄 Nouvelle conversation
   const resetChat = () => {
     const welcomeMessages = config.showWelcomeMessage && config.welcomeMessage
       ? [{
@@ -200,7 +188,6 @@ export default function UnifiedChatWidget({
     setMessages(welcomeMessages);
   };
 
-  // 🎭 Toggle chat ouvert/fermé
   const toggleChat = () => {
     setIsOpen(!isOpen);
     setShowPopup(false);
@@ -262,8 +249,138 @@ export default function UnifiedChatWidget({
     }
   }, [mode, config.width, config.height]);
 
+  // 🎯 RENDER AVEC CLASSES CSS EXACTES (pas Tailwind)
   return (
     <div className="chat-widget" style={getWidgetStyles()}>
+      {/* CSS intégré pour garantir l'identité visuelle */}
+      <style jsx>{`
+        /* Reset et base */
+        .message-container {
+          display: flex;
+          margin-bottom: 12px;
+          align-items: flex-start;
+        }
+        
+        .message-container.user {
+          flex-direction: row-reverse;
+          align-items: flex-end;
+        }
+        
+        .message-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          margin-right: 8px;
+          align-self: flex-start;
+        }
+        
+        .message-container.user .message-avatar {
+          margin-right: 0;
+          margin-left: 8px;
+        }
+        
+        .message-content {
+          display: flex;
+          flex-direction: column;
+          max-width: 384px;
+          position: relative;
+        }
+        
+        .message-text {
+          padding: 12px 16px;
+          border-radius: 20px;
+          line-height: 1.5;
+          word-break: break-word;
+          margin-bottom: 2px;
+          white-space: pre-line;
+          display: inline-block;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .message-text.bot {
+          background: linear-gradient(135deg, #e5e7eb, #f3f4f6);
+          color: #111827;
+        }
+        
+        .message-text.user {
+          background: linear-gradient(135deg, ${primaryColor}, color-mix(in srgb, ${primaryColor} 90%, #06b6d4));
+          color: white;
+          align-self: flex-end;
+        }
+        
+        .message-text.bot.dark {
+          background: linear-gradient(135deg, #374151, #4b5563);
+          color: white;
+          border-color: rgba(75, 85, 99, 0.3);
+        }
+        
+        .message-time {
+          font-size: 11px;
+          color: #9ca3af;
+          margin-top: 2px;
+          font-weight: 500;
+        }
+        
+        .message-time.bot {
+          text-align: left;
+          padding-left: 4px;
+        }
+        
+        .message-time.user {
+          text-align: right;
+          padding-right: 4px;
+        }
+        
+        .typing-container {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 12px 16px;
+        }
+        
+        .typing-dot {
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: ${isDark ? '#9ca3af' : '#6b7280'};
+          animation: bounce-dots 1.2s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: 0.5s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.7s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.9s; }
+        
+        @keyframes bounce-dots {
+          0%, 80%, 100% { 
+            transform: translateY(0);
+            opacity: 0.7;
+          } 
+          40% { 
+            transform: translateY(-6px);
+            opacity: 1;
+          }
+        }
+        
+        .animate-message-in {
+          animation: slide-in-message 0.2s ease-out forwards;
+          opacity: 0;
+        }
+        
+        @keyframes slide-in-message {
+          0% {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+
       {showPopup && !isOpen && config.popupMessage && (
         <div 
           className="chat-popup animate-slide-in-message" 
@@ -337,9 +454,7 @@ export default function UnifiedChatWidget({
               {messages.map((message, index) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.isBot ? 'items-start' : 'items-end'} mb-3 ${
-                    message.isBot ? 'flex-row' : 'flex-row-reverse'
-                  } animate-slide-in-message`}
+                  className={`message-container ${message.isBot ? 'bot' : 'user'} animate-message-in`}
                   style={{
                     animationDelay: `${index * 0.05}s`,
                     animationFillMode: 'both'
@@ -349,9 +464,8 @@ export default function UnifiedChatWidget({
                     <img
                       src={config.avatar || '/Default Avatar.png'}
                       alt="Bot Avatar"
-                      className="w-8 h-8 rounded-full self-start mr-2 animate-avatar-pop"
+                      className="message-avatar"
                       style={{ 
-                        flexShrink: 0,
                         animationDelay: `${index * 0.05 + 0.05}s`,
                         animationFillMode: 'both'
                       }}
@@ -361,11 +475,11 @@ export default function UnifiedChatWidget({
                       }}
                     />
                   )}
-                  <div className="flex flex-col max-w-sm relative">
-                    <div className={`chat-bubble ${message.isBot ? 'bot' : 'user'}`}>
+                  <div className="message-content">
+                    <div className={`message-text ${message.isBot ? 'bot' : 'user'} ${isDark && message.isBot ? 'dark' : ''}`}>
                       {message.text}
                     </div>
-                    <div className={`chat-timestamp ${message.isBot ? 'bot' : 'user'}`}>
+                    <div className={`message-time ${message.isBot ? 'bot' : 'user'}`}>
                       {new Date(message.timestamp).toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit'
@@ -376,11 +490,11 @@ export default function UnifiedChatWidget({
               ))}
 
               {isTyping && (
-                <div className="flex items-start mb-3 flex-row animate-slide-in-message">
+                <div className="message-container bot animate-message-in">
                   <img
                     src={config.avatar || '/Default Avatar.png'}
                     alt="Bot Avatar"
-                    className="w-8 h-8 rounded-full self-start mr-2 animate-avatar-pop"
+                    className="message-avatar"
                     style={{
                       animationDelay: '0.1s',
                       animationFillMode: 'both'
@@ -390,27 +504,14 @@ export default function UnifiedChatWidget({
                       target.src = '/Default Avatar.png';
                     }}
                   />
-                  <div 
-                    className="chat-bubble bot animate-typing-bubble"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '12px 16px',
-                      animationDelay: '0.2s',
-                      animationFillMode: 'both'
-                    }}
-                  >
-                    {[0, 1, 2].map(i => (
-                      <span
-                        key={i}
-                        className="inline-block w-2 h-2 rounded-full animate-bounceDots"
-                        style={{ 
-                          backgroundColor: isDark ? '#9ca3af' : '#6b7280',
-                          animationDelay: `${0.5 + (i * 0.2)}s` 
-                        }}
-                      />
-                    ))}
+                  <div className="message-content">
+                    <div className={`message-text bot ${isDark ? 'dark' : ''}`}>
+                      <div className="typing-container">
+                        <span className="typing-dot"></span>
+                        <span className="typing-dot"></span>
+                        <span className="typing-dot"></span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

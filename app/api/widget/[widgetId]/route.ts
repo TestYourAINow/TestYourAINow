@@ -1,6 +1,12 @@
+// app/api/widget/[widgetId]/route.ts - VERSION RENDERTOSTRING
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { ChatbotConfig } from "@/models/ChatbotConfig";
+import { renderToString } from 'react-dom/server';
+import React from 'react';
+
+// Import direct de ton composant
+import UnifiedChatWidget from '@/components/UnifiedChatWidget';
 
 export async function GET(
   req: NextRequest,
@@ -12,18 +18,26 @@ export async function GET(
     
     await connectToDatabase();
     
-    // Récupérer la config depuis la DB
     const rawConfig = await ChatbotConfig.findById(widgetId).lean();
     
     if (!rawConfig) {
       return new NextResponse('Widget not found', { status: 404 });
     }
 
-    // Sérialiser la config
     const config = JSON.parse(JSON.stringify(rawConfig));
     const baseUrl = req.nextUrl.origin;
 
-    // 🎯 HTML VANILLA JS - IDENTIQUE AU DASHBOARD
+    // 🎯 RENDER TON COMPOSANT EXACTEMENT COMME DANS LE DASHBOARD
+    const widgetComponent = React.createElement(UnifiedChatWidget, {
+      config: config,
+      mode: 'production',
+      baseUrl: baseUrl
+    });
+
+    // Convertir en HTML string
+    const widgetHTML = renderToString(widgetComponent);
+
+    // 🎯 HTML FINAL - Inclut Tailwind CSS !
     const html = `
 <!DOCTYPE html>
 <html lang="fr">
@@ -32,10 +46,15 @@ export async function GET(
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${config.name || 'Chat Widget'}</title>
   
-  <!-- CSS IDENTIQUE AU DASHBOARD -->
+  <!-- ✅ TAILWIND CSS - COMME TON DASHBOARD -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- ✅ TON CSS CUSTOM -->
   <link rel="stylesheet" href="${baseUrl}/widget-styles.css" />
   
-  <!-- STYLES POUR IFRAME TRANSPARENT -->
+  <!-- ✅ LUCIDE ICONS - COMME TON DASHBOARD -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  
   <style>
     * {
       margin: 0;
@@ -48,6 +67,7 @@ export async function GET(
       overflow: hidden;
       height: 100%;
       width: 100%;
+      font-family: Inter, system-ui, sans-serif;
     }
     
     #widget-root {
@@ -56,190 +76,132 @@ export async function GET(
       width: 100vw;
       position: relative;
     }
+    
+    /* Assurer que le widget prend tout l'espace */
+    .chat-widget {
+      position: fixed !important;
+      bottom: 24px !important;
+      right: 24px !important;
+      z-index: 9999 !important;
+    }
   </style>
 </head>
 
 <body>
-  <!-- WIDGET CONTAINER -->
-  <div id="widget-root"></div>
+  <div id="widget-root">
+    ${widgetHTML}
+  </div>
   
   <script>
-    // Configuration du widget
+    // Configuration globale
     window.WIDGET_CONFIG = ${JSON.stringify(config)};
     window.BASE_URL = "${baseUrl}";
     
-    // 🎯 CLASSE WIDGET VANILLA - REPRODUCTION EXACTE DU DASHBOARD
-    class ProductionChatWidget {
-      constructor(config) {
-        this.config = config;
-        this.messages = [];
-        this.isOpen = false;
-        this.isTyping = false;
-        this.showPopup = false;
-        
-        this.init();
+    // 🎯 HYDRATATION - Rendre le widget interactif
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialiser Lucide icons
+      if (window.lucide) {
+        lucide.createIcons();
       }
       
-      init() {
-        this.createWidget();
-        this.setupEventListeners();
-        this.setupPopup();
-        this.addWelcomeMessage();
-        this.communicateWithParent();
+      // Simuler les événements React
+      initializeWidgetEvents();
+      
+      // Notifier le parent
+      parent.postMessage({
+        type: 'WIDGET_READY',
+        data: { 
+          width: window.WIDGET_CONFIG.width, 
+          height: window.WIDGET_CONFIG.height 
+        }
+      }, '*');
+    });
+    
+    // 🎯 FONCTIONS D'ÉVÉNEMENTS - Copie de ton composant React
+    function initializeWidgetEvents() {
+      const config = window.WIDGET_CONFIG;
+      let isOpen = false;
+      let messages = [];
+      let isTyping = false;
+      
+      // Ajouter message de bienvenue
+      if (config.showWelcomeMessage && config.welcomeMessage) {
+        messages.push({
+          id: 'welcome',
+          text: config.welcomeMessage,
+          isBot: true,
+          timestamp: new Date()
+        });
       }
       
-      createWidget() {
-        const root = document.getElementById('widget-root');
-        root.innerHTML = \`
-          <div class="chat-widget" style="--primary-color: \${this.config.primaryColor}; position: fixed; bottom: 24px; right: 24px; z-index: 9999;">
-            
-            <div id="chat-popup" class="chat-popup animate-slide-in-message" style="background-color: \${this.config.primaryColor}; display: none;">
-              \${this.config.popupMessage || 'Hi! Need any help?'}
-            </div>
-            
-            <button id="chat-button" class="chat-button animate-bounce-in" style="background-color: \${this.config.primaryColor};" aria-label="Ouvrir le chat">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            
-            <div id="chat-window" class="chat-window animate-expand-from-button \${this.config.theme === 'dark' ? 'dark' : ''}" style="width: \${this.config.width}px; height: \${this.config.height}px; --primary-color: \${this.config.primaryColor}; display: none;">
-              
-              <div class="chat-header">
-                <div class="chat-header-content">
-                  <div class="chat-avatar-container">
-                    <img src="\${this.config.avatar || '/Default Avatar.png'}" alt="Assistant Avatar" class="chat-avatar" onerror="this.src='/Default Avatar.png'"/>
-                    <div class="chat-status"></div>
-                  </div>
-                  <div class="chat-info">
-                    <h3 class="chat-title">\${this.config.chatTitle || this.config.name}</h3>
-                    <p class="chat-subtitle">\${this.config.subtitle || 'En ligne'}</p>
-                  </div>
-                </div>
-                <div class="chat-actions">
-                  <button id="reset-btn" class="chat-action-btn" title="Nouvelle conversation" aria-label="Nouvelle conversation">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 4v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M3.51 15a9 9 0 102.13-9.36L1 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
-                  <button id="close-btn" class="chat-action-btn" title="Fermer" aria-label="Fermer le chat">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-              <div id="messages-area" class="chat-messages \${this.config.theme === 'dark' ? 'dark' : ''} custom-scrollbar">
-                <div id="messages-container" class="messages-container">
-                </div>
-              </div>
-              
-              <div class="chat-input-area \${this.config.theme === 'dark' ? 'dark' : ''} animate-slide-up">
-                <div class="chat-input-container">
-                  <input 
-                    id="message-input" 
-                    type="text" 
-                    placeholder="\${this.config.placeholderText || 'Tapez votre message...'}" 
-                    class="chat-input \${this.config.theme === 'dark' ? 'dark' : ''}"
-                  />
-                  <button id="send-btn" class="chat-send-btn animate-button-hover" style="background-color: \${this.config.primaryColor};" aria-label="Envoyer le message">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <line x1="22" y1="2" x2="11" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <polygon points="22,2 15,22 11,13 2,9 22,2" fill="currentColor"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        \`;
+      // Event listeners
+      const chatButton = document.querySelector('.chat-button');
+      const closeBtn = document.querySelector('[title="Fermer"]');
+      const resetBtn = document.querySelector('[title="Nouvelle conversation"]');
+      const sendBtn = document.querySelector('.chat-send-btn');
+      const messageInput = document.querySelector('.chat-input');
+      
+      if (chatButton) {
+        chatButton.addEventListener('click', toggleChat);
       }
       
-      setupEventListeners() {
-        const chatButton = document.getElementById('chat-button');
-        const closeBtn = document.getElementById('close-btn');
-        const resetBtn = document.getElementById('reset-btn');
-        const sendBtn = document.getElementById('send-btn');
-        const messageInput = document.getElementById('message-input');
-        
-        chatButton.addEventListener('click', () => this.toggleChat());
-        closeBtn.addEventListener('click', () => this.toggleChat());
-        resetBtn.addEventListener('click', () => this.resetChat());
-        sendBtn.addEventListener('click', () => this.sendMessage());
-        
-        messageInput.addEventListener('keydown', (e) => {
+      if (closeBtn) {
+        closeBtn.addEventListener('click', toggleChat);
+      }
+      
+      if (resetBtn) {
+        resetBtn.addEventListener('click', resetChat);
+      }
+      
+      if (sendBtn) {
+        sendBtn.addEventListener('click', sendMessage);
+      }
+      
+      if (messageInput) {
+        messageInput.addEventListener('keydown', function(e) {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            this.sendMessage();
+            sendMessage();
           }
         });
       }
       
-      setupPopup() {
-        if (this.config.showPopup && this.config.popupMessage) {
-          setTimeout(() => {
-            if (!this.isOpen) {
-              this.showPopupBubble();
+      // Popup automatique
+      if (config.showPopup && config.popupMessage) {
+        setTimeout(() => {
+          if (!isOpen) {
+            const popup = document.querySelector('.chat-popup');
+            if (popup) {
+              popup.style.display = 'block';
             }
-          }, this.config.popupDelay * 1000);
-        }
+          }
+        }, config.popupDelay * 1000);
       }
       
-      showPopupBubble() {
-        const popup = document.getElementById('chat-popup');
-        if (popup && !this.isOpen) {
-          popup.style.display = 'block';
-          this.showPopup = true;
-        }
-      }
-      
-      hidePopupBubble() {
-        const popup = document.getElementById('chat-popup');
-        if (popup) {
-          popup.style.display = 'none';
-          this.showPopup = false;
-        }
-      }
-      
-      addWelcomeMessage() {
-        if (this.config.showWelcomeMessage && this.config.welcomeMessage) {
-          this.messages.push({
-            id: 'welcome',
-            text: this.config.welcomeMessage,
-            isBot: true,
-            timestamp: new Date()
-          });
-          this.renderMessages();
-        }
-      }
-      
-      toggleChat() {
-        this.isOpen = !this.isOpen;
-        const chatButton = document.getElementById('chat-button');
-        const chatWindow = document.getElementById('chat-window');
+      function toggleChat() {
+        isOpen = !isOpen;
+        const chatButton = document.querySelector('.chat-button');
+        const chatWindow = document.querySelector('.chat-window');
+        const popup = document.querySelector('.chat-popup');
         
-        if (this.isOpen) {
-          chatButton.style.display = 'none';
-          chatWindow.style.display = 'flex';
-          this.hidePopupBubble();
+        if (isOpen) {
+          if (chatButton) chatButton.style.display = 'none';
+          if (chatWindow) chatWindow.style.display = 'flex';
+          if (popup) popup.style.display = 'none';
           
           setTimeout(() => {
-            document.getElementById('message-input')?.focus();
+            const input = document.querySelector('.chat-input');
+            if (input) input.focus();
           }, 300);
           
-          // Communication avec parent iframe
           parent.postMessage({
             type: 'WIDGET_OPEN',
-            data: { width: this.config.width, height: this.config.height }
+            data: { width: config.width, height: config.height }
           }, '*');
         } else {
-          chatButton.style.display = 'flex';
-          chatWindow.style.display = 'none';
+          if (chatButton) chatButton.style.display = 'flex';
+          if (chatWindow) chatWindow.style.display = 'none';
           
-          // Communication avec parent iframe
           parent.postMessage({
             type: 'WIDGET_CLOSE',
             data: {}
@@ -247,13 +209,26 @@ export async function GET(
         }
       }
       
-      async sendMessage() {
-        const input = document.getElementById('message-input');
-        const text = input.value.trim();
+      function resetChat() {
+        messages = [];
+        if (config.showWelcomeMessage && config.welcomeMessage) {
+          messages.push({
+            id: 'welcome',
+            text: config.welcomeMessage,
+            isBot: true,
+            timestamp: new Date()
+          });
+        }
+        renderMessages();
+      }
+      
+      async function sendMessage() {
+        const input = document.querySelector('.chat-input');
+        const text = input?.value?.trim();
         if (!text) return;
         
         // Message utilisateur
-        this.messages.push({
+        messages.push({
           id: crypto.randomUUID(),
           text: text,
           isBot: false,
@@ -261,87 +236,73 @@ export async function GET(
         });
         
         input.value = '';
-        this.renderMessages();
+        renderMessages();
         
         // Typing indicator
         setTimeout(() => {
-          this.isTyping = true;
-          this.renderTyping();
+          isTyping = true;
+          renderTyping();
         }, 200);
         
         try {
-          // API Call avec headers publics
-          const history = this.messages
+          const history = messages
             .filter(msg => msg.id !== 'welcome')
             .map(msg => ({
               role: msg.isBot ? 'assistant' : 'user',
               content: msg.text,
             }));
           
-          const response = await fetch(\`\${window.BASE_URL}/api/agents/\${this.config.selectedAgent}/ask\`, {
+          const response = await fetch(\`\${window.BASE_URL}/api/agents/\${config.selectedAgent}/ask\`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'x-public-kind': 'widget',
-              'x-widget-id': this.config._id,
+              'x-widget-id': config._id,
               'x-widget-token': 'public'
             },
             body: JSON.stringify({
               message: text,
               previousMessages: history,
-              welcomeMessage: this.config.showWelcomeMessage ? this.config.welcomeMessage : null,
+              welcomeMessage: config.showWelcomeMessage ? config.welcomeMessage : null,
             }),
           });
           
           const data = await response.json();
           
           setTimeout(() => {
-            this.isTyping = false;
-            this.messages.push({
+            isTyping = false;
+            messages.push({
               id: crypto.randomUUID(),
               text: data.reply || "Désolé, je n'ai pas pu traiter votre demande.",
               isBot: true,
               timestamp: new Date()
             });
-            this.renderMessages();
+            renderMessages();
           }, 800);
           
         } catch (error) {
           console.error('Erreur envoi message:', error);
           setTimeout(() => {
-            this.isTyping = false;
-            this.messages.push({
+            isTyping = false;
+            messages.push({
               id: crypto.randomUUID(),
               text: "Désolé, une erreur s'est produite. Veuillez réessayer.",
               isBot: true,
               timestamp: new Date()
             });
-            this.renderMessages();
+            renderMessages();
           }, 800);
         }
       }
       
-      resetChat() {
-        this.messages = [];
-        if (this.config.showWelcomeMessage && this.config.welcomeMessage) {
-          this.messages.push({
-            id: 'welcome',
-            text: this.config.welcomeMessage,
-            isBot: true,
-            timestamp: new Date()
-          });
-        }
-        this.renderMessages();
-      }
-      
-      renderMessages() {
-        const container = document.getElementById('messages-container');
+      function renderMessages() {
+        const container = document.querySelector('.messages-container');
         if (!container) return;
         
-        container.innerHTML = this.messages.map((message, index) => \`
+        container.innerHTML = messages.map((message, index) => \`
           <div class="flex \${message.isBot ? 'items-start' : 'items-end'} mb-3 \${message.isBot ? 'flex-row' : 'flex-row-reverse'} animate-slide-in-message" style="animation-delay: \${index * 0.05}s; animation-fill-mode: both;">
             \${message.isBot ? \`
-              <img src="\${this.config.avatar || '/Default Avatar.png'}" alt="Bot Avatar" class="w-8 h-8 rounded-full self-start mr-2 animate-avatar-pop" style="flex-shrink: 0; animation-delay: \${index * 0.05 + 0.05}s; animation-fill-mode: both;" onerror="this.src='/Default Avatar.png'"/>
+              <img src="\${config.avatar || '/Default Avatar.png'}" alt="Bot Avatar" class="w-8 h-8 rounded-full self-start mr-2" style="flex-shrink: 0;" onerror="this.src='/Default Avatar.png'"/>
             \` : ''}
             <div class="flex flex-col max-w-sm relative">
               <div class="chat-bubble \${message.isBot ? 'bot' : 'user'}">
@@ -357,21 +318,21 @@ export async function GET(
           </div>
         \`).join('');
         
-        this.scrollToBottom();
+        scrollToBottom();
       }
       
-      renderTyping() {
-        const container = document.getElementById('messages-container');
+      function renderTyping() {
+        const container = document.querySelector('.messages-container');
         if (!container) return;
         
-        if (this.isTyping) {
+        if (isTyping) {
           const typingHtml = \`
             <div id="typing-indicator" class="flex items-start mb-3 flex-row animate-slide-in-message">
-              <img src="\${this.config.avatar || '/Default Avatar.png'}" alt="Bot Avatar" class="w-8 h-8 rounded-full self-start mr-2 animate-avatar-pop" style="animation-delay: 0.1s; animation-fill-mode: both;" onerror="this.src='/Default Avatar.png'"/>
-              <div class="chat-bubble bot animate-typing-bubble" style="display: flex; align-items: center; gap: 4px; padding: 12px 16px; animation-delay: 0.2s; animation-fill-mode: both;">
-                <span class="inline-block w-2 h-2 rounded-full animate-bounceDots" style="background-color: \${this.config.theme === 'dark' ? '#9ca3af' : '#6b7280'}; animation-delay: 0.5s;"></span>
-                <span class="inline-block w-2 h-2 rounded-full animate-bounceDots" style="background-color: \${this.config.theme === 'dark' ? '#9ca3af' : '#6b7280'}; animation-delay: 0.7s;"></span>
-                <span class="inline-block w-2 h-2 rounded-full animate-bounceDots" style="background-color: \${this.config.theme === 'dark' ? '#9ca3af' : '#6b7280'}; animation-delay: 0.9s;"></span>
+              <img src="\${config.avatar || '/Default Avatar.png'}" alt="Bot Avatar" class="w-8 h-8 rounded-full self-start mr-2" style="animation-delay: 0.1s; animation-fill-mode: both;" onerror="this.src='/Default Avatar.png'"/>
+              <div class="chat-bubble bot" style="display: flex; align-items: center; gap: 4px; padding: 12px 16px;">
+                <span class="inline-block w-2 h-2 rounded-full animate-bounceDots" style="background-color: \${config.theme === 'dark' ? '#9ca3af' : '#6b7280'}; animation-delay: 0.5s;"></span>
+                <span class="inline-block w-2 h-2 rounded-full animate-bounceDots" style="background-color: \${config.theme === 'dark' ? '#9ca3af' : '#6b7280'}; animation-delay: 0.7s;"></span>
+                <span class="inline-block w-2 h-2 rounded-full animate-bounceDots" style="background-color: \${config.theme === 'dark' ? '#9ca3af' : '#6b7280'}; animation-delay: 0.9s;"></span>
               </div>
             </div>
           \`;
@@ -383,11 +344,11 @@ export async function GET(
           }
         }
         
-        this.scrollToBottom();
+        scrollToBottom();
       }
       
-      scrollToBottom() {
-        const messagesArea = document.getElementById('messages-area');
+      function scrollToBottom() {
+        const messagesArea = document.querySelector('.chat-messages');
         if (messagesArea) {
           setTimeout(() => {
             messagesArea.scrollTop = messagesArea.scrollHeight;
@@ -395,22 +356,9 @@ export async function GET(
         }
       }
       
-      communicateWithParent() {
-        // Signaler que le widget est prêt
-        parent.postMessage({
-          type: 'WIDGET_READY',
-          data: { 
-            width: this.config.width, 
-            height: this.config.height 
-          }
-        }, '*');
-      }
+      // Render initial
+      renderMessages();
     }
-    
-    // 🚀 INITIALISER LE WIDGET
-    document.addEventListener('DOMContentLoaded', function() {
-      window.chatWidget = new ProductionChatWidget(window.WIDGET_CONFIG);
-    });
     
     // Gestion des erreurs
     window.addEventListener('error', function(e) {
