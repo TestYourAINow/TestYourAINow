@@ -28,12 +28,12 @@ window.AIChatWidget = {
     this.setupMessageListener();
   },
 
-  // 📱 Créer l'iframe qui pointe vers ton nouveau widget
+  // 📱 Créer l'iframe qui pointe vers la nouvelle API route
   createIframe: function() {
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
-    // 🎯 NOUVEAU : Pointe vers ta nouvelle page /widget/[widgetId]
-    iframe.src = `https://testyourainow.com/widget/${this.widgetId}`;
+    // 🎯 NOUVEAU : Pointe vers l'API route qui génère du HTML pur
+    iframe.src = `https://testyourainow.com/api/widget/${this.widgetId}`;
     iframe.title = "Assistant IA";
     iframe.loading = "lazy";
     
