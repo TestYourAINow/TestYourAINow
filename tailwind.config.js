@@ -8,10 +8,6 @@ module.exports = {
   theme: {
     extend: {
       keyframes: {
-        bounceDots: {
-          "0%, 80%, 100%": { transform: "translateY(0)" },
-          "40%": { transform: "translateY(-6px)" },
-        },
         fadeIn: {
           "0%": { opacity: 0 },
           "100%": { opacity: 1 },
@@ -28,7 +24,6 @@ module.exports = {
         },
       },
       animation: {
-        bounceDots: "bounceDots 1.2s infinite ease-in-out both",
         "fade-in": "fadeIn 0.4s ease-out forwards",
         "slide-up-fade": "slideUpFade 0.5s ease-out forwards",
       },

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, RotateCcw, Send } from 'lucide-react';
+import styles from './ChatWidget.module.css';
 
-// ✨ TYPES PROPRES - Compatible avec ton type existant
+// ✨ TYPES - Compatibles avec ton système existant
 interface ChatWidgetConfig {
   _id: string;
   name: string;
@@ -33,10 +33,10 @@ interface Message {
 
 interface ChatWidgetProps {
   config: ChatWidgetConfig;
-  isPreview?: boolean; // Pour distinguer preview vs widget final
+  isPreview?: boolean;
 }
 
-// 🎯 COMPOSANT PRINCIPAL - UTILISÉ PARTOUT
+// 🎯 COMPOSANT PRINCIPAL - Version CSS Module pure
 export default function ChatWidget({ config, isPreview = false }: ChatWidgetProps) {
   // ========== ÉTATS ==========
   const [messages, setMessages] = useState<Message[]>([]);
@@ -47,7 +47,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
 
   // ========== REFS ==========
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // ========== COMPUTED ==========
   const isDark = config.theme === 'dark';
@@ -98,6 +98,30 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   }, [isOpen]);
 
+  // 📏 Auto-resize textarea comme cette interface
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (textarea) {
+      // Reset height pour recalculer
+      textarea.style.height = 'auto';
+      
+      // Calculer la nouvelle hauteur basée sur le contenu
+      const scrollHeight = textarea.scrollHeight;
+      const maxHeight = 120; // Même que CSS
+      const minHeight = 32;
+      
+      if (scrollHeight <= maxHeight) {
+        // Pas encore besoin de scroll, on agrandit
+        textarea.style.height = Math.max(scrollHeight, minHeight) + 'px';
+        textarea.style.overflowY = 'hidden';
+      } else {
+        // Trop grand, on fixe la hauteur et on active le scroll
+        textarea.style.height = maxHeight + 'px';
+        textarea.style.overflowY = 'auto';
+      }
+    }
+  }, [inputValue]);
+
   // ========== FONCTIONS ==========
 
   // 📨 Envoyer un message
@@ -121,56 +145,72 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     setTimeout(() => setIsTyping(true), 200);
 
     try {
-      // 🔧 Préparer l'historique pour l'API
-      const history = updatedMessages
-        .filter(msg => msg.id !== 'welcome') // Exclure le message de bienvenue de l'historique
-        .map(msg => ({
-          role: msg.isBot ? 'assistant' : 'user',
-          content: msg.text,
-        }));
+      if (isPreview) {
+        // 🎯 MODE PREVIEW - Simulation comme ton HTML
+        const responses = [
+          "Merci pour votre message ! Comment puis-je vous aider davantage ?",
+          "C'est une excellente question. Laissez-moi vous expliquer...",
+          "Je comprends votre préoccupation. Voici ce que je peux vous suggérer :",
+          "Parfait ! Je suis là pour vous aider avec ça.",
+          "Intéressant ! Pouvez-vous me donner plus de détails ?"
+        ];
+        
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        
+        setTimeout(() => {
+          const botMessage: Message = {
+            id: crypto.randomUUID(),
+            text: randomResponse,
+            isBot: true,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, botMessage]);
+          setIsTyping(false);
+        }, 1000 + Math.random() * 1000);
 
-      // 🌐 Headers selon le contexte (preview vs widget final)
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      } else {
+        // 🌐 MODE PRODUCTION - Vraie API
+        const history = updatedMessages
+          .filter(msg => msg.id !== 'welcome')
+          .map(msg => ({
+            role: msg.isBot ? 'assistant' : 'user',
+            content: msg.text,
+          }));
 
-      if (!isPreview) {
-        // Widget final : mode public
-        headers['x-public-kind'] = 'widget';
-        headers['x-widget-id'] = config._id;
-        headers['x-widget-token'] = 'public';
-      }
-      // Preview : utilise la session normale (pas de headers publics)
-
-      // 📡 Appel API
-      const response = await fetch(`/api/agents/${config.selectedAgent}/ask`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          message: trimmed,
-          previousMessages: history,
-          welcomeMessage: config.showWelcomeMessage ? config.welcomeMessage : null,
-        }),
-      });
-
-      const data = await response.json();
-      
-      // 🤖 Réponse du bot avec délai minimum
-      setTimeout(() => {
-        const botMessage: Message = {
-          id: crypto.randomUUID(),
-          text: data.reply || "Désolé, je n'ai pas pu traiter votre demande.",
-          isBot: true,
-          timestamp: new Date()
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'x-public-kind': 'widget',
+          'x-widget-id': config._id,
+          'x-widget-token': 'public'
         };
-        setMessages(prev => [...prev, botMessage]);
-        setIsTyping(false);
-      }, 800);
+
+        const response = await fetch(`/api/agents/${config.selectedAgent}/ask`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            message: trimmed,
+            previousMessages: history,
+            welcomeMessage: config.showWelcomeMessage ? config.welcomeMessage : null,
+          }),
+        });
+
+        const data = await response.json();
+        
+        setTimeout(() => {
+          const botMessage: Message = {
+            id: crypto.randomUUID(),
+            text: data.reply || "Désolé, je n'ai pas pu traiter votre demande.",
+            isBot: true,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, botMessage]);
+          setIsTyping(false);
+        }, 800);
+      }
       
     } catch (error) {
       console.error('Erreur envoi message:', error);
       
-      // 🚨 Message d'erreur
       setTimeout(() => {
         const errorMessage: Message = {
           id: crypto.randomUUID(),
@@ -204,33 +244,63 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     setShowPopup(false);
   };
 
-  // 🎹 Gestion Enter dans l'input
+  // 🎹 Gestion Enter dans l'input avec support multi-lignes
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+    if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        // Shift+Enter = nouvelle ligne (comportement par défaut)
+        return;
+      } else {
+        // Enter seul = envoyer message
+        e.preventDefault();
+        sendMessage();
+      }
     }
   };
 
-  // ========== RENDER ==========
-  
-  const widgetStyles = {
-    '--primary-color': primaryColor,
-    position: isPreview ? 'absolute' : 'fixed',
-    [config.placement.split('-')[0]]: '24px',
-    [config.placement.split('-')[1]]: '24px',
-    zIndex: isPreview ? 10 : 9999,
-  } as React.CSSProperties;
+  // ========== PLACEMENT DYNAMIQUE ==========
+  const getWidgetClasses = () => {
+    let classes = styles.chatWidget;
+    if (isPreview) classes += ` ${styles.preview}`;
+    return classes;
+  };
 
+  const getWidgetStyles = () => {
+    const baseStyles: React.CSSProperties = {
+      '--primary-color': primaryColor,
+    } as React.CSSProperties;
+
+    if (!isPreview) {
+      // Position selon config placement
+      const [vertical, horizontal] = config.placement.split('-');
+      if (vertical === 'top' || vertical === 'bottom') {
+        baseStyles[vertical] = '24px';
+      }
+      if (horizontal === 'left' || horizontal === 'right') {
+        baseStyles[horizontal] = '24px';
+      }
+    }
+
+    return baseStyles;
+  };
+
+  const getWindowStyles = () => {
+    return {
+      width: `${config.width}px`,
+      height: `${config.height}px`,
+    };
+  };
+
+  // ========== RENDER ==========
   return (
-    <div className="chat-widget" style={widgetStyles}>
+    <div 
+      className={getWidgetClasses()}
+      style={getWidgetStyles()}
+    >
       
       {/* 💭 POPUP BUBBLE */}
       {showPopup && !isOpen && config.popupMessage && (
-        <div 
-          className="chat-popup animate-slide-in-message" 
-          style={{ backgroundColor: primaryColor }}
-        >
+        <div className={styles.chatPopup}>
           {config.popupMessage}
         </div>
       )}
@@ -238,101 +308,100 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
       {/* 🔘 CHAT BUTTON */}
       {!isOpen && (
         <button
-          className="chat-button animate-bounce-in"
+          className={styles.chatButton}
           onClick={toggleChat}
-          style={{ backgroundColor: primaryColor }}
           aria-label="Ouvrir le chat"
         >
-          <MessageCircle size={24} color="white" />
+          {/* SVG exact de ton HTML */}
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
+          </svg>
         </button>
       )}
 
       {/* 🏠 CHAT WINDOW */}
       {isOpen && (
-        <div
-          className={`chat-window animate-expand-from-button ${isDark ? 'dark' : ''}`}
-          style={{
-            width: config.width,
-            height: config.height,
-            '--primary-color': primaryColor
-          } as React.CSSProperties}
+        <div 
+          className={`${styles.chatWindow} ${isDark ? styles.dark : ''}`}
+          style={getWindowStyles()}
         >
           
           {/* 📋 HEADER */}
-          <div className="chat-header">
-            <div className="chat-header-content">
-              <div className="chat-avatar-container">
+          <div className={styles.chatHeader}>
+            <div className={styles.chatHeaderContent}>
+              <div className={styles.chatAvatarContainer}>
                 <img
                   src={config.avatar || '/Default Avatar.png'}
                   alt="Assistant Avatar"
-                  className="chat-avatar"
+                  className={styles.chatAvatar}
                   onError={(e) => {
                     const target = e.currentTarget as HTMLImageElement;
                     target.src = '/Default Avatar.png';
                   }}
                 />
-                <div className="chat-status" />
+                <div className={styles.chatStatus} />
               </div>
-              <div className="chat-info">
-                <h3 className="chat-title">{config.chatTitle || config.name}</h3>
-                <p className="chat-subtitle">{config.subtitle || 'En ligne'}</p>
+              <div className={styles.chatInfo}>
+                <h3 className={styles.chatTitle}>
+                  {config.chatTitle || config.name}
+                </h3>
+                <p className={styles.chatSubtitle}>
+                  {config.subtitle || 'En ligne'}
+                </p>
               </div>
             </div>
-            <div className="chat-actions">
-              <button 
-                className="chat-action-btn" 
+            <div className={styles.chatActions}>
+              <button
+                className={styles.chatActionBtn}
                 onClick={resetChat}
                 title="Nouvelle conversation"
                 aria-label="Nouvelle conversation"
               >
-                <RotateCcw size={18} />
+                {/* SVG exact de ton HTML */}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
               </button>
-              <button 
-                className="chat-action-btn" 
+              <button
+                className={styles.chatActionBtn}
                 onClick={toggleChat}
                 title="Fermer"
                 aria-label="Fermer le chat"
               >
-                <X size={18} />
+                {/* SVG exact de ton HTML */}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
               </button>
             </div>
           </div>
 
           {/* 💬 MESSAGES */}
-          <div className={`chat-messages ${isDark ? 'dark' : ''} custom-scrollbar`}>
-            <div className="messages-container">
-              {messages.map((message, index) => (
+          <div className={`${styles.chatMessages} ${isDark ? styles.dark : ''}`}>
+            <div className={styles.messagesContainer}>
+              {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.isBot ? 'items-start' : 'items-end'} mb-3 ${
-                    message.isBot ? 'flex-row' : 'flex-row-reverse'
-                  } animate-slide-in-message`}
-                  style={{
-                    animationDelay: `${index * 0.05}s`,
-                    animationFillMode: 'both'
-                  }}
+                  className={`${styles.message} ${message.isBot ? styles.bot : styles.user}`}
                 >
                   {message.isBot && (
                     <img
                       src={config.avatar || '/Default Avatar.png'}
                       alt="Bot Avatar"
-                      className="w-8 h-8 rounded-full self-start mr-2 animate-avatar-pop"
-                      style={{ 
-                        flexShrink: 0,
-                        animationDelay: `${index * 0.05 + 0.05}s`,
-                        animationFillMode: 'both'
-                      }}
+                      className={styles.messageAvatar}
                       onError={(e) => {
                         const target = e.currentTarget as HTMLImageElement;
                         target.src = '/Default Avatar.png';
                       }}
                     />
                   )}
-                  <div className="flex flex-col max-w-sm relative">
-                    <div className={`chat-bubble ${message.isBot ? 'bot' : 'user'}`}>
+                  <div className={styles.messageContent}>
+                    <div className={`${styles.messageBubble} ${message.isBot ? styles.bot : styles.user}`}>
                       {message.text}
                     </div>
-                    <div className={`chat-timestamp ${message.isBot ? 'bot' : 'user'}`}>
+                    <div className={styles.messageTimestamp}>
                       {new Date(message.timestamp).toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit'
@@ -344,71 +413,55 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
 
               {/* ⌨️ TYPING INDICATOR */}
               {isTyping && (
-                <div className="flex items-start mb-3 flex-row animate-slide-in-message">
+                <div className={`${styles.message} ${styles.bot}`}>
                   <img
                     src={config.avatar || '/Default Avatar.png'}
                     alt="Bot Avatar"
-                    className="w-8 h-8 rounded-full self-start mr-2 animate-avatar-pop"
-                    style={{
-                      animationDelay: '0.1s',
-                      animationFillMode: 'both'
-                    }}
+                    className={styles.messageAvatar}
                     onError={(e) => {
                       const target = e.currentTarget as HTMLImageElement;
                       target.src = '/Default Avatar.png';
                     }}
                   />
-                  <div 
-                    className="chat-bubble bot animate-typing-bubble"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '12px 16px',
-                      animationDelay: '0.2s',
-                      animationFillMode: 'both'
-                    }}
-                  >
-                    {[0, 1, 2].map(i => (
-                      <span
-                        key={i}
-                        className="inline-block w-2 h-2 rounded-full animate-bounceDots"
-                        style={{ 
-                          backgroundColor: isDark ? '#9ca3af' : '#6b7280',
-                          animationDelay: `${0.5 + (i * 0.2)}s` 
-                        }}
-                      />
-                    ))}
+                  <div className={styles.messageContent}>
+                    <div className={styles.typingIndicator}>
+                      <div className={styles.typingDot} />
+                      <div className={styles.typingDot} />
+                      <div className={styles.typingDot} />
+                    </div>
                   </div>
                 </div>
               )}
               
-              {/* 📍 SCROLL ANCHOR */}
               <div ref={messagesEndRef} style={{ height: '1px' }} />
             </div>
           </div>
 
           {/* ⌨️ INPUT AREA */}
-          <div className={`chat-input-area ${isDark ? 'dark' : ''} animate-slide-up`}>
-            <div className="chat-input-container">
-              <input
-                ref={inputRef}
-                type="text"
+          <div className={`${styles.chatInputArea} ${isDark ? styles.dark : ''}`}>
+            <div className={styles.chatInputContainer}>
+              <textarea
+                ref={inputRef as React.RefObject<HTMLTextAreaElement>}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={config.placeholderText || 'Tapez votre message...'}
-                className={`chat-input ${isDark ? 'dark' : ''}`}
+                className={`${styles.chatInput} ${isDark ? styles.dark : ''}`}
                 disabled={isTyping}
+                autoComplete="off"
+                rows={1}
+                style={{ resize: 'none' }}
               />
               <button
                 onClick={sendMessage}
                 disabled={!inputValue.trim() || isTyping}
-                className="chat-send-btn animate-button-hover"
-                style={{ backgroundColor: primaryColor }}
+                className={styles.chatSendBtn}
                 aria-label="Envoyer le message"
               >
-                <Send size={18} />
+                {/* SVG exact de ton HTML */}
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2.01 21L23 12 2.01 3 2 10L17 12 2 14Z"/>
+                </svg>
               </button>
             </div>
           </div>
