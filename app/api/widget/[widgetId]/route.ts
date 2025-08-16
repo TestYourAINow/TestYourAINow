@@ -94,6 +94,11 @@ export async function GET(
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     }
     
+    .chat-button svg {
+      color: white !important;
+      fill: white !important;
+    }
+    
     .chat-popup {
       position: absolute !important;
       bottom: 100% !important;
@@ -475,7 +480,7 @@ export async function GET(
     
     <!-- Bouton -->
     <button class="chat-button" id="chatButton">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
         <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
       </svg>
     </button>
