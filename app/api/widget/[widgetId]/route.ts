@@ -30,28 +30,26 @@ export async function GET(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${config.name || 'Chat Widget'}</title>
   <style>
-    /* Reset global pour éviter les conflits avec le site */
-    .chat-widget, .chat-widget * {
-      box-sizing: border-box !important;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html, body {
       margin: 0 !important;
       padding: 0 !important;
-      position: static;
+      background: transparent !important;
+      overflow: hidden !important;
+      font-family: Inter, system-ui, sans-serif;
+      height: 100vh !important;
+      width: 100vw !important;
+      position: relative !important;
     }
     
-    /* Repositionnement forcé */
     .chat-widget {
       position: fixed !important;
       bottom: 24px !important;
       right: 24px !important;
       z-index: 999999 !important;
-      font-family: Inter, system-ui, sans-serif !important;
+      font-family: Inter, system-ui, sans-serif;
       --primary-color: ${config.primaryColor || '#3b82f6'};
-      left: auto !important;
-      top: auto !important;
-      margin: 0 !important;
-      transform: none !important;
-      width: auto !important;
-      height: auto !important;
     }
     
     .chat-button {
@@ -101,11 +99,11 @@ export async function GET(
     }
     
     .chat-window {
-      position: absolute !important;
-      bottom: 0 !important;
-      right: 0 !important;
-      width: ${config.width || 380}px !important;
-      height: ${config.height || 600}px !important;
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: ${config.width || 380}px;
+      height: ${config.height || 600}px;
       border-radius: 20px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       overflow: hidden;
@@ -113,10 +111,6 @@ export async function GET(
       flex-direction: column;
       background: ${isDark ? '#1f2937' : '#ffffff'};
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      left: auto !important;
-      top: auto !important;
-      margin: 0 !important;
-      transform: none !important;
     }
     
     .chat-header {

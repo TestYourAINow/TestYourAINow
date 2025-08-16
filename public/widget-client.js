@@ -323,44 +323,7 @@ window.addEventListener('resize', function() {
   }
 });
 
-// 🔄 Auto-initialisation si un widgetId est fourni dans l'URL du script
+// 🔄 Auto-initialisation SUPPRIMÉE - Maintenant géré par le script d'intégration
 (function() {
-  // Chercher le script avec widgetId
-  const scripts = document.querySelectorAll('script[src*="widget-client.js"]');
-  const lastScript = scripts[scripts.length - 1];
-  
-  if (lastScript && lastScript.src) {
-    try {
-      const url = new URL(lastScript.src);
-      const widgetId = url.searchParams.get('widgetId') || url.searchParams.get('id');
-      
-      if (widgetId) {
-        console.log('AIChatWidget: Auto-initialisation avec widgetId:', widgetId);
-        
-        // Attendre que le DOM soit prêt
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', function() {
-            window.AIChatWidget.init({ widgetId: widgetId });
-          });
-        } else {
-          // DOM déjà prêt
-          window.AIChatWidget.init({ widgetId: widgetId });
-        }
-      } else {
-        console.warn('AIChatWidget: Aucun widgetId trouvé dans l\'URL du script');
-      }
-    } catch (error) {
-      console.error('AIChatWidget: Erreur lors de l\'auto-initialisation:', error);
-    }
-  }
+  console.log('AIChatWidget v2.0 chargé avec succès');
 })();
-
-// 🛡️ Protection contre les erreurs globales
-window.addEventListener('error', function(event) {
-  if (event.filename && event.filename.includes('widget-client.js')) {
-    console.error('AIChatWidget: Erreur interceptée:', event.error);
-    // Optionnel : Envoyer l'erreur à ton service de monitoring
-  }
-});
-
-console.log('AIChatWidget v2.0 chargé avec succès');
