@@ -122,7 +122,7 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-  // 🔘 Afficher le bouton chat (état initial) - REMIS COMME AVANT
+  // 🔘 Afficher le bouton chat (état initial) - POSITION CORRIGÉE
   showButton: function() {
     if (!this.iframe) return;
     
@@ -141,7 +141,7 @@ window.AIChatWidget = {
       background: transparent !important;
       opacity: 1 !important;
       pointer-events: auto !important;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
       transform: scale(1) !important;
       margin: 0 !important;
@@ -154,7 +154,7 @@ window.AIChatWidget = {
     this.animateButtonEntrance();
   },
 
-  // 🏠 Widget ouvert : agrandir en fenêtre de chat - REMIS COMME AVANT
+  // 🏠 Widget ouvert : agrandir en fenêtre de chat - POSITION CORRIGÉE
   handleWidgetOpen: function(data) {
     if (!this.iframe) return;
     
@@ -189,10 +189,11 @@ window.AIChatWidget = {
         transform: none !important;
       `;
     } else {
-      // Desktop : fenêtre dimensionnée
+      // Desktop : fenêtre dimensionnée - POSITION ABSOLUE CORRIGÉE
       const finalWidth = Math.min(this.config.width, window.innerWidth - 48);
       const finalHeight = Math.min(this.config.height, maxHeight);
       
+      // 🎯 CLÉS : Positionner l'iframe exactement où elle doit être
       this.iframe.style.cssText = `
         position: fixed !important;
         bottom: 24px !important;
