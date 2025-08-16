@@ -141,7 +141,7 @@ window.AIChatWidget = {
       background: transparent !important;
       opacity: 1 !important;
       pointer-events: auto !important;
-      box-shadow: none !important;
+  
       transform: none !important;
       margin: 0 !important;
       padding: 0 !important;
@@ -180,7 +180,7 @@ window.AIChatWidget = {
         background: transparent !important;
         opacity: 1 !important;
         pointer-events: auto !important;
-        box-shadow: none !important;
+ 
         margin: 0 !important;
         padding: 0 !important;
         transform: none !important;
@@ -203,7 +203,7 @@ window.AIChatWidget = {
         background: transparent !important;
         opacity: 1 !important;
         pointer-events: auto !important;
-        box-shadow: none !important;
+ 
         transform: none !important;
         margin: 0 !important;
         padding: 0 !important;
