@@ -137,9 +137,7 @@ export async function GET(
       display: flex !important;
       flex-direction: column !important;
       background: ${isDark ? '#1f2937' : '#ffffff'} !important;
-      /* 🎯 SUPPRESSION DE L'ANIMATION INTERNE - Seule l'iframe s'anime */
-      transition: none !important;
-      animation: none !important;
+      animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
     }
     
     .chat-header {
@@ -437,7 +435,18 @@ export async function GET(
       display: none !important; 
     }
     
-    /* 🎬 ANIMATIONS SIMPLIFIÉES - Plus de conflit */
+    /* 🎬 ANIMATIONS INDESTRUCTIBLES */
+    @keyframes bounceIn {
+      0% { opacity: 0 !important; transform: scale(0.3) !important; }
+      50% { opacity: 1 !important; transform: scale(1.05) !important; }
+      100% { opacity: 1 !important; transform: scale(1) !important; }
+    }
+    
+    @keyframes expandIn {
+      0% { opacity: 0 !important; transform: scale(0.8) translateY(20px) !important; }
+      100% { opacity: 1 !important; transform: scale(1) translateY(0) !important; }
+    }
+    
     @keyframes slideUp {
       0% { opacity: 0 !important; transform: translateY(10px) !important; }
       100% { opacity: 1 !important; transform: translateY(0) !important; }
@@ -466,7 +475,7 @@ export async function GET(
     
     <!-- Bouton -->
     <button class="chat-button" id="chatButton">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
         <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
       </svg>
     </button>
