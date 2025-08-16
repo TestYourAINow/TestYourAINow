@@ -122,7 +122,7 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-  // 🔘 Afficher le bouton chat (état initial) - POSITION CORRIGÉE
+  // 🔘 Afficher le bouton chat (état initial) - REMIS COMME AVANT
   showButton: function() {
     if (!this.iframe) return;
     
@@ -141,37 +141,20 @@ window.AIChatWidget = {
       background: transparent !important;
       opacity: 1 !important;
       pointer-events: auto !important;
-      animation: bounceIn 0.6s ease-out !important;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+      transform: scale(1) !important;
       margin: 0 !important;
       padding: 0 !important;
       top: auto !important;
       left: auto !important;
     `;
     
-    // 🎬 Ajouter les keyframes CSS pour l'animation bounceIn
-    if (!document.getElementById('widget-animations')) {
-      const style = document.createElement('style');
-      style.id = 'widget-animations';
-      style.textContent = `
-        @keyframes bounceIn {
-          0% { opacity: 0; transform: scale(0.3); }
-          50% { opacity: 1; transform: scale(1.05); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes expandIn {
-          0% { opacity: 0; transform: scale(0.8) translateY(20px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-    
-    // ✨ Animation d'entrée (maintenant gérée par CSS)
-    // Suppression de animateButtonEntrance() car l'animation CSS le fait
+    // ✨ Animation d'entrée
+    this.animateButtonEntrance();
   },
 
-  // 🏠 Widget ouvert : agrandir en fenêtre de chat - ANIMATION SYNCHRONISÉE
+  // 🏠 Widget ouvert : agrandir en fenêtre de chat - REMIS COMME AVANT
   handleWidgetOpen: function(data) {
     if (!this.iframe) return;
     
@@ -199,18 +182,17 @@ window.AIChatWidget = {
         background: transparent !important;
         opacity: 1 !important;
         pointer-events: auto !important;
-        animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.3) !important;
         margin: 0 !important;
         padding: 0 !important;
         transform: none !important;
       `;
     } else {
-      // Desktop : fenêtre dimensionnée - ANIMATION SYNCHRONISÉE
+      // Desktop : fenêtre dimensionnée
       const finalWidth = Math.min(this.config.width, window.innerWidth - 48);
       const finalHeight = Math.min(this.config.height, maxHeight);
       
-      // 🎯 MÊME ANIMATION QUE LE CONTENU INTERNE
       this.iframe.style.cssText = `
         position: fixed !important;
         bottom: 24px !important;
@@ -223,26 +205,14 @@ window.AIChatWidget = {
         background: transparent !important;
         opacity: 1 !important;
         pointer-events: auto !important;
-        animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
+        transform: scale(1) !important;
         margin: 0 !important;
         padding: 0 !important;
         top: auto !important;
         left: auto !important;
       `;
-    }
-    
-    // 🎬 Ajouter les keyframes CSS pour l'animation expandIn
-    if (!document.getElementById('widget-animations')) {
-      const style = document.createElement('style');
-      style.id = 'widget-animations';
-      style.textContent = `
-        @keyframes expandIn {
-          0% { opacity: 0; transform: scale(0.8) translateY(20px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-      `;
-      document.head.appendChild(style);
     }
   },
 
