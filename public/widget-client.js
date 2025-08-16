@@ -122,13 +122,13 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-  // 🔘 Afficher le bouton chat (état initial) - REMIS COMME AVANT
+  // 🔘 Afficher le bouton chat (état initial) - SANS TRANSITION
   showButton: function() {
     if (!this.iframe) return;
     
     const isMobile = window.innerWidth <= 768;
     
-    // 🎯 POSITIONNEMENT EXACT : L'iframe doit être exactement là où le bouton apparaît
+    // 🎯 IFRAME = JUSTE UN CONTENEUR, pas d'animation
     this.iframe.style.cssText = `
       position: fixed !important;
       bottom: ${isMobile ? '16px' : '24px'} !important;
@@ -141,20 +141,18 @@ window.AIChatWidget = {
       background: transparent !important;
       opacity: 1 !important;
       pointer-events: auto !important;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-      transform: scale(1) !important;
+      box-shadow: none !important;
+      transform: none !important;
       margin: 0 !important;
       padding: 0 !important;
       top: auto !important;
       left: auto !important;
     `;
     
-    // ✨ Animation d'entrée
-    this.animateButtonEntrance();
+    // ✨ Plus besoin d'animation iframe - le contenu s'en charge !
   },
 
-  // 🏠 Widget ouvert : agrandir en fenêtre de chat - REMIS COMME AVANT
+  // 🏠 Widget ouvert : agrandir en fenêtre de chat - CHANGEMENT INSTANTANÉ
   handleWidgetOpen: function(data) {
     if (!this.iframe) return;
     
@@ -167,7 +165,7 @@ window.AIChatWidget = {
     const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
     
     if (isMobile) {
-      // Mobile : interface plein écran optimisée
+      // Mobile : changement INSTANTANÉ de taille
       this.iframe.style.cssText = `
         position: fixed !important;
         bottom: 0 !important;
@@ -182,17 +180,17 @@ window.AIChatWidget = {
         background: transparent !important;
         opacity: 1 !important;
         pointer-events: auto !important;
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-        box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.3) !important;
+        box-shadow: none !important;
         margin: 0 !important;
         padding: 0 !important;
         transform: none !important;
       `;
     } else {
-      // Desktop : fenêtre dimensionnée
+      // Desktop : changement INSTANTANÉ de taille
       const finalWidth = Math.min(this.config.width, window.innerWidth - 48);
       const finalHeight = Math.min(this.config.height, maxHeight);
       
+      // 🎯 IFRAME = CONTENEUR FIXE, animation faite par le contenu
       this.iframe.style.cssText = `
         position: fixed !important;
         bottom: 24px !important;
@@ -205,9 +203,8 @@ window.AIChatWidget = {
         background: transparent !important;
         opacity: 1 !important;
         pointer-events: auto !important;
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
-        transform: scale(1) !important;
+        box-shadow: none !important;
+        transform: none !important;
         margin: 0 !important;
         padding: 0 !important;
         top: auto !important;
@@ -251,19 +248,10 @@ window.AIChatWidget = {
     }
   },
 
-  // ✨ Animation d'apparition du bouton
+  // ✨ Animation supprimée - Le contenu gère tout !
   animateButtonEntrance: function() {
-    if (!this.iframe) return;
-    
-    // Effet bounce d'entrée élégant
-    this.iframe.style.transform = 'scale(0.8)';
-    
-    setTimeout(() => {
-      this.iframe.style.transform = 'scale(1.1)';
-      setTimeout(() => {
-        this.iframe.style.transform = 'scale(1)';
-      }, 150);
-    }, 100);
+    // Plus besoin - les animations CSS du contenu sont suffisantes !
+    return;
   },
 
   // 📱 Gestion des changements de taille d'écran
