@@ -1,5 +1,4 @@
-// 🚀 CLIENT WIDGET SCRIPT - Version mise à jour pour le nouveau ChatWidget
-// Utilisé par les clients pour intégrer le widget sur leur site
+// public/widget-client.js - MISE À JOUR POUR LA NOUVELLE PAGE
 
 window.AIChatWidget = {
   iframe: null,
@@ -7,7 +6,9 @@ window.AIChatWidget = {
   widgetId: null,
   config: {
     width: 380,
-    height: 600
+    height: 600,
+    theme: 'light',
+    themeColor: '#3b82f6'
   },
   
   // 🎯 Fonction d'initialisation principale
@@ -24,18 +25,32 @@ window.AIChatWidget = {
     }
 
     this.widgetId = options.widgetId;
+    this.config = { ...this.config, ...options };
+    
+    console.log(`🚀 Initializing widget: ${this.widgetId}`);
+    
     this.createIframe();
     this.setupMessageListener();
   },
 
-  // 📱 Créer l'iframe qui pointe vers la nouvelle API route
+  // 📱 Créer l'iframe qui pointe vers la nouvelle page widget
   createIframe: function() {
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
-    // 🎯 NOUVEAU : Pointe vers l'API route qui génère du HTML pur
-    iframe.src = `https://testyourainow.com/api/widget/${this.widgetId}`;
+    
+    // 🎯 NOUVEAU : Pointe vers /widget/[id] comme buildmyagent
+    const params = new URLSearchParams({
+      theme: this.config.theme || 'light',
+      themeColor: encodeURIComponent(this.config.themeColor || '#3b82f6'),
+      template: this.config.template || 'professional'
+    });
+    
+    iframe.src = `https://testyourainow.com/widget/${this.widgetId}?${params.toString()}`;
     iframe.title = "Assistant IA";
     iframe.loading = "lazy";
+    iframe.allowTransparency = true;
+    iframe.frameBorder = "0";
+    iframe.scrolling = "no";
     
     // 🔧 Style initial : invisible jusqu'à ce que le widget soit prêt
     iframe.style.cssText = `
@@ -56,6 +71,8 @@ window.AIChatWidget = {
 
     this.iframe = iframe;
     document.body.appendChild(iframe);
+    
+    console.log(`📡 Loading iframe: ${iframe.src}`);
     
     // 🔄 Timeout de sécurité si le widget ne charge pas
     setTimeout(() => {
@@ -81,6 +98,8 @@ window.AIChatWidget = {
       }
       
       const { type, data } = event.data;
+      
+      console.log(`📨 Message received:`, { type, data });
       
       switch (type) {
         case 'WIDGET_READY':
@@ -110,11 +129,12 @@ window.AIChatWidget = {
   handleWidgetReady: function(data) {
     if (!this.iframe) return;
     
-    console.log('AIChatWidget: Widget prêt à être affiché');
+    console.log('✅ Widget prêt à être affiché');
     
     // Sauvegarder la config
     if (data.width) this.config.width = data.width;
     if (data.height) this.config.height = data.height;
+    if (data.theme) this.config.theme = data.theme;
     
     this.isOpen = false;
     this.showButton();
@@ -143,6 +163,8 @@ window.AIChatWidget = {
       transform: scale(1);
     `;
     
+    console.log('🔘 Showing chat button');
+    
     // ✨ Animation d'entrée
     this.animateButtonEntrance();
   },
@@ -151,7 +173,7 @@ window.AIChatWidget = {
   handleWidgetOpen: function(data) {
     if (!this.iframe) return;
     
-    console.log('AIChatWidget: Ouverture du chat');
+    console.log('📂 Ouverture du chat');
     this.isOpen = true;
     
     // 📱 Design responsive intelligent
@@ -206,7 +228,7 @@ window.AIChatWidget = {
   handleWidgetClose: function() {
     if (!this.iframe) return;
     
-    console.log('AIChatWidget: Fermeture du chat');
+    console.log('📁 Fermeture du chat');
     this.isOpen = false;
     this.showButton();
   },
@@ -224,7 +246,7 @@ window.AIChatWidget = {
 
   // 🚨 Gestion d'erreur
   handleWidgetError: function(data) {
-    console.error('AIChatWidget Error:', data.error);
+    console.error('❌ AIChatWidget Error:', data.error);
     
     // Tentative de récupération automatique
     if (this.iframe) {
@@ -325,5 +347,5 @@ window.addEventListener('resize', function() {
 
 // 🔄 Auto-initialisation SUPPRIMÉE - Maintenant géré par le script d'intégration
 (function() {
-  console.log('AIChatWidget v2.0 chargé avec succès');
+  console.log('✅ AIChatWidget v3.0 chargé avec succès (Page Mode)');
 })();
