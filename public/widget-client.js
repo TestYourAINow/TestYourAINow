@@ -1,4 +1,4 @@
-// 🚀 CLIENT WIDGET SCRIPT - Version mise à jour pour le nouveau ChatWidget
+// 🚀 CLIENT WIDGET SCRIPT - Version avec positionnement iframe corrigé
 // Utilisé par les clients pour intégrer le widget sur leur site
 
 window.AIChatWidget = {
@@ -32,26 +32,28 @@ window.AIChatWidget = {
   createIframe: function() {
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
-    // 🎯 NOUVEAU : Pointe vers l'API route qui génère du HTML pur
     iframe.src = `https://testyourainow.com/api/widget/${this.widgetId}`;
     iframe.title = "Assistant IA";
     iframe.loading = "lazy";
     
     // 🔧 Style initial : invisible jusqu'à ce que le widget soit prêt
     iframe.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 0px;
-      height: 0px;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      border-radius: 20px;
-      box-shadow: none;
+      position: fixed !important;
+      bottom: 24px !important;
+      right: 24px !important;
+      width: 0px !important;
+      height: 0px !important;
+      border: none !important;
+      z-index: 999999 !important;
+      background: transparent !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      border-radius: 20px !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      transform: none !important;
     `;
 
     this.iframe = iframe;
@@ -120,34 +122,39 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-  // 🔘 Afficher le bouton chat (état initial)
+  // 🔘 Afficher le bouton chat (état initial) - POSITION CORRIGÉE
   showButton: function() {
     if (!this.iframe) return;
     
     const isMobile = window.innerWidth <= 768;
     
+    // 🎯 POSITIONNEMENT EXACT : L'iframe doit être exactement là où le bouton apparaît
     this.iframe.style.cssText = `
-      position: fixed;
-      bottom: ${isMobile ? '16px' : '24px'};
-      right: ${isMobile ? '16px' : '24px'};
-      width: 64px;
-      height: 64px;
-      border: none;
-      z-index: 999999;
-      border-radius: 50%;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transform: scale(1);
+      position: fixed !important;
+      bottom: ${isMobile ? '16px' : '24px'} !important;
+      right: ${isMobile ? '16px' : '24px'} !important;
+      width: 64px !important;
+      height: 64px !important;
+      border: none !important;
+      z-index: 999999 !important;
+      border-radius: 50% !important;
+      background: transparent !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+      transform: scale(1) !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      top: auto !important;
+      left: auto !important;
     `;
     
     // ✨ Animation d'entrée
     this.animateButtonEntrance();
   },
 
-  // 🏠 Widget ouvert : agrandir en fenêtre de chat
+  // 🏠 Widget ouvert : agrandir en fenêtre de chat - POSITION CORRIGÉE
   handleWidgetOpen: function(data) {
     if (!this.iframe) return;
     
@@ -162,42 +169,50 @@ window.AIChatWidget = {
     if (isMobile) {
       // Mobile : interface plein écran optimisée
       this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 0;
-        right: 0;
-        left: 0;
-        top: ${isSmallScreen ? '10px' : '20px'};
-        width: 100%;
-        height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
-        border: none;
-        z-index: 999999;
-        border-radius: ${isSmallScreen ? '15px 15px 0 0' : '20px 20px 0 0'};
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.3);
+        position: fixed !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        left: 0 !important;
+        top: ${isSmallScreen ? '10px' : '20px'} !important;
+        width: 100% !important;
+        height: calc(100vh - ${isSmallScreen ? '10px' : '20px'}) !important;
+        border: none !important;
+        z-index: 999999 !important;
+        border-radius: ${isSmallScreen ? '15px 15px 0 0' : '20px 20px 0 0'} !important;
+        background: transparent !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.3) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
       `;
     } else {
-      // Desktop : fenêtre dimensionnée avec tes tailles exactes
+      // Desktop : fenêtre dimensionnée - POSITION ABSOLUE CORRIGÉE
       const finalWidth = Math.min(this.config.width, window.innerWidth - 48);
       const finalHeight = Math.min(this.config.height, maxHeight);
       
+      // 🎯 CLÉS : Positionner l'iframe exactement où elle doit être
       this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        width: ${finalWidth}px;
-        height: ${finalHeight}px;
-        border: none;
-        z-index: 999999;
-        border-radius: 20px;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-        transform: scale(1);
+        position: fixed !important;
+        bottom: 24px !important;
+        right: 24px !important;
+        width: ${finalWidth}px !important;
+        height: ${finalHeight}px !important;
+        border: none !important;
+        z-index: 999999 !important;
+        border-radius: 20px !important;
+        background: transparent !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
+        transform: scale(1) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        top: auto !important;
+        left: auto !important;
       `;
     }
   },
