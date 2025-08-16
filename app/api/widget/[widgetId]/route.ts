@@ -1,5 +1,3 @@
-// app/api/widget/[widgetId]/route.ts - VERSION ENTREPRISE (comme Intercom)
-
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { ChatbotConfig } from "@/models/ChatbotConfig";
@@ -14,433 +12,399 @@ export async function GET(
   try {
     await connectToDatabase();
     
+    // Récupérer la config depuis la DB
     const rawConfig = await ChatbotConfig.findById(widgetId).lean();
     
     if (!rawConfig) {
-      console.error(`❌ Widget not found: ${widgetId}`);
-      return new NextResponse(createErrorWidget(), { 
-        status: 404,
-        headers: getSecureHeaders()
-      });
+      return new NextResponse('Widget not found', { status: 404 });
     }
 
     const config = JSON.parse(JSON.stringify(rawConfig));
-    
-    console.log(`✅ Loading widget ${widgetId}:`, { 
-      name: config.name, 
-      theme: config.theme 
-    });
+    const isDark = config.theme === 'dark';
 
-    // 🎯 HTML OPTIMISÉ IFRAME - Méthode Entreprise
-    const htmlContent = createWidgetHTML(config);
-
-    return new NextResponse(htmlContent, {
-      status: 200,
-      headers: getSecureHeaders()
-    });
-
-  } catch (error) {
-    console.error('❌ Widget loading error:', error);
-    return new NextResponse(createErrorWidget(), {
-      status: 500,
-      headers: getSecureHeaders()
-    });
-  }
-}
-
-// 🛡️ Headers sécurisés comme les entreprises
-function getSecureHeaders() {
-  return {
-    "Content-Type": "text/html; charset=utf-8",
-    "Cache-Control": "no-cache, no-store, must-revalidate",
-    "Pragma": "no-cache",
-    "Expires": "0",
-    "X-Frame-Options": "SAMEORIGIN", // ✅ Plus sécurisé que ALLOWALL
-    "X-Content-Type-Options": "nosniff",
-    "X-XSS-Protection": "1; mode=block",
-    "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-}
-
-// 🎨 Widget HTML optimisé iframe
-function createWidgetHTML(config: any) {
-  const isDark = config.theme === 'dark';
-  const primaryColor = config.primaryColor || '#3b82f6';
-  
-  return `<!DOCTYPE html>
+    // 🎯 HTML COMPLET SANS NEXT.JS
+    const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>${config.name || 'Chat'}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${config.name || 'Chat Widget'}</title>
   <style>
-    /* 🔥 CSS DÉFENSIF ENTREPRISE - Méthode Intercom */
-    *, *::before, *::after {
-      box-sizing: border-box !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-    
-    html {
-      height: 100% !important;
-      width: 100% !important;
-      overflow: hidden !important;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
-      -webkit-font-smoothing: antialiased !important;
-      -moz-osx-font-smoothing: grayscale !important;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body {
-      height: 100% !important;
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      overflow: hidden !important;
+      margin: 0;
+      padding: 0;
       background: transparent !important;
-      font-family: inherit !important;
-      font-size: 14px !important;
-      line-height: 1.4 !important;
-      color: ${isDark ? '#ffffff' : '#000000'} !important;
+      overflow: hidden;
+      font-family: Inter, system-ui, sans-serif;
+      height: 100vh;
+      width: 100vw;
     }
     
-    /* 🎯 ROOT CONTAINER - Position absolue pour iframe */
-    .widget-root {
-      position: absolute !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      display: flex !important;
-      flex-direction: column !important;
-      background: ${isDark ? '#1f2937' : '#ffffff'} !important;
-      border-radius: 20px !important;
-      overflow: hidden !important;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important;
-      --primary: ${primaryColor};
+    .chat-widget {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999999;
+      font-family: Inter, system-ui, sans-serif;
+      --primary-color: ${config.primaryColor || '#3b82f6'};
     }
     
-    /* 📱 RESPONSIVE STATES */
-    .widget-state-button {
-      position: absolute !important;
-      bottom: 24px !important;
-      right: 24px !important;
-      width: 64px !important;
-      height: 64px !important;
-      border-radius: 50% !important;
-      border: none !important;
-      background: linear-gradient(135deg, var(--primary), #06b6d4) !important;
-      color: white !important;
-      cursor: pointer !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-      transition: all 0.3s ease !important;
-      z-index: 1000 !important;
+    .chat-button {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, #06b6d4));
+      animation: bounceIn 0.6s ease-out;
     }
     
-    .widget-state-button:hover {
-      transform: scale(1.05) !important;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
+    .chat-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
     
-    .widget-state-chat {
-      display: flex !important;
-      flex-direction: column !important;
-      height: 100% !important;
-      width: 100% !important;
+    .chat-popup {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 16px;
+      max-width: 240px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      font-size: 14px;
+      color: white;
+      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+      animation: slideUp 0.3s ease-out;
     }
     
-    /* 🎨 HEADER PREMIUM */
-    .widget-header {
-      background: linear-gradient(135deg, var(--primary), #06b6d4) !important;
-      padding: 16px 20px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
-      flex-shrink: 0 !important;
-      border-radius: 20px 20px 0 0 !important;
+    .chat-popup::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      right: 24px;
+      width: 12px;
+      height: 12px;
+      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+      transform: rotate(45deg);
     }
     
-    .widget-header-info {
-      display: flex !important;
-      align-items: center !important;
-      gap: 12px !important;
+    .chat-window {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: ${config.width || 380}px;
+      height: ${config.height || 600}px;
+      border-radius: 20px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: ${isDark ? '#1f2937' : '#ffffff'};
+      animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     
-    .widget-avatar {
-      width: 40px !important;
-      height: 40px !important;
-      border-radius: 50% !important;
-      border: 2px solid rgba(255,255,255,0.3) !important;
-      object-fit: cover !important;
+    .chat-header {
+      height: 64px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, var(--primary-color) 0%, color-mix(in srgb, var(--primary-color) 85%, #06b6d4) 100%);
     }
     
-    .widget-header-text h3 {
-      color: white !important;
-      font-size: 16px !important;
-      font-weight: 600 !important;
-      margin: 0 !important;
-      line-height: 1.2 !important;
+    .chat-header-content {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      gap: 12px;
     }
     
-    .widget-header-text p {
-      color: rgba(255,255,255,0.8) !important;
-      font-size: 12px !important;
-      margin: 2px 0 0 0 !important;
-      line-height: 1.2 !important;
+    .chat-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      object-fit: cover;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
-    .widget-header-actions {
-      display: flex !important;
-      gap: 8px !important;
+    .chat-status {
+      width: 12px;
+      height: 12px;
+      background: #10b981;
+      border-radius: 50%;
+      border: 2px solid white;
+      position: absolute;
+      bottom: -1px;
+      right: -1px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
     
-    .widget-action-btn {
-      width: 32px !important;
-      height: 32px !important;
-      border: none !important;
-      border-radius: 50% !important;
-      background: rgba(255,255,255,0.2) !important;
-      color: white !important;
-      cursor: pointer !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      transition: all 0.2s ease !important;
+    .chat-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: white;
+      margin: 0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
     
-    .widget-action-btn:hover {
-      background: rgba(255,255,255,0.3) !important;
-      transform: scale(1.1) !important;
+    .chat-subtitle {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      margin: 1px 0 0 0;
+      font-weight: 400;
     }
     
-    /* 💬 MESSAGES AREA */
-    .widget-messages {
-      flex: 1 !important;
-      padding: 20px !important;
-      overflow-y: auto !important;
-      background: ${isDark ? '#111827' : '#f8fafc'} !important;
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 16px !important;
+    .chat-actions {
+      display: flex;
+      gap: 6px;
     }
     
-    .widget-messages::-webkit-scrollbar {
-      width: 4px !important;
+    .chat-action-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.9);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    .widget-messages::-webkit-scrollbar-thumb {
-      background: var(--primary) !important;
-      border-radius: 4px !important;
+    .chat-action-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(1.05);
     }
     
-    .widget-message {
-      display: flex !important;
-      gap: 12px !important;
-      animation: slideUp 0.3s ease !important;
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      background: ${isDark ? '#111827' : '#f8fafc'};
     }
     
-    .widget-message.user {
-      flex-direction: row-reverse !important;
+    .chat-messages::-webkit-scrollbar {
+      width: 6px;
     }
     
-    .widget-message-avatar {
-      width: 32px !important;
-      height: 32px !important;
-      border-radius: 50% !important;
-      object-fit: cover !important;
-      flex-shrink: 0 !important;
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: linear-gradient(to bottom, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6));
+      border-radius: 8px;
     }
     
-    .widget-message-bubble {
-      max-width: 260px !important;
-      padding: 12px 16px !important;
-      border-radius: 18px !important;
-      font-size: 14px !important;
-      line-height: 1.4 !important;
-      word-wrap: break-word !important;
+    .message {
+      display: flex;
+      margin-bottom: 8px;
+      animation: slideInMessage 0.3s ease-out;
     }
     
-    .widget-message.bot .widget-message-bubble {
-      background: ${isDark ? '#374151' : '#ffffff'} !important;
-      color: ${isDark ? '#ffffff' : '#374151'} !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    .message.user {
+      flex-direction: row-reverse;
     }
     
-    .widget-message.user .widget-message-bubble {
-      background: var(--primary) !important;
-      color: white !important;
+    .message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin: 0 8px 0 0;
+      object-fit: cover;
     }
     
-    /* ⌨️ INPUT AREA */
-    .widget-input-area {
-      padding: 20px !important;
-      background: ${isDark ? '#1f2937' : '#ffffff'} !important;
-      border-top: 1px solid ${isDark ? '#374151' : '#e5e7eb'} !important;
-      flex-shrink: 0 !important;
+    .message-bubble {
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.4;
+      max-width: 280px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.04);
     }
     
-    .widget-input-container {
-      display: flex !important;
-      gap: 12px !important;
-      align-items: flex-end !important;
+    .message-bubble.bot {
+      background: ${isDark ? '#374151' : '#f1f5f9'};
+      color: ${isDark ? 'white' : '#334155'};
     }
     
-    .widget-input {
-      flex: 1 !important;
-      border: 1px solid ${isDark ? '#4b5563' : '#d1d5db'} !important;
-      border-radius: 20px !important;
-      padding: 12px 16px !important;
-      font-size: 14px !important;
-      background: ${isDark ? '#374151' : '#ffffff'} !important;
-      color: ${isDark ? '#ffffff' : '#374151'} !important;
-      resize: none !important;
-      outline: none !important;
-      max-height: 120px !important;
-      min-height: 44px !important;
-      font-family: inherit !important;
-      line-height: 1.4 !important;
+    .message-bubble.user {
+      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 90%, #06b6d4));
+      color: white;
     }
     
-    .widget-input:focus {
-      border-color: var(--primary) !important;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.1) !important;
+    .message-timestamp {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
     }
     
-    .widget-send-btn {
-      width: 44px !important;
-      height: 44px !important;
-      border: none !important;
-      border-radius: 50% !important;
-      background: var(--primary) !important;
-      color: white !important;
-      cursor: pointer !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      flex-shrink: 0 !important;
-      transition: all 0.2s ease !important;
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 16px;
+      background: ${isDark ? '#374151' : '#f1f5f9'};
+      border-radius: 18px;
     }
     
-    .widget-send-btn:hover:not(:disabled) {
-      transform: scale(1.05) !important;
-      box-shadow: 0 4px 12px rgba(59,130,246,0.3) !important;
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: ${isDark ? '#9ca3af' : '#6b7280'};
+      animation: typingBounce 1.4s infinite ease-in-out;
     }
     
-    .widget-send-btn:disabled {
-      opacity: 0.5 !important;
-      cursor: not-allowed !important;
-      transform: none !important;
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    
+    .chat-input-area {
+      padding: 12px 16px;
+      border-top: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.4)' : 'rgba(229, 231, 235, 0.6)'};
+      background: ${isDark ? '#1f2937' : '#ffffff'};
     }
     
-    /* 🎭 TYPING INDICATOR */
-    .widget-typing {
-      display: flex !important;
-      gap: 4px !important;
-      padding: 12px 16px !important;
-      background: ${isDark ? '#374151' : '#ffffff'} !important;
-      border-radius: 18px !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    .chat-input-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
     
-    .widget-typing-dot {
-      width: 8px !important;
-      height: 8px !important;
-      border-radius: 50% !important;
-      background: #9ca3af !important;
-      animation: typing 1.4s infinite ease-in-out !important;
+    .chat-input {
+      flex: 1;
+      padding: 8px 14px;
+      border: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.8)' : 'rgba(209, 213, 219, 0.6)'};
+      border-radius: 18px;
+      font-size: 14px;
+      outline: none;
+      background: ${isDark ? 'rgba(55, 65, 81, 0.9)' : '#ffffff'};
+      color: ${isDark ? 'white' : '#111827'};
+      resize: none;
+      min-height: 32px;
+      max-height: 120px;
+      font-family: inherit;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    .widget-typing-dot:nth-child(2) { animation-delay: 0.2s !important; }
-    .widget-typing-dot:nth-child(3) { animation-delay: 0.4s !important; }
-    
-    /* 🎪 POPUP */
-    .widget-popup {
-      position: absolute !important;
-      bottom: 80px !important;
-      right: 24px !important;
-      max-width: 200px !important;
-      padding: 12px 16px !important;
-      background: var(--primary) !important;
-      color: white !important;
-      border-radius: 12px !important;
-      font-size: 13px !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-      animation: slideUp 0.3s ease !important;
-      z-index: 999 !important;
+    .chat-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 15%, transparent);
     }
     
-    .widget-popup::after {
-      content: '' !important;
-      position: absolute !important;
-      bottom: -6px !important;
-      right: 20px !important;
-      width: 12px !important;
-      height: 12px !important;
-      background: var(--primary) !important;
-      transform: rotate(45deg) !important;
+    .chat-input::-webkit-scrollbar {
+      width: 4px;
     }
     
-    /* 🎬 ANIMATIONS */
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .chat-input::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
     }
     
-    @keyframes typing {
-      0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
-      40% { transform: translateY(-8px); opacity: 1; }
+    .chat-send-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* 🎯 UTILITY CLASSES */
+    .chat-send-btn:hover:not(:disabled) {
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    
+    .chat-send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
     .hidden { display: none !important; }
-    .visible { display: block !important; }
+    
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: scale(0.3); }
+      50% { opacity: 1; transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    
+    @keyframes expandIn {
+      0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slideInMessage {
+      0% { opacity: 0; transform: translateY(8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.7; }
+      40% { transform: translateY(-6px); opacity: 1; }
+    }
   </style>
 </head>
+
 <body>
-  <div class="widget-root" id="widgetRoot">
+  <div class="chat-widget">
+    <!-- Popup -->
+    ${config.showPopup && config.popupMessage ? `
+      <div class="chat-popup hidden" id="chatPopup">
+        ${config.popupMessage}
+      </div>
+    ` : ''}
     
-    <!-- 🔘 BUTTON STATE -->
-    <button class="widget-state-button hidden" id="chatButton">
+    <!-- Bouton -->
+    <button class="chat-button" id="chatButton">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
         <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
       </svg>
     </button>
     
-    <!-- 💭 POPUP -->
-    ${config.showPopup && config.popupMessage ? `
-    <div class="widget-popup hidden" id="widgetPopup">
-      ${config.popupMessage}
-    </div>
-    ` : ''}
-    
-    <!-- 💬 CHAT STATE -->
-    <div class="widget-state-chat" id="chatWindow">
-      
-      <!-- HEADER -->
-      <div class="widget-header">
-        <div class="widget-header-info">
-          <img src="${config.avatar || '/Default Avatar.png'}" alt="Avatar" class="widget-avatar" onerror="this.src='/Default Avatar.png'">
-          <div class="widget-header-text">
-            <h3>${config.chatTitle || config.name || 'Assistant'}</h3>
-            <p>${config.subtitle || 'En ligne'}</p>
+    <!-- Fenêtre Chat -->
+    <div class="chat-window hidden" id="chatWindow">
+      <!-- Header -->
+      <div class="chat-header">
+        <div class="chat-header-content">
+          <div style="position: relative;">
+            <img src="${config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+'}" alt="Avatar" class="chat-avatar">
+            <div class="chat-status"></div>
+          </div>
+          <div>
+            <div class="chat-title">${config.chatTitle || config.name}</div>
+            <div class="chat-subtitle">${config.subtitle || 'En ligne'}</div>
           </div>
         </div>
-        <div class="widget-header-actions">
-          <button class="widget-action-btn" id="resetBtn" title="Nouvelle conversation">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="chat-actions">
+          <button class="chat-action-btn" id="resetBtn" title="Nouvelle conversation">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="1 4 1 10 7 10"></polyline>
               <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
             </svg>
           </button>
-          <button class="widget-action-btn" id="closeBtn" title="Fermer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button class="chat-action-btn" id="closeBtn" title="Fermer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -448,95 +412,104 @@ function createWidgetHTML(config: any) {
         </div>
       </div>
       
-      <!-- MESSAGES -->
-      <div class="widget-messages" id="messagesArea">
+      <!-- Messages -->
+      <div class="chat-messages" id="chatMessages">
         <div id="messagesContainer">
           ${config.showWelcomeMessage && config.welcomeMessage ? `
-          <div class="widget-message bot">
-            <img src="${config.avatar || '/Default Avatar.png'}" alt="Bot" class="widget-message-avatar" onerror="this.src='/Default Avatar.png'">
-            <div class="widget-message-bubble">${config.welcomeMessage}</div>
-          </div>
+            <div class="message bot">
+              <img src="${config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+'}" alt="Bot" class="message-avatar">
+              <div>
+                <div class="message-bubble bot">${config.welcomeMessage}</div>
+                <div class="message-timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+              </div>
+            </div>
           ` : ''}
         </div>
       </div>
       
-      <!-- INPUT -->
-      <div class="widget-input-area">
-        <div class="widget-input-container">
+      <!-- Input -->
+      <div class="chat-input-area">
+        <div class="chat-input-container">
           <textarea 
-            class="widget-input" 
+            class="chat-input" 
             id="messageInput" 
             placeholder="${config.placeholderText || 'Tapez votre message...'}"
             rows="1"
           ></textarea>
-          <button class="widget-send-btn" id="sendBtn" disabled>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <button class="chat-send-btn" id="sendBtn" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10L17 12 2 14Z"/>
             </svg>
           </button>
         </div>
       </div>
-      
     </div>
   </div>
   
   <script>
-    // 🚀 WIDGET ENTERPRISE LOGIC
-    const config = ${JSON.stringify(config)};
+    // Variables globales
     let isOpen = false;
     let isTyping = false;
     let messages = [];
     
-    // 🎯 DOM ELEMENTS
-    const elements = {
-      root: document.getElementById('widgetRoot'),
-      button: document.getElementById('chatButton'),
-      popup: document.getElementById('widgetPopup'),
-      chat: document.getElementById('chatWindow'),
-      messages: document.getElementById('messagesContainer'),
-      input: document.getElementById('messageInput'),
-      sendBtn: document.getElementById('sendBtn'),
-      resetBtn: document.getElementById('resetBtn'),
-      closeBtn: document.getElementById('closeBtn')
-    };
+    // Configuration
+    const config = ${JSON.stringify(config)};
     
-    // 🎪 EVENT LISTENERS
-    elements.button?.addEventListener('click', openChat);
-    elements.closeBtn?.addEventListener('click', closeChat);
-    elements.resetBtn?.addEventListener('click', resetChat);
-    elements.sendBtn?.addEventListener('click', sendMessage);
+    // Éléments DOM
+    const popup = document.getElementById('chatPopup');
+    const button = document.getElementById('chatButton');
+    const chatWindow = document.getElementById('chatWindow');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const input = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const closeBtn = document.getElementById('closeBtn');
     
-    elements.input?.addEventListener('input', function() {
-      elements.sendBtn.disabled = !this.value.trim();
-      autoResize(this);
+    // Event listeners
+    button?.addEventListener('click', toggleChat);
+    closeBtn?.addEventListener('click', closeChat);
+    resetBtn?.addEventListener('click', resetChat);
+    sendBtn?.addEventListener('click', sendMessage);
+    
+    input?.addEventListener('input', function() {
+      sendBtn.disabled = !this.value.trim();
+      // Auto-resize
+      this.style.height = 'auto';
+      const newHeight = Math.min(this.scrollHeight, 120);
+      this.style.height = newHeight + 'px';
+      this.style.overflowY = newHeight >= 120 ? 'auto' : 'hidden';
     });
     
-    elements.input?.addEventListener('keydown', function(e) {
+    input?.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
     });
     
-    // 🔧 FUNCTIONS
-    function openChat() {
-      isOpen = true;
-      elements.button?.classList.add('hidden');
-      elements.popup?.classList.add('hidden');
-      elements.chat?.classList.remove('hidden');
-      setTimeout(() => elements.input?.focus(), 100);
-      notifyParent('WIDGET_OPEN');
+    // Fonctions
+    function toggleChat() {
+      isOpen = !isOpen;
+      if (isOpen) {
+        button?.classList.add('hidden');
+        chatWindow?.classList.remove('hidden');
+        popup?.classList.add('hidden');
+        setTimeout(() => input?.focus(), 300);
+        parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
+      } else {
+        closeChat();
+      }
     }
     
     function closeChat() {
       isOpen = false;
-      elements.chat?.classList.add('hidden');
-      elements.button?.classList.remove('hidden');
-      notifyParent('WIDGET_CLOSE');
+      chatWindow?.classList.add('hidden');
+      button?.classList.remove('hidden');
+      parent.postMessage({ type: 'WIDGET_CLOSE', data: {} }, '*');
     }
     
     function resetChat() {
-      elements.messages.innerHTML = '';
+      messagesContainer.innerHTML = '';
       messages = [];
       if (config.showWelcomeMessage && config.welcomeMessage) {
         addMessage(config.welcomeMessage, true);
@@ -544,18 +517,18 @@ function createWidgetHTML(config: any) {
     }
     
     async function sendMessage() {
-      const text = elements.input?.value?.trim();
+      const text = input?.value?.trim();
       if (!text) return;
       
       addMessage(text, false);
-      elements.input.value = '';
-      elements.sendBtn.disabled = true;
-      autoResize(elements.input);
+      input.value = '';
+      input.style.height = '32px';
+      sendBtn.disabled = true;
       
       showTyping();
       
       try {
-        const response = await fetch(\`/api/agents/\${config.selectedAgent}/ask\`, {
+        const response = await fetch('/api/agents/' + config.selectedAgent + '/ask', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -577,46 +550,51 @@ function createWidgetHTML(config: any) {
         hideTyping();
         addMessage(data.reply || "Désolé, je n'ai pas pu traiter votre demande.", true);
       } catch (error) {
-        console.error('❌ Send error:', error);
+        console.error('Erreur:', error);
         hideTyping();
-        addMessage("Désolé, une erreur s'est produite.", true);
+        addMessage("Désolé, une erreur s'est produite. Veuillez réessayer.", true);
       }
     }
     
     function addMessage(text, isBot) {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = \`widget-message \${isBot ? 'bot' : 'user'}\`;
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
       
       if (isBot) {
-        messageDiv.innerHTML = \`
-          <img src="\${config.avatar || '/Default Avatar.png'}" alt="Bot" class="widget-message-avatar" onerror="this.src='/Default Avatar.png'">
-          <div class="widget-message-bubble">\${text}</div>
-        \`;
+        messageEl.innerHTML = 
+          '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
+          '<div>' +
+            '<div class="message-bubble bot">' + text + '</div>' +
+            '<div class="message-timestamp">' + new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
+          '</div>';
       } else {
-        messageDiv.innerHTML = \`
-          <div class="widget-message-bubble">\${text}</div>
-        \`;
+        messageEl.innerHTML = 
+          '<div>' +
+            '<div class="message-bubble user">' + text + '</div>' +
+            '<div class="message-timestamp">' + new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
+          '</div>';
       }
       
-      elements.messages?.appendChild(messageDiv);
+      messagesContainer?.appendChild(messageEl);
       messages.push({ text, isBot, timestamp: new Date() });
       scrollToBottom();
     }
     
     function showTyping() {
       isTyping = true;
-      const typingDiv = document.createElement('div');
-      typingDiv.id = 'typingIndicator';
-      typingDiv.className = 'widget-message bot';
-      typingDiv.innerHTML = \`
-        <img src="\${config.avatar || '/Default Avatar.png'}" alt="Bot" class="widget-message-avatar" onerror="this.src='/Default Avatar.png'">
-        <div class="widget-typing">
-          <div class="widget-typing-dot"></div>
-          <div class="widget-typing-dot"></div>
-          <div class="widget-typing-dot"></div>
-        </div>
-      \`;
-      elements.messages?.appendChild(typingDiv);
+      const typingEl = document.createElement('div');
+      typingEl.id = 'typingIndicator';
+      typingEl.className = 'message bot';
+      typingEl.innerHTML = 
+        '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
+        '<div>' +
+          '<div class="typing-indicator">' +
+            '<div class="typing-dot"></div>' +
+            '<div class="typing-dot"></div>' +
+            '<div class="typing-dot"></div>' +
+          '</div>' +
+        '</div>';
+      messagesContainer?.appendChild(typingEl);
       scrollToBottom();
     }
     
@@ -625,80 +603,83 @@ function createWidgetHTML(config: any) {
       document.getElementById('typingIndicator')?.remove();
     }
     
-    function autoResize(textarea) {
-      textarea.style.height = 'auto';
-      const height = Math.min(textarea.scrollHeight, 120);
-      textarea.style.height = height + 'px';
-    }
-    
     function scrollToBottom() {
-      const messagesArea = document.getElementById('messagesArea');
-      if (messagesArea) {
+      const messages = document.getElementById('chatMessages');
+      if (messages) {
         setTimeout(() => {
-          messagesArea.scrollTop = messagesArea.scrollHeight;
-        }, 50);
+          messages.scrollTop = messages.scrollHeight;
+        }, 100);
       }
     }
     
-    function notifyParent(type, data = {}) {
-      try {
-        window.parent.postMessage({ 
-          type, 
-          data: { ...data, width: config.width, height: config.height } 
-        }, '*');
-      } catch (e) {
-        console.log('Parent notification failed:', e);
-      }
+    // Popup automatique
+    if (config.showPopup && config.popupMessage && popup) {
+      setTimeout(() => {
+        if (!isOpen) popup.classList.remove('hidden');
+      }, config.popupDelay * 1000);
     }
     
-    // 🎪 INIT
-    function init() {
-      console.log('✅ Widget loaded:', config.name);
-      
-      // Auto popup
-      if (config.showPopup && config.popupMessage && elements.popup) {
-        setTimeout(() => {
-          if (!isOpen) elements.popup?.classList.remove('hidden');
-        }, config.popupDelay * 1000);
-      }
-      
-      // Notify parent
-      notifyParent('WIDGET_READY');
-    }
+    // Communication avec parent
+    parent.postMessage({ 
+      type: 'WIDGET_READY', 
+      data: { width: config.width, height: config.height } 
+    }, '*');
     
-    // 🚀 START
-    init();
+    console.log('Widget chargé avec succès');
   </script>
 </body>
 </html>`;
-}
 
-// 💥 Widget d'erreur simple
-function createErrorWidget() {
-  return `<!DOCTYPE html>
+    return new NextResponse(htmlContent, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=300", // 5 minutes
+        "X-Frame-Options": "ALLOWALL", // Permet l'iframe
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET",
+        "Access-Control-Allow-Headers": "*"
+      },
+    });
+
+  } catch (error) {
+    console.error('Erreur chargement widget:', error);
+    
+    // Page d'erreur simple
+    const errorHtml = `<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <title>Widget Error</title>
   <style>
     body { 
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: Arial, sans-serif; 
       display: flex; 
       align-items: center; 
       justify-content: center; 
       height: 100vh; 
       margin: 0; 
-      background: #f5f5f5;
-      color: #666;
+      background: #f5f5f5; 
     }
-    .error { text-align: center; }
+    .error { 
+      text-align: center; 
+      color: #666; 
+    }
   </style>
 </head>
 <body>
   <div class="error">
-    <h3>Widget temporairement indisponible</h3>
-    <p>Veuillez réessayer dans quelques instants.</p>
+    <h3>Widget non disponible</h3>
+    <p>Le widget demandé n'a pas pu être chargé.</p>
   </div>
 </body>
 </html>`;
+
+    return new NextResponse(errorHtml, {
+      status: 404,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    });
+  }
 }

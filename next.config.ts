@@ -3,10 +3,10 @@ import { NextConfig as ActualNextConfig } from "next";
 
 const nextConfig: ActualNextConfig = {
   eslint: {
-    ignoreDuringBuilds: true, // ← TON CONFIG EXISTANT
+    ignoreDuringBuilds: true, // ← AJOUTÉ POUR IGNORER ESLINT
   },
   webpack: (config, { isServer }) => {
-    // Évite les erreurs liées à "fs" côté client (TON CONFIG EXISTANT)
+    // Évite les erreurs liées à "fs" côté client
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -14,41 +14,13 @@ const nextConfig: ActualNextConfig = {
       };
     }
 
-    // Ignore tous les fichiers .test.ts, .test.js, etc. (TON CONFIG EXISTANT)
+    // Ignore tous les fichiers .test.ts, .test.js, etc. même dans node_modules
     config.module.rules.push({
       test: /\.test\.(js|ts|tsx)$/,
       use: "null-loader",
     });
 
     return config;
-  },
-  
-  // 🚀 NOUVEAU - HEADERS POUR AUTORISER IFRAME SUR WIDGETS
-  async headers() {
-    return [
-      {
-        // 🎯 AUTORISER IFRAME POUR TOUS LES WIDGETS
-        source: '/widget/:path*',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'ALLOWALL',
-          },
-          {
-            key: 'Content-Security-Policy',
-            value: 'frame-ancestors *',
-          },
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=300',
-          },
-        ],
-      },
-    ];
   },
 };
 
