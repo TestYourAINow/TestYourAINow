@@ -122,13 +122,13 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-  // 🔘 Afficher le bouton chat (état initial) - SANS TRANSITION
+  // 🔘 Afficher le bouton chat (état initial) - AVEC SHADOW
   showButton: function() {
     if (!this.iframe) return;
     
     const isMobile = window.innerWidth <= 768;
     
-    // 🎯 IFRAME = JUSTE UN CONTENEUR, pas d'animation
+    // 🎯 IFRAME = CONTENEUR AVEC BOX-SHADOW pour cacher les bords
     this.iframe.style.cssText = `
       position: fixed !important;
       bottom: ${isMobile ? '16px' : '24px'} !important;
@@ -141,15 +141,13 @@ window.AIChatWidget = {
       background: transparent !important;
       opacity: 1 !important;
       pointer-events: auto !important;
-  
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
       transform: none !important;
       margin: 0 !important;
       padding: 0 !important;
       top: auto !important;
       left: auto !important;
     `;
-    
-    // ✨ Plus besoin d'animation iframe - le contenu s'en charge !
   },
 
   // 🏠 Widget ouvert : agrandir en fenêtre de chat - CHANGEMENT INSTANTANÉ
@@ -180,7 +178,7 @@ window.AIChatWidget = {
         background: transparent !important;
         opacity: 1 !important;
         pointer-events: auto !important;
- 
+        box-shadow: none !important;
         margin: 0 !important;
         padding: 0 !important;
         transform: none !important;
@@ -190,7 +188,7 @@ window.AIChatWidget = {
       const finalWidth = Math.min(this.config.width, window.innerWidth - 48);
       const finalHeight = Math.min(this.config.height, maxHeight);
       
-      // 🎯 IFRAME = CONTENEUR FIXE, animation faite par le contenu
+      // 🎯 IFRAME = CONTENEUR AVEC SHADOW pour cacher les bords
       this.iframe.style.cssText = `
         position: fixed !important;
         bottom: 24px !important;
@@ -203,7 +201,7 @@ window.AIChatWidget = {
         background: transparent !important;
         opacity: 1 !important;
         pointer-events: auto !important;
- 
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
         transform: none !important;
         margin: 0 !important;
         padding: 0 !important;

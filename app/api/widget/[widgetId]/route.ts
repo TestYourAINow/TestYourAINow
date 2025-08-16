@@ -435,10 +435,11 @@ export async function GET(
       display: none !important; 
     }
     
-    /* 🎬 ANIMATIONS INDESTRUCTIBLES */
+    /* 🎬 ANIMATIONS COMPLÈTES - Copiées depuis ChatWidget.module.css */
     @keyframes bounceIn {
       0% { opacity: 0 !important; transform: scale(0.3) !important; }
       50% { opacity: 1 !important; transform: scale(1.05) !important; }
+      70% { transform: scale(0.9) !important; }
       100% { opacity: 1 !important; transform: scale(1) !important; }
     }
     
