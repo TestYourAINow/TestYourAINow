@@ -137,7 +137,9 @@ export async function GET(
       display: flex !important;
       flex-direction: column !important;
       background: ${isDark ? '#1f2937' : '#ffffff'} !important;
-      animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      /* 🎯 SUPPRESSION DE L'ANIMATION INTERNE - Seule l'iframe s'anime */
+      transition: none !important;
+      animation: none !important;
     }
     
     .chat-header {
@@ -435,18 +437,7 @@ export async function GET(
       display: none !important; 
     }
     
-    /* 🎬 ANIMATIONS INDESTRUCTIBLES */
-    @keyframes bounceIn {
-      0% { opacity: 0 !important; transform: scale(0.3) !important; }
-      50% { opacity: 1 !important; transform: scale(1.05) !important; }
-      100% { opacity: 1 !important; transform: scale(1) !important; }
-    }
-    
-    @keyframes expandIn {
-      0% { opacity: 0 !important; transform: scale(0.8) translateY(20px) !important; }
-      100% { opacity: 1 !important; transform: scale(1) translateY(0) !important; }
-    }
-    
+    /* 🎬 ANIMATIONS SIMPLIFIÉES - Plus de conflit */
     @keyframes slideUp {
       0% { opacity: 0 !important; transform: translateY(10px) !important; }
       100% { opacity: 1 !important; transform: translateY(0) !important; }
