@@ -128,7 +128,7 @@ window.AIChatWidget = {
     
     const isMobile = window.innerWidth <= 768;
     
-    // 🎯 IFRAME = JUSTE UN CONTENEUR, pas d'animation
+    // 🎯 IFRAME = BOUTON AVEC TRANSITION POUR HOVER
     this.iframe.style.cssText = `
       position: fixed !important;
       bottom: ${isMobile ? '16px' : '24px'} !important;
@@ -141,6 +141,7 @@ window.AIChatWidget = {
       background: transparent !important;
       opacity: 1 !important;
       pointer-events: auto !important;
+      transition: all 0.3s ease !important;
       box-shadow: none !important;
       transform: none !important;
       margin: 0 !important;
@@ -190,7 +191,7 @@ window.AIChatWidget = {
       const finalWidth = Math.min(this.config.width, window.innerWidth - 48);
       const finalHeight = Math.min(this.config.height, maxHeight);
       
-      // 🎯 IFRAME = CONTENEUR FIXE, animation faite par le contenu
+      // 🎯 IFRAME = CONTENEUR AVEC TRANSITION SIMPLE ET RAPIDE
       this.iframe.style.cssText = `
         position: fixed !important;
         bottom: 24px !important;
@@ -203,6 +204,7 @@ window.AIChatWidget = {
         background: transparent !important;
         opacity: 1 !important;
         pointer-events: auto !important;
+        transition: all 0.3s ease !important;
         box-shadow: none !important;
         transform: none !important;
         margin: 0 !important;
