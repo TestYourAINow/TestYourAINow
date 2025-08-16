@@ -17,18 +17,27 @@ export async function GET(
     const rawConfig = await ChatbotConfig.findById(widgetId).lean();
     
     if (!rawConfig) {
+      console.error(`❌ Widget not found: ${widgetId}`);
       return new NextResponse('Widget not found', { status: 404 });
     }
 
     const config = JSON.parse(JSON.stringify(rawConfig));
     const isDark = config.theme === 'dark';
+    
+    console.log(`✅ Loading widget ${widgetId}:`, { 
+      name: config.name, 
+      theme: config.theme,
+      width: config.width,
+      height: config.height 
+    });
 
     // 🎯 HTML AVEC CSS ULTRA-DÉFENSIF CONTRE TOUS LES SITES
     const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>${config.name || 'Chat Widget'}</title>
   <style>
     /* 🛡️ RESET TOTAL pour neutraliser le CSS du site parent */
@@ -1417,8 +1426,11 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=300", // 5 minutes
-        "X-Frame-Options": "ALLOWALL", // Permet l'iframe
+        "Cache-Control": "no-cache, no-store, must-revalidate", // ✅ NOUVEAU: Force le refresh
+        "Pragma": "no-cache", // ✅ NOUVEAU: Cache IE
+        "Expires": "0", // ✅ NOUVEAU: Cache expiry
+        "X-Frame-Options": "ALLOWALL",
+        "X-Content-Type-Options": "nosniff", // ✅ NOUVEAU: Force le type MIME
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET",
         "Access-Control-Allow-Headers": "*"
