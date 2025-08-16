@@ -43,9 +43,19 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
-  // 🎯 NOUVEAU CODE D'INTÉGRATION SIMPLIFIÉ
+  // 🎯 SCRIPT D'INTÉGRATION CORRIGÉ
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://testyourainow.com';
-  const embedCode = `<script src="${baseUrl}/widget-client.js?widgetId=${widgetId}"></script>`;
+  const embedCode = `<script>
+(function() {
+  if (window.AIChatWidget) return;
+  var script = document.createElement('script');
+  script.src = '${baseUrl}/widget-client.js';
+  script.onload = function() {
+    window.AIChatWidget.init({ widgetId: '${widgetId}' });
+  };
+  document.body.appendChild(script);
+})();
+</script>`;
 
   const copyToClipboard = async () => {
     try {
