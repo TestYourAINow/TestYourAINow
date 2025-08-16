@@ -58,20 +58,11 @@ export async function GET(
     /* 🎯 CONTENEUR PRINCIPAL - POSITION ABSOLUE ULTRA-ROBUSTE */
     .chat-widget {
       position: fixed !important;
-      bottom: 24px !important;
-      right: 24px !important;
+      bottom: 0px !important;
+      right: 0px !important;
       z-index: 999999 !important;
       font-family: Inter, system-ui, sans-serif !important;
       --primary-color: ${config.primaryColor || '#3b82f6'};
-      /* 🎯 ALIGNEMENT PARFAIT - Suppression de tous les décalages */
-      margin: 0 !important;
-      padding: 0 !important;
-      transform: none !important;
-      top: auto !important;
-      left: auto !important;
-      display: block !important;
-      visibility: visible !important;
-      opacity: 1 !important;
     }
     
     .chat-button {
@@ -147,14 +138,6 @@ export async function GET(
       flex-direction: column !important;
       background: ${isDark ? '#1f2937' : '#ffffff'} !important;
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-      /* 🎯 COLLAGE PARFAIT - Aucun décalage autorisé */
-      margin: 0 !important;
-      padding: 0 !important;
-      transform: none !important;
-      top: auto !important;
-      left: auto !important;
-      border: none !important;
-      outline: none !important;
     }
     
     .chat-header {
