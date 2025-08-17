@@ -72,31 +72,64 @@ export async function GET(
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
     }
     
-    .chat-popup {
-      position: absolute;
-      bottom: 100%;
-      right: 0;
-      margin-bottom: 16px;
-      max-width: 240px;
-      padding: 12px 16px;
-      border-radius: 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      font-size: 14px;
-      color: white;
-      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
-      animation: slideUp 0.3s ease-out;
-    }
-    
-    .chat-popup::after {
-      content: '';
-      position: absolute;
-      bottom: -6px;
-      right: 24px;
-      width: 12px;
-      height: 12px;
-      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
-      transform: rotate(45deg);
-    }
+/* Popup avec bouton close */
+.chat-popup {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 16px;
+  max-width: 240px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+  animation: slideUp 0.3s ease-out;
+  /* 🎯 NOUVEAU: Flexbox pour le layout */
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.popup-content {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.popup-close-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-top: -2px;
+}
+
+.popup-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Ajuster la flèche du popup */
+.chat-popup::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  right: 24px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+  transform: rotate(45deg);
+}
     
     .chat-window {
       position: absolute;
@@ -368,13 +401,20 @@ export async function GET(
 </head>
 
 <body>
-  <div class="chat-widget">
-    <!-- Popup -->
-    ${config.showPopup && config.popupMessage ? `
-      <div class="chat-popup hidden" id="chatPopup">
-        ${config.popupMessage}
-      </div>
-    ` : ''}
+<!-- Popup AVEC bouton close -->
+${config.showPopup && config.popupMessage ? `
+  <div class="chat-popup hidden" id="chatPopup">
+    <div class="popup-content">
+      ${config.popupMessage}
+    </div>
+    <button class="popup-close-btn" id="popupCloseBtn" title="Fermer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+` : ''}
     
     <!-- Bouton -->
     <button class="chat-button" id="chatButton">
@@ -465,12 +505,14 @@ export async function GET(
     const sendBtn = document.getElementById('sendBtn');
     const resetBtn = document.getElementById('resetBtn');
     const closeBtn = document.getElementById('closeBtn');
+    const popupCloseBtn = document.getElementById('popupCloseBtn');
     
     // Event listeners
     button?.addEventListener('click', toggleChat);
     closeBtn?.addEventListener('click', closeChat);
     resetBtn?.addEventListener('click', resetChat);
     sendBtn?.addEventListener('click', sendMessage);
+    popupCloseBtn?.addEventListener('click', hidePopup);
     
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
@@ -488,19 +530,26 @@ export async function GET(
       }
     });
     
-    // Fonctions
-    function toggleChat() {
-      isOpen = !isOpen;
-      if (isOpen) {
-        button?.classList.add('hidden');
-        chatWindow?.classList.remove('hidden');
-        popup?.classList.add('hidden');
-        setTimeout(() => input?.focus(), 300);
-        parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
-      } else {
-        closeChat();
-      }
-    }
+// 🎯 NOUVEAU: Cacher le popup quand on clique sur le bouton
+// 🎯 FONCTION pour cacher le popup
+function hidePopup() {
+  if (popup) {
+    popup.classList.add('hidden');
+    parent.postMessage({ type: 'POPUP_HIDE' }, '*');
+  }
+}
+function toggleChat() {
+  isOpen = !isOpen;
+  if (isOpen) {
+    button?.classList.add('hidden');
+    chatWindow?.classList.remove('hidden');
+    hidePopup(); // 🎯 CACHER LE POPUP
+    setTimeout(() => input?.focus(), 300);
+    parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
+  } else {
+    closeChat();
+  }
+}
     
     function closeChat() {
       isOpen = false;
@@ -613,12 +662,20 @@ export async function GET(
       }
     }
     
-    // Popup automatique
-    if (config.showPopup && config.popupMessage && popup) {
-      setTimeout(() => {
-        if (!isOpen) popup.classList.remove('hidden');
-      }, config.popupDelay * 1000);
+// Popup automatique - MODIFIÉ
+if (config.showPopup && config.popupMessage && popup) {
+  setTimeout(() => {
+    if (!isOpen) {
+      popup.classList.remove('hidden');
+      parent.postMessage({ type: 'POPUP_SHOW' }, '*');
     }
+  }, config.popupDelay * 1000);
+  
+  // Auto-fermer après 15 secondes
+  setTimeout(() => {
+    if (!isOpen) hidePopup();
+  }, (config.popupDelay + 15) * 1000);
+}
     
     // Communication avec parent
     parent.postMessage({ 

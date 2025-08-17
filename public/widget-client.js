@@ -117,28 +117,24 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-// 🔘 Afficher le bouton chat (état initial) - AVEC MARGES COMPLÈTES
 showButton: function() {
   if (!this.iframe) return;
   
   const isMobile = window.innerWidth <= 768;
   
-  // 🎯 NOUVELLE APPROCHE: Iframe juste pour le bouton + popup visible
+  // 🎯 SOLUTION: Iframe exactement de la taille du bouton + petit buffer
   const buttonSize = 64;
-  const hoverMargin = 10;
-  const popupWidth = 240; // Largeur max du popup
-  const popupHeight = 80; // Hauteur approximative du popup
+  const safetyMargin = 12; // Juste pour le hover scale
   
-  // Iframe minimale qui couvre seulement ce qui est nécessaire
-  const iframeWidth = Math.max(buttonSize + hoverMargin, popupWidth);
-  const iframeHeight = buttonSize + hoverMargin + popupHeight;
+  // Iframe MINIMALE - seulement pour le bouton
+  const iframeSize = buttonSize + safetyMargin;
   
   this.iframe.style.cssText = `
     position: fixed;
     bottom: ${isMobile ? '16px' : '24px'};
     right: ${isMobile ? '16px' : '24px'};
-    width: ${iframeWidth}px;
-    height: ${iframeHeight}px;
+    width: ${iframeSize}px;
+    height: ${iframeSize}px;
     border: none;
     z-index: 999999;
     background: transparent;
@@ -146,6 +142,30 @@ showButton: function() {
     pointer-events: auto;
     display: block;
   `;
+},
+
+// 🎯 NOUVEAU: Fonction pour gérer le popup séparément
+showPopup: function() {
+  // Quand le popup apparaît, on agrandit temporairement l'iframe
+  if (!this.iframe) return;
+  
+  const isMobile = window.innerWidth <= 768;
+  const buttonSize = 64;
+  const popupWidth = 240;
+  const popupHeight = 100;
+  
+  // Iframe agrandie pour le popup
+  const iframeWidth = Math.max(buttonSize + 12, popupWidth + 20);
+  const iframeHeight = buttonSize + popupHeight + 30;
+  
+  this.iframe.style.width = iframeWidth + 'px';
+  this.iframe.style.height = iframeHeight + 'px';
+  this.iframe.style.right = (isMobile ? 16 : 24) - 10 + 'px'; // Décaler un peu
+},
+
+hidePopup: function() {
+  // Quand le popup disparaît, on remet l'iframe à sa taille minimale
+  this.showButton();
 },
 
 // 🏠 Widget ouvert - AVEC MARGES COMPLÈTES POUR OMBRES
