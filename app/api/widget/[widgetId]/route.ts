@@ -72,28 +72,14 @@ export async function GET(
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
     }
     
-/* 💭 POPUP BUBBLE - VERSION LIMITÉE */
 .chat-popup {
-  position: absolute;
-  bottom: 100%;
-  right: 0;
-  margin-bottom: 16px;
-  /* 🎯 LIMITER LA TAILLE */
-  max-width: 200px;        /* Plus petit */
-  max-height: 60px;        /* Maximum 2 lignes */
-  padding: 10px 14px;      /* Padding plus compact */
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  font-size: 13px;         /* Police plus petite */
-  line-height: 1.3;        /* Interligne réduit */
-  color: white;
-  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
-  animation: slideUp 0.3s ease-out;
-  /* 🎯 LIMITER LE TEXTE */
+  max-width: 200px;
+  min-height: 40px;
+  max-height: 80px;     /* Un peu plus flexible */
+  padding: 10px 14px;
   overflow: hidden;
-  text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;   /* Max 2 lignes */
+  -webkit-line-clamp: 3; /* Max 3 lignes au lieu de 2 */
   -webkit-box-orient: vertical;
 }
     

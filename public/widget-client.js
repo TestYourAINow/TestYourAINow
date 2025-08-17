@@ -117,32 +117,26 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-// 🔘 Afficher le bouton - IFRAME RÉDUITE AU MINIMUM
+// 🔘 Afficher le bouton chat (état initial) - AVEC MARGES COMPLÈTES
 showButton: function() {
   if (!this.iframe) return;
   
   const isMobile = window.innerWidth <= 768;
   
-  // 🎯 CALCUL MINIMAL: popup limité à 200x60px + bouton 64x64px
+  // 🎯 MARGES POUR: hover scale + box-shadow + popup
   const buttonSize = 64;
-  const shadowMargin = 10;      // Réduit
-  const popupWidth = 200;       // Largeur fixe popup
-  const popupHeight = 60;       // Hauteur fixe popup (2 lignes max)
-  const popupMarginBottom = 16; // Marge entre popup et bouton
+  const shadowMargin = 15; // Pour les box-shadows
+  const hoverMargin = 8;   // Pour le scale(1.05)
+  const popupMarginTop = 100; // Pour le popup au-dessus
+  const popupMarginLeft = 60; // 🎯 NOUVEAU: Marge à gauche pour le popup
   
-  // Iframe juste assez grande pour contenir bouton + popup compact
-  const iframeWidth = Math.max(buttonSize + (shadowMargin * 2), popupWidth + 20);
-  const iframeHeight = buttonSize + shadowMargin + popupHeight + popupMarginBottom + 10;
-  
-  // Position ajustée pour que le bouton reste à sa place
-  const rightOffset = isMobile ? 16 : 24;
-  const widthDiff = iframeWidth - (buttonSize + shadowMargin);
-  const adjustedRight = rightOffset - (widthDiff / 2);
+  const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
+  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
   
   this.iframe.style.cssText = `
     position: fixed;
     bottom: ${isMobile ? '16px' : '24px'};
-    right: ${adjustedRight}px;
+    right: ${isMobile ? '16px' : '24px'};
     width: ${iframeWidth}px;
     height: ${iframeHeight}px;
     border: none;
