@@ -37,13 +37,13 @@ window.AIChatWidget = {
     iframe.title = "Assistant IA";
     iframe.loading = "lazy";
     
-    // 🔧 Style initial : iframe immense invisible
+    // 🔧 Style initial : invisible jusqu'à ce que le widget soit prêt
     iframe.style.cssText = `
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      bottom: 24px;
+      right: 24px;
+      width: 0px;
+      height: 0px;
       border: none;
       z-index: 999999;
       background: transparent;
@@ -121,21 +121,24 @@ window.AIChatWidget = {
   showButton: function() {
     if (!this.iframe) return;
     
+    const isMobile = window.innerWidth <= 768;
+    
     this.iframe.style.cssText = `
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      bottom: ${isMobile ? '16px' : '24px'};
+      right: ${isMobile ? '16px' : '24px'};
+      width: 64px;
+      height: 64px;
       border: none;
       z-index: 999999;
       background: transparent;
       opacity: 1;
       pointer-events: auto;
+      display: block;
     `;
   },
 
-  // 🏠 Widget ouvert : agrandir en fenêtre de chat
+  // 🏠 Widget ouvert : agrandir en fenêtre de chat - VERSION DIRECTE
   handleWidgetOpen: function(data) {
     if (!this.iframe) return;
     
@@ -148,32 +151,39 @@ window.AIChatWidget = {
     const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
     
     if (isMobile) {
-      // Mobile : iframe immense, widget gère sa position
+      // Mobile : interface plein écran optimisée - DIRECT
       this.iframe.style.cssText = `
         position: fixed;
-        top: 0;
+        bottom: 0;
+        right: 0;
         left: 0;
-        width: 100vw;
-        height: 100vh;
+        top: ${isSmallScreen ? '10px' : '20px'};
+        width: 100%;
+        height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
         border: none;
         z-index: 999999;
         background: transparent;
         opacity: 1;
         pointer-events: auto;
+        display: block;
       `;
     } else {
-      // Desktop : iframe immense, widget gère sa position
+      // Desktop : fenêtre dimensionnée - DIRECT
+      const finalWidth = Math.min(this.config.width, window.innerWidth - 48);
+      const finalHeight = Math.min(this.config.height, maxHeight);
+      
       this.iframe.style.cssText = `
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
+        bottom: 24px;
+        right: 24px;
+        width: ${finalWidth}px;
+        height: ${finalHeight}px;
         border: none;
         z-index: 999999;
         background: transparent;
         opacity: 1;
         pointer-events: auto;
+        display: block;
       `;
     }
   },
