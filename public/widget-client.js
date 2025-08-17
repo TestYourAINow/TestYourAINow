@@ -117,20 +117,27 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-// 🔘 Afficher le bouton chat (état initial) - VERSION CORRIGÉE
+// 🔘 Afficher le bouton chat (état initial) - AVEC MARGES COMPLÈTES
 showButton: function() {
   if (!this.iframe) return;
   
   const isMobile = window.innerWidth <= 768;
   
-  // 🎯 SOLUTION: Iframe plus grande pour accommoder le hover scale
-  // Bouton = 64px + hover scale 1.05 = ~67px + marge de sécurité = 80px
+  // 🎯 MARGES POUR: hover scale + box-shadow + popup
+  const buttonSize = 64;
+  const shadowMargin = 15; // Pour les box-shadows
+  const hoverMargin = 8;   // Pour le scale(1.05)
+  const popupMargin = 120; // Pour le popup au-dessus (plus large que le bouton)
+  
+  const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin;
+  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMargin;
+  
   this.iframe.style.cssText = `
     position: fixed;
     bottom: ${isMobile ? '16px' : '24px'};
     right: ${isMobile ? '16px' : '24px'};
-    width: 80px;
-    height: 80px;
+    width: ${iframeWidth}px;
+    height: ${iframeHeight}px;
     border: none;
     z-index: 999999;
     background: transparent;
@@ -140,20 +147,19 @@ showButton: function() {
   `;
 },
 
-// 🏠 Widget ouvert : agrandir en fenêtre de chat - VERSION CORRIGÉE
+// 🏠 Widget ouvert - AVEC MARGES COMPLÈTES POUR OMBRES
 handleWidgetOpen: function(data) {
   if (!this.iframe) return;
   
   console.log('AIChatWidget: Ouverture du chat');
   this.isOpen = true;
   
-  // 📱 Design responsive intelligent
   const isMobile = window.innerWidth <= 768;
   const isSmallScreen = window.innerHeight <= 600;
   const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
   
   if (isMobile) {
-    // Mobile : interface plein écran optimisée
+    // Mobile : interface plein écran (pas de problème d'ombres)
     this.iframe.style.cssText = `
       position: fixed;
       bottom: 0;
@@ -170,15 +176,20 @@ handleWidgetOpen: function(data) {
       display: block;
     `;
   } else {
-    // Desktop : fenêtre dimensionnée avec marge pour l'animation
+    // Desktop : marges pour ombres + animation
     const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
     const baseHeight = Math.min(this.config.height, maxHeight);
     
-    // 🎯 SOLUTION: Ajouter marge pour l'animation expandIn
-    // Animation translateY(20px) + marge de sécurité
-    const animationMargin = 30; // 20px translateY + 10px sécurité
-    const finalWidth = baseWidth + animationMargin;
-    const finalHeight = baseHeight + animationMargin;
+    // 🎯 MARGES COMPLÈTES
+    const shadowMargin = 20;    // Pour box-shadow du chat window
+    const animationMargin = 25; // Pour expandIn translateY + scale
+    const borderRadius = 10;    // Marge pour border-radius
+    
+    const totalMarginWidth = shadowMargin + animationMargin + borderRadius;
+    const totalMarginHeight = shadowMargin + animationMargin + borderRadius;
+    
+    const finalWidth = baseWidth + totalMarginWidth;
+    const finalHeight = baseHeight + totalMarginHeight;
     
     this.iframe.style.cssText = `
       position: fixed;
