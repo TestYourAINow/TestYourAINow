@@ -48,7 +48,7 @@ window.AIChatWidget = {
       z-index: 999999;
       background: transparent;
       opacity: 0;
-      pointer-events: none;
+      pointer-events: none !important;
     `;
 
     this.iframe = iframe;
@@ -117,55 +117,35 @@ window.AIChatWidget = {
     this.showButton();
   },
 
+// 🔘 Afficher le bouton chat (état initial) - AVEC MARGES COMPLÈTES
 showButton: function() {
   if (!this.iframe) return;
   
   const isMobile = window.innerWidth <= 768;
   
-  // 🎯 SOLUTION: Iframe exactement de la taille du bouton + petit buffer
+  // 🎯 MARGES POUR: hover scale + box-shadow + popup
   const buttonSize = 64;
-  const safetyMargin = 12; // Juste pour le hover scale
+  const shadowMargin = 15; // Pour les box-shadows
+  const hoverMargin = 8;   // Pour le scale(1.05)
+  const popupMarginTop = 120; // Pour le popup au-dessus
+  const popupMarginLeft = 60; // 🎯 NOUVEAU: Marge à gauche pour le popup
   
-  // Iframe MINIMALE - seulement pour le bouton
-  const iframeSize = buttonSize + safetyMargin;
+  const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
+  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
   
   this.iframe.style.cssText = `
     position: fixed;
     bottom: ${isMobile ? '16px' : '24px'};
     right: ${isMobile ? '16px' : '24px'};
-    width: ${iframeSize}px;
-    height: ${iframeSize}px;
+    width: ${iframeWidth}px;
+    height: ${iframeHeight}px;
     border: none;
     z-index: 999999;
     background: transparent;
     opacity: 1;
-    pointer-events: auto;
+    pointer-events: none !important;
     display: block;
   `;
-},
-
-// 🎯 NOUVEAU: Fonction pour gérer le popup séparément
-showPopup: function() {
-  // Quand le popup apparaît, on agrandit temporairement l'iframe
-  if (!this.iframe) return;
-  
-  const isMobile = window.innerWidth <= 768;
-  const buttonSize = 64;
-  const popupWidth = 240;
-  const popupHeight = 100;
-  
-  // Iframe agrandie pour le popup
-  const iframeWidth = Math.max(buttonSize + 12, popupWidth + 20);
-  const iframeHeight = buttonSize + popupHeight + 30;
-  
-  this.iframe.style.width = iframeWidth + 'px';
-  this.iframe.style.height = iframeHeight + 'px';
-  this.iframe.style.right = (isMobile ? 16 : 24) - 10 + 'px'; // Décaler un peu
-},
-
-hidePopup: function() {
-  // Quand le popup disparaît, on remet l'iframe à sa taille minimale
-  this.showButton();
 },
 
 // 🏠 Widget ouvert - AVEC MARGES COMPLÈTES POUR OMBRES
@@ -193,7 +173,7 @@ handleWidgetOpen: function(data) {
       z-index: 999999;
       background: transparent;
       opacity: 1;
-      pointer-events: auto;
+      pointer-events: none !important;
       display: block;
     `;
   } else {
@@ -222,7 +202,7 @@ handleWidgetOpen: function(data) {
       z-index: 999999;
       background: transparent;
       opacity: 1;
-      pointer-events: auto;
+      pointer-events: none !important;
       display: block;
     `;
   }
