@@ -123,15 +123,15 @@ showButton: function() {
   
   const isMobile = window.innerWidth <= 768;
   
-  // 🎯 MARGES POUR: hover scale + box-shadow + popup
+  // 🎯 NOUVELLE APPROCHE: Iframe juste pour le bouton + popup visible
   const buttonSize = 64;
-  const shadowMargin = 15; // Pour les box-shadows
-  const hoverMargin = 8;   // Pour le scale(1.05)
-  const popupMarginTop = 120; // Pour le popup au-dessus
-  const popupMarginLeft = 100; // 🎯 NOUVEAU: Marge à gauche pour le popup
+  const hoverMargin = 10;
+  const popupWidth = 240; // Largeur max du popup
+  const popupHeight = 80; // Hauteur approximative du popup
   
-  const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
-  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
+  // Iframe minimale qui couvre seulement ce qui est nécessaire
+  const iframeWidth = Math.max(buttonSize + hoverMargin, popupWidth);
+  const iframeHeight = buttonSize + hoverMargin + popupHeight;
   
   this.iframe.style.cssText = `
     position: fixed;
@@ -146,35 +146,7 @@ showButton: function() {
     pointer-events: auto;
     display: block;
   `;
-  // 🎯 SOLUTION: Injecter du CSS dans l'iframe une fois chargée
-  this.iframe.onload = () => {
-    try {
-      const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow.document;
-      const style = iframeDoc.createElement('style');
-      style.innerHTML = `
-        html, body { 
-          pointer-events: none !important; 
-          margin: 0 !important;
-          padding: 0 !important;
-        }
-        .chat-widget, 
-        .chat-button, 
-        .chat-popup,
-        .chat-window,
-        button,
-        input,
-        textarea { 
-          pointer-events: auto !important; 
-        }
-      `;
-      iframeDoc.head.appendChild(style);
-    } catch (e) {
-      console.log('Cannot access iframe content (CORS)');
-    }
-  };
 },
-
-
 
 // 🏠 Widget ouvert - AVEC MARGES COMPLÈTES POUR OMBRES
 handleWidgetOpen: function(data) {
