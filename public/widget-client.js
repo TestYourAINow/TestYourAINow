@@ -40,8 +40,8 @@ window.AIChatWidget = {
     // 🔧 Style initial : invisible jusqu'à ce que le widget soit prêt
     iframe.style.cssText = `
       position: fixed;
-      bottom: 24px;
-      right: 24px;
+      bottom: 0px;
+      right: 0px;
       width: 0px;
       height: 0px;
       border: none;
@@ -125,8 +125,8 @@ window.AIChatWidget = {
     
     this.iframe.style.cssText = `
       position: fixed;
-      bottom: ${isMobile ? '16px' : '24px'};
-      right: ${isMobile ? '16px' : '24px'};
+      bottom: 0px;
+      right: 0px;
       width: 64px;
       height: 64px;
       border: none;
@@ -172,8 +172,8 @@ window.AIChatWidget = {
       
       this.iframe.style.cssText = `
         position: fixed;
-        bottom: 24px;
-        right: 24px;
+        bottom: 0px;
+        right: 0px;
         width: ${finalWidth}px;
         height: ${finalHeight}px;
         border: none;
