@@ -41,7 +41,6 @@ export async function GET(
       height: 100vh !important;
       width: 100vw !important;
       position: relative !important;
-      pointer-events: none !important;
     }
     
 .chat-widget {
@@ -51,7 +50,6 @@ export async function GET(
       z-index: 999999 !important;
       font-family: Inter, system-ui, sans-serif;
       --primary-color: ${config.primaryColor || '#3b82f6'};
-      pointer-events: auto !important;
     }
     
     .chat-button {
@@ -67,7 +65,6 @@ export async function GET(
       justify-content: center;
       background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, #06b6d4));
       animation: bounceIn 0.6s ease-out;
-      pointer-events: auto !important;
     }
     
     .chat-button:hover {
@@ -75,21 +72,30 @@ export async function GET(
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
     }
     
-    .chat-popup {
-      position: absolute;
-      bottom: 100%;
-      right: 0;
-      margin-bottom: 16px;
-      max-width: 240px;
-      padding: 12px 16px;
-      border-radius: 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      font-size: 14px;
-      color: white;
-      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
-      animation: slideUp 0.3s ease-out;
-      pointer-events: auto !important;
-    }
+/* 💭 POPUP BUBBLE - VERSION LIMITÉE */
+.chat-popup {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 16px;
+  /* 🎯 LIMITER LA TAILLE */
+  max-width: 200px;        /* Plus petit */
+  max-height: 60px;        /* Maximum 2 lignes */
+  padding: 10px 14px;      /* Padding plus compact */
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 13px;         /* Police plus petite */
+  line-height: 1.3;        /* Interligne réduit */
+  color: white;
+  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+  animation: slideUp 0.3s ease-out;
+  /* 🎯 LIMITER LE TEXTE */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;   /* Max 2 lignes */
+  -webkit-box-orient: vertical;
+}
     
     .chat-popup::after {
       content: '';
