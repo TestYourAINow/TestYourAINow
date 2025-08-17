@@ -77,8 +77,8 @@ export async function GET(
   bottom: 100%;
   right: 0;
   margin-bottom: 16px;
-  max-width: 320px;
-  min-width: 200px;
+  max-width: 180px;
+  min-width: 150px;
   padding: 12px 16px;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -418,15 +418,6 @@ export async function GET(
       <!-- Messages -->
       <div class="chat-messages" id="chatMessages">
         <div id="messagesContainer">
-          ${config.showWelcomeMessage && config.welcomeMessage ? `
-            <div class="message bot">
-              <img src="${config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+'}" alt="Bot" class="message-avatar">
-              <div>
-                <div class="message-bubble bot">${config.welcomeMessage}</div>
-                <div class="message-timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-              </div>
-            </div>
-          ` : ''}
         </div>
       </div>
       
@@ -491,18 +482,33 @@ export async function GET(
     });
     
     // Fonctions
-    function toggleChat() {
-      isOpen = !isOpen;
-      if (isOpen) {
-        button?.classList.add('hidden');
-        chatWindow?.classList.remove('hidden');
-        popup?.classList.add('hidden');
-        setTimeout(() => input?.focus(), 300);
-        parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
-      } else {
-        closeChat();
-      }
+function toggleChat() {
+  isOpen = !isOpen;
+  if (isOpen) {
+    button?.classList.add('hidden');
+    chatWindow?.classList.remove('hidden');
+    popup?.classList.add('hidden');
+    
+    // 🎯 OPTION AVEC TYPING : Plus réaliste
+    if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
+      setTimeout(() => {
+        // 1. Montrer typing indicator
+        showTyping();
+        
+        // 2. Après 1.5s, cacher typing et montrer message
+        setTimeout(() => {
+          hideTyping();
+          addMessage(config.welcomeMessage, true);
+        }, 1500);
+      }, 400);
     }
+    
+    setTimeout(() => input?.focus(), 300);
+    parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
+  } else {
+    closeChat();
+  }
+}
     
     function closeChat() {
       isOpen = false;
