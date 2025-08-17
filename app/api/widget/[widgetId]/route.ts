@@ -113,18 +113,15 @@ export async function GET(
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     
-.chat-header {
-  height: 64px;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(135deg, var(--primary-color) 0%, color-mix(in srgb, var(--primary-color) 85%, #06b6d4) 100%);
-  /* 🎯 NOUVEAU: Ajouter une ombre au header */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: relative;
-  z-index: 2;
-}
+    .chat-header {
+      height: 64px;
+      padding: 10px 16px;
+      display: flex;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, var(--primary-color) 0%, color-mix(in srgb, var(--primary-color) 85%, #06b6d4) 100%);
+    }
     
     .chat-header-content {
       display: flex;
