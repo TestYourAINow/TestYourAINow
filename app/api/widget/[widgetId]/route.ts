@@ -43,7 +43,7 @@ export async function GET(
       position: relative !important;
     }
     
-.chat-widget {
+    .chat-widget {
       position: fixed !important;
       bottom: 0px !important;
       right: 0px !important;
@@ -58,19 +58,21 @@ export async function GET(
       border-radius: 50%;
       border: none;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
       justify-content: center;
       background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, #06b6d4));
-      animation: bounceIn 0.6s ease-out;
     }
     
-    .chat-button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    .chat-button svg {
+      transition: transform 0.2s ease;
     }
+    
+    .chat-button:hover svg {
+      transform: scale(1.1);
+    }
+    
+    /* HOVER SUPPRIMÉ - Plus d'animation sur le bouton */
     
     .chat-popup {
       position: absolute;
@@ -105,12 +107,10 @@ export async function GET(
       width: ${config.width || 380}px;
       height: ${config.height || 600}px;
       border-radius: 20px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       background: ${isDark ? '#1f2937' : '#ffffff'};
-      animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     
     .chat-header {
@@ -339,17 +339,7 @@ export async function GET(
     
     .hidden { display: none !important; }
     
-    @keyframes bounceIn {
-      0% { opacity: 0; transform: scale(0.3); }
-      50% { opacity: 1; transform: scale(1.05); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-    
-    @keyframes expandIn {
-      0% { opacity: 0; transform: scale(0.8) translateY(20px); }
-      100% { opacity: 1; transform: scale(1) translateY(0); }
-    }
-    
+    /* ANIMATIONS SUPPRIMÉES - Open/Close direct */
     @keyframes slideUp {
       0% { opacity: 0; transform: translateY(10px); }
       100% { opacity: 1; transform: translateY(0); }
@@ -378,7 +368,7 @@ export async function GET(
     
     <!-- Bouton -->
     <button class="chat-button" id="chatButton">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
         <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
       </svg>
     </button>
