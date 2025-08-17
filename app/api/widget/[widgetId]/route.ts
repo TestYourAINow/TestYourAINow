@@ -12,6 +12,7 @@ export async function GET(
   try {
     await connectToDatabase();
     
+    // Récupérer la config depuis la DB
     const rawConfig = await ChatbotConfig.findById(widgetId).lean();
     
     if (!rawConfig) {
@@ -21,7 +22,7 @@ export async function GET(
     const config = JSON.parse(JSON.stringify(rawConfig));
     const isDark = config.theme === 'dark';
 
-    // 🎯 HTML COMPLET - SOLUTION SIMPLE : JUSTE LES CORRECTIONS SHADOW + PADDING
+    // 🎯 HTML COMPLET SANS NEXT.JS
     const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -42,19 +43,13 @@ export async function GET(
       position: relative !important;
     }
     
-    .chat-widget {
+.chat-widget {
       position: fixed !important;
       bottom: 0px !important;
       right: 0px !important;
       z-index: 999999 !important;
       font-family: Inter, system-ui, sans-serif;
       --primary-color: ${config.primaryColor || '#3b82f6'};
-      padding: 20px;
-      pointer-events: none;
-    }
-    
-    .chat-widget > * {
-      pointer-events: auto;
     }
     
     .chat-button {
@@ -110,13 +105,12 @@ export async function GET(
       width: ${config.width || 380}px;
       height: ${config.height || 600}px;
       border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12), 0 4px 6px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       background: ${isDark ? '#1f2937' : '#ffffff'};
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      border: 1px solid ${isDark ? 'rgba(55, 65, 81, 0.3)' : 'rgba(0, 0, 0, 0.08)'};
     }
     
     .chat-header {
@@ -264,8 +258,6 @@ export async function GET(
       padding: 12px 16px;
       background: ${isDark ? '#374151' : '#f1f5f9'};
       border-radius: 18px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-      border: 1px solid rgba(0, 0, 0, 0.04);
     }
     
     .typing-dot {
@@ -377,19 +369,23 @@ export async function GET(
 
 <body>
   <div class="chat-widget">
+    <!-- Popup -->
     ${config.showPopup && config.popupMessage ? `
       <div class="chat-popup hidden" id="chatPopup">
         ${config.popupMessage}
       </div>
     ` : ''}
     
+    <!-- Bouton -->
     <button class="chat-button" id="chatButton">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
         <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
       </svg>
     </button>
     
+    <!-- Fenêtre Chat -->
     <div class="chat-window hidden" id="chatWindow">
+      <!-- Header -->
       <div class="chat-header">
         <div class="chat-header-content">
           <div style="position: relative;">
@@ -417,6 +413,7 @@ export async function GET(
         </div>
       </div>
       
+      <!-- Messages -->
       <div class="chat-messages" id="chatMessages">
         <div id="messagesContainer">
           ${config.showWelcomeMessage && config.welcomeMessage ? `
@@ -431,6 +428,7 @@ export async function GET(
         </div>
       </div>
       
+      <!-- Input -->
       <div class="chat-input-area">
         <div class="chat-input-container">
           <textarea 
@@ -450,11 +448,15 @@ export async function GET(
   </div>
   
   <script>
+    // Variables globales
     let isOpen = false;
     let isTyping = false;
     let messages = [];
+    
+    // Configuration
     const config = ${JSON.stringify(config)};
     
+    // Éléments DOM
     const popup = document.getElementById('chatPopup');
     const button = document.getElementById('chatButton');
     const chatWindow = document.getElementById('chatWindow');
@@ -464,6 +466,7 @@ export async function GET(
     const resetBtn = document.getElementById('resetBtn');
     const closeBtn = document.getElementById('closeBtn');
     
+    // Event listeners
     button?.addEventListener('click', toggleChat);
     closeBtn?.addEventListener('click', closeChat);
     resetBtn?.addEventListener('click', resetChat);
@@ -471,6 +474,7 @@ export async function GET(
     
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
+      // Auto-resize
       this.style.height = 'auto';
       const newHeight = Math.min(this.scrollHeight, 120);
       this.style.height = newHeight + 'px';
@@ -484,6 +488,7 @@ export async function GET(
       }
     });
     
+    // Fonctions
     function toggleChat() {
       isOpen = !isOpen;
       if (isOpen) {
@@ -491,13 +496,7 @@ export async function GET(
         chatWindow?.classList.remove('hidden');
         popup?.classList.add('hidden');
         setTimeout(() => input?.focus(), 300);
-        parent.postMessage({ 
-          type: 'WIDGET_OPEN', 
-          data: { 
-            width: ${config.width || 380} + 40, 
-            height: ${config.height || 600} + 40 
-          } 
-        }, '*');
+        parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
       } else {
         closeChat();
       }
@@ -507,10 +506,7 @@ export async function GET(
       isOpen = false;
       chatWindow?.classList.add('hidden');
       button?.classList.remove('hidden');
-      parent.postMessage({ 
-        type: 'WIDGET_CLOSE', 
-        data: { width: 104, height: 104 } 
-      }, '*');
+      parent.postMessage({ type: 'WIDGET_CLOSE', data: {} }, '*');
     }
     
     function resetChat() {
@@ -564,12 +560,20 @@ export async function GET(
     function addMessage(text, isBot) {
       const messageEl = document.createElement('div');
       messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
-      const defaultAvatar = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+';
       
       if (isBot) {
-        messageEl.innerHTML = '<img src="' + (config.avatar || defaultAvatar) + '" alt="Bot" class="message-avatar"><div><div class="message-bubble bot">' + text + '</div><div class="message-timestamp">' + new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}) + '</div></div>';
+        messageEl.innerHTML = 
+          '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
+          '<div>' +
+            '<div class="message-bubble bot">' + text + '</div>' +
+            '<div class="message-timestamp">' + new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
+          '</div>';
       } else {
-        messageEl.innerHTML = '<div><div class="message-bubble user">' + text + '</div><div class="message-timestamp">' + new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}) + '</div></div>';
+        messageEl.innerHTML = 
+          '<div>' +
+            '<div class="message-bubble user">' + text + '</div>' +
+            '<div class="message-timestamp">' + new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
+          '</div>';
       }
       
       messagesContainer?.appendChild(messageEl);
@@ -582,8 +586,15 @@ export async function GET(
       const typingEl = document.createElement('div');
       typingEl.id = 'typingIndicator';
       typingEl.className = 'message bot';
-      const defaultAvatar = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+';
-      typingEl.innerHTML = '<img src="' + (config.avatar || defaultAvatar) + '" alt="Bot" class="message-avatar"><div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+      typingEl.innerHTML = 
+        '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
+        '<div>' +
+          '<div class="typing-indicator">' +
+            '<div class="typing-dot"></div>' +
+            '<div class="typing-dot"></div>' +
+            '<div class="typing-dot"></div>' +
+          '</div>' +
+        '</div>';
       messagesContainer?.appendChild(typingEl);
       scrollToBottom();
     }
@@ -602,15 +613,17 @@ export async function GET(
       }
     }
     
+    // Popup automatique
     if (config.showPopup && config.popupMessage && popup) {
       setTimeout(() => {
         if (!isOpen) popup.classList.remove('hidden');
       }, config.popupDelay * 1000);
     }
     
+    // Communication avec parent
     parent.postMessage({ 
       type: 'WIDGET_READY', 
-      data: { width: 104, height: 104 } 
+      data: { width: config.width, height: config.height } 
     }, '*');
     
     console.log('Widget chargé avec succès');
@@ -622,8 +635,8 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=300",
-        "X-Frame-Options": "ALLOWALL",
+        "Cache-Control": "public, max-age=300", // 5 minutes
+        "X-Frame-Options": "ALLOWALL", // Permet l'iframe
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET",
         "Access-Control-Allow-Headers": "*"
@@ -633,6 +646,7 @@ export async function GET(
   } catch (error) {
     console.error('Erreur chargement widget:', error);
     
+    // Page d'erreur simple
     const errorHtml = `<!DOCTYPE html>
 <html>
 <head>
