@@ -41,7 +41,6 @@ export async function GET(
       height: 100vh !important;
       width: 100vw !important;
       position: relative !important;
-      pointer-events: none !important;
     }
     
 .chat-widget {
@@ -51,7 +50,6 @@ export async function GET(
       z-index: 999999 !important;
       font-family: Inter, system-ui, sans-serif;
       --primary-color: ${config.primaryColor || '#3b82f6'};
-      pointer-events: auto !important;
     }
     
     .chat-button {
@@ -118,7 +116,6 @@ export async function GET(
     .chat-header {
       height: 64px;
       padding: 10px 16px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       display: flex;
       align-items: center;
       justify-content: space-between;
