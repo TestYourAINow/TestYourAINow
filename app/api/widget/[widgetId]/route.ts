@@ -41,6 +41,7 @@ export async function GET(
       height: 100vh !important;
       width: 100vw !important;
       position: relative !important;
+      pointer-events: none !important;
     }
     
 .chat-widget {
@@ -50,6 +51,7 @@ export async function GET(
       z-index: 999999 !important;
       font-family: Inter, system-ui, sans-serif;
       --primary-color: ${config.primaryColor || '#3b82f6'};
+      pointer-events: auto !important;
     }
     
     .chat-button {
@@ -68,7 +70,7 @@ export async function GET(
     }
     
     .chat-button:hover {
-      transform: scale(1.05);
+      transform: scale(1.03);
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
     }
     
@@ -117,7 +119,6 @@ export async function GET(
       height: 64px;
       padding: 10px 16px;
       display: flex;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       align-items: center;
       justify-content: space-between;
       background: linear-gradient(135deg, var(--primary-color) 0%, color-mix(in srgb, var(--primary-color) 85%, #06b6d4) 100%);

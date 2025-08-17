@@ -127,8 +127,8 @@ showButton: function() {
   const buttonSize = 64;
   const shadowMargin = 15; // Pour les box-shadows
   const hoverMargin = 8;   // Pour le scale(1.05)
-  const popupMarginTop = 40; // Pour le popup au-dessus
-  const popupMarginLeft = 10; // 🎯 NOUVEAU: Marge à gauche pour le popup
+  const popupMarginTop = 120; // Pour le popup au-dessus
+  const popupMarginLeft = 100; // 🎯 NOUVEAU: Marge à gauche pour le popup
   
   const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
   const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
