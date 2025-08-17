@@ -466,14 +466,14 @@ export async function GET(
       }
     }
     
-    function loadConversation() {
+function loadConversation() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const data = JSON.parse(saved);
           
-          // Vérifier que ce n'est pas trop vieux (24h max)
-          const maxAge = 24 * 60 * 60 * 1000;
+          // Vérifier que ce n'est pas trop vieux (1h max)
+          const maxAge = 60 * 60 * 1000; // 1 heure
           if (Date.now() - data.timestamp < maxAge) {
             messages = data.messages || [];
             
@@ -485,13 +485,20 @@ export async function GET(
               });
             }
             
-            // Restaurer l'état ouvert si c'était ouvert
+            // 🎯 FIX: Restaurer l'état ouvert CORRECTEMENT
             if (data.isOpen) {
               setTimeout(() => {
                 isOpen = true;
                 button?.classList.add('hidden');
                 chatWindow?.classList.remove('hidden');
                 popup?.classList.add('hidden');
+                
+                // 🎯 NOUVEAU: Envoyer message pour redimensionner l'iframe
+                parent.postMessage({ 
+                  type: 'WIDGET_OPEN', 
+                  data: { width: config.width, height: config.height } 
+                }, '*');
+                
               }, 100);
             }
             
