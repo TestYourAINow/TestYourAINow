@@ -117,38 +117,54 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-// 🔘 Afficher le bouton chat (état initial) - AVEC MARGES COMPLÈTES
+// 🔘 Afficher le bouton chat - AVEC PROPRIÉTÉS INDIVIDUELLES
 showButton: function() {
   if (!this.iframe) return;
   
   const isMobile = window.innerWidth <= 768;
-  
-  // 🎯 MARGES POUR: hover scale + box-shadow + popup
   const buttonSize = 64;
-  const shadowMargin = 15; // Pour les box-shadows
-  const hoverMargin = 8;   // Pour le scale(1.05)
-  const popupMarginTop = 100; // Pour le popup au-dessus
-  const popupMarginLeft = 60; // 🎯 NOUVEAU: Marge à gauche pour le popup
+  const shadowMargin = 15;
+  const hoverMargin = 8;
+  const popupMarginTop = 120;
+  const popupMarginLeft = 60;
   
   const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
   const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
   
-  this.iframe.style.cssText = `
-    position: fixed;
-    bottom: ${isMobile ? '16px' : '24px'};
-    right: ${isMobile ? '16px' : '24px'};
-    width: ${iframeWidth}px;
-    height: ${iframeHeight}px;
-    border: none;
-    z-index: 999999;
-    background: transparent;
-    opacity: 1;
-    pointer-events: auto;
-    display: block;
-  `;
+  const rightOffset = isMobile ? 16 : 24;
+  const adjustedRight = rightOffset - (popupMarginLeft / 2);
+  
+  // 🎯 NOUVEAU: Propriétés individuelles au lieu de cssText
+  this.iframe.style.position = 'fixed';
+  this.iframe.style.bottom = (isMobile ? '16px' : '24px');
+  this.iframe.style.right = adjustedRight + 'px';
+  this.iframe.style.width = iframeWidth + 'px';
+  this.iframe.style.height = iframeHeight + 'px';
+  this.iframe.style.border = 'none';
+  this.iframe.style.zIndex = '999999';
+  this.iframe.style.background = 'transparent';
+  this.iframe.style.opacity = '1';
+  this.iframe.style.display = 'block';
+  
+  // 🎯 POINTER-EVENTS: d'abord none, puis auto sur le contenu
+  this.iframe.style.pointerEvents = 'none';
+  
+  // Permettre les clics seulement sur le widget
+  setTimeout(() => {
+    if (this.iframe && this.iframe.contentDocument) {
+      const style = this.iframe.contentDocument.createElement('style');
+      style.textContent = `
+        html, body { pointer-events: none !important; }
+        .chat-widget, .chat-button, .chat-popup, .chat-window { 
+          pointer-events: auto !important; 
+        }
+      `;
+      this.iframe.contentDocument.head.appendChild(style);
+    }
+  }, 100);
 },
 
-// 🏠 Widget ouvert - AVEC MARGES COMPLÈTES POUR OMBRES
+// 🏠 Widget ouvert - AVEC PROPRIÉTÉS INDIVIDUELLES
 handleWidgetOpen: function(data) {
   if (!this.iframe) return;
   
@@ -160,31 +176,28 @@ handleWidgetOpen: function(data) {
   const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
   
   if (isMobile) {
-    // Mobile : interface plein écran (pas de problème d'ombres)
-    this.iframe.style.cssText = `
-      position: fixed;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      top: ${isSmallScreen ? '10px' : '20px'};
-      width: 100%;
-      height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-    `;
+    // Mobile : propriétés individuelles
+    this.iframe.style.position = 'fixed';
+    this.iframe.style.bottom = '0';
+    this.iframe.style.right = '0';
+    this.iframe.style.left = '0';
+    this.iframe.style.top = (isSmallScreen ? '10px' : '20px');
+    this.iframe.style.width = '100%';
+    this.iframe.style.height = `calc(100vh - ${isSmallScreen ? '10px' : '20px'})`;
+    this.iframe.style.border = 'none';
+    this.iframe.style.zIndex = '999999';
+    this.iframe.style.background = 'transparent';
+    this.iframe.style.opacity = '1';
+    this.iframe.style.display = 'block';
+    this.iframe.style.pointerEvents = 'auto'; // 🎯 Auto pour le chat ouvert
   } else {
-    // Desktop : marges pour ombres + animation
+    // Desktop : propriétés individuelles
     const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
     const baseHeight = Math.min(this.config.height, maxHeight);
     
-    // 🎯 MARGES COMPLÈTES
-    const shadowMargin = 20;    // Pour box-shadow du chat window
-    const animationMargin = 25; // Pour expandIn translateY + scale
-    const borderRadius = 10;    // Marge pour border-radius
+    const shadowMargin = 20;
+    const animationMargin = 25;
+    const borderRadius = 10;
     
     const totalMarginWidth = shadowMargin + animationMargin + borderRadius;
     const totalMarginHeight = shadowMargin + animationMargin + borderRadius;
@@ -192,19 +205,17 @@ handleWidgetOpen: function(data) {
     const finalWidth = baseWidth + totalMarginWidth;
     const finalHeight = baseHeight + totalMarginHeight;
     
-    this.iframe.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: ${finalWidth}px;
-      height: ${finalHeight}px;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-    `;
+    this.iframe.style.position = 'fixed';
+    this.iframe.style.bottom = '24px';
+    this.iframe.style.right = '24px';
+    this.iframe.style.width = finalWidth + 'px';
+    this.iframe.style.height = finalHeight + 'px';
+    this.iframe.style.border = 'none';
+    this.iframe.style.zIndex = '999999';
+    this.iframe.style.background = 'transparent';
+    this.iframe.style.opacity = '1';
+    this.iframe.style.display = 'block';
+    this.iframe.style.pointerEvents = 'auto'; // 🎯 Auto pour le chat ouvert
   }
 },
 
