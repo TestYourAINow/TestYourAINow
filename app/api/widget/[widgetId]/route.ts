@@ -72,20 +72,22 @@ export async function GET(
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
     }
     
-    .chat-popup {
-      position: absolute;
-      bottom: 100%;
-      right: 0;
-      margin-bottom: 16px;
-      max-width: 240px;
-      padding: 12px 16px;
-      border-radius: 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      font-size: 14px;
-      color: white;
-      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
-      animation: slideUp 0.3s ease-out;
-    }
+.chat-popup {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 16px;
+  max-width: 320px;
+  min-width: 200px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+  animation: slideUp 0.3s ease-out;
+  word-wrap: break-word;
+}
     
     .chat-popup::after {
       content: '';
