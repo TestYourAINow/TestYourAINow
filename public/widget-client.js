@@ -37,13 +37,13 @@ window.AIChatWidget = {
     iframe.title = "Assistant IA";
     iframe.loading = "lazy";
     
-    // 🔧 Style initial : invisible jusqu'à ce que le widget soit prêt
+    // 🔧 Style initial : iframe immense invisible
     iframe.style.cssText = `
       position: fixed;
-      bottom: 0px;
-      right: 0px;
-      width: 0px;
-      height: 0px;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       border: none;
       z-index: 999999;
       background: transparent;
@@ -121,14 +121,12 @@ window.AIChatWidget = {
   showButton: function() {
     if (!this.iframe) return;
     
-    const isMobile = window.innerWidth <= 768;
-    
     this.iframe.style.cssText = `
       position: fixed;
-      bottom: 0px;
-      right: 0px;
-      width: 64px;
-      height: 64px;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       border: none;
       z-index: 999999;
       background: transparent;
@@ -150,15 +148,13 @@ window.AIChatWidget = {
     const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
     
     if (isMobile) {
-      // Mobile : interface plein écran optimisée
+      // Mobile : iframe immense, widget gère sa position
       this.iframe.style.cssText = `
         position: fixed;
-        bottom: 0;
-        right: 0;
+        top: 0;
         left: 0;
-        top: ${isSmallScreen ? '10px' : '20px'};
-        width: 100%;
-        height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
+        width: 100vw;
+        height: 100vh;
         border: none;
         z-index: 999999;
         background: transparent;
@@ -166,16 +162,13 @@ window.AIChatWidget = {
         pointer-events: auto;
       `;
     } else {
-      // Desktop : fenêtre dimensionnée avec tes tailles exactes
-      const finalWidth = Math.min(this.config.width, window.innerWidth - 48);
-      const finalHeight = Math.min(this.config.height, maxHeight);
-      
+      // Desktop : iframe immense, widget gère sa position
       this.iframe.style.cssText = `
         position: fixed;
-        bottom: 0px;
-        right: 0px;
-        width: ${finalWidth}px;
-        height: ${finalHeight}px;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
         border: none;
         z-index: 999999;
         background: transparent;

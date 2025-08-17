@@ -45,11 +45,12 @@ export async function GET(
     
 .chat-widget {
       position: fixed !important;
-      bottom: 0px !important;
-      right: 0px !important;
+      bottom: 24px !important;
+      right: 24px !important;
       z-index: 999999 !important;
       font-family: Inter, system-ui, sans-serif;
       --primary-color: ${config.primaryColor || '#3b82f6'};
+      pointer-events: auto !important;
     }
     
     .chat-button {
