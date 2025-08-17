@@ -117,18 +117,51 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-  // 🔘 Afficher le bouton chat (état initial)
-  showButton: function() {
-    if (!this.iframe) return;
-    
-    const isMobile = window.innerWidth <= 768;
-    
+// 🔘 Afficher le bouton chat (état initial) - VERSION CORRIGÉE
+showButton: function() {
+  if (!this.iframe) return;
+  
+  const isMobile = window.innerWidth <= 768;
+  
+  // 🎯 SOLUTION: Iframe plus grande pour accommoder le hover scale
+  // Bouton = 64px + hover scale 1.05 = ~67px + marge de sécurité = 80px
+  this.iframe.style.cssText = `
+    position: fixed;
+    bottom: ${isMobile ? '16px' : '24px'};
+    right: ${isMobile ? '16px' : '24px'};
+    width: 80px;
+    height: 80px;
+    border: none;
+    z-index: 999999;
+    background: transparent;
+    opacity: 1;
+    pointer-events: auto;
+    display: block;
+  `;
+},
+
+// 🏠 Widget ouvert : agrandir en fenêtre de chat - VERSION CORRIGÉE
+handleWidgetOpen: function(data) {
+  if (!this.iframe) return;
+  
+  console.log('AIChatWidget: Ouverture du chat');
+  this.isOpen = true;
+  
+  // 📱 Design responsive intelligent
+  const isMobile = window.innerWidth <= 768;
+  const isSmallScreen = window.innerHeight <= 600;
+  const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
+  
+  if (isMobile) {
+    // Mobile : interface plein écran optimisée
     this.iframe.style.cssText = `
       position: fixed;
-      bottom: ${isMobile ? '16px' : '24px'};
-      right: ${isMobile ? '16px' : '24px'};
-      width: 64px;
-      height: 64px;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      top: ${isSmallScreen ? '10px' : '20px'};
+      width: 100%;
+      height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
       border: none;
       z-index: 999999;
       background: transparent;
@@ -136,57 +169,32 @@ window.AIChatWidget = {
       pointer-events: auto;
       display: block;
     `;
-  },
-
-  // 🏠 Widget ouvert : agrandir en fenêtre de chat - VERSION DIRECTE
-  handleWidgetOpen: function(data) {
-    if (!this.iframe) return;
+  } else {
+    // Desktop : fenêtre dimensionnée avec marge pour l'animation
+    const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
+    const baseHeight = Math.min(this.config.height, maxHeight);
     
-    console.log('AIChatWidget: Ouverture du chat');
-    this.isOpen = true;
+    // 🎯 SOLUTION: Ajouter marge pour l'animation expandIn
+    // Animation translateY(20px) + marge de sécurité
+    const animationMargin = 30; // 20px translateY + 10px sécurité
+    const finalWidth = baseWidth + animationMargin;
+    const finalHeight = baseHeight + animationMargin;
     
-    // 📱 Design responsive intelligent
-    const isMobile = window.innerWidth <= 768;
-    const isSmallScreen = window.innerHeight <= 600;
-    const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
-    
-    if (isMobile) {
-      // Mobile : interface plein écran optimisée - DIRECT
-      this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 0;
-        right: 0;
-        left: 0;
-        top: ${isSmallScreen ? '10px' : '20px'};
-        width: 100%;
-        height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        display: block;
-      `;
-    } else {
-      // Desktop : fenêtre dimensionnée - DIRECT
-      const finalWidth = Math.min(this.config.width, window.innerWidth - 48);
-      const finalHeight = Math.min(this.config.height, maxHeight);
-      
-      this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        width: ${finalWidth}px;
-        height: ${finalHeight}px;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        display: block;
-      `;
-    }
-  },
+    this.iframe.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: ${finalWidth}px;
+      height: ${finalHeight}px;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+    `;
+  }
+},
 
   // 🔘 Widget fermé : revenir au bouton
   handleWidgetClose: function() {
