@@ -49,9 +49,6 @@ window.AIChatWidget = {
       background: transparent;
       opacity: 0;
       pointer-events: none;
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      border-radius: 20px;
-      box-shadow: none;
     `;
 
     this.iframe = iframe;
@@ -134,17 +131,10 @@ window.AIChatWidget = {
       height: 64px;
       border: none;
       z-index: 999999;
-      border-radius: 50%;
       background: transparent;
       opacity: 1;
       pointer-events: auto;
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transform: scale(1);
     `;
-    
-    // ✨ Animation d'entrée
-    this.animateButtonEntrance();
   },
 
   // 🏠 Widget ouvert : agrandir en fenêtre de chat
@@ -171,12 +161,9 @@ window.AIChatWidget = {
         height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
         border: none;
         z-index: 999999;
-        border-radius: ${isSmallScreen ? '15px 15px 0 0' : '20px 20px 0 0'};
         background: transparent;
         opacity: 1;
         pointer-events: auto;
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.3);
       `;
     } else {
       // Desktop : fenêtre dimensionnée avec tes tailles exactes
@@ -191,13 +178,9 @@ window.AIChatWidget = {
         height: ${finalHeight}px;
         border: none;
         z-index: 999999;
-        border-radius: 20px;
         background: transparent;
         opacity: 1;
         pointer-events: auto;
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-        transform: scale(1);
       `;
     }
   },
@@ -235,21 +218,6 @@ window.AIChatWidget = {
         }
       }, 2000);
     }
-  },
-
-  // ✨ Animation d'apparition du bouton
-  animateButtonEntrance: function() {
-    if (!this.iframe) return;
-    
-    // Effet bounce d'entrée élégant
-    this.iframe.style.transform = 'scale(0.8)';
-    
-    setTimeout(() => {
-      this.iframe.style.transform = 'scale(1.1)';
-      setTimeout(() => {
-        this.iframe.style.transform = 'scale(1)';
-      }, 150);
-    }, 100);
   },
 
   // 📱 Gestion des changements de taille d'écran
