@@ -118,6 +118,7 @@ export async function GET(
     .chat-header {
       height: 64px;
       padding: 10px 16px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       display: flex;
       align-items: center;
       justify-content: space-between;
