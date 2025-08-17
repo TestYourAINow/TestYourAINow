@@ -72,16 +72,20 @@ export async function GET(
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
     }
     
-.chat-popup {
-  max-width: 200px;
-  min-height: 40px;
-  max-height: 80px;     /* Un peu plus flexible */
-  padding: 10px 14px;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3; /* Max 3 lignes au lieu de 2 */
-  -webkit-box-orient: vertical;
-}
+    .chat-popup {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 16px;
+      max-width: 240px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      font-size: 14px;
+      color: white;
+      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+      animation: slideUp 0.3s ease-out;
+    }
     
     .chat-popup::after {
       content: '';
