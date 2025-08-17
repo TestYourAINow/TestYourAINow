@@ -44,35 +44,28 @@ export async function GET(
     }
     
 .chat-widget {
-  position: fixed !important;
-  bottom: 0px !important;
-  right: 0px !important;
-  z-index: 999999 !important;
-  font-family: Inter, system-ui, sans-serif;
-  --primary-color: ${config.primaryColor || '#3b82f6'};
-  /* 🎯 AJOUT: Padding pour centrer le contenu */
-  padding: 25px;
-  box-sizing: border-box;
-}
+      position: fixed !important;
+      bottom: 8px !important;
+      right: 8px !important;
+      z-index: 999999 !important;
+      font-family: Inter, system-ui, sans-serif;
+      --primary-color: ${config.primaryColor || '#3b82f6'};
+    }
     
-.chat-button {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, #06b6d4));
-  animation: bounceIn 0.6s ease-out;
-  /* 🎯 AJOUT: Positionner le bouton dans le padding */
-  position: absolute;
-  bottom: 0;
-  right: 0;
-}
+    .chat-button {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, #06b6d4));
+      animation: bounceIn 0.6s ease-out;
+    }
     
     .chat-button:hover {
       transform: scale(1.05);
