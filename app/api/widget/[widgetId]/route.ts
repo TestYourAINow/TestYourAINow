@@ -69,7 +69,7 @@ export async function GET(
     
     .chat-button:hover {
       transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
     }
     
     .chat-popup {
