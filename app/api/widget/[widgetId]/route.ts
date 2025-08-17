@@ -440,7 +440,7 @@ export async function GET(
     </div>
   </div>
   
-  <script>
+<script>
     // Variables globales
     let isOpen = false;
     let isTyping = false;
@@ -448,6 +448,85 @@ export async function GET(
     
     // Configuration
     const config = ${JSON.stringify(config)};
+    
+    // 💾 PERSISTANCE - NOUVEAU CODE ICI
+    const STORAGE_KEY = 'chatbot_conversation_' + config._id;
+    
+    // Fonctions de sauvegarde
+    function saveConversation() {
+      try {
+        const conversationData = {
+          messages: messages,
+          timestamp: Date.now(),
+          isOpen: isOpen
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationData));
+      } catch (error) {
+        console.log('Impossible de sauvegarder la conversation');
+      }
+    }
+    
+    function loadConversation() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          
+          // Vérifier que ce n'est pas trop vieux (24h max)
+          const maxAge = 24 * 60 * 60 * 1000;
+          if (Date.now() - data.timestamp < maxAge) {
+            messages = data.messages || [];
+            
+            // Restaurer les messages dans le DOM
+            if (messages.length > 0) {
+              messagesContainer.innerHTML = '';
+              messages.forEach(msg => {
+                addMessageToDOM(msg.text, msg.isBot, msg.timestamp);
+              });
+            }
+            
+            // Restaurer l'état ouvert si c'était ouvert
+            if (data.isOpen) {
+              setTimeout(() => {
+                isOpen = true;
+                button?.classList.add('hidden');
+                chatWindow?.classList.remove('hidden');
+                popup?.classList.add('hidden');
+              }, 100);
+            }
+            
+            return true;
+          }
+        }
+      } catch (error) {
+        console.log('Impossible de charger la conversation');
+      }
+      return false;
+    }
+    
+    // Fonction pour ajouter au DOM sans sauvegarder
+    function addMessageToDOM(text, isBot, timestamp = new Date()) {
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
+      
+      if (isBot) {
+        messageEl.innerHTML = 
+          '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc>') + '" alt="Bot" class="message-avatar">' +
+          '<div>' +
+            '<div class="message-bubble bot">' + text + '</div>' +
+            '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
+          '</div>';
+      } else {
+        messageEl.innerHTML = 
+          '<div>' +
+            '<div class="message-bubble user">' + text + '</div>' +
+            '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
+          '</div>';
+      }
+      
+      messagesContainer?.appendChild(messageEl);
+    }
+    // FIN PERSISTANCE
     
     // Éléments DOM
     const popup = document.getElementById('chatPopup');
@@ -467,7 +546,6 @@ export async function GET(
     
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
-      // Auto-resize
       this.style.height = 'auto';
       const newHeight = Math.min(this.scrollHeight, 120);
       this.style.height = newHeight + 'px';
@@ -481,45 +559,53 @@ export async function GET(
       }
     });
     
-    // Fonctions
-function toggleChat() {
-  isOpen = !isOpen;
-  if (isOpen) {
-    button?.classList.add('hidden');
-    chatWindow?.classList.remove('hidden');
-    popup?.classList.add('hidden');
-    
-    // 🎯 OPTION AVEC TYPING : Plus réaliste
-    if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
-      setTimeout(() => {
-        // 1. Montrer typing indicator
-        showTyping();
+    // Fonctions MODIFIÉES
+    function toggleChat() {
+      isOpen = !isOpen;
+      if (isOpen) {
+        button?.classList.add('hidden');
+        chatWindow?.classList.remove('hidden');
+        popup?.classList.add('hidden');
         
-        // 2. Après 1.5s, cacher typing et montrer message
-        setTimeout(() => {
-          hideTyping();
-          addMessage(config.welcomeMessage, true);
-        }, 1500);
-      }, 400);
+        // Message de bienvenue seulement si pas de conversation sauvée
+        if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
+          setTimeout(() => {
+            showTyping();
+            
+            setTimeout(() => {
+              hideTyping();
+              addMessage(config.welcomeMessage, true);
+            }, 1500);
+          }, 400);
+        }
+        
+        setTimeout(() => input?.focus(), 300);
+        parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
+      } else {
+        closeChat();
+      }
+      
+      // 💾 SAUVEGARDER l'état
+      saveConversation();
     }
-    
-    setTimeout(() => input?.focus(), 300);
-    parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
-  } else {
-    closeChat();
-  }
-}
     
     function closeChat() {
       isOpen = false;
       chatWindow?.classList.add('hidden');
       button?.classList.remove('hidden');
       parent.postMessage({ type: 'WIDGET_CLOSE', data: {} }, '*');
+      
+      // 💾 SAUVEGARDER l'état
+      saveConversation();
     }
     
     function resetChat() {
       messagesContainer.innerHTML = '';
       messages = [];
+      
+      // 💾 SUPPRIMER la sauvegarde
+      localStorage.removeItem(STORAGE_KEY);
+      
       if (config.showWelcomeMessage && config.welcomeMessage) {
         addMessage(config.welcomeMessage, true);
       }
@@ -565,27 +651,19 @@ function toggleChat() {
       }
     }
     
+    // 💾 FONCTION addMessage MODIFIÉE
     function addMessage(text, isBot) {
-      const messageEl = document.createElement('div');
-      messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
+      const timestamp = new Date();
       
-      if (isBot) {
-        messageEl.innerHTML = 
-          '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
-          '<div>' +
-            '<div class="message-bubble bot">' + text + '</div>' +
-            '<div class="message-timestamp">' + new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
-          '</div>';
-      } else {
-        messageEl.innerHTML = 
-          '<div>' +
-            '<div class="message-bubble user">' + text + '</div>' +
-            '<div class="message-timestamp">' + new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
-          '</div>';
-      }
+      // Ajouter au DOM
+      addMessageToDOM(text, isBot, timestamp);
       
-      messagesContainer?.appendChild(messageEl);
-      messages.push({ text, isBot, timestamp: new Date() });
+      // Ajouter aux données
+      messages.push({ text, isBot, timestamp });
+      
+      // 💾 SAUVEGARDER
+      saveConversation();
+      
       scrollToBottom();
     }
     
@@ -595,7 +673,7 @@ function toggleChat() {
       typingEl.id = 'typingIndicator';
       typingEl.className = 'message bot';
       typingEl.innerHTML = 
-        '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
+        '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc>') + '" alt="Bot" class="message-avatar">' +
         '<div>' +
           '<div class="typing-indicator">' +
             '<div class="typing-dot"></div>' +
@@ -620,6 +698,14 @@ function toggleChat() {
         }, 100);
       }
     }
+    
+    // 💾 CHARGER la conversation au démarrage
+    window.addEventListener('DOMContentLoaded', function() {
+      const loaded = loadConversation();
+      
+      // Si pas de conversation sauvée ET pas déjà ouvert, ne rien faire
+      // Le message de bienvenue sera ajouté à l'ouverture
+    });
     
     // Popup automatique
     if (config.showPopup && config.popupMessage && popup) {
