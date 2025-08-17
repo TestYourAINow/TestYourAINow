@@ -67,6 +67,7 @@ export async function GET(
       justify-content: center;
       background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, #06b6d4));
       animation: bounceIn 0.6s ease-out;
+      pointer-events: auto !important;
     }
     
     .chat-button:hover {
@@ -87,6 +88,7 @@ export async function GET(
       color: white;
       background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
       animation: slideUp 0.3s ease-out;
+      pointer-events: auto !important;
     }
     
     .chat-popup::after {

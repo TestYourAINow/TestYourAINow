@@ -143,7 +143,7 @@ showButton: function() {
     z-index: 999999;
     background: transparent;
     opacity: 1;
-    pointer-events: none;
+    pointer-events: auto;
     display: block;
   `;
 },
