@@ -48,7 +48,7 @@ window.AIChatWidget = {
       z-index: 999999;
       background: transparent;
       opacity: 0;
-      pointer-events: none !important;
+      pointer-events: none;
     `;
 
     this.iframe = iframe;
@@ -143,7 +143,7 @@ showButton: function() {
     z-index: 999999;
     background: transparent;
     opacity: 1;
-    pointer-events: none !important;
+    pointer-events: none;
     display: block;
   `;
 },
@@ -173,7 +173,7 @@ handleWidgetOpen: function(data) {
       z-index: 999999;
       background: transparent;
       opacity: 1;
-      pointer-events: none !important;
+      pointer-events: auto;
       display: block;
     `;
   } else {
@@ -202,7 +202,7 @@ handleWidgetOpen: function(data) {
       z-index: 999999;
       background: transparent;
       opacity: 1;
-      pointer-events: none !important;
+      pointer-events: auto;
       display: block;
     `;
   }
