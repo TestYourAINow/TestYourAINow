@@ -79,7 +79,7 @@ export async function GET(
   margin-bottom: 16px;
   max-width: 180px;
   min-width: 150px;
-  padding: 12px 16px;
+  padding: 10px 8px 10px 10px;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   font-size: 14px;
