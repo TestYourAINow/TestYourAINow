@@ -366,6 +366,23 @@ export async function GET(
       0%, 80%, 100% { transform: translateY(0); opacity: 0.7; }
       40% { transform: translateY(-6px); opacity: 1; }
     }
+
+        /* 📱 RESPONSIVE CSS */
+    @media (max-width: 768px) {
+      .chat-widget {
+        bottom: 16px !important;
+        right: 16px !important;
+      }
+      
+      .chat-window {
+        width: calc(100vw - 32px) !important;
+        height: calc(100vh - 100px) !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        border-radius: 12px !important;
+      }
+    }
+
   </style>
 </head>
 
