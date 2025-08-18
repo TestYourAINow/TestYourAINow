@@ -732,8 +732,7 @@ function toggleChat() {
       data: { width: config.width, height: config.height } 
     }, '*');
     
-    // 📏 RESPONSIVE DESKTOP
-function adjustChatSize() {
+    function adjustChatSize() {
   if (!isOpen || !chatWindow) return;
   
   const maxWidth = window.innerWidth - 100;
@@ -742,25 +741,24 @@ function adjustChatSize() {
   const newWidth = Math.min(config.width, maxWidth);
   const newHeight = Math.min(config.height, maxHeight);
   
+  // 🎯 ONLY ajuster le CSS, PAS de message au parent
   chatWindow.style.width = newWidth + 'px';
   chatWindow.style.height = newHeight + 'px';
-  
-  parent.postMessage({ 
-    type: 'WIDGET_RESIZE', 
-    data: { width: newWidth, height: newHeight } 
-  }, '*');
 }
 
+// 🎯 ÉCOUTER seulement les resize du WINDOW parent, pas de l'iframe
 let resizeTimeout;
-window.addEventListener('resize', function() {
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(() => {
-    adjustChatSize();
-  }, 100);
+window.addEventListener('resize', function(e) {
+  // 🛡️ ÉVITER la boucle : seulement si c'est le window principal
+  if (e.target === window) {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      adjustChatSize();
+    }, 100);
+  }
 });
 
 console.log('Widget chargé avec succès');
-    console.log('Widget chargé avec succès');
   </script>
 </body>
 </html>`;
