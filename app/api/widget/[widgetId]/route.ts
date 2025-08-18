@@ -449,7 +449,7 @@ export async function GET(
     // Configuration
     const config = ${JSON.stringify(config)};
     
-    // 💾 PERSISTANCE
+    // 💾 PERSISTANCE - NOUVEAU CODE ICI
     const STORAGE_KEY = 'chatbot_conversation_' + config._id;
     
     // Fonctions de sauvegarde
@@ -466,7 +466,7 @@ export async function GET(
       }
     }
     
-    function loadConversation() {
+function loadConversation() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
@@ -485,7 +485,7 @@ export async function GET(
               });
             }
             
-            // Restaurer l'état ouvert CORRECTEMENT
+            // 🎯 FIX: Restaurer l'état ouvert CORRECTEMENT
             if (data.isOpen) {
               setTimeout(() => {
                 isOpen = true;
@@ -493,7 +493,7 @@ export async function GET(
                 chatWindow?.classList.remove('hidden');
                 popup?.classList.add('hidden');
                 
-                // Envoyer message pour redimensionner l'iframe
+                // 🎯 NOUVEAU: Envoyer message pour redimensionner l'iframe
                 parent.postMessage({ 
                   type: 'WIDGET_OPEN', 
                   data: { width: config.width, height: config.height } 
@@ -533,41 +533,7 @@ export async function GET(
       
       messagesContainer?.appendChild(messageEl);
     }
-    
-    // 📏 RESPONSIVE INTELLIGENT
-    function adjustChatSizeIfNeeded() {
-      if (!isOpen || !chatWindow) return;
-      
-      // Tailles actuelles du chat
-      const currentWidth = parseInt(chatWindow.style.width) || config.width;
-      const currentHeight = parseInt(chatWindow.style.height) || config.height;
-      
-      // Tailles disponibles (avec marge de sécurité)
-      const availableWidth = window.innerWidth - 50;
-      const availableHeight = window.innerHeight - 50;
-      
-      // Ajuster seulement si le chat dépasse
-      let needsResize = false;
-      let newWidth = currentWidth;
-      let newHeight = currentHeight;
-      
-      if (currentWidth > availableWidth) {
-        newWidth = Math.max(300, availableWidth); // Minimum 300px
-        needsResize = true;
-      }
-      
-      if (currentHeight > availableHeight) {
-        newHeight = Math.max(400, availableHeight); // Minimum 400px
-        needsResize = true;
-      }
-      
-      // Appliquer seulement si nécessaire
-      if (needsResize) {
-        chatWindow.style.width = newWidth + 'px';
-        chatWindow.style.height = newHeight + 'px';
-        console.log('Chat redimensionné:', newWidth + 'x' + newHeight);
-      }
-    }
+    // FIN PERSISTANCE
     
     // Éléments DOM
     const popup = document.getElementById('chatPopup');
@@ -600,34 +566,40 @@ export async function GET(
       }
     });
     
-    // Fonctions principales
-    function toggleChat() {
-      isOpen = !isOpen;
-      if (isOpen) {
-        button?.classList.add('hidden');
-        chatWindow?.classList.remove('hidden');
-        popup?.classList.add('hidden');
+    // Fonctions MODIFIÉES
+function toggleChat() {
+  isOpen = !isOpen;
+  if (isOpen) {
+    button?.classList.add('hidden');
+    chatWindow?.classList.remove('hidden');
+    popup?.classList.add('hidden');
+    
+    // Message de bienvenue
+    if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
+      setTimeout(() => {
+        showTyping();
         
-        // Message de bienvenue seulement si pas de conversation sauvée
-        if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
-          setTimeout(() => {
-            showTyping();
-            
-            setTimeout(() => {
-              hideTyping();
-              addMessage(config.welcomeMessage, true);
-            }, 1500);
-          }, 400);
-        }
-        
-        setTimeout(() => input?.focus(), 300);
-        parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
-      } else {
-        closeChat();
-      }
-      
-      saveConversation();
+        setTimeout(() => {
+          hideTyping();
+          addMessage(config.welcomeMessage, true);
+        }, 1500);
+      }, 400);
     }
+    
+    setTimeout(() => input?.focus(), 300);
+    parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
+    
+    // 🎯 NOUVEAU: Ajuster la taille à l'ouverture
+    setTimeout(() => {
+      adjustChatSize();
+    }, 100);
+    
+  } else {
+    closeChat();
+  }
+  
+  saveConversation();
+}
     
     function closeChat() {
       isOpen = false;
@@ -635,6 +607,7 @@ export async function GET(
       button?.classList.remove('hidden');
       parent.postMessage({ type: 'WIDGET_CLOSE', data: {} }, '*');
       
+      // 💾 SAUVEGARDER l'état
       saveConversation();
     }
     
@@ -642,7 +615,7 @@ export async function GET(
       messagesContainer.innerHTML = '';
       messages = [];
       
-      // Supprimer la sauvegarde
+      // 💾 SUPPRIMER la sauvegarde
       localStorage.removeItem(STORAGE_KEY);
       
       if (config.showWelcomeMessage && config.welcomeMessage) {
@@ -690,6 +663,7 @@ export async function GET(
       }
     }
     
+    // 💾 FONCTION addMessage MODIFIÉE
     function addMessage(text, isBot) {
       const timestamp = new Date();
       
@@ -699,7 +673,7 @@ export async function GET(
       // Ajouter aux données
       messages.push({ text, isBot, timestamp });
       
-      // Sauvegarder
+      // 💾 SAUVEGARDER
       saveConversation();
       
       scrollToBottom();
@@ -737,20 +711,12 @@ export async function GET(
       }
     }
     
-    // Écouter les resize avec debounce
-    let resizeTimeout;
-    window.addEventListener('resize', function(e) {
-      if (e.target === window) {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-          adjustChatSizeIfNeeded();
-        }, 200);
-      }
-    });
-    
-    // Charger la conversation au démarrage
+    // 💾 CHARGER la conversation au démarrage
     window.addEventListener('DOMContentLoaded', function() {
       const loaded = loadConversation();
+      
+      // Si pas de conversation sauvée ET pas déjà ouvert, ne rien faire
+      // Le message de bienvenue sera ajouté à l'ouverture
     });
     
     // Popup automatique
@@ -766,7 +732,33 @@ export async function GET(
       data: { width: config.width, height: config.height } 
     }, '*');
     
-    console.log('Widget chargé avec succès');
+    function adjustChatSize() {
+  if (!isOpen || !chatWindow) return;
+  
+  const maxWidth = window.innerWidth - 100;
+  const maxHeight = window.innerHeight - 120;
+  
+  const newWidth = Math.min(config.width, maxWidth);
+  const newHeight = Math.min(config.height, maxHeight);
+  
+  // 🎯 ONLY ajuster le CSS, PAS de message au parent
+  chatWindow.style.width = newWidth + 'px';
+  chatWindow.style.height = newHeight + 'px';
+}
+
+// 🎯 ÉCOUTER seulement les resize du WINDOW parent, pas de l'iframe
+let resizeTimeout;
+window.addEventListener('resize', function(e) {
+  // 🛡️ ÉVITER la boucle : seulement si c'est le window principal
+  if (e.target === window) {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      adjustChatSize();
+    }, 100);
+  }
+});
+
+console.log('Widget chargé avec succès');
   </script>
 </body>
 </html>`;
