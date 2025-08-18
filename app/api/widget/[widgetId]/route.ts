@@ -366,23 +366,6 @@ export async function GET(
       0%, 80%, 100% { transform: translateY(0); opacity: 0.7; }
       40% { transform: translateY(-6px); opacity: 1; }
     }
-
-        /* 📱 RESPONSIVE CSS */
-    @media (max-width: 768px) {
-      .chat-widget {
-        bottom: 16px !important;
-        right: 16px !important;
-      }
-      
-      .chat-window {
-        width: calc(100vw - 32px) !important;
-        height: calc(100vh - 100px) !important;
-        bottom: 0 !important;
-        right: 0 !important;
-        border-radius: 12px !important;
-      }
-    }
-
   </style>
 </head>
 
@@ -584,34 +567,39 @@ function loadConversation() {
     });
     
     // Fonctions MODIFIÉES
-    function toggleChat() {
-      isOpen = !isOpen;
-      if (isOpen) {
-        button?.classList.add('hidden');
-        chatWindow?.classList.remove('hidden');
-        popup?.classList.add('hidden');
+function toggleChat() {
+  isOpen = !isOpen;
+  if (isOpen) {
+    button?.classList.add('hidden');
+    chatWindow?.classList.remove('hidden');
+    popup?.classList.add('hidden');
+    
+    // Message de bienvenue
+    if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
+      setTimeout(() => {
+        showTyping();
         
-        // Message de bienvenue seulement si pas de conversation sauvée
-        if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
-          setTimeout(() => {
-            showTyping();
-            
-            setTimeout(() => {
-              hideTyping();
-              addMessage(config.welcomeMessage, true);
-            }, 1500);
-          }, 400);
-        }
-        
-        setTimeout(() => input?.focus(), 300);
-        parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
-      } else {
-        closeChat();
-      }
-      
-      // 💾 SAUVEGARDER l'état
-      saveConversation();
+        setTimeout(() => {
+          hideTyping();
+          addMessage(config.welcomeMessage, true);
+        }, 1500);
+      }, 400);
     }
+    
+    setTimeout(() => input?.focus(), 300);
+    parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
+    
+    // 🎯 NOUVEAU: Ajuster la taille à l'ouverture
+    setTimeout(() => {
+      adjustChatSize();
+    }, 100);
+    
+  } else {
+    closeChat();
+  }
+  
+  saveConversation();
+}
     
     function closeChat() {
       isOpen = false;
@@ -744,6 +732,34 @@ function loadConversation() {
       data: { width: config.width, height: config.height } 
     }, '*');
     
+    // 📏 RESPONSIVE DESKTOP
+function adjustChatSize() {
+  if (!isOpen || !chatWindow) return;
+  
+  const maxWidth = window.innerWidth - 100;
+  const maxHeight = window.innerHeight - 120;
+  
+  const newWidth = Math.min(config.width, maxWidth);
+  const newHeight = Math.min(config.height, maxHeight);
+  
+  chatWindow.style.width = newWidth + 'px';
+  chatWindow.style.height = newHeight + 'px';
+  
+  parent.postMessage({ 
+    type: 'WIDGET_RESIZE', 
+    data: { width: newWidth, height: newHeight } 
+  }, '*');
+}
+
+let resizeTimeout;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    adjustChatSize();
+  }, 100);
+});
+
+console.log('Widget chargé avec succès');
     console.log('Widget chargé avec succès');
   </script>
 </body>
