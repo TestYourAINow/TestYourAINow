@@ -366,6 +366,68 @@ export async function GET(
       0%, 80%, 100% { transform: translateY(0); opacity: 0.7; }
       40% { transform: translateY(-6px); opacity: 1; }
     }
+
+    /* 📱 RESPONSIVE MOBILE FULLSCREEN - Ajouter à la fin de ton CSS */
+@media (max-width: 768px) {
+  .chat-widget {
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+  }
+  
+  .chat-window {
+    position: fixed !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+    animation: slideInFromBottom 0.3s ease-out;
+  }
+  
+  .chat-header {
+    height: 70px !important;
+    padding: 15px 20px !important;
+    /* Ajouter padding-top pour le notch des iPhones */
+    padding-top: max(15px, env(safe-area-inset-top)) !important;
+  }
+  
+  .chat-messages {
+    /* Compenser pour le notch et la barre du bas */
+    padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+  }
+  
+  .chat-input-area {
+    padding: 15px 20px !important;
+    /* Compenser pour la barre home indicator */
+    padding-bottom: max(15px, env(safe-area-inset-bottom)) !important;
+  }
+  
+  /* Animation d'entrée mobile */
+  @keyframes slideInFromBottom {
+    0% { 
+      opacity: 0; 
+      transform: translateY(100%); 
+    }
+    100% { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+  
+  /* Cacher le bouton quand le chat est ouvert sur mobile */
+  .chat-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000000;
+  }
+}
   </style>
 </head>
 

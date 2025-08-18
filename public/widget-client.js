@@ -148,8 +148,6 @@ showButton: function() {
   `;
 },
 
-// Dans widget-client.js, modifier handleWidgetOpen pour mobile :
-
 handleWidgetOpen: function(data) {
   if (!this.iframe) return;
   
@@ -157,27 +155,26 @@ handleWidgetOpen: function(data) {
   this.isOpen = true;
   
   const isMobile = window.innerWidth <= 768;
-  const isSmallScreen = window.innerHeight <= 600;
   
   if (isMobile) {
-    // 🎯 MOBILE : Position fixe optimisée
+    // 🎯 MOBILE : Fullscreen comme une vraie app
     this.iframe.style.cssText = `
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       border: none;
       z-index: 999999;
-      background: transparent;
+      background: white;
       opacity: 1;
       pointer-events: auto;
       display: block;
     `;
   } else {
-    // Desktop : fenêtre dimensionnée
+    // Desktop : fenêtre normale
     const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
     const maxHeight = window.innerHeight - 100;
     const baseHeight = Math.min(this.config.height, maxHeight);
