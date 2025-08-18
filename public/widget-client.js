@@ -148,6 +148,7 @@ showButton: function() {
   `;
 },
 
+// 🏠 Widget ouvert - AVEC MARGES COMPLÈTES POUR OMBRES
 handleWidgetOpen: function(data) {
   if (!this.iframe) return;
   
@@ -155,35 +156,38 @@ handleWidgetOpen: function(data) {
   this.isOpen = true;
   
   const isMobile = window.innerWidth <= 768;
+  const isSmallScreen = window.innerHeight <= 600;
+  const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
   
   if (isMobile) {
-    // 🎯 MOBILE : Fullscreen comme une vraie app
+    // Mobile : interface plein écran (pas de problème d'ombres)
     this.iframe.style.cssText = `
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
       bottom: 0;
-      width: 100vw;
-      height: 100vh;
+      right: 0;
+      left: 0;
+      top: ${isSmallScreen ? '10px' : '20px'};
+      width: 100%;
+      height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
       border: none;
       z-index: 999999;
-      background: white;
+      background: transparent;
       opacity: 1;
       pointer-events: auto;
       display: block;
     `;
   } else {
-    // Desktop : fenêtre normale
+    // Desktop : marges pour ombres + animation
     const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-    const maxHeight = window.innerHeight - 100;
     const baseHeight = Math.min(this.config.height, maxHeight);
     
-    const shadowMargin = 20;
-    const animationMargin = 25;
-    const borderRadius = 10;
-    const totalMarginWidth = shadowMargin + animationMargin + borderRadius;
-    const totalMarginHeight = shadowMargin + animationMargin + borderRadius;
+    // 🎯 MARGES COMPLÈTES
+
+    const animationMargin = 25; // Pour expandIn translateY + scale
+    const borderRadius = 10;    // Marge pour border-radius
+    
+    const totalMarginWidth = animationMargin + borderRadius;
+    const totalMarginHeight = animationMargin + borderRadius;
     
     const finalWidth = baseWidth + totalMarginWidth;
     const finalHeight = baseHeight + totalMarginHeight;
