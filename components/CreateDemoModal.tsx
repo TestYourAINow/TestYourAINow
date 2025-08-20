@@ -2,7 +2,7 @@
 
 import { Dialog } from '@headlessui/react';
 import { useState } from 'react';
-import { X, Settings, Copy, ExternalLink, Rocket, CheckCircle, Plus, Minus } from 'lucide-react';
+import { X, Settings, Copy, ExternalLink, Rocket, CheckCircle } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -22,11 +22,12 @@ interface Props {
     showPopup: boolean;
     popupMessage: string;
     popupDelay: number;
+    usageLimit: number; // ✅ REÇU du parent maintenant
   };
 }
 
 export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agentConfig }: Props) {
-  const [usageLimit, setUsageLimit] = useState(150);
+  // ❌ SUPPRIMÉ : const [usageLimit, setUsageLimit] = useState(150);
   const [loading, setLoading] = useState(false);
   const [createdDemo, setCreatedDemo] = useState<{ id: string; link: string } | null>(null);
 
@@ -39,7 +40,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...agentConfig,
-          usageLimit,
+          // ✅ CHANGÉ : utilise agentConfig.usageLimit au lieu de l'état local
         }),
       });
 
@@ -86,9 +87,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
     onClose();
   };
 
-  const adjustUsageLimit = (delta: number) => {
-    setUsageLimit(prev => Math.min(Math.max(prev + delta, 1), 150));
-  };
+  // ❌ SUPPRIMÉ : const adjustUsageLimit
 
   if (!isOpen) return null;
 
@@ -98,7 +97,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-2xl text-white overflow-hidden">
           
-          {/* Enhanced Header */}
+          {/* Enhanced Header (INCHANGÉ) */}
           <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 ${
@@ -119,7 +118,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                 <p className="text-gray-400 text-sm mt-0.5">
                   {createdDemo 
                     ? `${agentConfig.name} • ID: ${createdDemo.id.slice(-8)}...`
-                    : 'Configure your demo before sharing'
+                    : 'Review your configuration before creating'
                   }
                 </p>
               </div>
@@ -134,7 +133,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
 
           <div className="p-6">
             {!createdDemo ? (
-              // Enhanced Configuration Phase
+              // ✅ SIMPLIFIÉ : Configuration Phase (sans usage limit)
               <div className="space-y-6">
                 
                 {/* Enhanced Agent Configuration Display */}
@@ -154,6 +153,11 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                         <span className="text-gray-400 text-sm">Theme:</span>
                         <span className="text-white capitalize">{agentConfig.theme}</span>
                       </div>
+                      {/* ✅ NOUVEAU : Affichage Usage Limit (lecture seule) */}
+                      <div className="flex justify-between">
+                        <span className="text-gray-400 text-sm">Usage Limit:</span>
+                        <span className="text-white font-semibold">{agentConfig.usageLimit} responses</span>
+                      </div>
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
@@ -172,54 +176,17 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                           {agentConfig.showWelcome ? 'Enabled' : 'Disabled'}
                         </span>
                       </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400 text-sm">Popup:</span>
+                        <span className={`text-sm font-medium ${agentConfig.showPopup ? 'text-emerald-400' : 'text-gray-400'}`}>
+                          {agentConfig.showPopup ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Enhanced Usage Limit Section */}
-                <div className="bg-gray-800/60 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 space-y-4">
-                  <h3 className="text-lg font-bold text-white">Usage Limit</h3>
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <div className="relative">
-                        <input
-                          type="number"
-                          min={1}
-                          max={150}
-                          value={usageLimit}
-                          onChange={(e) => setUsageLimit(Number(e.target.value))}
-                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium backdrop-blur-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          placeholder="150"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
-                          responses max
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2">
-                      <button
-                        type="button"
-                        onClick={() => adjustUsageLimit(1)}
-                        className="w-10 h-8 bg-gray-700/60 hover:bg-gray-600/60 border border-gray-600/50 hover:border-gray-500/50 rounded-lg text-white text-sm flex items-center justify-center transition-all backdrop-blur-sm"
-                      >
-                        <Plus size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => adjustUsageLimit(-1)}
-                        className="w-10 h-8 bg-gray-700/60 hover:bg-gray-600/60 border border-gray-600/50 hover:border-gray-500/50 rounded-lg text-white text-sm flex items-center justify-center transition-all backdrop-blur-sm"
-                      >
-                        <Minus size={14} />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <p className="text-xs text-gray-400">
-                    Limit the number of responses the AI can provide (maximum 150)
-                  </p>
-                </div>
+                {/* ❌ SUPPRIMÉ : Enhanced Usage Limit Section */}
 
                 {/* Enhanced Action Buttons */}
                 <div className="flex gap-3 pt-6 border-t border-gray-700/50">
@@ -232,7 +199,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                   <button
                     onClick={handleCreate}
                     disabled={loading || !agentConfig.agentId}
-                    className="flex-1 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden"
+                    className="flex-1 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden group"
                   >
                     {/* Shimmer effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
@@ -252,10 +219,10 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                 </div>
               </div>
             ) : (
-              // Enhanced Success Phase
+              // Success Phase (INCHANGÉ sauf usageLimit)
               <div className="space-y-6">
                 
-                {/* Enhanced Success Banner */}
+                {/* Enhanced Success Banner (INCHANGÉ) */}
                 <div className="bg-gradient-to-r from-emerald-500/20 to-blue-500/20 backdrop-blur-sm border border-emerald-500/30 rounded-xl p-6">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-emerald-500/20 border-2 border-emerald-500/40 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -270,7 +237,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                   </div>
                 </div>
 
-                {/* Enhanced Share Link Section */}
+                {/* Enhanced Share Link Section (INCHANGÉ) */}
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-white mb-3">
@@ -293,7 +260,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                     </div>
                   </div>
 
-                  {/* Enhanced Instructions */}
+                  {/* Enhanced Instructions - ✅ CHANGÉ : utilise agentConfig.usageLimit */}
                   <div className="bg-blue-500/10 backdrop-blur-sm border border-blue-500/30 rounded-xl p-5 space-y-3">
                     <h4 className="text-sm font-bold text-blue-200 flex items-center gap-2">
                       💡 How to use your demo
@@ -303,7 +270,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                         "Copy the link above",
                         "Share it with your clients or prospects",
                         "They can test your AI agent directly",
-                        `Demo is limited to ${usageLimit} responses`
+                        `Demo is limited to ${agentConfig.usageLimit} responses`
                       ].map((step, index) => (
                         <div key={index} className="flex items-start gap-2">
                           <span className="text-blue-400 font-bold text-sm mt-0.5">{index + 1}.</span>
@@ -314,7 +281,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
                   </div>
                 </div>
 
-                {/* Enhanced Action Buttons */}
+                {/* Enhanced Action Buttons (INCHANGÉ) */}
                 <div className="flex gap-3 pt-6 border-t border-gray-700/50">
                   <button
                     onClick={handleClose}

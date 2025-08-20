@@ -1,27 +1,23 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import styles from './ChatWidget.module.css';
+import styles from './ChatWidget.module.css'; // ✅ RÉUTILISE le même CSS !
 
-// ✨ TYPES - Compatibles avec ton système existant (INCHANGÉ)
-interface ChatWidgetConfig {
-  _id: string;
+// ✨ TYPES - Adaptés pour la demo page (INCHANGÉ de ton demo-agent)
+interface DemoConfig {
   name: string;
-  avatar?: string;
-  welcomeMessage?: string;
-  placeholderText?: string;
+  agentId: string;
+  avatar: string;
+  welcomeMessage: string;
+  placeholderText: string;
   theme: 'light' | 'dark';
   primaryColor: string;
-  width: number;
-  height: number;
-  placement: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  popupMessage?: string;
+  popupMessage: string;
   popupDelay: number;
   showPopup: boolean;
   showWelcomeMessage: boolean;
-  selectedAgent: string;
-  chatTitle?: string;
-  subtitle?: string;
+  chatTitle: string;
+  subtitle: string;
 }
 
 interface Message {
@@ -31,54 +27,46 @@ interface Message {
   timestamp: Date;
 }
 
-interface ChatWidgetProps {
-  config: ChatWidgetConfig;
+interface DemoPageChatWidgetProps {
+  config: DemoConfig;
   isPreview?: boolean;
+  // ✅ NOUVEAUX PROPS pour contrôler depuis la page parent
+  isOpen: boolean;
+  onToggle: () => void;
+  messages: Message[];
+  onMessagesChange: (messages: Message[]) => void;
+  inputValue: string;
+  onInputChange: (value: string) => void;
+  isTyping: boolean;
+  onTypingChange: (typing: boolean) => void;
+  showPopupBubble: boolean;
 }
 
-// 🎯 COMPOSANT PRINCIPAL - Version CSS Module avec vraie API
-export default function ChatWidget({ config, isPreview = false }: ChatWidgetProps) {
-  // ========== ÉTATS (INCHANGÉS) ==========
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-
-  // ========== REFS (INCHANGÉS) ==========
+// 🎯 COMPOSANT PRINCIPAL - Logique identique à ChatWidget mais adapté pour Demo
+export default function DemoPageChatWidget({ 
+  config, 
+  isPreview = true, // Demo = toujours preview 
+  isOpen,
+  onToggle,
+  messages,
+  onMessagesChange,
+  inputValue,
+  onInputChange,
+  isTyping,
+  onTypingChange,
+  showPopupBubble
+}: DemoPageChatWidgetProps) {
+  
+  // ========== REFS (IDENTIQUES) ==========
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // ========== COMPUTED (INCHANGÉS) ==========
+  // ========== COMPUTED (IDENTIQUES) ==========
   const isDark = config.theme === 'dark';
-  const primaryColor = config.primaryColor || '#3b82f6';
+  const primaryColor = config.primaryColor || '#3B82F6';
 
-  // ========== EFFETS (INCHANGÉS) ==========
+  // ========== EFFETS ==========
   
-  // 🏁 Message de bienvenue initial
-  useEffect(() => {
-    if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
-      setMessages([{
-        id: 'welcome',
-        text: config.welcomeMessage,
-        isBot: true,
-        timestamp: new Date()
-      }]);
-    }
-  }, [config.showWelcomeMessage, config.welcomeMessage]);
-
-  // 💬 Popup automatique
-  useEffect(() => {
-    if (config.showPopup && config.popupMessage && !isOpen && !isPreview) {
-      const timer = setTimeout(() => {
-        setShowPopup(true);
-      }, config.popupDelay * 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowPopup(false);
-    }
-  }, [config.showPopup, config.popupMessage, config.popupDelay, isOpen, isPreview]);
-
   // 🔄 Auto-scroll des messages
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -98,24 +86,20 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   }, [isOpen]);
 
-  // 📏 Auto-resize textarea comme cette interface
+  // 📏 Auto-resize textarea
   useEffect(() => {
     const textarea = inputRef.current;
     if (textarea) {
-      // Reset height pour recalculer
       textarea.style.height = 'auto';
       
-      // Calculer la nouvelle hauteur basée sur le contenu
       const scrollHeight = textarea.scrollHeight;
-      const maxHeight = 120; // Même que CSS
+      const maxHeight = 120;
       const minHeight = 32;
       
       if (scrollHeight <= maxHeight) {
-        // Pas encore besoin de scroll, on agrandit
         textarea.style.height = Math.max(scrollHeight, minHeight) + 'px';
         textarea.style.overflowY = 'hidden';
       } else {
-        // Trop grand, on fixe la hauteur et on active le scroll
         textarea.style.height = maxHeight + 'px';
         textarea.style.overflowY = 'auto';
       }
@@ -124,12 +108,12 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
 
   // ========== FONCTIONS ==========
 
-  // 📨 Envoyer un message - CHIRURGICAL : Seulement la partie API changée
+  // 📨 Envoyer un message - ADAPTÉE pour DemoConfig
   const sendMessage = async () => {
     const trimmed = inputValue.trim();
-    if (!trimmed) return;
+    if (!trimmed || !config.agentId) return; // ← agentId au lieu de selectedAgent
 
-    // Message utilisateur (INCHANGÉ)
+    // Message utilisateur
     const userMessage: Message = {
       id: crypto.randomUUID(),
       text: trimmed,
@@ -138,15 +122,14 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     };
 
     const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setInputValue('');
+    onMessagesChange(updatedMessages); // ← Notifier le parent
+    onInputChange(''); // ← Reset input via parent
     
-    // Animation typing avec délai (INCHANGÉ)
-    setTimeout(() => setIsTyping(true), 200);
+    // Animation typing
+    setTimeout(() => onTypingChange(true), 200);
 
     try {
-      // 🎯 CHIRURGICAL : Remplacer SEULEMENT le bloc simulation par la vraie API
-      // Utiliser la MÊME API que dans route.ts
+      // 🎯 API CALL - Identique à ChatWidget mais avec agentId
       const history = updatedMessages
         .filter(msg => msg.id !== 'welcome')
         .map(msg => ({
@@ -154,21 +137,21 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
           content: msg.text,
         }));
 
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'x-public-kind': 'widget',
-        'x-widget-id': config._id,
-        'x-widget-token': 'public'
+      const body: any = {
+        message: trimmed,
+        previousMessages: history
       };
 
-      const response = await fetch(`/api/agents/${config.selectedAgent}/ask`, {
+      if (config.showWelcomeMessage && config.welcomeMessage?.trim()) {
+        body.welcomeMessage = config.welcomeMessage.trim();
+      }
+
+      const response = await fetch(`/api/agents/${config.agentId}/ask`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({
-          message: trimmed,
-          previousMessages: history,
-          welcomeMessage: config.showWelcomeMessage ? config.welcomeMessage : null,
-        }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
       });
 
       const data = await response.json();
@@ -180,27 +163,38 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
           isBot: true,
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, botMessage]);
-        setIsTyping(false);
+        onMessagesChange([...updatedMessages, botMessage]); // ← Notifier le parent
+        onTypingChange(false);
       }, 800);
       
     } catch (error) {
       console.error('Erreur envoi message:', error);
       
+      // Fallback responses comme dans ton demo original
+      const responses = [
+        "Thanks for your message! I'm here to help you.",
+        "That's an interesting question. Let me think about that...",
+        "I understand your concern. Here's what I can suggest...",
+        "Great question! I'd be happy to help you with that.",
+        "I'm processing your request. Please give me a moment..."
+      ];
+
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      
       setTimeout(() => {
         const errorMessage: Message = {
           id: crypto.randomUUID(),
-          text: "Désolé, une erreur s'est produite. Veuillez réessayer.",
+          text: randomResponse,
           isBot: true,
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, errorMessage]);
-        setIsTyping(false);
+        onMessagesChange([...updatedMessages, errorMessage]);
+        onTypingChange(false);
       }, 800);
     }
   };
 
-  // 🔄 Nouvelle conversation (INCHANGÉ)
+  // 🔄 Nouvelle conversation - ADAPTÉE
   const resetChat = () => {
     const welcomeMessages = config.showWelcomeMessage && config.welcomeMessage
       ? [{
@@ -211,30 +205,22 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
         }]
       : [];
     
-    setMessages(welcomeMessages);
+    onMessagesChange(welcomeMessages); // ← Notifier le parent
   };
 
-  // 🎭 Toggle chat ouvert/fermé (INCHANGÉ)
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
-    setShowPopup(false);
-  };
-
-  // 🎹 Gestion Enter dans l'input avec support multi-lignes (INCHANGÉ)
+  // 🎹 Gestion Enter dans l'input (IDENTIQUE)
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       if (e.shiftKey) {
-        // Shift+Enter = nouvelle ligne (comportement par défaut)
         return;
       } else {
-        // Enter seul = envoyer message
         e.preventDefault();
         sendMessage();
       }
     }
   };
 
-  // ========== PLACEMENT DYNAMIQUE (INCHANGÉ) ==========
+  // ========== STYLES (IDENTIQUES) ==========
   const getWidgetClasses = () => {
     let classes = styles.chatWidget;
     if (isPreview) classes += ` ${styles.preview}`;
@@ -242,32 +228,22 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
   };
 
   const getWidgetStyles = () => {
-    const baseStyles: React.CSSProperties = {
+    return {
       '--primary-color': primaryColor,
+      position: 'absolute',
+      bottom: '24px',
+      right: '24px',
     } as React.CSSProperties;
-
-    if (!isPreview) {
-      // Position selon config placement
-      const [vertical, horizontal] = config.placement.split('-');
-      if (vertical === 'top' || vertical === 'bottom') {
-        baseStyles[vertical] = '24px';
-      }
-      if (horizontal === 'left' || horizontal === 'right') {
-        baseStyles[horizontal] = '24px';
-      }
-    }
-
-    return baseStyles;
   };
 
   const getWindowStyles = () => {
     return {
-      width: `${config.width}px`,
-      height: `${config.height}px`,
+      width: '380px',  // ← Dimensions fixes comme dans ton demo
+      height: '600px',
     };
   };
 
-  // ========== RENDER (INCHANGÉ) ==========
+  // ========== RENDER (IDENTIQUE structure, styles CSS Module) ==========
   return (
     <div 
       className={getWidgetClasses()}
@@ -275,7 +251,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     >
       
       {/* 💭 POPUP BUBBLE */}
-      {showPopup && !isOpen && config.popupMessage && (
+      {showPopupBubble && !isOpen && config.popupMessage && (
         <div className={styles.chatPopup}>
           {config.popupMessage}
         </div>
@@ -285,10 +261,9 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
       {!isOpen && (
         <button
           className={styles.chatButton}
-          onClick={toggleChat}
+          onClick={onToggle}
           aria-label="Ouvrir le chat"
         >
-          {/* SVG exact de ton HTML */}
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
           </svg>
@@ -333,7 +308,6 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                 title="Nouvelle conversation"
                 aria-label="Nouvelle conversation"
               >
-                {/* SVG exact de ton HTML */}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="1 4 1 10 7 10"></polyline>
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
@@ -341,11 +315,10 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
               </button>
               <button
                 className={styles.chatActionBtn}
-                onClick={toggleChat}
+                onClick={onToggle}
                 title="Fermer"
                 aria-label="Fermer le chat"
               >
-                {/* SVG exact de ton HTML */}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -419,7 +392,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
               <textarea
                 ref={inputRef as React.RefObject<HTMLTextAreaElement>}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => onInputChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={config.placeholderText || 'Tapez votre message...'}
                 className={`${styles.chatInput} ${isDark ? styles.dark : ''}`}
@@ -434,7 +407,6 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                 className={styles.chatSendBtn}
                 aria-label="Envoyer le message"
               >
-                {/* SVG exact de ton HTML */}
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <path d="M2.01 21L23 12 2.01 3 2 10L17 12 2 14Z"/>
                 </svg>

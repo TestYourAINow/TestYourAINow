@@ -10,7 +10,6 @@ import { createAgentOpenAI, createAgentOpenAIForWebhook } from "@/lib/openai";
 type IntegrationFile = { name: string; size: number; path: string; url: string };
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
-// 🆕 Interface pour typer le Demo
 interface DemoDocument {
   _id: string;
   userId: string;
@@ -18,16 +17,14 @@ interface DemoDocument {
   agentId: string;
   demoToken: string;
   publicEnabled: boolean;
-  // ... autres champs si nécessaire
 }
 
-// 🆕 FONCTION HELPER POUR LA DATE LOCALISÉE
+// LOCALIZED DATE/TIME HELPER - English version
 function getLocalizedDateTime(timezone: string): string {
   const now = new Date();
   
   try {
-    // Essayer de formater avec la timezone de l'utilisateur
-    const localTime = now.toLocaleString('fr-FR', { 
+    const localTime = now.toLocaleString('en-US', { 
       timeZone: timezone,
       year: 'numeric',
       month: 'long', 
@@ -38,53 +35,66 @@ function getLocalizedDateTime(timezone: string): string {
       hour12: false
     });
     
-    // Obtenir le nom de la timezone en français
-    const timeZoneName = Intl.DateTimeFormat('fr', { timeZone: timezone, timeZoneName: 'long' })
+    const timeZoneName = Intl.DateTimeFormat('en', { timeZone: timezone, timeZoneName: 'long' })
       .formatToParts(now)
       .find(part => part.type === 'timeZoneName')?.value || timezone;
     
     return `${localTime} (${timeZoneName})`;
   } catch (error) {
-    // Si la timezone n'est pas valide, utiliser UTC
-    console.warn('Timezone invalide:', timezone, 'Utilisation UTC');
+    console.warn('Invalid timezone:', timezone, 'Using UTC');
     return `${now.toISOString().replace('T', ' ').replace('Z', '')} (UTC)`;
   }
 }
 
-// 🆕 NOUVELLE FONCTION : Gérer les intégrations Calendly
+// STRICT APPOINTMENT INTENT DETECTION
+async function isAppointmentRequest(userMessage: string, openai: any, agentModel: string): Promise<boolean> {
+  try {
+    const intentCheck = await openai.chat.completions.create({
+      model: agentModel,
+      temperature: 0,
+      messages: [
+        {
+          role: "system",
+          content: "You are an intent detector. Reply ONLY with 'true' or 'false'. Return 'true' ONLY if the user is EXPLICITLY requesting to schedule/book an appointment or meeting."
+        },
+        {
+          role: "user", 
+          content: `Message: "${userMessage}"`
+        }
+      ]
+    });
+    
+    const response = intentCheck.choices[0]?.message?.content?.toLowerCase().trim();
+    return response === 'true';
+  } catch (error) {
+    console.log('Intent detection error:', error);
+    return false;
+  }
+}
+
+// SAFE CALENDLY INTEGRATION
 async function handleCalendlyIntegration(
   userMessage: string, 
   integrations: any[], 
-  openai: any
+  openai: any,
+  agentModel: string
 ): Promise<string | null> {
-  const calendlyIntegrations = integrations.filter(i => i.type === "calendly");
+  const calendlyIntegrations = integrations.filter(i => i.type === "calendly" && i.enabled !== false);
   
   if (calendlyIntegrations.length === 0) return null;
   
-  // Détecter si l'utilisateur demande un rendez-vous
-  const appointmentKeywords = [
-    'rendez-vous', 'rdv', 'rencontrer', 'réunion', 'meeting', 
-    'planifier', 'réserver', 'disponibilité', 'horaire', 
-    'calendrier', 'appointment', 'schedule', 'book', 'booking',
-    'prendre rendez-vous', 'fixer un rdv', 'voir ensemble'
-  ];
+  const isAppointment = await isAppointmentRequest(userMessage, openai, agentModel);
+  if (!isAppointment) return null;
   
-  const hasAppointmentRequest = appointmentKeywords.some(keyword => 
-    userMessage.toLowerCase().includes(keyword)
-  );
-  
-  if (!hasAppointmentRequest) return null;
-  
-  console.log('🗓️ Demande de rendez-vous détectée, intégration Calendly...');
+  console.log('Confirmed appointment request, Calendly integration...');
   
   for (const integration of calendlyIntegrations) {
     if (!integration.apiKey) {
-      console.log(`❌ Pas d'API key pour l'intégration ${integration.name}`);
+      console.log(`No API key for ${integration.name}`);
       continue;
     }
     
     try {
-      // 1. Récupérer les informations utilisateur Calendly
       const userRes = await fetch('https://api.calendly.com/users/me', {
         headers: {
           'Authorization': `Bearer ${integration.apiKey}`,
@@ -93,17 +103,16 @@ async function handleCalendlyIntegration(
       });
       
       if (!userRes.ok) {
-        console.log(`❌ Erreur API Calendly user (${userRes.status}):`, await userRes.text());
+        console.log(`Calendly user API error (${userRes.status})`);
         continue;
       }
       
       const userData = await userRes.json();
       const userUri = userData.resource.uri;
       
-      console.log('✅ Utilisateur Calendly récupéré:', userData.resource.name);
+      console.log('Calendly user retrieved:', userData.resource.name);
       
-      // 2. Récupérer les types d'événements
-      const eventsRes = await fetch(`https://api.calendly.com/event_types?user=${userUri}&active=true`, {
+      const eventsRes = await fetch(`https://api.calendly.com/event_types?user=${userUri}&active=true&count=25`, {
         headers: {
           'Authorization': `Bearer ${integration.apiKey}`,
           'Content-Type': 'application/json'
@@ -111,42 +120,46 @@ async function handleCalendlyIntegration(
       });
       
       if (!eventsRes.ok) {
-        console.log(`❌ Erreur API Calendly events (${eventsRes.status}):`, await eventsRes.text());
+        console.log(`Calendly events API error (${eventsRes.status})`);
         continue;
       }
       
       const eventsData = await eventsRes.json();
       const eventTypes = eventsData.collection || [];
       
-      console.log(`📅 ${eventTypes.length} types d'événements trouvés`);
+      console.log(`${eventTypes.length} event types found`);
       
       if (eventTypes.length === 0) {
-        return `❌ Aucun type d'événement actif trouvé sur Calendly pour ${integration.name}. Veuillez configurer vos événements sur Calendly.`;
+        console.log('No active event types found');
+        continue;
       }
       
-      // 3. Prendre le premier type d'événement disponible
       const firstEvent = eventTypes[0];
       const schedulingUrl = firstEvent.scheduling_url;
       
-      console.log('🔗 URL de planification:', schedulingUrl);
+      if (!schedulingUrl) {
+        console.log('No scheduling_url found');
+        continue;
+      }
       
-      // 4. Utiliser l'IA pour générer une réponse personnalisée
+      console.log('Scheduling URL:', schedulingUrl);
+      
       const aiRes = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: agentModel,
         temperature: 0.3,
         messages: [
           {
             role: 'system',
-            content: `Tu es un assistant qui aide à planifier des rendez-vous. L'utilisateur vient de demander un rendez-vous. Tu as accès à Calendly avec le lien : ${schedulingUrl}
+            content: `You are an assistant helping to schedule appointments. The user just requested an appointment. You have access to Calendly with this link: ${schedulingUrl}
 
-Réponds de manière naturelle, chaleureuse et professionnelle en proposant ce lien pour réserver. 
+Respond in a natural, warm, and professional way by offering this link for booking. 
 
-Instructions importantes :
-- Sois enthousiaste mais professionnel
-- Explique brièvement que le lien mène à un calendrier de réservation
-- Encourage l'action
-- Garde un ton personnalisé et humain
-- Ne mentionne pas les détails techniques de Calendly`
+Important instructions:
+- Be enthusiastic but professional
+- Briefly explain that the link leads to a booking calendar
+- Encourage action
+- Keep a personalized and human tone
+- Don't mention technical Calendly details`
           },
           {
             role: 'user',
@@ -155,77 +168,58 @@ Instructions importantes :
         ]
       });
       
-      const aiResponse = aiRes.choices[0]?.message?.content || '';
+      const aiResponse = aiRes.choices[0]?.message?.content;
       
-      // 5. Construire la réponse finale avec le lien
-      const finalResponse = `${aiResponse}\n\n🗓️ **Réservez votre créneau ici :** ${schedulingUrl}`;
+      if (!aiResponse) {
+        console.log('No AI response');
+        continue;
+      }
       
-      console.log('✅ Réponse Calendly générée avec succès');
+      const finalResponse = `${aiResponse}\n\n**Book your time slot here:** ${schedulingUrl}`;
+      
+      console.log('Calendly response generated successfully');
       return finalResponse;
       
     } catch (error) {
-      console.error('❌ Erreur Calendly pour', integration.name, ':', error);
+      console.error('Calendly error for', integration.name, ':', error);
       continue;
     }
   }
   
-  // Si aucune intégration n'a fonctionné
-  return `Je serais ravi de planifier un rendez-vous avec vous ! Malheureusement, il semble y avoir un problème temporaire avec mon système de réservation. Pouvez-vous me contacter directement pour que nous puissions organiser notre rencontre ?`;
+  return null;
 }
 
-// 🆕 NOUVELLE FONCTION : Gérer les intégrations Google Calendar
+// SAFE GOOGLE CALENDAR INTEGRATION - Multilingual + Fixed timezone
 async function handleGoogleCalendarIntegration(
   userMessage: string,
   integrations: any[],
   openai: any,
-  userTimezone: string
+  userTimezone: string,
+  agentModel: string
 ): Promise<string | null> {
-  const googleCalendarIntegrations = integrations.filter(i => i.type === "google_calendar");
+  const googleCalendarIntegrations = integrations.filter(i => i.type === "google_calendar" && i.enabled !== false);
   
   if (googleCalendarIntegrations.length === 0) return null;
   
-  // Détecter si l'utilisateur demande un rendez-vous avec date/heure spécifique
-  const timeIndicators = [
-    'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche', 'lundi',
-    'demain', 'après-midi', 'matin', 'soir', 'dans', 'h', 'heure', '14h', '15h', '16h',
-    'à', 'le', 'prochain', 'prochaine', 'semaine', 'aujourd\'hui', ':', 'h00', 'h30'
-  ];
-  
-  const appointmentKeywords = [
-    'rendez-vous', 'rdv', 'rencontrer', 'réunion', 'meeting', 
-    'planifier', 'réserver', 'booker', 'créer', 'fixer'
-  ];
-  
-  const hasTimeIndicator = timeIndicators.some(indicator => 
-    userMessage.toLowerCase().includes(indicator)
-  );
-  
-  const hasAppointmentKeyword = appointmentKeywords.some(keyword => 
-    userMessage.toLowerCase().includes(keyword)
-  );
-  
-  // Seulement déclencher si on a à la fois un mot-clé de RDV ET un indicateur temporel
-  if (!hasTimeIndicator || !hasAppointmentKeyword) return null;
-  
-  console.log('🗓️ Demande de création Google Calendar détectée...');
+  console.log('Google Calendar creation request detected...');
   
   for (const integration of googleCalendarIntegrations) {
     if (!integration.accessToken) {
-      console.log(`❌ Pas d'access token pour ${integration.name}`);
+      console.log(`No access token for ${integration.name}`);
       continue;
     }
     
     try {
-      // 1. Demander à l'IA d'extraire les informations temporelles
       const extractionRes = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: agentModel,
         temperature: 0.1,
         messages: [
           {
             role: 'system',
-            content: `Tu es un assistant spécialisé dans l'extraction d'informations temporelles. 
+            content: `Return ONLY valid minified JSON (no prose). If info is incomplete, set "hasAppointment": false.
+MUST include both "datetime" AND "endDatetime" as RFC3339 with offset (e.g. "2025-08-25T14:00:00-04:00").
 
-Date et heure actuelles: ${new Date().toLocaleString('fr-FR', { 
+Current date and time: ${new Date().toLocaleString('en-US', { 
               timeZone: userTimezone,
               year: 'numeric',
               month: 'long', 
@@ -235,17 +229,15 @@ Date et heure actuelles: ${new Date().toLocaleString('fr-FR', {
               minute: '2-digit'
             })} (${userTimezone})
 
-À partir du message utilisateur, extrait les informations de rendez-vous et réponds UNIQUEMENT en JSON:
-
+Required JSON format:
 {
   "hasAppointment": true/false,
-  "datetime": "2025-08-25T14:00:00", // Format ISO, timezone utilisateur
-  "duration": 60, // en minutes
-  "title": "Titre du rendez-vous",
-  "email": "email@exemple.com" // si mentionné, sinon null
-}
-
-Si les informations sont incomplètes ou ambiguës, retourne "hasAppointment": false.`
+  "datetime": "2025-08-25T14:00:00-04:00",
+  "endDatetime": "2025-08-25T15:00:00-04:00", 
+  "duration": 60,
+  "title": "Appointment title",
+  "email": "email@example.com or null"
+}`
           },
           {
             role: 'user',
@@ -256,29 +248,28 @@ Si les informations sont incomplètes ou ambiguës, retourne "hasAppointment": f
       
       const extractedInfo = JSON.parse(extractionRes.choices[0]?.message?.content || '{"hasAppointment": false}');
       
-      if (!extractedInfo.hasAppointment) {
-        console.log('❌ Informations temporelles insuffisantes');
+      if (!extractedInfo.hasAppointment || !extractedInfo.datetime || !extractedInfo.endDatetime) {
+        console.log('Missing datetime/endDatetime -> skip Google Calendar');
         continue;
       }
       
-      console.log('✅ Informations extraites:', extractedInfo);
+      console.log('Information extracted:', extractedInfo);
       
-      // 2. Créer l'événement Google Calendar
-      const startDateTime = new Date(extractedInfo.datetime);
-      const endDateTime = new Date(startDateTime.getTime() + (extractedInfo.duration * 60000));
+      const startISO = extractedInfo.datetime;
+      const endISO = extractedInfo.endDatetime;
       
       const calendarEvent = {
-        summary: extractedInfo.title || 'Rendez-vous',
+        summary: extractedInfo.title || 'Appointment',
         start: {
-          dateTime: startDateTime.toISOString(),
+          dateTime: startISO,
           timeZone: userTimezone
         },
         end: {
-          dateTime: endDateTime.toISOString(),
+          dateTime: endISO,
           timeZone: userTimezone
         },
         attendees: extractedInfo.email ? [{ email: extractedInfo.email }] : undefined,
-        description: `Rendez-vous créé automatiquement via l'assistant IA`
+        description: `Appointment created automatically via AI assistant`
       };
       
       const createEventRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${integration.calendarId || 'primary'}/events`, {
@@ -292,43 +283,51 @@ Si les informations sont incomplètes ou ambiguës, retourne "hasAppointment": f
       
       if (!createEventRes.ok) {
         const errorData = await createEventRes.text();
-        console.error('❌ Erreur création Google Calendar:', errorData);
+        console.error('Google Calendar creation error:', errorData);
         continue;
       }
       
       const createdEvent = await createEventRes.json();
-      console.log('✅ Événement créé:', createdEvent.id);
       
-      // 3. Générer une réponse personnalisée
+      if (!createdEvent.htmlLink) {
+        console.log('No htmlLink in created event');
+        continue;
+      }
+      
+      console.log('Event created:', createdEvent.id);
+      
+      const startDateTime = new Date(startISO);
+      const endDateTime = new Date(endISO);
+      
       const confirmationRes = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: agentModel,
         temperature: 0.3,
         messages: [
           {
             role: 'system',
-            content: `Tu es un assistant qui confirme la création d'un rendez-vous Google Calendar.
+            content: `You are an assistant confirming Google Calendar appointment creation.
 
-L'événement a été créé avec succès avec ces détails :
-- Titre: ${extractedInfo.title}
-- Date: ${startDateTime.toLocaleDateString('fr-FR', { 
+The event was successfully created with these details:
+- Title: ${extractedInfo.title}
+- Date: ${startDateTime.toLocaleDateString('en-US', { 
               weekday: 'long', 
               year: 'numeric', 
               month: 'long', 
               day: 'numeric',
               timeZone: userTimezone
             })}
-- Heure: ${startDateTime.toLocaleTimeString('fr-FR', { 
+- Time: ${startDateTime.toLocaleTimeString('en-US', { 
               hour: '2-digit', 
               minute: '2-digit',
               timeZone: userTimezone
-            })} - ${endDateTime.toLocaleTimeString('fr-FR', { 
+            })} - ${endDateTime.toLocaleTimeString('en-US', { 
               hour: '2-digit', 
               minute: '2-digit',
               timeZone: userTimezone
             })}
-- Durée: ${extractedInfo.duration} minutes
+- Duration: ${extractedInfo.duration || 60} minutes
 
-Réponds de manière chaleureuse et professionnelle pour confirmer la création. Inclus les détails importants et rassure l'utilisateur.`
+Respond warmly and professionally to confirm the creation. Include important details and reassure the user.`
           },
           {
             role: 'user',
@@ -337,32 +336,37 @@ Réponds de manière chaleureuse et professionnelle pour confirmer la création.
         ]
       });
       
-      const confirmationMessage = confirmationRes.choices[0]?.message?.content || '';
+      const confirmationMessage = confirmationRes.choices[0]?.message?.content;
       
-      const finalResponse = `${confirmationMessage}\n\n✅ **Événement créé dans Google Calendar**\n📅 Lien: ${createdEvent.htmlLink}`;
+      if (!confirmationMessage) {
+        console.log('No confirmation message');
+        continue;
+      }
       
-      console.log('✅ Réponse Google Calendar générée avec succès');
+      const finalResponse = `${confirmationMessage}\n\n**Event created in Google Calendar**\nLink: ${createdEvent.htmlLink}`;
+      
+      console.log('Google Calendar response generated successfully');
       return finalResponse;
       
     } catch (error) {
-      console.error('❌ Erreur Google Calendar pour', integration.name, ':', error);
+      console.error('Google Calendar error for', integration.name, ':', error);
       continue;
     }
   }
   
-  // Si aucune intégration n'a fonctionné
-  return `Je serais ravi de créer ce rendez-vous pour vous ! Malheureusement, il semble y avoir un problème temporaire avec mon intégration Google Calendar. Pouvez-vous me redonner les détails du rendez-vous que nous pourrons organiser manuellement ?`;
+  return null;
 }
 
-export async function POST(req: NextRequest, context: any) {
+export async function POST(
+  req: NextRequest,
+  ctx: { params: { id: string } } | { params: Promise<{ id: string }> }
+) {
   try {
-    // Récupérer les paramètres
-    const params = await context.params;
-    const { id } = params;
+    const p = 'then' in ctx.params ? await ctx.params : ctx.params;
+    const { id } = p;
     
     await connectToDatabase();
 
-    // 🆕 ÉTAPE 1: Vérifier si c'est un appel public (demo ou widget)
     const publicKind = req.headers.get('x-public-kind');
     const demoId = req.headers.get('x-demo-id');
     const demoToken = req.headers.get('x-demo-token');
@@ -373,28 +377,22 @@ export async function POST(req: NextRequest, context: any) {
     let session = null;
 
     if (publicKind === 'demo' && demoId && demoToken) {
-      // Mode public DEMO : valider le token de la démo
-      console.log('🔓 Mode public DEMO détecté, validation du token...');
+      console.log('Mode public DEMO détecté, validation du token...');
       
       const demo = await Demo.findById(demoId).lean() as DemoDocument | null;
       
       if (demo && demo.demoToken === demoToken && demo.publicEnabled) {
         isPublicOK = true;
-        console.log('✅ Token démo valide, accès public autorisé');
+        console.log('Token démo valide, accès public autorisé');
       } else {
-        console.log('❌ Token démo invalide ou démo désactivée');
+        console.log('Token démo invalide ou démo désactivée');
         return NextResponse.json({ error: "Invalid demo token" }, { status: 401 });
       }
     } else if (publicKind === 'widget' && widgetId && widgetToken === 'public') {
-      // Mode public WIDGET : validation simplifiée
-      console.log('🔓 Mode public WIDGET détecté, validation...');
-      
-      // Pour l'instant, on accepte tous les widgets avec token "public"
-      // Plus tard, on pourra ajouter une validation plus stricte
+      console.log('Mode public WIDGET détecté, validation...');
       isPublicOK = true;
-      console.log('✅ Widget public autorisé');
+      console.log('Widget public autorisé');
     } else {
-      // Mode privé : vérifier la session
       session = await getServerSession(authOptions);
       if (!session || !session.user?.email || !session.user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -405,22 +403,18 @@ export async function POST(req: NextRequest, context: any) {
     const userMessage: string = body.message;
     const previousMessages: ChatMessage[] = body.previousMessages || [];
     const welcomeMessage: string | null = body.welcomeMessage || null;
-    const userTimezone: string = body.timezone || 'UTC'; // 🆕 NOUVEAU
+    const userTimezone: string = body.timezone || 'UTC';
 
     if (!userMessage || typeof userMessage !== "string") {
       return NextResponse.json({ error: "Message is required." }, { status: 400 });
     }
 
-    // 🆕 ÉTAPE 2: Récupérer l'agent selon le mode (public ou privé)
     let agent;
     
     if (isPublicOK) {
-      // Mode public : récupérer l'agent sans vérifier le userId
       agent = await Agent.findOne({ _id: id });
-      console.log('🔓 Agent récupéré en mode public:', !!agent, `(${publicKind})`);
+      console.log('Agent récupéré en mode public:', !!agent, `(${publicKind})`);
     } else {
-      // Mode privé : récupérer l'agent avec vérification du userId
-      // ✅ Fix TypeScript : vérifier que session n'est pas null
       if (!session?.user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
@@ -431,21 +425,17 @@ export async function POST(req: NextRequest, context: any) {
       return NextResponse.json({ error: "Agent not found." }, { status: 404 });
     }
 
-    // 🆕 ÉTAPE 3: Créer l'instance OpenAI selon le mode
     let openaiResult;
     
     if (isPublicOK) {
-      // Mode public : utiliser la fonction webhook (sans session)
-      console.log(`🔓 Création OpenAI en mode public (${publicKind})...`);
+      console.log(`Création OpenAI en mode public (${publicKind})...`);
       openaiResult = await createAgentOpenAIForWebhook(agent);
     } else {
-      // Mode privé : utiliser la fonction normale (avec session)
       openaiResult = await createAgentOpenAI(agent);
     }
 
-    // Gérer les erreurs OpenAI
     if (!openaiResult.openai) {
-      console.error('❌ Erreur création OpenAI:', openaiResult.error);
+      console.error('Erreur création OpenAI:', openaiResult.error);
       
       if (isPublicOK) {
         return NextResponse.json(
@@ -461,41 +451,41 @@ export async function POST(req: NextRequest, context: any) {
     }
 
     const openai = openaiResult.openai;
-    console.log('✅ Instance OpenAI créée avec succès');
+    console.log('Instance OpenAI créée avec succès');
 
-    // 🆕 VÉRIFIER SI C'EST UNE DEMANDE DE CRÉATION GOOGLE CALENDAR
+    const agentModel = agent.openaiModel || 'gpt-4o';
+
     const googleCalendarResponse = await handleGoogleCalendarIntegration(
       userMessage, 
       agent.integrations || [], 
       openai,
-      userTimezone
+      userTimezone,
+      agentModel
     );
 
     if (googleCalendarResponse) {
-      console.log('✅ Réponse Google Calendar générée');
+      console.log('Google Calendar response generated');
       return NextResponse.json({ reply: googleCalendarResponse });
     }
 
-    // 🆕 VÉRIFIER SI C'EST UNE DEMANDE DE RENDEZ-VOUS CALENDLY
     const calendlyResponse = await handleCalendlyIntegration(
       userMessage, 
       agent.integrations || [], 
-      openai
+      openai,
+      agentModel
     );
 
     if (calendlyResponse) {
-      console.log('✅ Réponse Calendly générée');
+      console.log('Calendly response generated');
       return NextResponse.json({ reply: calendlyResponse });
     }
 
-    // Le reste du code reste identique...
-    // Connaissances internes (fichiers) - LIMITE INTELLIGENTE
     const knowledge = await AgentKnowledge.find({ agentId: id }).sort({ createdAt: -1 });
     
     const MAX_CONTENT_PER_FILE = 15000;
     const MAX_TOTAL_KNOWLEDGE = 80000;
     
-    console.log(`📚 Found ${knowledge.length} knowledge entries for agent ${id}`);
+    console.log(`Found ${knowledge.length} knowledge entries for agent ${id}`);
     
     let totalUsedChars = 0;
     const knowledgeText = knowledge
@@ -518,16 +508,15 @@ export async function POST(req: NextRequest, context: any) {
         totalUsedChars += content.length;
         
         const header = `— ${k.fileName} (${k.sourceName || 'Document'}) :`;
-        const footer = truncated ? "\n... [document tronqué pour rester dans les limites]" : "";
+        const footer = truncated ? "\n... [document truncated to stay within limits]" : "";
         
         return `${header}\n${content}${footer}\n`;
       })
       .filter(Boolean)
       .join("\n");
     
-    console.log(`📊 Knowledge summary: ${totalUsedChars} chars used, ${knowledge.length} files processed`);
+    console.log(`Knowledge summary: ${totalUsedChars} chars used, ${knowledge.length} files processed`);
 
-    // Intégrations
     const integrationsText = (agent.integrations || [])
       .map((i: any) => {
         if (i.type === "webhook") {
@@ -535,7 +524,7 @@ export async function POST(req: NextRequest, context: any) {
         } else if (i.type === "calendly") {
           return `Calendly "${i.name}": ${i.url}`;
         } else if (i.type === "google_calendar") {
-          return `Google Calendar "${i.name}": Calendrier connecté`;
+          return `Google Calendar "${i.name}": Connected calendar`;
         } else if (i.type === "files" && Array.isArray(i.files)) {
           const fileList = (i.files as IntegrationFile[]).map((f) => `- ${f.name}`).join("\n");
           return `Files "${i.name}":\n${fileList}`;
@@ -545,21 +534,19 @@ export async function POST(req: NextRequest, context: any) {
       .filter(Boolean)
       .join("\n\n");
 
-    // 🆕 OBTENIR LA DATE LOCALISÉE
     const currentDateTime = getLocalizedDateTime(userTimezone);
 
-    // Construction du message avec mémoire
     const messages: ChatMessage[] = [
       { role: "system", content: agent.finalPrompt || "" },
-      { role: "system", content: `Voici ce que tu dois savoir :\n${knowledgeText}` },
+      { role: "system", content: `Here's what you need to know:\n${knowledgeText}` },
       { 
         role: "system", 
-        content: `DATE ET HEURE ACTUELLES: ${currentDateTime}. Utilise cette information pour toute question relative au temps, aux dates, ou à la planification. L'utilisateur est dans cette timezone.` 
+        content: `CURRENT DATE AND TIME: ${currentDateTime}. Use this information for any time, date, or scheduling related questions. The user is in this timezone.` 
       },
     ];
 
     if (integrationsText) {
-      messages.push({ role: "system", content: `Voici aussi les intégrations disponibles :\n${integrationsText}` });
+      messages.push({ role: "system", content: `Here are also the available integrations:\n${integrationsText}` });
     }
 
     if (typeof welcomeMessage === "string" && welcomeMessage.trim().length > 0) {
@@ -569,15 +556,14 @@ export async function POST(req: NextRequest, context: any) {
     messages.push(...previousMessages);
     messages.push({ role: "user", content: userMessage });
 
-    // Appel OpenAI
     const completion = await openai.chat.completions.create({
-      model: agent.openaiModel,
+      model: agentModel,
       temperature: agent.temperature,
       top_p: agent.top_p,
       messages,
     });
 
-    const reply = completion.choices[0]?.message?.content || "Je n'ai pas pu répondre.";
+    const reply = completion.choices[0]?.message?.content || "I couldn't provide a response.";
     return NextResponse.json({ reply });
     
   } catch (error: any) {
