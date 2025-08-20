@@ -473,304 +473,305 @@ export default function AgentLab() {
     openaiModel !== selectedAgent?.openaiModel ||
     selectedAgentApiKey !== (selectedAgent?.apiKey || "");
   const selectedAgentName = agents.find(a => a._id === selectedAgentId)?.name;
-  // ===== RENDU DU PANNEAU DE CONFIGURATION =====
+
+// ===== RENDU DU PANNEAU DE CONFIGURATION =====
   const renderConfigPanel = () => (
     <div className={cn(
-      "overflow-y-auto custom-scrollbar",
+      "flex flex-col", // <- CHANGÉ: Structure flex column
       isMobile ? "flex-1" : "flex-1"
     )}>
-      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-        {/* Agent Selection */}
-        <SectionCard
-          icon={<Bot className="text-blue-400" size={isMobile ? 18 : 20} />}
-          title="Agent Selection"
-          subtitle="Choose your AI agent and version"
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2">
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
-                Select Agent
-              </label>
-              <SelectAgentDropdown
-                selectedAgentId={selectedAgentId}
-                onAgentSelect={handleAgentSelect}
-                agents={agents}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
-                Version
-              </label>
-              <SelectVersionDropdown
-                selectedVersionId={selectedVersionId}
-                onVersionSelect={(value) => {
-                  if (value === "__delete__") {
-                    setShowDeleteModal(true);
-                    return;
-                  }
-                  setSelectedVersionId(value);
-                  fetch(`/api/agents/${selectedAgentId}/versions/${value}`)
-                    .then((res) => res.json())
-                    .then((data) => {
-                      if (data.version) {
-                        setPrompt(data.version.prompt);
-                        setInitialPrompt(data.version.prompt);
-                        setOpenaiModel(data.version.openaiModel);
-                        setTemperature(data.version.temperature);
-                        setTopP(data.version.top_p);
-                      }
-                    });
-                }}
-                versions={versions}
-                disabled={!selectedAgentId || versions.length === 0}
-              />
-            </div>
-          </div>
-        </SectionCard>
-
-        {/* System Prompt */}
-        <SectionCard
-          icon={<Code className="text-purple-400" size={isMobile ? 18 : 20} />}
-          title="System Prompt"
-          subtitle="Define your agent's behavior and instructions"
-        >
-          {diffPrompt ? (
-            <div
-              className={cn(
-                "bg-gray-900/60 border border-gray-700/50 rounded-lg p-3 text-sm text-white whitespace-pre-wrap overflow-y-auto custom-scrollbar backdrop-blur-sm",
-                isMobile ? "h-[300px]" : "h-[400px]"
-              )}
-              dangerouslySetInnerHTML={{ __html: diffPrompt }}
-            />
-          ) : (
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Enter your system prompt here..."
-              className={cn(
-                "w-full px-3 py-3 bg-gray-900/60 border border-gray-700/50 text-white rounded-lg outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/20 transition-all placeholder-gray-400 backdrop-blur-sm text-sm leading-relaxed",
-                "resize-y min-h-[200px] max-h-[600px] custom-scrollbar",
-                isMobile ? "h-[300px]" : "h-[400px]",
-                !selectedAgentId && "opacity-50 cursor-not-allowed"
-              )}
-              disabled={!selectedAgentId}
-            />
-          )}
-        </SectionCard>
-
-        {/* Model Configuration */}
-        <SectionCard
-          icon={<Brain className="text-cyan-400" size={isMobile ? 18 : 20} />}
-          title="Model Parameters"
-          subtitle="Fine-tune your AI model settings"
-          allowOverflow={true}
-        >
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">AI Model</label>
-                <AiModelDropdown
-                  selectedModel={openaiModel}
-                  onModelSelect={(modelId) => setOpenaiModel(modelId)}
-                  disabled={!selectedAgentId}
+      {/* ZONE SCROLLABLE */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+          {/* Agent Selection */}
+          <SectionCard
+            icon={<Bot className="text-blue-400" size={isMobile ? 18 : 20} />}
+            title="Agent Selection"
+            subtitle="Choose your AI agent and version"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  Select Agent
+                </label>
+                <SelectAgentDropdown
+                  selectedAgentId={selectedAgentId}
+                  onAgentSelect={handleAgentSelect}
+                  agents={agents}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  API Key Project
+                  Version
                 </label>
-                <ApiKeyDropdown
-                  selectedApiKey={selectedAgentApiKey}
-                  onApiKeySelect={(keyId) => setSelectedAgentApiKey(keyId)}
-                  onAddNewClick={() => setShowAddApiModal(true)}
-                  apiKeys={apiKeys}
-                  disabled={!selectedAgentId}
+                <SelectVersionDropdown
+                  selectedVersionId={selectedVersionId}
+                  onVersionSelect={(value) => {
+                    if (value === "__delete__") {
+                      setShowDeleteModal(true);
+                      return;
+                    }
+                    setSelectedVersionId(value);
+                    fetch(`/api/agents/${selectedAgentId}/versions/${value}`)
+                      .then((res) => res.json())
+                      .then((data) => {
+                        if (data.version) {
+                          setPrompt(data.version.prompt);
+                          setInitialPrompt(data.version.prompt);
+                          setOpenaiModel(data.version.openaiModel);
+                          setTemperature(data.version.temperature);
+                          setTopP(data.version.top_p);
+                        }
+                      });
+                  }}
+                  versions={versions}
+                  disabled={!selectedAgentId || versions.length === 0}
                 />
               </div>
             </div>
+          </SectionCard>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
-                  <Gauge size={14} className="text-cyan-400" />
-                  Temperature: <span className="text-cyan-400 font-mono">{temperature.toFixed(2)}</span>
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={temperature}
-                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                  className={cn(
-                    "w-full h-2 bg-gray-700/50 rounded-lg appearance-none cursor-pointer slider-enhanced",
-                    !selectedAgentId && 'opacity-50 cursor-not-allowed'
-                  )}
-                  disabled={!selectedAgentId}
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Conservative</span>
-                  <span>Creative</span>
+          {/* System Prompt */}
+          <SectionCard
+            icon={<Code className="text-purple-400" size={isMobile ? 18 : 20} />}
+            title="System Prompt"
+            subtitle="Define your agent's behavior and instructions"
+          >
+            {diffPrompt ? (
+              <div
+                className={cn(
+                  "bg-gray-900/60 border border-gray-700/50 rounded-lg p-3 text-sm text-white whitespace-pre-wrap overflow-y-auto custom-scrollbar backdrop-blur-sm",
+                  isMobile ? "h-[300px]" : "h-[400px]"
+                )}
+                dangerouslySetInnerHTML={{ __html: diffPrompt }}
+              />
+            ) : (
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Enter your system prompt here..."
+                className={cn(
+                  "w-full px-3 py-3 bg-gray-900/60 border border-gray-700/50 text-white rounded-lg outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/20 transition-all placeholder-gray-400 backdrop-blur-sm text-sm leading-relaxed",
+                  "resize-y min-h-[200px] max-h-[600px] custom-scrollbar",
+                  isMobile ? "h-[300px]" : "h-[400px]",
+                  !selectedAgentId && "opacity-50 cursor-not-allowed"
+                )}
+                disabled={!selectedAgentId}
+              />
+            )}
+          </SectionCard>
+
+          {/* Model Configuration */}
+          <SectionCard
+            icon={<Brain className="text-cyan-400" size={isMobile ? 18 : 20} />}
+            title="Model Parameters"
+            subtitle="Fine-tune your AI model settings"
+            allowOverflow={true}
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">AI Model</label>
+                  <AiModelDropdown
+                    selectedModel={openaiModel}
+                    onModelSelect={(modelId) => setOpenaiModel(modelId)}
+                    disabled={!selectedAgentId}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    API Key Project
+                  </label>
+                  <ApiKeyDropdown
+                    selectedApiKey={selectedAgentApiKey}
+                    onApiKeySelect={(keyId) => setSelectedAgentApiKey(keyId)}
+                    onAddNewClick={() => setShowAddApiModal(true)}
+                    apiKeys={apiKeys}
+                    disabled={!selectedAgentId}
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
-                  <Layers size={14} className="text-cyan-400" />
-                  Top P: <span className="text-cyan-400 font-mono">{topP.toFixed(2)}</span>
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={topP}
-                  onChange={(e) => setTopP(parseFloat(e.target.value))}
-                  className={cn(
-                    "w-full h-2 bg-gray-700/50 rounded-lg appearance-none cursor-pointer slider-enhanced",
-                    !selectedAgentId && 'opacity-50 cursor-not-allowed'
-                  )}
-                  disabled={!selectedAgentId}
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Focused</span>
-                  <span>Diverse</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </SectionCard>
-
-        {/* Integrations */}
-        <SectionCard
-          icon={<Zap className="text-yellow-400" size={isMobile ? 18 : 20} />}
-          title="Integrations"
-          subtitle="Enhance your agent with external capabilities"
-          headerAction={
-            integrations.length > 0 && (
-              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1 flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                <span className="text-yellow-400 text-xs font-medium">{integrations.length} active</span>
-              </div>
-            )
-          }
-        >
-          {integrations.length === 0 ? (
-            <div className="text-center py-6">
-              <div className="w-12 h-12 rounded-xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center mx-auto mb-3">
-                <Activity className="text-gray-500" size={20} />
-              </div>
-              <h4 className="text-white font-medium mb-1 text-sm">No integrations configured</h4>
-              <p className="text-gray-400 text-xs mb-4 max-w-sm mx-auto">
-                Add integrations like webhooks, file uploads, or calendar connections
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3 mb-4">
-              {integrations.map((integration, idx) => (
-                <div key={idx} className="group bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 hover:bg-gray-800/60 transition-all duration-200 backdrop-blur-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-600/20 to-orange-600/20 border border-yellow-500/30 flex items-center justify-center">
-                          <Zap size={12} className="text-yellow-400" />
-                        </div>
-                        <div>
-                          <h4 className="text-white font-semibold text-sm">{integration.name}</h4>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <IntegrationStatus type={integration.type} />
-                            <span className="text-xs text-gray-500">•</span>
-                            <span className="text-xs text-gray-400 capitalize">
-                              {integration.type}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-xs text-gray-400 bg-gray-900/50 border border-gray-700/30 rounded-md px-2 py-1.5 font-mono">
-                        {integration.type === "files"
-                          ? `${integration.files?.length || 0} file(s) uploaded`
-                          : integration.type === "calendly"
-                            ? "API Key configured"
-                            : integration.type === "google_calendar"
-                              ? `Calendar: ${integration.calendarId || "primary"}`
-                              : integration.url || "No URL configured"
-                        }
-                      </div>
-                    </div>
-
-                    <IntegrationActions
-                      integration={integration}
-                      onEdit={() => {
-                        if (integration.type === "webhook") {
-                          setEditWebhook(integration);
-                          setShowWebhookModal(true);
-                        } else if (integration.type === "calendly") {
-                          setEditCalendly(integration);
-                          setShowCalendlyModal(true);
-                        } else if (integration.type === "files") {
-                          setEditFiles(integration);
-                          setTimeout(() => setShowFileUploadModal(true), 0);
-                        } else if (integration.type === "google_calendar") {
-                          setEditGoogleCalendar(integration);
-                          setShowGoogleCalendarModal(true);
-                        }
-                      }}
-                      onDelete={() => handleDeleteIntegration(integration.name)}
-                    />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
+                    <Gauge size={14} className="text-cyan-400" />
+                    Temperature: <span className="text-cyan-400 font-mono">{temperature.toFixed(2)}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                    className={cn(
+                      "w-full h-2 bg-gray-700/50 rounded-lg appearance-none cursor-pointer slider-enhanced",
+                      !selectedAgentId && 'opacity-50 cursor-not-allowed'
+                    )}
+                    disabled={!selectedAgentId}
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Conservative</span>
+                    <span>Creative</span>
                   </div>
                 </div>
-              ))}
+
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
+                    <Layers size={14} className="text-cyan-400" />
+                    Top P: <span className="text-cyan-400 font-mono">{topP.toFixed(2)}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={topP}
+                    onChange={(e) => setTopP(parseFloat(e.target.value))}
+                    className={cn(
+                      "w-full h-2 bg-gray-700/50 rounded-lg appearance-none cursor-pointer slider-enhanced",
+                      !selectedAgentId && 'opacity-50 cursor-not-allowed'
+                    )}
+                    disabled={!selectedAgentId}
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Focused</span>
+                    <span>Diverse</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
+          </SectionCard>
 
-          <button
-            onClick={() => setShowAddIntegrationModal(true)}
-            className={cn(
-              "w-full border-2 border-dashed border-gray-600 hover:border-yellow-500/50 text-gray-400 hover:text-yellow-400 transition-all duration-200 py-3 rounded-lg flex items-center justify-center gap-2 group backdrop-blur-sm text-sm",
-              "hover:bg-yellow-500/5",
-              !selectedAgentId && 'opacity-50 cursor-not-allowed'
-            )}
-            disabled={!selectedAgentId}
+          {/* Integrations */}
+          <SectionCard
+            icon={<Zap className="text-yellow-400" size={isMobile ? 18 : 20} />}
+            title="Integrations"
+            subtitle="Enhance your agent with external capabilities"
+            headerAction={
+              integrations.length > 0 && (
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1 flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                  <span className="text-yellow-400 text-xs font-medium">{integrations.length} active</span>
+                </div>
+              )
+            }
           >
-            <div className="w-6 h-6 rounded-md border border-gray-600 group-hover:border-yellow-500/50 flex items-center justify-center group-hover:bg-yellow-500/10 transition-all">
-              <Zap size={12} className="group-hover:scale-110 transition-transform" />
-            </div>
-            <span className="font-medium">Add Integration</span>
-          </button>
-        </SectionCard>
-
-        {/* Save Button */}
-        <div className={cn(
-          "bg-gradient-to-t from-gray-900/95 to-transparent backdrop-blur-sm",
-          isMobile ? "sticky bottom-0 pt-4 pb-4" : "sticky bottom-0 pt-6 pb-4"
-        )}>
-          <button
-            onClick={handleSave}
-            className={cn(
-              "w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden text-sm",
-              (!selectedAgentId || isSaving || !isModified) && "opacity-50 cursor-not-allowed transform-none hover:scale-100"
-            )}
-            disabled={!selectedAgentId || isSaving || !isModified}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-
-            {isSaving ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Saving configuration...</span>
-              </>
+            {integrations.length === 0 ? (
+              <div className="text-center py-6">
+                <div className="w-12 h-12 rounded-xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center mx-auto mb-3">
+                  <Activity className="text-gray-500" size={20} />
+                </div>
+                <h4 className="text-white font-medium mb-1 text-sm">No integrations configured</h4>
+                <p className="text-gray-400 text-xs mb-4 max-w-sm mx-auto">
+                  Add integrations like webhooks, file uploads, or calendar connections
+                </p>
+              </div>
             ) : (
-              <>
-                <Save className="w-4 h-4" />
-                <span>Save Configuration</span>
-                {isModified && <span className="text-emerald-200 text-xs">• Unsaved changes</span>}
-              </>
+              <div className="space-y-3 mb-4">
+                {integrations.map((integration, idx) => (
+                  <div key={idx} className="group bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 hover:bg-gray-800/60 transition-all duration-200 backdrop-blur-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-600/20 to-orange-600/20 border border-yellow-500/30 flex items-center justify-center">
+                            <Zap size={12} className="text-yellow-400" />
+                          </div>
+                          <div>
+                            <h4 className="text-white font-semibold text-sm">{integration.name}</h4>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <IntegrationStatus type={integration.type} />
+                              <span className="text-xs text-gray-500">•</span>
+                              <span className="text-xs text-gray-400 capitalize">
+                                {integration.type}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-xs text-gray-400 bg-gray-900/50 border border-gray-700/30 rounded-md px-2 py-1.5 font-mono">
+                          {integration.type === "files"
+                            ? `${integration.files?.length || 0} file(s) uploaded`
+                            : integration.type === "calendly"
+                              ? "API Key configured"
+                              : integration.type === "google_calendar"
+                                ? `Calendar: ${integration.calendarId || "primary"}`
+                                : integration.url || "No URL configured"
+                          }
+                        </div>
+                      </div>
+
+                      <IntegrationActions
+                        integration={integration}
+                        onEdit={() => {
+                          if (integration.type === "webhook") {
+                            setEditWebhook(integration);
+                            setShowWebhookModal(true);
+                          } else if (integration.type === "calendly") {
+                            setEditCalendly(integration);
+                            setShowCalendlyModal(true);
+                          } else if (integration.type === "files") {
+                            setEditFiles(integration);
+                            setTimeout(() => setShowFileUploadModal(true), 0);
+                          } else if (integration.type === "google_calendar") {
+                            setEditGoogleCalendar(integration);
+                            setShowGoogleCalendarModal(true);
+                          }
+                        }}
+                        onDelete={() => handleDeleteIntegration(integration.name)}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
-          </button>
+
+            <button
+              onClick={() => setShowAddIntegrationModal(true)}
+              className={cn(
+                "w-full border-2 border-dashed border-gray-600 hover:border-yellow-500/50 text-gray-400 hover:text-yellow-400 transition-all duration-200 py-3 rounded-lg flex items-center justify-center gap-2 group backdrop-blur-sm text-sm",
+                "hover:bg-yellow-500/5",
+                !selectedAgentId && 'opacity-50 cursor-not-allowed'
+              )}
+              disabled={!selectedAgentId}
+            >
+              <div className="w-6 h-6 rounded-md border border-gray-600 group-hover:border-yellow-500/50 flex items-center justify-center group-hover:bg-yellow-500/10 transition-all">
+                <Zap size={12} className="group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="font-medium">Add Integration</span>
+            </button>
+          </SectionCard>
         </div>
+      </div>
+
+      {/* SAVE BUTTON - VRAI FOOTER FIXE */}
+      <div className="border-t border-gray-700/50 bg-gray-900/95 backdrop-blur-sm p-4">
+        <button
+          onClick={handleSave}
+          className={cn(
+            "w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden text-sm",
+            (!selectedAgentId || isSaving || !isModified) && "opacity-50 cursor-not-allowed transform-none hover:scale-100"
+          )}
+          disabled={!selectedAgentId || isSaving || !isModified}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+
+          {isSaving ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Saving configuration...</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              <span>Save Configuration</span>
+              {isModified && <span className="text-emerald-200 text-xs">• Unsaved changes</span>}
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
@@ -1040,41 +1041,38 @@ export default function AgentLab() {
         )}
       </div>
 
-      {/* Input Area */}
-<div className={cn(
-  "border-t border-gray-700/50 bg-gray-800/30 backdrop-blur-sm",
-  isMobile ? "p-2" : "p-4" // Padding réduit
-)}>
-  <div className={cn("space-y-2", !isMobile && "space-y-3")}>
-    <div className="relative">
-      <textarea
-        placeholder={mode === "prompter" ? "Describe improvements..." : "Type message..."}
-        rows={isMobile ? 1 : 3} // 1 seule ligne sur mobile !
-        className={cn(
-          "w-full px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-lg outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm resize-none custom-scrollbar text-sm pr-12",
-          !selectedAgentId && 'opacity-50 cursor-not-allowed'
-        )}
-        disabled={!selectedAgentId}
-        readOnly={isThinking}
-        value={mode === "prompter" ? userInstruction : testMessage}
-        onChange={(e) => {
-          if (mode === "prompter") {
-            setUserInstruction(e.target.value);
-          } else {
-            setTestMessage(e.target.value);
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            if (mode === "prompter") {
-              handleSendInstruction();
-            } else {
-              handleSendTestMessage();
-            }
-          }
-        }}
-      />
+{/* Input Area - FOOTER FIXE (comme le save button) */}
+      <div className="border-t border-gray-700/50 bg-gray-800/30 backdrop-blur-sm p-4">
+        <div className={cn("space-y-2", !isMobile && "space-y-3")}>
+          <div className="relative">
+            <textarea
+              placeholder={mode === "prompter" ? "Describe improvements..." : "Type message..."}
+              rows={isMobile ? 1 : 3} // <- 1 ligne sur mobile, 3 sur desktop
+              className={cn(
+                "w-full px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-lg outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm resize-none custom-scrollbar text-sm pr-12",
+                !selectedAgentId && 'opacity-50 cursor-not-allowed'
+              )}
+              disabled={!selectedAgentId}
+              readOnly={isThinking}
+              value={mode === "prompter" ? userInstruction : testMessage}
+              onChange={(e) => {
+                if (mode === "prompter") {
+                  setUserInstruction(e.target.value);
+                } else {
+                  setTestMessage(e.target.value);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (mode === "prompter") {
+                    handleSendInstruction();
+                  } else {
+                    handleSendTestMessage();
+                  }
+                }
+              }}
+            />
 
       {/* Send Button */}
       <button
@@ -1111,14 +1109,14 @@ export default function AgentLab() {
   return (
     <RequireApiKey>
       <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar">
-      {/* ===== MOBILE TAB NAVIGATION ===== */}
+{/* ===== MOBILE TAB NAVIGATION COMPACT ===== */}
       {isMobile && (
-        <div className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50">
-          <div className="flex bg-gray-800/50 m-2 rounded-xl p-1 border border-gray-700/30">
+        <div className="bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50">
+          <div className="flex bg-gray-800/50 m-1 rounded-lg p-0.5 border border-gray-700/30"> {/* Réduit de m-2 à m-1 et p-1 à p-0.5 */}
             <button
               onClick={() => setMobileView("config")}
               className={cn(
-                "flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden",
+                "flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 relative overflow-hidden",
                 mobileView === "config"
                   ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                   : "text-gray-400 hover:text-white hover:bg-gray-700/30"
@@ -1127,14 +1125,14 @@ export default function AgentLab() {
               {mobileView === "config" && (
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
               )}
-              <Settings className="w-4 h-4 relative z-10" />
-              <span className="relative z-10">Configuration</span>
-              {isModified && <div className="w-2 h-2 rounded-full bg-emerald-400 relative z-10" />}
+              <Settings className="w-3.5 h-3.5 relative z-10" /> {/* Réduit de w-4 h-4 à w-3.5 h-3.5 */}
+              <span className="relative z-10">Config</span> {/* Raccourci de "Configuration" à "Config" */}
+              {isModified && <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 relative z-10" />} {/* Réduit de w-2 h-2 à w-1.5 h-1.5 */}
             </button>
             <button
               onClick={() => setMobileView("test")}
               className={cn(
-                "flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden",
+                "flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 relative overflow-hidden",
                 mobileView === "test"
                   ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                   : "text-gray-400 hover:text-white hover:bg-gray-700/30"
@@ -1143,8 +1141,8 @@ export default function AgentLab() {
               {mobileView === "test" && (
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
               )}
-              <TestTube className="w-4 h-4 relative z-10" />
-              <span className="relative z-10">Testing</span>
+              <TestTube className="w-3.5 h-3.5 relative z-10" />
+              <span className="relative z-10">Test</span> {/* Garde "Test" car déjà court */}
             </button>
           </div>
         </div>
@@ -1153,7 +1151,7 @@ export default function AgentLab() {
       {/* ===== MAIN LAYOUT ===== */}
       <div className={cn(
         "flex",
-        isMobile ? "flex-col h-[calc(100vh-112px)]" : "h-[calc(100vh-64px)]"
+        isMobile ? "flex-col h-[calc(100vh-123px)]" : "h-[calc(100vh-64px)]"
       )}>
         {/* Configuration Panel */}
         {(!isMobile || mobileView === "config") && renderConfigPanel()}
