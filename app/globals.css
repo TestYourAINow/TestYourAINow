@@ -108,3 +108,305 @@ html {
 .sidebar-scroll-container::-webkit-scrollbar {
   display: none;
 }
+
+/* =====================================
+   AJOUTS RESPONSIVES CHIRURGICAUX
+   À ajouter À LA FIN de ton globals.css
+   (après tes styles existants)
+   ===================================== */
+
+/* ===== MOBILE OPTIMIZATIONS GLOBALES ===== */
+
+/* Prévenir le zoom sur iOS lors du focus sur les inputs */
+@media (max-width: 768px) {
+  input, 
+  textarea, 
+  select {
+    font-size: 16px !important; /* Prévient le zoom automatique */
+  }
+  
+  /* Touch-friendly buttons sur mobile */
+  button, 
+  [role="button"], 
+  input[type="submit"], 
+  input[type="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Amélioration des modals sur mobile */
+  .modal,
+  .modal-overlay,
+  [role="dialog"] {
+    border-radius: 1rem 1rem 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    transform: none !important;
+    max-height: 90vh !important;
+    width: 100% !important;
+  }
+}
+
+/* ===== ENHANCED SCROLLBARS RESPONSIVES ===== */
+
+/* Scrollbar responsive - plus petit sur mobile */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.7) rgba(17, 24, 39, 0.5);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px; /* Plus petit sur mobile */
+}
+
+@media (min-width: 768px) {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px; /* Taille normale sur desktop */
+  }
+}
+
+@media (min-width: 1024px) {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px; /* Plus grand sur large screens */
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(17, 24, 39, 0.3);
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6));
+  border-radius: 8px;
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8));
+}
+
+/* ===== SAFE AREAS POUR IPHONE X+ ===== */
+
+@supports (padding: max(0px)) {
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-area-left {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+  
+  .safe-area-right {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  /* Pour ton header mobile */
+  @media (max-width: 768px) {
+    .mobile-header {
+      padding-top: max(1rem, env(safe-area-inset-top));
+    }
+    
+    .mobile-bottom {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* ===== ENHANCED ANIMATIONS RESPONSIVES ===== */
+
+/* Animations plus douces sur mobile (batterie) */
+@media (max-width: 768px) {
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+}
+
+/* Respecter les préférences de mouvement réduit */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .bg-premium-gradient {
+    animation: none !important;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+
+@media print {
+  .no-print,
+  .sidebar,
+  .mobile-nav,
+  .toaster,
+  button:not(.print-button) {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .card-responsive,
+  .bg-gray-900 {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    color: black !important;
+  }
+}
+
+/* ===== ACCESSIBILITY AMÉLIORÉE ===== */
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .card-responsive,
+  .bg-gray-900,
+  .border-gray-700 {
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: #000 !important;
+  }
+  
+  .text-gray-400 {
+    color: #000 !important;
+  }
+}
+
+/* Focus visible amélioré */
+*:focus-visible {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  border-radius: 4px !important;
+}
+
+/* ===== ORIENTATION MOBILE ===== */
+
+/* Optimisations pour mobile en mode paysage */
+@media (max-width: 768px) and (orientation: landscape) {
+  .mobile-landscape-optimize {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+  
+  /* Header plus compact en paysage */
+  .mobile-header {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+}
+
+/* ===== RESPONSIVE TEXT SCALING ===== */
+
+/* Text scaling responsive automatique */
+html {
+  font-size: 14px; /* Base mobile */
+}
+
+@media (min-width: 480px) {
+  html {
+    font-size: 15px; /* Petit mobile */
+  }
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px; /* Tablet et plus */
+  }
+}
+
+/* ===== HOVER STATES INTELLIGENTS ===== */
+
+/* Hover seulement sur les devices qui le supportent */
+@media (hover: hover) and (pointer: fine) {
+  .btn-responsive:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .card-responsive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Pas de hover sur mobile/touch */
+@media (hover: none) and (pointer: coarse) {
+  .btn-responsive:hover,
+  .card-responsive:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ===== LAYOUT FIXES POUR TON SITE ===== */
+
+/* Fix pour ton ClientLayout sur mobile */
+@media (max-width: 768px) {
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available; /* Safari mobile fix */
+  }
+  
+  /* Overflow fix pour mobile */
+  body {
+    overflow-x: hidden !important;
+  }
+  
+  /* Sidebar responsive améliorée */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+
+/* Optimiser les rendus sur mobile */
+@media (max-width: 768px) {
+  /* Réduire les effects coûteux sur mobile */
+  .bg-premium-gradient {
+    background: linear-gradient(135deg, #0a0a0b 0%, #111827 50%, #0a0a0b 100%) !important;
+    animation: none !important;
+  }
+  
+  /* Backdrop-filter plus léger sur mobile */
+  .backdrop-blur-xl {
+    backdrop-filter: blur(8px) !important;
+  }
+  
+  .backdrop-blur-sm {
+    backdrop-filter: blur(4px) !important;
+  }
+}
+
+/* ===== RETINA DISPLAY OPTIMIZATIONS ===== */
+
+@media (-webkit-min-device-pixel-ratio: 2),
+       (min-resolution: 192dpi) {
+  /* Borders plus nets sur retina */
+  .border {
+    border-width: 0.5px;
+  }
+  
+  /* Shadows plus subtiles sur retina */
+  .shadow-lg {
+    box-shadow: 0 5px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  }
+}
