@@ -359,11 +359,11 @@ Respond warmly and professionally to confirm the creation. Include important det
 
 export async function POST(
   req: NextRequest,
-  ctx: { params: { id: string } } | { params: Promise<{ id: string }> }
+  context: any
 ) {
   try {
-    const p = 'then' in ctx.params ? await ctx.params : ctx.params;
-    const { id } = p;
+    const params = await context.params;
+    const { id } = params;
     
     await connectToDatabase();
 
