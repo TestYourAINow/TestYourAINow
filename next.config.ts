@@ -5,6 +5,12 @@ const nextConfig: ActualNextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // ← AJOUTÉ POUR IGNORER ESLINT
   },
+  
+  // 🆕 AJOUTER CETTE SECTION POUR INCLURE LE DOSSIER TEST
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./test/**/*'],
+  },
+  
   webpack: (config, { isServer }) => {
     // Évite les erreurs liées à "fs" côté client
     if (!isServer) {
