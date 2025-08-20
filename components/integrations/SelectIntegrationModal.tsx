@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Upload, Link, Calendar, X, Plus, Sparkles } from "lucide-react";
 import type { AgentIntegration } from "@/types/integrations";
 
-export type IntegrationType = "files" | "webhook" | "calendly";
+export type IntegrationType = "files" | "webhook" | "calendly" | "google_calendar";
 
 interface SelectIntegrationModalProps {
   onSelect: (type: IntegrationType) => void;
@@ -28,48 +28,66 @@ export default function SelectIntegrationModal({
     onSelect(type);
   };
 
-  const integrationOptions = [
-    {
-      type: "files" as IntegrationType,
-      title: "File Upload",
-      description: "Upload documents to enhance your agent's knowledge",
-      icon: Upload,
-      gradient: "from-orange-600 to-red-600",
-      bgGradient: "from-orange-500/10 to-red-500/10",
-      borderColor: "border-orange-500/30",
-      iconBg: "bg-orange-500/20",
-      iconColor: "text-orange-400",
-      shadowColor: "hover:shadow-orange-500/20",
-      disabled: alreadyHasFileUpload,
-      disabledReason: "Only one file upload integration allowed"
-    },
-    {
-      type: "webhook" as IntegrationType,
-      title: "Webhook",
-      description: "Connect your agent to external services and APIs",
-      icon: Link,
-      gradient: "from-blue-600 to-cyan-600",
-      bgGradient: "from-blue-500/10 to-cyan-500/10",
-      borderColor: "border-blue-500/30",
-      iconBg: "bg-blue-500/20",
-      iconColor: "text-blue-400",
-      shadowColor: "hover:shadow-blue-500/20",
-      disabled: false
-    },
-    {
-      type: "calendly" as IntegrationType,
-      title: "Calendly",
-      description: "Integrate with Calendly for appointment scheduling",
-      icon: Calendar,
-      gradient: "from-emerald-600 to-blue-600",
-      bgGradient: "from-emerald-500/10 to-blue-500/10",
-      borderColor: "border-emerald-500/30",
-      iconBg: "bg-emerald-500/20",
-      iconColor: "text-emerald-400",
-      shadowColor: "hover:shadow-emerald-500/20",
-      disabled: false
-    }
-  ];
+  // Dans /components/integrations/SelectIntegrationModal.tsx
+// REMPLACEZ la section integrationOptions par :
+
+const integrationOptions = [
+  {
+    type: "files" as IntegrationType,
+    title: "File Upload",
+    description: "Upload documents to enhance your agent's knowledge",
+    icon: Upload,
+    gradient: "from-orange-600 to-red-600",
+    bgGradient: "from-orange-500/10 to-red-500/10",
+    borderColor: "border-orange-500/30",
+    iconBg: "bg-orange-500/20",
+    iconColor: "text-orange-400",
+    shadowColor: "hover:shadow-orange-500/20",
+    disabled: alreadyHasFileUpload,
+    disabledReason: "Only one file upload integration allowed"
+  },
+  {
+    type: "webhook" as IntegrationType,
+    title: "Webhook",
+    description: "Connect your agent to external services and APIs",
+    icon: Link,
+    gradient: "from-blue-600 to-cyan-600",
+    bgGradient: "from-blue-500/10 to-cyan-500/10",
+    borderColor: "border-blue-500/30",
+    iconBg: "bg-blue-500/20",
+    iconColor: "text-blue-400",
+    shadowColor: "hover:shadow-blue-500/20",
+    disabled: false
+  },
+  {
+    type: "calendly" as IntegrationType,
+    title: "Calendly",
+    description: "Intégrez avec Calendly pour la prise de rendez-vous (liens)",
+    icon: Calendar,
+    gradient: "from-emerald-600 to-blue-600",
+    bgGradient: "from-emerald-500/10 to-blue-500/10",
+    borderColor: "border-emerald-500/30",
+    iconBg: "bg-emerald-500/20",
+    iconColor: "text-emerald-400",
+    shadowColor: "hover:shadow-emerald-500/20",
+    disabled: false
+  }
+  // 🚫 GOOGLE CALENDAR TEMPORAIREMENT SUPPRIMÉ
+  // Sera réactivé après vérification Google (4-6 semaines)
+  // {
+  //   type: "google_calendar" as IntegrationType,
+  //   title: "Google Calendar",
+  //   description: "Créez des rendez-vous automatiquement dans Google Calendar",
+  //   icon: Calendar,
+  //   gradient: "from-blue-600 to-green-600",
+  //   bgGradient: "from-blue-500/10 to-green-500/10",
+  //   borderColor: "border-blue-500/30",
+  //   iconBg: "bg-blue-500/20",
+  //   iconColor: "text-blue-400",
+  //   shadowColor: "hover:shadow-blue-500/20",
+  //   disabled: false
+  // }
+];
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">

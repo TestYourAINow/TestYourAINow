@@ -12,11 +12,12 @@ import RequireApiKey from "@/components/RequireApiKey";
 import AiModelDropdown from "@/components/Dropdowns/AiModelDropdown";
 import ApiKeyDropdown, { ApiKeyOption } from "@/components/Dropdowns/ApiKeyDropdown";
 import { AgentIntegration } from "@/types/integrations";
-import { 
-  Settings, User, Bot, MessageCircle, Globe, Info, Code, TestTube, Zap, X, Check, 
+import {
+  Settings, User, Bot, MessageCircle, Globe, Info, Code, TestTube, Zap, X, Check,
   Edit, Trash2, Activity, Beaker, ChevronDown, MoreVertical, Circle, Sparkles,
   Brain, Cpu, Gauge, Layers, Save, AlertTriangle, CheckCircle, Key
 } from "lucide-react";
+import GoogleCalendarIntegrationModal from "@/components/integrations/GoogleCalendarIntegrationModal";
 
 type Agent = {
   _id: string;
@@ -27,19 +28,19 @@ type Agent = {
   apiKey?: string;
 };
 
-type AgentVersion = { 
-  _id: string; 
+type AgentVersion = {
+  _id: string;
   createdAt: string;
 };
 
-type UploadedFile = { 
-  url: string; 
+type UploadedFile = {
+  url: string;
   path?: string;
 };
 
-type ChatMessage = { 
-  role: "user" | "assistant"; 
-  content: string; 
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
 };
 
 // ===== ENHANCED COMPONENTS =====
@@ -48,8 +49,8 @@ const IntegrationStatus = ({ type, isActive = true }: { type: string; isActive?:
   return (
     <div className={cn(
       "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
-      isActive 
-        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+      isActive
+        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
         : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
     )}>
       <div className={cn(
@@ -61,14 +62,14 @@ const IntegrationStatus = ({ type, isActive = true }: { type: string; isActive?:
   );
 };
 
-const IntegrationActions = ({ 
-  integration, 
-  onEdit, 
-  onDelete 
-}: { 
-  integration: AgentIntegration; 
-  onEdit: () => void; 
-  onDelete: () => void; 
+const IntegrationActions = ({
+  integration,
+  onEdit,
+  onDelete
+}: {
+  integration: AgentIntegration;
+  onEdit: () => void;
+  onDelete: () => void;
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -82,7 +83,7 @@ const IntegrationActions = ({
 
   return (
     <div className="relative" onClick={(e) => e.stopPropagation()}>
-      <button 
+      <button
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -93,7 +94,7 @@ const IntegrationActions = ({
         <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-gray-500/0 to-gray-500/0 group-hover:from-gray-500/10 group-hover:to-gray-500/10 transition-all duration-200"></div>
         <MoreVertical size={14} className="relative z-10" />
       </button>
-      
+
       {showDropdown && (
         <div className="absolute right-0 top-full mt-2 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-50 min-w-[140px] py-2 animate-fade-in">
           <button
@@ -126,11 +127,11 @@ const IntegrationActions = ({
   );
 };
 
-const SectionCard = ({ 
-  icon, 
-  title, 
-  subtitle, 
-  children, 
+const SectionCard = ({
+  icon,
+  title,
+  subtitle,
+  children,
   className = "",
   headerAction,
   allowOverflow = false
@@ -194,7 +195,9 @@ export default function AgentLab() {
   const [showCalendlyModal, setShowCalendlyModal] = useState(false);
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [editFiles, setEditFiles] = useState<AgentIntegration | null>(null);
-  
+  const [showGoogleCalendarModal, setShowGoogleCalendarModal] = useState(false);
+  const [editGoogleCalendar, setEditGoogleCalendar] = useState<AgentIntegration | null>(null);
+
   // États pour AI Prompter
   const [userInstruction, setUserInstruction] = useState("");
   const [aiSummary, setAiSummary] = useState("");
@@ -210,15 +213,15 @@ export default function AgentLab() {
   const [apiKeys, setApiKeys] = useState<ApiKeyOption[]>([]);
   const [showAddApiModal, setShowAddApiModal] = useState(false);
   const [selectedAgentApiKey, setSelectedAgentApiKey] = useState<string>("");
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
-// ===== FONCTION POUR CHARGER LES API KEYS =====
+  // ===== FONCTION POUR CHARGER LES API KEYS =====
   const fetchApiKeys = async () => {
     try {
       const response = await fetch("/api/user/api-key");
       const data = await response.json();
-      
+
       if (response.ok) {
         setApiKeys(data.apiKeys || []);
       }
@@ -245,11 +248,11 @@ export default function AgentLab() {
       .then((data) => setAgents(data.agents || []));
   }, []);
 
-  useEffect(() => { 
-    const idFromUrl = searchParams.get("agentId"); 
-    if (idFromUrl && agents.length > 0 && !selectedAgentId) { 
-      handleAgentSelect(idFromUrl); 
-    } 
+  useEffect(() => {
+    const idFromUrl = searchParams.get("agentId");
+    if (idFromUrl && agents.length > 0 && !selectedAgentId) {
+      handleAgentSelect(idFromUrl);
+    }
   }, [agents, searchParams, selectedAgentId]);
 
   useEffect(() => {
@@ -281,7 +284,7 @@ export default function AgentLab() {
     setTemperature(selected.temperature);
     setTopP(selected.top_p);
     setSelectedAgentApiKey(selected.apiKey || ""); // NOUVELLE LIGNE AJOUTÉE
-    
+
     // 🚨 DEBUG - Vérifier le matching
     const foundKey = apiKeys.find(k => k.id === selected.apiKey);
     console.log("🎯 [AGENT SELECT] Found matching key:", foundKey ? "YES" : "NO");
@@ -290,7 +293,7 @@ export default function AgentLab() {
     } else {
       console.log("❌ [AGENT SELECT] No match found for:", selected.apiKey);
     }
-    
+
     // Réinitialiser les messages du AI Prompter
     setMessages([]);
     setUserInstruction("");
@@ -325,30 +328,37 @@ export default function AgentLab() {
       setSelectedVersionId(null);
       setIntegrations([]);
     }
-    
+
     router.push(`?agentId=${id}`);
   };
-  
+
+  // Dans /app/(dashboard)/agent-lab/page.tsx
+  // Modifier la fonction handleSendInstruction (ligne ~200 environ)
+
   const handleSendInstruction = async () => {
     if (!userInstruction.trim() || !selectedAgentId) return;
-    
+
     setMessages(prev => [...prev, { role: "user", content: userInstruction }]);
     setIsThinking(true);
     setUserInstruction("");
-    
+
     try {
+      // 🆕 DÉTECTER LA TIMEZONE
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
       const res = await fetch(`/api/agents/${selectedAgentId}/ai-prompter`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           instruction: userInstruction,
           prompt,
+          timezone: userTimezone, // 🆕 NOUVEAU
         }),
       });
-      
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "AI Prompter error");
-      
+
       setMessages(prev => [...prev, { role: "assistant", content: data.summary }]);
       setAiSummary(data.summary);
       setSuggestedPrompt(data.rewrittenPrompt);
@@ -361,41 +371,48 @@ export default function AgentLab() {
     }
   };
 
+  // Modifier la fonction handleSendTestMessage (ligne ~270 environ)
+
   const handleSendTestMessage = async () => {
     if (!selectedAgentId || !testMessage.trim()) return;
-    
+
     setIsThinking(true);
-    
+
     const newUserMessage: { role: "user"; content: string } = {
       role: "user",
       content: testMessage.trim(),
     };
-    
+
     const updatedHistory: { role: "user" | "assistant"; content: string }[] = [
       ...chatMessagesTestAI,
       newUserMessage,
     ];
-    
+
     setChatMessagesTestAI(updatedHistory);
     setTestMessage("");
-    
+
     try {
+      // 🆕 DÉTECTER LA TIMEZONE AUTOMATIQUEMENT
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      console.log('🌍 Timezone détectée:', userTimezone);
+
       const res = await fetch(`/api/agents/${selectedAgentId}/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: testMessage,
           previousMessages: updatedHistory,
+          timezone: userTimezone, // 🆕 NOUVEAU CHAMP
         }),
       });
-      
+
       const data = await res.json();
-      
+
       const newAssistantMessage: { role: "assistant"; content: string } = {
         role: "assistant",
         content: data.reply,
       };
-      
+
       setChatMessagesTestAI([...updatedHistory, newAssistantMessage]);
     } catch (err: any) {
       toast.error(err.message || "Test AI failed");
@@ -471,25 +488,25 @@ export default function AgentLab() {
       setIsSaving(false);
     }
   };
-  
+
   const handleDeleteIntegration = async (name: string) => {
     const confirmed = window.confirm("Are you sure you want to delete this integration?");
     if (!confirmed || !selectedAgentId) return;
-    
+
     const integration = integrations.find(i => i.name === name);
-    
+
     if (integration?.type === "files" && Array.isArray(integration.files)) {
       const filePaths = integration.files
         .map((f: any) => f.path)
         .filter((p): p is string => !!p);
-      
+
       if (filePaths.length > 0) {
         await fetch(`/api/agents/${selectedAgentId}/upload`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ paths: filePaths }),
         });
-        
+
         await fetch(`/api/agents/${selectedAgentId}/knowledge`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -497,16 +514,16 @@ export default function AgentLab() {
         });
       }
     }
-    
+
     const updated = integrations.filter((i) => i.name !== name);
     setIntegrations(updated);
-    
+
     await fetch(`/api/agents/${selectedAgentId}?id=${selectedAgentId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ integrations: updated }),
     });
-    
+
     toast.success("Integration deleted");
   };
 
@@ -530,11 +547,11 @@ export default function AgentLab() {
     <RequireApiKey>
       {/* ===== MAIN LAYOUT - NO HEADER, FIX HEIGHT ===== */}
       <div className="h-[calc(100vh-64px)] flex">
-        
+
         {/* ===== LEFT PANEL - Configuration (Scrollable) ===== */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="p-6 space-y-6">
-            
+
             {/* Agent Selection */}
             <SectionCard
               icon={<Bot className="text-blue-400" size={20} />}
@@ -564,7 +581,7 @@ export default function AgentLab() {
                   <label className="block text-sm font-semibold text-gray-300 mb-2">
                     Version
                   </label>
-                  <select 
+                  <select
                     className={cn(
                       "w-full px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-lg outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all backdrop-blur-sm text-sm",
                       !selectedAgentId && 'opacity-50 cursor-not-allowed'
@@ -602,7 +619,7 @@ export default function AgentLab() {
                           </option>
                         ))}
                         <option value="__delete__" className="bg-red-900/20 text-red-400 border-t border-gray-600">
-                           Delete version...
+                          Delete version...
                         </option>
                       </>
                     )}
@@ -610,15 +627,15 @@ export default function AgentLab() {
                 </div>
               </div>
             </SectionCard>
-{/* System Prompt - ENHANCED */}
+            {/* System Prompt - ENHANCED */}
             <SectionCard
               icon={<Code className="text-purple-400" size={20} />}
               title="System Prompt"
               subtitle="Define your agent's behavior and instructions"
             >
               {diffPrompt ? (
-                <div 
-                  className="bg-gray-900/60 border border-gray-700/50 rounded-lg p-3 text-sm text-white whitespace-pre-wrap h-[400px] overflow-y-auto custom-scrollbar backdrop-blur-sm" 
+                <div
+                  className="bg-gray-900/60 border border-gray-700/50 rounded-lg p-3 text-sm text-white whitespace-pre-wrap h-[400px] overflow-y-auto custom-scrollbar backdrop-blur-sm"
                   dangerouslySetInnerHTML={{ __html: diffPrompt }}
                 />
               ) : (
@@ -766,15 +783,19 @@ export default function AgentLab() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="text-xs text-gray-400 bg-gray-900/50 border border-gray-700/30 rounded-md px-2 py-1.5 font-mono">
-                            {integration.type === "files" 
-                              ? `${integration.files?.length || 0} file(s) uploaded` 
-                              : integration.url || "No URL configured"
-                            }
+{integration.type === "files" 
+  ? `${integration.files?.length || 0} file(s) uploaded` 
+  : integration.type === "calendly"
+  ? "API Key configured"
+  : integration.type === "google_calendar"
+  ? `Calendar: ${integration.calendarId || "primary"}`
+  : integration.url || "No URL configured"
+}
                           </div>
                         </div>
-                        
+
                         <IntegrationActions
                           integration={integration}
                           onEdit={() => {
@@ -788,6 +809,11 @@ export default function AgentLab() {
                               setEditFiles(integration);
                               setTimeout(() => setShowFileUploadModal(true), 0);
                             }
+                            // Dans la fonction onEdit des IntegrationActions
+                            else if (integration.type === "google_calendar") {
+                              setEditGoogleCalendar(integration);
+                              setShowGoogleCalendarModal(true);
+                            }
                           }}
                           onDelete={() => handleDeleteIntegration(integration.name)}
                         />
@@ -796,8 +822,8 @@ export default function AgentLab() {
                   ))}
                 </div>
               )}
-              
-              <button 
+
+              <button
                 onClick={() => setShowAddIntegrationModal(true)}
                 className={cn(
                   "w-full border-2 border-dashed border-gray-600 hover:border-yellow-500/50 text-gray-400 hover:text-yellow-400 transition-all duration-200 py-3 rounded-lg flex items-center justify-center gap-2 group backdrop-blur-sm text-sm",
@@ -815,7 +841,7 @@ export default function AgentLab() {
 
             {/* Save Button */}
             <div className="sticky bottom-0 bg-gradient-to-t from-gray-900/95 to-transparent pt-6 pb-4 backdrop-blur-sm">
-              <button 
+              <button
                 onClick={handleSave}
                 className={cn(
                   "w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden text-sm",
@@ -825,7 +851,7 @@ export default function AgentLab() {
               >
                 {/* Shimmer Effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                
+
                 {isSaving ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -845,7 +871,7 @@ export default function AgentLab() {
 
         {/* ===== RIGHT PANEL - Testing Suite (Fixed Height, Full Height) ===== */}
         <div className="w-96 border-l border-gray-700/50 bg-gray-900/80 backdrop-blur-xl flex flex-col h-full">
-          
+
           {/* Testing Header WITH EDITING STATUS */}
           <div className="flex items-center justify-between p-4 border-b border-gray-700/50 bg-gray-800/30">
             <div className="flex items-center gap-3">
@@ -859,7 +885,7 @@ export default function AgentLab() {
                 <p className="text-xs text-gray-400 mt-0.5">Test and refine your agent</p>
               </div>
             </div>
-            
+
             {/* EDITING STATUS - Moved here */}
             {selectedAgentName && (
               <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-lg px-3 py-1.5 flex items-center gap-2">
@@ -877,8 +903,8 @@ export default function AgentLab() {
                 onClick={() => setMode("prompter")}
                 className={cn(
                   "flex-1 px-3 py-2 rounded-md text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 relative overflow-hidden",
-                  mode === "prompter" 
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg" 
+                  mode === "prompter"
+                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                     : "text-gray-400 hover:text-white hover:bg-gray-700/30"
                 )}
                 disabled={!selectedAgentId}
@@ -893,8 +919,8 @@ export default function AgentLab() {
                 onClick={() => setMode("test")}
                 className={cn(
                   "flex-1 px-3 py-2 rounded-md text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 relative overflow-hidden",
-                  mode === "test" 
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg" 
+                  mode === "test"
+                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                     : "text-gray-400 hover:text-white hover:bg-gray-700/30"
                 )}
                 disabled={!selectedAgentId}
@@ -929,7 +955,7 @@ export default function AgentLab() {
                     <p className="text-gray-400 text-xs max-w-sm">Send a message to test your agent's responses</p>
                   </div>
                 )}
-                
+
                 <div className="space-y-3">
                   {chatMessagesTestAI.map((msg, i) => (
                     <div
@@ -954,7 +980,7 @@ export default function AgentLab() {
                       </div>
                     </div>
                   ))}
-                  
+
                   {isThinking && (
                     <div className="flex justify-start">
                       <div className="bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 flex items-center gap-2 backdrop-blur-sm">
@@ -987,7 +1013,7 @@ export default function AgentLab() {
                     <p className="text-gray-400 text-xs max-w-sm">Describe what you want to improve and get prompt suggestions</p>
                   </div>
                 )}
-                
+
                 <div className="space-y-3">
                   {messages.map((msg, i) => (
                     <div
@@ -1012,7 +1038,7 @@ export default function AgentLab() {
                       </div>
                     </div>
                   ))}
-                  
+
                   {isThinking && (
                     <div className="flex justify-start">
                       <div className="bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 flex items-center gap-2 backdrop-blur-sm">
@@ -1033,9 +1059,9 @@ export default function AgentLab() {
                     <div className="text-xs leading-relaxed whitespace-pre-wrap max-h-[150px] overflow-y-auto custom-scrollbar">
                       {diff.map((part, i) => (
                         <span key={i} className={
-                          part.added ? "text-emerald-400 bg-emerald-900/20 px-0.5 rounded-sm" : 
-                          part.removed ? "text-red-400 bg-red-900/20 line-through px-0.5 rounded-sm" : 
-                          "text-white"
+                          part.added ? "text-emerald-400 bg-emerald-900/20 px-0.5 rounded-sm" :
+                            part.removed ? "text-red-400 bg-red-900/20 line-through px-0.5 rounded-sm" :
+                              "text-white"
                         }>
                           {part.value}
                         </span>
@@ -1111,15 +1137,15 @@ export default function AgentLab() {
                     }
                   }}
                 />
-                
+
                 {/* Send Button Inside Textarea */}
-                <button 
+                <button
                   className={cn(
                     "absolute bottom-2 right-2 p-1.5 rounded-md transition-all duration-200 flex items-center justify-center",
                     (mode === "prompter" ? userInstruction.trim() : testMessage.trim()) && selectedAgentId && !isThinking
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg transform hover:scale-105" 
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg transform hover:scale-105"
                       : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                  )} 
+                  )}
                   disabled={!(mode === "prompter" ? userInstruction.trim() : testMessage.trim()) || !selectedAgentId || isThinking}
                   onClick={mode === "prompter" ? handleSendInstruction : handleSendTestMessage}
                 >
@@ -1132,7 +1158,7 @@ export default function AgentLab() {
                   )}
                 </button>
               </div>
-              
+
               <p className="text-xs text-gray-500 text-center bg-gray-800/30 rounded-md px-2 py-1.5 border border-gray-700/30">
                 Using your personal API key • Monitor usage carefully
               </p>
@@ -1142,7 +1168,7 @@ export default function AgentLab() {
       </div>
 
       {/* ===== MODALS ===== */}
-      
+
       {/* Delete Version Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -1280,20 +1306,21 @@ export default function AgentLab() {
 
       {/* Integration Modals */}
       {showAddIntegrationModal && (
-        <SelectIntegrationModal 
-          onClose={() => setShowAddIntegrationModal(false)} 
+        <SelectIntegrationModal
+          onClose={() => setShowAddIntegrationModal(false)}
           onSelect={(type: IntegrationType) => {
             setShowAddIntegrationModal(false);
             if (type === "webhook") setShowWebhookModal(true);
             else if (type === "calendly") setShowCalendlyModal(true);
             else if (type === "files") setShowFileUploadModal(true);
+            else if (type === "google_calendar") setShowGoogleCalendarModal(true);
           }}
           existingIntegrations={integrations}
         />
       )}
 
       {showWebhookModal && selectedAgentId && (
-        <WebhookIntegrationModal 
+        <WebhookIntegrationModal
           agentId={selectedAgentId}
           initialData={editWebhook ?? undefined}
           onClose={() => {
@@ -1316,7 +1343,7 @@ export default function AgentLab() {
       )}
 
       {showCalendlyModal && selectedAgentId && (
-        <CalendlyIntegrationModal 
+        <CalendlyIntegrationModal
           agentId={selectedAgentId}
           initialData={editCalendly ?? undefined}
           onClose={() => {
@@ -1339,7 +1366,7 @@ export default function AgentLab() {
       )}
 
       {showFileUploadModal && selectedAgentId && (
-        <FileUploadIntegrationModal 
+        <FileUploadIntegrationModal
           agentId={selectedAgentId}
           initialData={editFiles ?? undefined}
           onClose={() => {
@@ -1349,6 +1376,29 @@ export default function AgentLab() {
           onRefresh={refreshIntegrations}
         />
       )}
+
+      {showGoogleCalendarModal && selectedAgentId && (
+  <GoogleCalendarIntegrationModal 
+    agentId={selectedAgentId}
+    initialData={editGoogleCalendar ?? undefined}
+    onClose={() => {
+      setShowGoogleCalendarModal(false);
+      setEditGoogleCalendar(null);
+    }}
+    onSave={(data) => {
+      setIntegrations((prev) => {
+        const exists = prev.find((w) => w.name === data.name);
+        if (exists) {
+          return prev.map((w) => w.name === data.name ? data : w);
+        } else {
+          return [...prev, data];
+        }
+      });
+      refreshPrompt(selectedAgentId);
+      toast.success("Google Calendar integration saved!");
+    }}
+  />
+)}
 
       {/* ===== ENHANCED STYLES ===== */}
       <style jsx>{`

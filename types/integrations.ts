@@ -29,4 +29,13 @@ export type AgentIntegration =
       description?: string;
       apiKey?: string;
       createdAt: string;
+    }
+  | {
+      type: "google_calendar";
+      name: string;
+      description?: string;
+      accessToken?: string;
+      refreshToken?: string;
+      calendarId?: string;
+      createdAt: string;
     };

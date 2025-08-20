@@ -11,6 +11,9 @@ declare module "next-auth" {
       stripeCustomerId?: string;
       openaiApiKey: string;
       profileImage: string | null;
+      // 🆕 NOUVEAUX CHAMPS GOOGLE
+      googleAccessToken?: string;
+      googleRefreshToken?: string;
     };
   }
 
@@ -22,6 +25,9 @@ declare module "next-auth" {
     stripeCustomerId?: string;
     openaiApiKey?: string;
     profileImage: string | null;
+    // 🆕 NOUVEAUX CHAMPS GOOGLE
+    googleAccessToken?: string;
+    googleRefreshToken?: string;
   }
 
   interface JWT {
@@ -32,5 +38,8 @@ declare module "next-auth" {
     stripeCustomerId?: string;
     openaiApiKey?: string;
     profileImage: string | null;
+    // 🆕 NOUVEAUX CHAMPS GOOGLE
+    googleAccessToken?: string;
+    googleRefreshToken?: string;
   }
 }

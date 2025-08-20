@@ -5,6 +5,36 @@ import { authOptions } from "@/lib/authOptions";
 import { createUserOpenAI } from "@/lib/openai";
 import { diffWords } from "diff";
 
+// 🆕 FONCTION HELPER POUR LA DATE LOCALISÉE
+function getLocalizedDateTime(timezone: string): string {
+  const now = new Date();
+  
+  try {
+    // Essayer de formater avec la timezone de l'utilisateur
+    const localTime = now.toLocaleString('fr-FR', { 
+      timeZone: timezone,
+      year: 'numeric',
+      month: 'long', 
+      day: 'numeric',
+      weekday: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    // Obtenir le nom de la timezone en français
+    const timeZoneName = Intl.DateTimeFormat('fr', { timeZone: timezone, timeZoneName: 'long' })
+      .formatToParts(now)
+      .find(part => part.type === 'timeZoneName')?.value || timezone;
+    
+    return `${localTime} (${timeZoneName})`;
+  } catch (error) {
+    // Si la timezone n'est pas valide, utiliser UTC
+    console.warn('Timezone invalide:', timezone, 'Utilisation UTC');
+    return `${now.toISOString().replace('T', ' ').replace('Z', '')} (UTC)`;
+  }
+}
+
 function getDiffHtml(original: string, updated: string): string {
   const diff = diffWords(original, updated);
   return diff
@@ -38,7 +68,7 @@ export async function POST(
       return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
     }
 
-    const { prompt, instruction } = await req.json();
+    const { prompt, instruction, timezone = 'UTC' } = await req.json(); // 🆕 AJOUTÉ timezone
 
     if (!prompt || !instruction) {
       return NextResponse.json(
@@ -47,24 +77,29 @@ export async function POST(
       );
     }
 
+    // 🆕 OBTENIR LA DATE LOCALISÉE
+    const currentDateTime = getLocalizedDateTime(timezone);
+
     const systemPrompt = `
-You are an expert in prompt engineering and UX writing.
+Vous êtes un expert en prompt engineering et en UX writing.
 
-You will receive:
-1. The current prompt (used to guide an AI agent).
-2. An instruction from the user (asking how to improve the prompt).
+DATE ET HEURE ACTUELLES: ${currentDateTime}
 
-Your goal:
-→ Rewrite the current prompt according to the user's request.
-→ Keep the meaning clear, structure clean, and grammar correct.
-→ Do NOT lose important information unless the user asked to remove it.
-→ Do NOT over-correct or invent things that weren't mentioned.
-→ Return your result in JSON (no markdown formatting, no \`\`\` blocks).
+Vous allez recevoir:
+1. Le prompt actuel (utilisé pour guider un agent IA).
+2. Une instruction de l'utilisateur (demandant comment améliorer le prompt).
 
-Expected output format:
+Votre objectif:
+→ Réécrire le prompt actuel selon la demande de l'utilisateur.
+→ Garder le sens clair, la structure propre, et la grammaire correcte.
+→ NE PAS perdre d'informations importantes sauf si l'utilisateur a demandé de les supprimer.
+→ NE PAS sur-corriger ou inventer des choses qui n'ont pas été mentionnées.
+→ Retourner votre résultat en JSON (pas de formatage markdown, pas de blocs \`\`\` blocks).
+
+Format de sortie attendu:
 {
-  "summary": "What changes were made and why",
-  "updatedPrompt": "The full rewritten prompt"
+  "summary": "Quels changements ont été faits et pourquoi",
+  "updatedPrompt": "Le prompt complet réécrit"
 }
 `;
 

@@ -1,5 +1,6 @@
 // lib/authOptions.ts
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { connectToDatabase } from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
@@ -42,6 +43,18 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
+    // 🆕 NOUVEAU PROVIDER GOOGLE
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "openid email profile https://www.googleapis.com/auth/calendar",
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    }),
   ],
   pages: {
     signIn: "/login",
@@ -50,7 +63,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -59,6 +72,13 @@ export const authOptions: NextAuthOptions = {
         token.stripeCustomerId = user.stripeCustomerId;
         token.openaiApiKey = user.openaiApiKey;
       }
+      
+      // 🆕 STOCKER LES TOKENS GOOGLE
+      if (account?.provider === "google") {
+        token.googleAccessToken = account.access_token;
+        token.googleRefreshToken = account.refresh_token;
+      }
+      
       return token;
     },
     async session({ session, token }) {
@@ -73,9 +93,35 @@ export const authOptions: NextAuthOptions = {
         stripeCustomerId: dbUser?.stripeCustomerId ?? "",
         openaiApiKey: dbUser?.openaiApiKey ?? "",
         profileImage: dbUser?.profileImage ?? null,
+        // 🆕 AJOUTER LES TOKENS GOOGLE
+        googleAccessToken: token.googleAccessToken as string,
+        googleRefreshToken: token.googleRefreshToken as string,
       };
 
       return session;
+    },
+    // 🆕 CALLBACK SIGNIN POUR CRÉER/LIER LES COMPTES
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        await connectToDatabase();
+        
+        // Chercher si l'utilisateur existe déjà
+        let existingUser = await User.findOne({ email: user.email });
+        
+        if (!existingUser) {
+          // Créer un nouvel utilisateur
+          existingUser = await User.create({
+            email: user.email,
+            username: user.name?.replace(/\s+/g, '').toLowerCase() || 'user',
+            password: await bcrypt.hash(Math.random().toString(36), 10), // Mot de passe aléatoire
+            isSubscribed: false,
+          });
+        }
+        
+        user.id = existingUser._id.toString();
+      }
+      
+      return true;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
