@@ -18,6 +18,9 @@ import {
   Brain, Cpu, Gauge, Layers, Save, AlertTriangle, CheckCircle, Key
 } from "lucide-react";
 import GoogleCalendarIntegrationModal from "@/components/integrations/GoogleCalendarIntegrationModal";
+import IntegrationActions from "@/components/Dropdowns/IntegrationActions";
+import SelectAgentDropdown from "@/components/Dropdowns/SelectAgentDropdown";
+import SelectVersionDropdown from "@/components/Dropdowns/SelectVersionDropdown";
 
 type Agent = {
   _id: string;
@@ -62,70 +65,7 @@ const IntegrationStatus = ({ type, isActive = true }: { type: string; isActive?:
   );
 };
 
-const IntegrationActions = ({
-  integration,
-  onEdit,
-  onDelete
-}: {
-  integration: AgentIntegration;
-  onEdit: () => void;
-  onDelete: () => void;
-}) => {
-  const [showDropdown, setShowDropdown] = useState(false);
 
-  useEffect(() => {
-    const handleClickOutside = () => setShowDropdown(false);
-    if (showDropdown) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [showDropdown]);
-
-  return (
-    <div className="relative" onClick={(e) => e.stopPropagation()}>
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setShowDropdown(!showDropdown);
-        }}
-        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-200 group"
-      >
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-gray-500/0 to-gray-500/0 group-hover:from-gray-500/10 group-hover:to-gray-500/10 transition-all duration-200"></div>
-        <MoreVertical size={14} className="relative z-10" />
-      </button>
-
-      {showDropdown && (
-        <div className="absolute right-0 top-full mt-2 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-50 min-w-[140px] py-2 animate-fade-in">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onEdit();
-              setShowDropdown(false);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-200 hover:text-white hover:bg-gray-700/50 transition-all text-left group"
-          >
-            <Edit size={14} className="group-hover:scale-110 transition-transform" />
-            Edit
-          </button>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onDelete();
-              setShowDropdown(false);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-all text-left group"
-          >
-            <Trash2 size={14} className="group-hover:scale-110 transition-transform" />
-            Delete
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const SectionCard = ({
   icon,
@@ -563,33 +503,20 @@ export default function AgentLab() {
                   <label className="block text-sm font-semibold text-gray-300 mb-2">
                     Select Agent
                   </label>
-                  <select
-                    className="w-full px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-lg outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all backdrop-blur-sm text-sm"
-                    value={selectedAgentId ?? ""}
-                    onChange={(e) => handleAgentSelect(e.target.value)}
-                  >
-                    <option value="" className="bg-gray-800 text-gray-400">Select an agent...</option>
-                    {agents.map((agent) => (
-                      <option key={agent._id} value={agent._id} className="bg-gray-800 text-white">
-                        {agent.name}
-                      </option>
-                    ))}
-                  </select>
+                  <SelectAgentDropdown
+                    selectedAgentId={selectedAgentId}
+                    onAgentSelect={handleAgentSelect}
+                    agents={agents}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-300 mb-2">
                     Version
                   </label>
-                  <select
-                    className={cn(
-                      "w-full px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-lg outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all backdrop-blur-sm text-sm",
-                      !selectedAgentId && 'opacity-50 cursor-not-allowed'
-                    )}
-                    disabled={!selectedAgentId || versions.length === 0}
-                    value={selectedVersionId ?? ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
+                  <SelectVersionDropdown
+                    selectedVersionId={selectedVersionId}
+                    onVersionSelect={(value) => {
                       if (value === "__delete__") {
                         setShowDeleteModal(true);
                         return;
@@ -607,23 +534,9 @@ export default function AgentLab() {
                           }
                         });
                     }}
-                  >
-                    {versions.length === 0 ? (
-                      <option value="" className="bg-gray-800 text-gray-400">No versions yet</option>
-                    ) : (
-                      <>
-                        <option disabled value="" className="bg-gray-800 text-gray-400">Select version...</option>
-                        {versions.map((v) => (
-                          <option key={v._id} value={v._id} className="bg-gray-800 text-white">
-                            {new Date(v.createdAt).toLocaleString()}
-                          </option>
-                        ))}
-                        <option value="__delete__" className="bg-red-900/20 text-red-400 border-t border-gray-600">
-                          Delete version...
-                        </option>
-                      </>
-                    )}
-                  </select>
+                    versions={versions}
+                    disabled={!selectedAgentId || versions.length === 0}
+                  />
                 </div>
               </div>
             </SectionCard>
@@ -785,14 +698,14 @@ export default function AgentLab() {
                           </div>
 
                           <div className="text-xs text-gray-400 bg-gray-900/50 border border-gray-700/30 rounded-md px-2 py-1.5 font-mono">
-{integration.type === "files" 
-  ? `${integration.files?.length || 0} file(s) uploaded` 
-  : integration.type === "calendly"
-  ? "API Key configured"
-  : integration.type === "google_calendar"
-  ? `Calendar: ${integration.calendarId || "primary"}`
-  : integration.url || "No URL configured"
-}
+                            {integration.type === "files"
+                              ? `${integration.files?.length || 0} file(s) uploaded`
+                              : integration.type === "calendly"
+                                ? "API Key configured"
+                                : integration.type === "google_calendar"
+                                  ? `Calendar: ${integration.calendarId || "primary"}`
+                                  : integration.url || "No URL configured"
+                            }
                           </div>
                         </div>
 
@@ -1378,27 +1291,27 @@ export default function AgentLab() {
       )}
 
       {showGoogleCalendarModal && selectedAgentId && (
-  <GoogleCalendarIntegrationModal 
-    agentId={selectedAgentId}
-    initialData={editGoogleCalendar ?? undefined}
-    onClose={() => {
-      setShowGoogleCalendarModal(false);
-      setEditGoogleCalendar(null);
-    }}
-    onSave={(data) => {
-      setIntegrations((prev) => {
-        const exists = prev.find((w) => w.name === data.name);
-        if (exists) {
-          return prev.map((w) => w.name === data.name ? data : w);
-        } else {
-          return [...prev, data];
-        }
-      });
-      refreshPrompt(selectedAgentId);
-      toast.success("Google Calendar integration saved!");
-    }}
-  />
-)}
+        <GoogleCalendarIntegrationModal
+          agentId={selectedAgentId}
+          initialData={editGoogleCalendar ?? undefined}
+          onClose={() => {
+            setShowGoogleCalendarModal(false);
+            setEditGoogleCalendar(null);
+          }}
+          onSave={(data) => {
+            setIntegrations((prev) => {
+              const exists = prev.find((w) => w.name === data.name);
+              if (exists) {
+                return prev.map((w) => w.name === data.name ? data : w);
+              } else {
+                return [...prev, data];
+              }
+            });
+            refreshPrompt(selectedAgentId);
+            toast.success("Google Calendar integration saved!");
+          }}
+        />
+      )}
 
       {/* ===== ENHANCED STYLES ===== */}
       <style jsx>{`
