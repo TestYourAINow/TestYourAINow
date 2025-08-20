@@ -15,7 +15,7 @@ import { AgentIntegration } from "@/types/integrations";
 import {
   Settings, User, Bot, MessageCircle, Globe, Info, Code, TestTube, Zap, X, Check,
   Edit, Trash2, Activity, Beaker, ChevronDown, MoreVertical, Circle, Sparkles,
-  Brain, Cpu, Gauge, Layers, Save, AlertTriangle, CheckCircle, Key
+  Brain, Cpu, Gauge, Layers, Save, AlertTriangle, CheckCircle, Key, Menu
 } from "lucide-react";
 import GoogleCalendarIntegrationModal from "@/components/integrations/GoogleCalendarIntegrationModal";
 import IntegrationActions from "@/components/Dropdowns/IntegrationActions";
@@ -45,7 +45,6 @@ type ChatMessage = {
   role: "user" | "assistant";
   content: string;
 };
-
 // ===== ENHANCED COMPONENTS =====
 
 const IntegrationStatus = ({ type, isActive = true }: { type: string; isActive?: boolean }) => {
@@ -65,8 +64,6 @@ const IntegrationStatus = ({ type, isActive = true }: { type: string; isActive?:
   );
 };
 
-
-
 const SectionCard = ({
   icon,
   title,
@@ -85,27 +82,27 @@ const SectionCard = ({
   allowOverflow?: boolean;
 }) => (
   <div className={cn(
-    "bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl",
+    "bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl ",
     allowOverflow ? "overflow-visible" : "overflow-hidden",
     className
   )}>
-    <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-blue-600/20 border-2 border-blue-600/40 flex items-center justify-center shadow-lg">
+    <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-700/50">
+      <div className="flex items-center gap-3 md:gap-4">
+        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-600/20 border-2 border-blue-600/40 flex items-center justify-center shadow-lg">
           {icon}
         </div>
         <div>
-          <h3 className="text-xl font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+          <h3 className="text-lg md:text-xl font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
             {title}
           </h3>
           {subtitle && (
-            <p className="text-sm text-gray-400 mt-0.5">{subtitle}</p>
+            <p className="text-xs md:text-sm text-gray-400 mt-0.5">{subtitle}</p>
           )}
         </div>
       </div>
       {headerAction}
     </div>
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {children}
     </div>
   </div>
@@ -114,6 +111,10 @@ const SectionCard = ({
 // ===== MAIN COMPONENT =====
 
 export default function AgentLab() {
+  // ===== NOUVEAUX ÉTATS POUR LA RESPONSIVITÉ =====
+  const [mobileView, setMobileView] = useState<"config" | "test">("config");
+  const [isMobile, setIsMobile] = useState(false);
+
   // ===== EXISTING STATE (preserved) =====
   const [agents, setAgents] = useState<Agent[]>([]);
   const [versions, setVersions] = useState<AgentVersion[]>([]);
@@ -156,6 +157,17 @@ export default function AgentLab() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+  // ===== DÉTECTION MOBILE =====
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // ===== FONCTION POUR CHARGER LES API KEYS =====
   const fetchApiKeys = async () => {
     try {
@@ -213,26 +225,14 @@ export default function AgentLab() {
     const selected = agents.find((a) => a._id === id);
     if (!selected) return;
 
-    // 🚨 DEBUG LOGS POUR API KEY MAPPING
     console.log("🔍 [AGENT SELECT] Agent:", selected.name);
     console.log("🔑 [AGENT SELECT] Agent apiKey:", selected.apiKey);
-    console.log("📋 [AGENT SELECT] Available API keys:", apiKeys.length);
-    console.log("📋 [AGENT SELECT] API Keys IDs:", apiKeys.map(k => `${k.name}: ${k.id}`));
 
     setSelectedAgentId(id);
     setOpenaiModel(selected.openaiModel);
     setTemperature(selected.temperature);
     setTopP(selected.top_p);
-    setSelectedAgentApiKey(selected.apiKey || ""); // NOUVELLE LIGNE AJOUTÉE
-
-    // 🚨 DEBUG - Vérifier le matching
-    const foundKey = apiKeys.find(k => k.id === selected.apiKey);
-    console.log("🎯 [AGENT SELECT] Found matching key:", foundKey ? "YES" : "NO");
-    if (foundKey) {
-      console.log("✅ [AGENT SELECT] Matched key:", foundKey.name);
-    } else {
-      console.log("❌ [AGENT SELECT] No match found for:", selected.apiKey);
-    }
+    setSelectedAgentApiKey(selected.apiKey || "");
 
     // Réinitialiser les messages du AI Prompter
     setMessages([]);
@@ -272,9 +272,6 @@ export default function AgentLab() {
     router.push(`?agentId=${id}`);
   };
 
-  // Dans /app/(dashboard)/agent-lab/page.tsx
-  // Modifier la fonction handleSendInstruction (ligne ~200 environ)
-
   const handleSendInstruction = async () => {
     if (!userInstruction.trim() || !selectedAgentId) return;
 
@@ -283,7 +280,6 @@ export default function AgentLab() {
     setUserInstruction("");
 
     try {
-      // 🆕 DÉTECTER LA TIMEZONE
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       const res = await fetch(`/api/agents/${selectedAgentId}/ai-prompter`, {
@@ -292,7 +288,7 @@ export default function AgentLab() {
         body: JSON.stringify({
           instruction: userInstruction,
           prompt,
-          timezone: userTimezone, // 🆕 NOUVEAU
+          timezone: userTimezone,
         }),
       });
 
@@ -310,8 +306,6 @@ export default function AgentLab() {
       setIsThinking(false);
     }
   };
-
-  // Modifier la fonction handleSendTestMessage (ligne ~270 environ)
 
   const handleSendTestMessage = async () => {
     if (!selectedAgentId || !testMessage.trim()) return;
@@ -332,9 +326,7 @@ export default function AgentLab() {
     setTestMessage("");
 
     try {
-      // 🆕 DÉTECTER LA TIMEZONE AUTOMATIQUEMENT
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      console.log('🌍 Timezone détectée:', userTimezone);
 
       const res = await fetch(`/api/agents/${selectedAgentId}/ask`, {
         method: "POST",
@@ -342,7 +334,7 @@ export default function AgentLab() {
         body: JSON.stringify({
           message: testMessage,
           previousMessages: updatedHistory,
-          timezone: userTimezone, // 🆕 NOUVEAU CHAMP
+          timezone: userTimezone,
         }),
       });
 
@@ -360,7 +352,6 @@ export default function AgentLab() {
       setIsThinking(false);
     }
   };
-
   const handleSave = async () => {
     if (!selectedAgentId) return;
     if (!prompt.trim()) {
@@ -379,7 +370,7 @@ export default function AgentLab() {
           temperature,
           top_p: topP,
           integrations,
-          apiKey: selectedAgentApiKey, // NOUVELLE LIGNE AJOUTÉE
+          apiKey: selectedAgentApiKey,
         }),
       });
 
@@ -474,7 +465,7 @@ export default function AgentLab() {
     setIntegrations(data.integrations || []);
   };
 
-  // ===== COMPUTED VALUES - FIXED isModified =====
+  // ===== COMPUTED VALUES =====
   const selectedAgent = agents.find(a => a._id === selectedAgentId);
   const isModified = prompt !== initialPrompt ||
     temperature !== selectedAgent?.temperature ||
@@ -482,607 +473,696 @@ export default function AgentLab() {
     openaiModel !== selectedAgent?.openaiModel ||
     selectedAgentApiKey !== (selectedAgent?.apiKey || "");
   const selectedAgentName = agents.find(a => a._id === selectedAgentId)?.name;
+  // ===== RENDU DU PANNEAU DE CONFIGURATION =====
+  const renderConfigPanel = () => (
+    <div className={cn(
+      "overflow-y-auto custom-scrollbar",
+      isMobile ? "flex-1" : "flex-1"
+    )}>
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+        {/* Agent Selection */}
+        <SectionCard
+          icon={<Bot className="text-blue-400" size={isMobile ? 18 : 20} />}
+          title="Agent Selection"
+          subtitle="Choose your AI agent and version"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                Select Agent
+              </label>
+              <SelectAgentDropdown
+                selectedAgentId={selectedAgentId}
+                onAgentSelect={handleAgentSelect}
+                agents={agents}
+              />
+            </div>
 
-  return (
-    <RequireApiKey>
-      {/* ===== MAIN LAYOUT - NO HEADER, FIX HEIGHT ===== */}
-      <div className="h-[calc(100vh-64px)] flex">
-
-        {/* ===== LEFT PANEL - Configuration (Scrollable) ===== */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <div className="p-6 space-y-6">
-
-            {/* Agent Selection */}
-            <SectionCard
-              icon={<Bot className="text-blue-400" size={20} />}
-              title="Agent Selection"
-              subtitle="Choose your AI agent and version"
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">
-                    Select Agent
-                  </label>
-                  <SelectAgentDropdown
-                    selectedAgentId={selectedAgentId}
-                    onAgentSelect={handleAgentSelect}
-                    agents={agents}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">
-                    Version
-                  </label>
-                  <SelectVersionDropdown
-                    selectedVersionId={selectedVersionId}
-                    onVersionSelect={(value) => {
-                      if (value === "__delete__") {
-                        setShowDeleteModal(true);
-                        return;
+            <div>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                Version
+              </label>
+              <SelectVersionDropdown
+                selectedVersionId={selectedVersionId}
+                onVersionSelect={(value) => {
+                  if (value === "__delete__") {
+                    setShowDeleteModal(true);
+                    return;
+                  }
+                  setSelectedVersionId(value);
+                  fetch(`/api/agents/${selectedAgentId}/versions/${value}`)
+                    .then((res) => res.json())
+                    .then((data) => {
+                      if (data.version) {
+                        setPrompt(data.version.prompt);
+                        setInitialPrompt(data.version.prompt);
+                        setOpenaiModel(data.version.openaiModel);
+                        setTemperature(data.version.temperature);
+                        setTopP(data.version.top_p);
                       }
-                      setSelectedVersionId(value);
-                      fetch(`/api/agents/${selectedAgentId}/versions/${value}`)
-                        .then((res) => res.json())
-                        .then((data) => {
-                          if (data.version) {
-                            setPrompt(data.version.prompt);
-                            setInitialPrompt(data.version.prompt);
-                            setOpenaiModel(data.version.openaiModel);
-                            setTemperature(data.version.temperature);
-                            setTopP(data.version.top_p);
-                          }
-                        });
-                    }}
-                    versions={versions}
-                    disabled={!selectedAgentId || versions.length === 0}
-                  />
-                </div>
-              </div>
-            </SectionCard>
-            {/* System Prompt - ENHANCED */}
-            <SectionCard
-              icon={<Code className="text-purple-400" size={20} />}
-              title="System Prompt"
-              subtitle="Define your agent's behavior and instructions"
-            >
-              {diffPrompt ? (
-                <div
-                  className="bg-gray-900/60 border border-gray-700/50 rounded-lg p-3 text-sm text-white whitespace-pre-wrap h-[400px] overflow-y-auto custom-scrollbar backdrop-blur-sm"
-                  dangerouslySetInnerHTML={{ __html: diffPrompt }}
+                    });
+                }}
+                versions={versions}
+                disabled={!selectedAgentId || versions.length === 0}
+              />
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* System Prompt */}
+        <SectionCard
+          icon={<Code className="text-purple-400" size={isMobile ? 18 : 20} />}
+          title="System Prompt"
+          subtitle="Define your agent's behavior and instructions"
+        >
+          {diffPrompt ? (
+            <div
+              className={cn(
+                "bg-gray-900/60 border border-gray-700/50 rounded-lg p-3 text-sm text-white whitespace-pre-wrap overflow-y-auto custom-scrollbar backdrop-blur-sm",
+                isMobile ? "h-[300px]" : "h-[400px]"
+              )}
+              dangerouslySetInnerHTML={{ __html: diffPrompt }}
+            />
+          ) : (
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Enter your system prompt here..."
+              className={cn(
+                "w-full px-3 py-3 bg-gray-900/60 border border-gray-700/50 text-white rounded-lg outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/20 transition-all placeholder-gray-400 backdrop-blur-sm text-sm leading-relaxed",
+                "resize-y min-h-[200px] max-h-[600px] custom-scrollbar",
+                isMobile ? "h-[300px]" : "h-[400px]",
+                !selectedAgentId && "opacity-50 cursor-not-allowed"
+              )}
+              disabled={!selectedAgentId}
+            />
+          )}
+        </SectionCard>
+
+        {/* Model Configuration */}
+        <SectionCard
+          icon={<Brain className="text-cyan-400" size={isMobile ? 18 : 20} />}
+          title="Model Parameters"
+          subtitle="Fine-tune your AI model settings"
+          allowOverflow={true}
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">AI Model</label>
+                <AiModelDropdown
+                  selectedModel={openaiModel}
+                  onModelSelect={(modelId) => setOpenaiModel(modelId)}
+                  disabled={!selectedAgentId}
                 />
-              ) : (
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Enter your system prompt here... This will define how your AI agent behaves and responds."
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  API Key Project
+                </label>
+                <ApiKeyDropdown
+                  selectedApiKey={selectedAgentApiKey}
+                  onApiKeySelect={(keyId) => setSelectedAgentApiKey(keyId)}
+                  onAddNewClick={() => setShowAddApiModal(true)}
+                  apiKeys={apiKeys}
+                  disabled={!selectedAgentId}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
+                  <Gauge size={14} className="text-cyan-400" />
+                  Temperature: <span className="text-cyan-400 font-mono">{temperature.toFixed(2)}</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
                   className={cn(
-                    "w-full px-3 py-3 bg-gray-900/60 border border-gray-700/50 text-white rounded-lg outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/20 transition-all placeholder-gray-400 backdrop-blur-sm text-sm leading-relaxed",
-                    "h-[400px] resize-y min-h-[200px] max-h-[600px] custom-scrollbar",
-                    !selectedAgentId && "opacity-50 cursor-not-allowed"
+                    "w-full h-2 bg-gray-700/50 rounded-lg appearance-none cursor-pointer slider-enhanced",
+                    !selectedAgentId && 'opacity-50 cursor-not-allowed'
                   )}
                   disabled={!selectedAgentId}
-                  style={{ resize: 'vertical' }}
                 />
-              )}
-            </SectionCard>
-
-            {/* Model Configuration */}
-            <SectionCard
-              icon={<Brain className="text-cyan-400" size={20} />}
-              title="Model Parameters"
-              subtitle="Fine-tune your AI model settings"
-              allowOverflow={true}
-            >
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">AI Model</label>
-                    <AiModelDropdown
-                      selectedModel={openaiModel}
-                      onModelSelect={(modelId) => setOpenaiModel(modelId)}
-                      disabled={!selectedAgentId}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">
-                      API Key Project
-                    </label>
-                    <ApiKeyDropdown
-                      selectedApiKey={selectedAgentApiKey}
-                      onApiKeySelect={(keyId) => setSelectedAgentApiKey(keyId)}
-                      onAddNewClick={() => setShowAddApiModal(true)}
-                      apiKeys={apiKeys}
-                      disabled={!selectedAgentId}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
-                      <Gauge size={14} className="text-cyan-400" />
-                      Temperature: <span className="text-cyan-400 font-mono">{temperature.toFixed(2)}</span>
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={temperature}
-                      onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                      className={cn(
-                        "w-full h-2 bg-gray-700/50 rounded-lg appearance-none cursor-pointer slider-enhanced",
-                        !selectedAgentId && 'opacity-50 cursor-not-allowed'
-                      )}
-                      disabled={!selectedAgentId}
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>Conservative</span>
-                      <span>Creative</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
-                      <Layers size={14} className="text-cyan-400" />
-                      Top P: <span className="text-cyan-400 font-mono">{topP.toFixed(2)}</span>
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={topP}
-                      onChange={(e) => setTopP(parseFloat(e.target.value))}
-                      className={cn(
-                        "w-full h-2 bg-gray-700/50 rounded-lg appearance-none cursor-pointer slider-enhanced",
-                        !selectedAgentId && 'opacity-50 cursor-not-allowed'
-                      )}
-                      disabled={!selectedAgentId}
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>Focused</span>
-                      <span>Diverse</span>
-                    </div>
-                  </div>
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Conservative</span>
+                  <span>Creative</span>
                 </div>
               </div>
-            </SectionCard>
 
-            {/* Integrations */}
-            <SectionCard
-              icon={<Zap className="text-yellow-400" size={20} />}
-              title="Integrations"
-              subtitle="Enhance your agent with external capabilities"
-              headerAction={
-                integrations.length > 0 && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1 flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                    <span className="text-yellow-400 text-xs font-medium">{integrations.length} active</span>
-                  </div>
-                )
-              }
-            >
-              {integrations.length === 0 ? (
-                <div className="text-center py-6">
-                  <div className="w-12 h-12 rounded-xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center mx-auto mb-3">
-                    <Activity className="text-gray-500" size={20} />
-                  </div>
-                  <h4 className="text-white font-medium mb-1 text-sm">No integrations configured</h4>
-                  <p className="text-gray-400 text-xs mb-4 max-w-sm mx-auto">
-                    Add integrations like webhooks, file uploads, or calendar connections to expand your agent's capabilities
-                  </p>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
+                  <Layers size={14} className="text-cyan-400" />
+                  Top P: <span className="text-cyan-400 font-mono">{topP.toFixed(2)}</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={topP}
+                  onChange={(e) => setTopP(parseFloat(e.target.value))}
+                  className={cn(
+                    "w-full h-2 bg-gray-700/50 rounded-lg appearance-none cursor-pointer slider-enhanced",
+                    !selectedAgentId && 'opacity-50 cursor-not-allowed'
+                  )}
+                  disabled={!selectedAgentId}
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Focused</span>
+                  <span>Diverse</span>
                 </div>
-              ) : (
-                <div className="space-y-3 mb-4">
-                  {integrations.map((integration, idx) => (
-                    <div key={idx} className="group bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 hover:bg-gray-800/60 transition-all duration-200 backdrop-blur-sm">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-600/20 to-orange-600/20 border border-yellow-500/30 flex items-center justify-center">
-                              <Zap size={12} className="text-yellow-400" />
-                            </div>
-                            <div>
-                              <h4 className="text-white font-semibold text-sm">{integration.name}</h4>
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <IntegrationStatus type={integration.type} />
-                                <span className="text-xs text-gray-500">•</span>
-                                <span className="text-xs text-gray-400 capitalize">
-                                  {integration.type}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+              </div>
+            </div>
+          </div>
+        </SectionCard>
 
-                          <div className="text-xs text-gray-400 bg-gray-900/50 border border-gray-700/30 rounded-md px-2 py-1.5 font-mono">
-                            {integration.type === "files"
-                              ? `${integration.files?.length || 0} file(s) uploaded`
-                              : integration.type === "calendly"
-                                ? "API Key configured"
-                                : integration.type === "google_calendar"
-                                  ? `Calendar: ${integration.calendarId || "primary"}`
-                                  : integration.url || "No URL configured"
-                            }
+        {/* Integrations */}
+        <SectionCard
+          icon={<Zap className="text-yellow-400" size={isMobile ? 18 : 20} />}
+          title="Integrations"
+          subtitle="Enhance your agent with external capabilities"
+          headerAction={
+            integrations.length > 0 && (
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                <span className="text-yellow-400 text-xs font-medium">{integrations.length} active</span>
+              </div>
+            )
+          }
+        >
+          {integrations.length === 0 ? (
+            <div className="text-center py-6">
+              <div className="w-12 h-12 rounded-xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center mx-auto mb-3">
+                <Activity className="text-gray-500" size={20} />
+              </div>
+              <h4 className="text-white font-medium mb-1 text-sm">No integrations configured</h4>
+              <p className="text-gray-400 text-xs mb-4 max-w-sm mx-auto">
+                Add integrations like webhooks, file uploads, or calendar connections
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3 mb-4">
+              {integrations.map((integration, idx) => (
+                <div key={idx} className="group bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 hover:bg-gray-800/60 transition-all duration-200 backdrop-blur-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-600/20 to-orange-600/20 border border-yellow-500/30 flex items-center justify-center">
+                          <Zap size={12} className="text-yellow-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-white font-semibold text-sm">{integration.name}</h4>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <IntegrationStatus type={integration.type} />
+                            <span className="text-xs text-gray-500">•</span>
+                            <span className="text-xs text-gray-400 capitalize">
+                              {integration.type}
+                            </span>
                           </div>
                         </div>
+                      </div>
 
-                        <IntegrationActions
-                          integration={integration}
-                          onEdit={() => {
-                            if (integration.type === "webhook") {
-                              setEditWebhook(integration);
-                              setShowWebhookModal(true);
-                            } else if (integration.type === "calendly") {
-                              setEditCalendly(integration);
-                              setShowCalendlyModal(true);
-                            } else if (integration.type === "files") {
-                              setEditFiles(integration);
-                              setTimeout(() => setShowFileUploadModal(true), 0);
-                            }
-                            // Dans la fonction onEdit des IntegrationActions
-                            else if (integration.type === "google_calendar") {
-                              setEditGoogleCalendar(integration);
-                              setShowGoogleCalendarModal(true);
-                            }
-                          }}
-                          onDelete={() => handleDeleteIntegration(integration.name)}
-                        />
+                      <div className="text-xs text-gray-400 bg-gray-900/50 border border-gray-700/30 rounded-md px-2 py-1.5 font-mono">
+                        {integration.type === "files"
+                          ? `${integration.files?.length || 0} file(s) uploaded`
+                          : integration.type === "calendly"
+                            ? "API Key configured"
+                            : integration.type === "google_calendar"
+                              ? `Calendar: ${integration.calendarId || "primary"}`
+                              : integration.url || "No URL configured"
+                        }
                       </div>
                     </div>
-                  ))}
+
+                    <IntegrationActions
+                      integration={integration}
+                      onEdit={() => {
+                        if (integration.type === "webhook") {
+                          setEditWebhook(integration);
+                          setShowWebhookModal(true);
+                        } else if (integration.type === "calendly") {
+                          setEditCalendly(integration);
+                          setShowCalendlyModal(true);
+                        } else if (integration.type === "files") {
+                          setEditFiles(integration);
+                          setTimeout(() => setShowFileUploadModal(true), 0);
+                        } else if (integration.type === "google_calendar") {
+                          setEditGoogleCalendar(integration);
+                          setShowGoogleCalendarModal(true);
+                        }
+                      }}
+                      onDelete={() => handleDeleteIntegration(integration.name)}
+                    />
+                  </div>
                 </div>
-              )}
-
-              <button
-                onClick={() => setShowAddIntegrationModal(true)}
-                className={cn(
-                  "w-full border-2 border-dashed border-gray-600 hover:border-yellow-500/50 text-gray-400 hover:text-yellow-400 transition-all duration-200 py-3 rounded-lg flex items-center justify-center gap-2 group backdrop-blur-sm text-sm",
-                  "hover:bg-yellow-500/5",
-                  !selectedAgentId && 'opacity-50 cursor-not-allowed'
-                )}
-                disabled={!selectedAgentId}
-              >
-                <div className="w-6 h-6 rounded-md border border-gray-600 group-hover:border-yellow-500/50 flex items-center justify-center group-hover:bg-yellow-500/10 transition-all">
-                  <Zap size={12} className="group-hover:scale-110 transition-transform" />
-                </div>
-                <span className="font-medium">Add Integration</span>
-              </button>
-            </SectionCard>
-
-            {/* Save Button */}
-            <div className="sticky bottom-0 bg-gradient-to-t from-gray-900/95 to-transparent pt-6 pb-4 backdrop-blur-sm">
-              <button
-                onClick={handleSave}
-                className={cn(
-                  "w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden text-sm",
-                  (!selectedAgentId || isSaving || !isModified) && "opacity-50 cursor-not-allowed transform-none hover:scale-100"
-                )}
-                disabled={!selectedAgentId || isSaving || !isModified}
-              >
-                {/* Shimmer Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-
-                {isSaving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Saving configuration...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    <span>Save Configuration</span>
-                    {isModified && <span className="text-emerald-200 text-xs">• Unsaved changes</span>}
-                  </>
-                )}
-              </button>
+              ))}
             </div>
+          )}
+
+          <button
+            onClick={() => setShowAddIntegrationModal(true)}
+            className={cn(
+              "w-full border-2 border-dashed border-gray-600 hover:border-yellow-500/50 text-gray-400 hover:text-yellow-400 transition-all duration-200 py-3 rounded-lg flex items-center justify-center gap-2 group backdrop-blur-sm text-sm",
+              "hover:bg-yellow-500/5",
+              !selectedAgentId && 'opacity-50 cursor-not-allowed'
+            )}
+            disabled={!selectedAgentId}
+          >
+            <div className="w-6 h-6 rounded-md border border-gray-600 group-hover:border-yellow-500/50 flex items-center justify-center group-hover:bg-yellow-500/10 transition-all">
+              <Zap size={12} className="group-hover:scale-110 transition-transform" />
+            </div>
+            <span className="font-medium">Add Integration</span>
+          </button>
+        </SectionCard>
+
+        {/* Save Button */}
+        <div className={cn(
+          "bg-gradient-to-t from-gray-900/95 to-transparent backdrop-blur-sm",
+          isMobile ? "sticky bottom-0 pt-4 pb-4" : "sticky bottom-0 pt-6 pb-4"
+        )}>
+          <button
+            onClick={handleSave}
+            className={cn(
+              "w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden text-sm",
+              (!selectedAgentId || isSaving || !isModified) && "opacity-50 cursor-not-allowed transform-none hover:scale-100"
+            )}
+            disabled={!selectedAgentId || isSaving || !isModified}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+
+            {isSaving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Saving configuration...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Save Configuration</span>
+                {isModified && <span className="text-emerald-200 text-xs">• Unsaved changes</span>}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+  // ===== RENDU DU PANNEAU DE TEST =====
+  const renderTestPanel = () => (
+    <div className={cn(
+      "bg-gray-900/80 backdrop-blur-xl flex flex-col",
+      isMobile ? "flex-1" : "w-96 border-l border-gray-700/50 h-full"
+    )}>
+
+{/* Testing Header */}
+      <div className="flex items-center justify-between p-3 md:p-4 border-b border-gray-700/50 bg-gray-800/30">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-purple-600/20 border-2 border-purple-600/40 flex items-center justify-center shadow-lg">
+            <TestTube className="text-purple-400" size={isMobile ? 16 : 18} />
+          </div>
+          <div>
+            <h3 className="text-base md:text-lg font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+              Testing Suite
+            </h3>
+            {!isMobile && (
+              <p className="text-xs text-gray-400 mt-0.5">Test and refine your agent</p>
+            )}
           </div>
         </div>
 
-        {/* ===== RIGHT PANEL - Testing Suite (Fixed Height, Full Height) ===== */}
-        <div className="w-96 border-l border-gray-700/50 bg-gray-900/80 backdrop-blur-xl flex flex-col h-full">
-
-          {/* Testing Header WITH EDITING STATUS */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-700/50 bg-gray-800/30">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-600/20 border-2 border-purple-600/40 flex items-center justify-center shadow-lg">
-                <TestTube className="text-purple-400" size={18} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-                  Testing Suite
-                </h3>
-                <p className="text-xs text-gray-400 mt-0.5">Test and refine your agent</p>
-              </div>
-            </div>
-
-            {/* EDITING STATUS - Moved here */}
-            {selectedAgentName && (
-              <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-lg px-3 py-1.5 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs text-gray-300">
-                  Editing: <span className="text-white font-medium">{selectedAgentName}</span>
-                </span>
-              </div>
-            )}
-          </div>
-          {/* Mode Toggle */}
-          <div className="p-4 border-b border-gray-700/50 bg-gray-800/20">
-            <div className="flex bg-gray-800/50 backdrop-blur-sm rounded-lg p-1 border border-gray-700/30">
+        <div className="flex items-center gap-3">
+          {/* Toggle AI/Test SEULEMENT sur mobile */}
+          {isMobile && (
+            <div className="flex bg-gray-800/50 backdrop-blur-sm rounded-lg p-0.5 border border-gray-700/30">
               <button
                 onClick={() => setMode("prompter")}
                 className={cn(
-                  "flex-1 px-3 py-2 rounded-md text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 relative overflow-hidden",
+                  "px-2 py-1 rounded-md text-xs font-semibold transition-all duration-200 flex items-center gap-1",
                   mode === "prompter"
                     ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-400 hover:text-white hover:bg-gray-700/30"
+                    : "text-gray-400 hover:text-white"
                 )}
                 disabled={!selectedAgentId}
               >
-                {mode === "prompter" && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
-                )}
-                <Brain className="w-3 h-3 relative z-10" />
-                <span className="relative z-10">AI Prompter</span>
+                <Brain className="w-3 h-3" />
+                AI
               </button>
               <button
                 onClick={() => setMode("test")}
                 className={cn(
-                  "flex-1 px-3 py-2 rounded-md text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 relative overflow-hidden",
+                  "px-2 py-1 rounded-md text-xs font-semibold transition-all duration-200 flex items-center gap-1",
                   mode === "test"
                     ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-400 hover:text-white hover:bg-gray-700/30"
+                    : "text-gray-400 hover:text-white"
                 )}
                 disabled={!selectedAgentId}
               >
-                {mode === "test" && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
-                )}
-                <MessageCircle className="w-3 h-3 relative z-10" />
-                <span className="relative z-10">Test Chat</span>
+                <MessageCircle className="w-3 h-3" />
+                Test
               </button>
             </div>
-          </div>
+          )}
 
-          {/* Chat Area */}
-          <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
-            {!selectedAgentId ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <div className="w-16 h-16 rounded-xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center mb-4">
-                  <Bot className="w-8 h-8 text-gray-500" />
-                </div>
-                <h3 className="text-sm font-semibold text-gray-400 mb-1">No Agent Selected</h3>
-                <p className="text-gray-500 text-xs max-w-sm">Select an agent from the configuration panel to start testing</p>
-              </div>
-            ) : mode === "test" ? (
-              <>
-                {chatMessagesTestAI.length === 0 && !isThinking && (
-                  <div className="flex flex-col items-center justify-center h-full text-center">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 flex items-center justify-center mb-3">
-                      <MessageCircle className="w-6 h-6 text-blue-400" />
-                    </div>
-                    <h4 className="text-white font-medium mb-1 text-sm">Start Testing</h4>
-                    <p className="text-gray-400 text-xs max-w-sm">Send a message to test your agent's responses</p>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  {chatMessagesTestAI.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex",
-                        msg.role === "user" ? "justify-end" : "justify-start"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed shadow-lg backdrop-blur-sm animate-fade-in",
-                          msg.role === "user"
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                            : "bg-gray-800/60 border border-gray-700/50 text-gray-100"
-                        )}
-                      >
-                        <div className="text-xs opacity-75 mb-1 font-medium">
-                          {msg.role === "user" ? "You" : "AI Agent"}
-                        </div>
-                        <div className="whitespace-pre-wrap">{msg.content}</div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {isThinking && (
-                    <div className="flex justify-start">
-                      <div className="bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 flex items-center gap-2 backdrop-blur-sm">
-                        <div className="w-3 h-3 border-2 border-t-transparent border-blue-400 rounded-full animate-spin" />
-                        <span className="text-gray-300 text-xs">AI is thinking...</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {chatMessagesTestAI.length > 0 && (
-                  <div className="flex justify-center mt-4">
-                    <button
-                      onClick={() => setChatMessagesTestAI([])}
-                      className="text-xs text-gray-500 hover:text-red-400 transition-colors px-3 py-1.5 rounded-md hover:bg-red-900/10 border border-gray-700/30 hover:border-red-500/30"
-                    >
-                      Clear conversation
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                {!suggestedPrompt && !aiSummary && messages.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-full text-center">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600/20 to-pink-600/20 border border-purple-500/30 flex items-center justify-center mb-3">
-                      <Brain className="w-6 h-6 text-purple-400" />
-                    </div>
-                    <h4 className="text-white font-medium mb-1 text-sm">AI Prompt Assistant</h4>
-                    <p className="text-gray-400 text-xs max-w-sm">Describe what you want to improve and get prompt suggestions</p>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  {messages.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex",
-                        msg.role === "user" ? "justify-end" : "justify-start"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed shadow-lg backdrop-blur-sm animate-fade-in",
-                          msg.role === "user"
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                            : "bg-gray-800/60 border border-gray-700/50 text-gray-100"
-                        )}
-                      >
-                        <div className="text-xs opacity-75 mb-1 font-medium">
-                          {msg.role === "user" ? "You" : "Prompt AI"}
-                        </div>
-                        <div className="whitespace-pre-wrap">{msg.content}</div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {isThinking && (
-                    <div className="flex justify-start">
-                      <div className="bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 flex items-center gap-2 backdrop-blur-sm">
-                        <div className="w-3 h-3 border-2 border-t-transparent border-purple-400 rounded-full animate-spin" />
-                        <span className="text-gray-300 text-xs">Analyzing your prompt...</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Diff Display */}
-                {suggestedPrompt && diff && (
-                  <div className="mt-4 bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 backdrop-blur-sm animate-fade-in">
-                    <div className="flex items-center gap-1.5 mb-2 text-xs text-gray-400">
-                      <Code size={10} />
-                      Suggested changes
-                    </div>
-                    <div className="text-xs leading-relaxed whitespace-pre-wrap max-h-[150px] overflow-y-auto custom-scrollbar">
-                      {diff.map((part, i) => (
-                        <span key={i} className={
-                          part.added ? "text-emerald-400 bg-emerald-900/20 px-0.5 rounded-sm" :
-                            part.removed ? "text-red-400 bg-red-900/20 line-through px-0.5 rounded-sm" :
-                              "text-white"
-                        }>
-                          {part.value}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                {suggestedPrompt && (
-                  <div className="flex gap-2 mt-3 animate-fade-in">
-                    <button
-                      onClick={() => {
-                        setSuggestedPrompt("");
-                        setAiSummary("");
-                        setDiff(null);
-                        setDiffPrompt(null);
-                      }}
-                      className="flex-1 bg-red-600/20 border border-red-500/30 hover:bg-red-600/30 text-red-400 hover:text-red-300 py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 text-xs font-medium"
-                    >
-                      <X className="w-3 h-3" />
-                      Reject
-                    </button>
-                    <button
-                      onClick={() => {
-                        setPrompt(suggestedPrompt);
-                        setSuggestedPrompt("");
-                        setAiSummary("");
-                        setDiff(null);
-                        setDiffPrompt(null);
-                        toast.success("Prompt updated successfully!");
-                      }}
-                      className="flex-1 bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-400 hover:text-emerald-300 py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 text-xs font-medium"
-                    >
-                      <CheckCircle className="w-3 h-3" />
-                      Accept
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Input Area - SIMPLIFIED WITH INTEGRATED SEND */}
-          <div className="border-t border-gray-700/50 bg-gray-800/30 backdrop-blur-sm p-4">
-            <div className="space-y-3">
-              <div className="relative">
-                <textarea
-                  placeholder={mode === "prompter" ? "Describe what you want to improve in your prompt... (Send)" : "Type your message to test the agent... (Send)"}
-                  rows={3}
-                  className={cn(
-                    "w-full px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-lg outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm resize-none custom-scrollbar text-sm pr-12",
-                    !selectedAgentId && 'opacity-50 cursor-not-allowed'
-                  )}
-                  disabled={!selectedAgentId}
-                  readOnly={isThinking}
-                  value={mode === "prompter" ? userInstruction : testMessage}
-                  onChange={(e) => {
-                    if (mode === "prompter") {
-                      setUserInstruction(e.target.value);
-                    } else {
-                      setTestMessage(e.target.value);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      if (mode === "prompter") {
-                        handleSendInstruction();
-                      } else {
-                        handleSendTestMessage();
-                      }
-                    }
-                  }}
-                />
-
-                {/* Send Button Inside Textarea */}
-                <button
-                  className={cn(
-                    "absolute bottom-2 right-2 p-1.5 rounded-md transition-all duration-200 flex items-center justify-center",
-                    (mode === "prompter" ? userInstruction.trim() : testMessage.trim()) && selectedAgentId && !isThinking
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg transform hover:scale-105"
-                      : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                  )}
-                  disabled={!(mode === "prompter" ? userInstruction.trim() : testMessage.trim()) || !selectedAgentId || isThinking}
-                  onClick={mode === "prompter" ? handleSendInstruction : handleSendTestMessage}
-                >
-                  {isThinking ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-
-              <p className="text-xs text-gray-500 text-center bg-gray-800/30 rounded-md px-2 py-1.5 border border-gray-700/30">
-                Using your personal API key • Monitor usage carefully
-              </p>
+          {/* Status agent */}
+          {selectedAgentName && (
+            <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-lg px-2 md:px-3 py-1.5 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs text-gray-300">
+                <span className="hidden md:inline">Editing: </span>
+                <span className="text-white font-medium">
+                  {isMobile ? selectedAgentName.slice(0, 8) + '...' : selectedAgentName}
+                </span>
+              </span>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* ===== MODALS ===== */}
+{/* Mode Toggle SEULEMENT sur desktop */}
+      {!isMobile && (
+        <div className="p-4 border-b border-gray-700/50 bg-gray-800/20">
+          <div className="flex bg-gray-800/50 backdrop-blur-sm rounded-lg p-1 border border-gray-700/30">
+            <button
+              onClick={() => setMode("prompter")}
+              className={cn(
+                "flex-1 px-3 py-2 rounded-md text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 relative overflow-hidden",
+                mode === "prompter"
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-400 hover:text-white hover:bg-gray-700/30"
+              )}
+              disabled={!selectedAgentId}
+            >
+              {mode === "prompter" && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
+              )}
+              <Brain className="w-3 h-3 relative z-10" />
+              <span className="relative z-10">AI Prompter</span>
+            </button>
+            <button
+              onClick={() => setMode("test")}
+              className={cn(
+                "flex-1 px-3 py-2 rounded-md text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 relative overflow-hidden",
+                mode === "test"
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-400 hover:text-white hover:bg-gray-700/30"
+              )}
+              disabled={!selectedAgentId}
+            >
+              {mode === "test" && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
+              )}
+              <MessageCircle className="w-3 h-3 relative z-10" />
+              <span className="relative z-10">Test Chat</span>
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* Delete Version Modal */}
+      {/* Chat Area */}
+      <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
+        {!selectedAgentId ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="w-16 h-16 rounded-xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center mb-4">
+              <Bot className="w-8 h-8 text-gray-500" />
+            </div>
+            <h3 className="text-sm font-semibold text-gray-400 mb-1">No Agent Selected</h3>
+            <p className="text-gray-500 text-xs max-w-sm">Select an agent to start testing</p>
+          </div>
+        ) : mode === "test" ? (
+          <>
+            {chatMessagesTestAI.length === 0 && !isThinking && (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 flex items-center justify-center mb-3">
+                  <MessageCircle className="w-6 h-6 text-blue-400" />
+                </div>
+                <h4 className="text-white font-medium mb-1 text-sm">Start Testing</h4>
+                <p className="text-gray-400 text-xs max-w-sm">Send a message to test your agent</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {chatMessagesTestAI.map((msg, i) => (
+                <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+                  <div className={cn(
+                    "max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed shadow-lg backdrop-blur-sm animate-fade-in",
+                    msg.role === "user"
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                      : "bg-gray-800/60 border border-gray-700/50 text-gray-100"
+                  )}>
+                    <div className="text-xs opacity-75 mb-1 font-medium">
+                      {msg.role === "user" ? "You" : "AI Agent"}
+                    </div>
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  </div>
+                </div>
+              ))}
+
+              {isThinking && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 flex items-center gap-2 backdrop-blur-sm">
+                    <div className="w-3 h-3 border-2 border-t-transparent border-blue-400 rounded-full animate-spin" />
+                    <span className="text-gray-300 text-xs">AI is thinking...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {chatMessagesTestAI.length > 0 && (
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={() => setChatMessagesTestAI([])}
+                  className="text-xs text-gray-500 hover:text-red-400 transition-colors px-3 py-1.5 rounded-md hover:bg-red-900/10 border border-gray-700/30 hover:border-red-500/30"
+                >
+                  Clear conversation
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {!suggestedPrompt && !aiSummary && messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600/20 to-pink-600/20 border border-purple-500/30 flex items-center justify-center mb-3">
+                  <Brain className="w-6 h-6 text-purple-400" />
+                </div>
+                <h4 className="text-white font-medium mb-1 text-sm">AI Prompt Assistant</h4>
+                <p className="text-gray-400 text-xs max-w-sm">Describe what you want to improve</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {messages.map((msg, i) => (
+                <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+                  <div className={cn(
+                    "max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed shadow-lg backdrop-blur-sm animate-fade-in",
+                    msg.role === "user"
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                      : "bg-gray-800/60 border border-gray-700/50 text-gray-100"
+                  )}>
+                    <div className="text-xs opacity-75 mb-1 font-medium">
+                      {msg.role === "user" ? "You" : "Prompt AI"}
+                    </div>
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  </div>
+                </div>
+              ))}
+
+              {isThinking && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 flex items-center gap-2 backdrop-blur-sm">
+                    <div className="w-3 h-3 border-2 border-t-transparent border-purple-400 rounded-full animate-spin" />
+                    <span className="text-gray-300 text-xs">Analyzing prompt...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Diff Display */}
+            {suggestedPrompt && diff && (
+              <div className="mt-4 bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 backdrop-blur-sm animate-fade-in">
+                <div className="flex items-center gap-1.5 mb-2 text-xs text-gray-400">
+                  <Code size={10} />
+                  Suggested changes
+                </div>
+                <div className="text-xs leading-relaxed whitespace-pre-wrap max-h-[150px] overflow-y-auto custom-scrollbar">
+                  {diff.map((part, i) => (
+                    <span key={i} className={
+                      part.added ? "text-emerald-400 bg-emerald-900/20 px-0.5 rounded-sm" :
+                        part.removed ? "text-red-400 bg-red-900/20 line-through px-0.5 rounded-sm" :
+                          "text-white"
+                    }>
+                      {part.value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            {suggestedPrompt && (
+              <div className="flex gap-2 mt-3 animate-fade-in">
+                <button
+                  onClick={() => {
+                    setSuggestedPrompt("");
+                    setAiSummary("");
+                    setDiff(null);
+                    setDiffPrompt(null);
+                  }}
+                  className="flex-1 bg-red-600/20 border border-red-500/30 hover:bg-red-600/30 text-red-400 hover:text-red-300 py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 text-xs font-medium"
+                >
+                  <X className="w-3 h-3" />
+                  Reject
+                </button>
+                <button
+                  onClick={() => {
+                    setPrompt(suggestedPrompt);
+                    setSuggestedPrompt("");
+                    setAiSummary("");
+                    setDiff(null);
+                    setDiffPrompt(null);
+                    toast.success("Prompt updated successfully!");
+                  }}
+                  className="flex-1 bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-400 hover:text-emerald-300 py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 text-xs font-medium"
+                >
+                  <CheckCircle className="w-3 h-3" />
+                  Accept
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Input Area */}
+<div className={cn(
+  "border-t border-gray-700/50 bg-gray-800/30 backdrop-blur-sm",
+  isMobile ? "p-2" : "p-4" // Padding réduit
+)}>
+  <div className={cn("space-y-2", !isMobile && "space-y-3")}>
+    <div className="relative">
+      <textarea
+        placeholder={mode === "prompter" ? "Describe improvements..." : "Type message..."}
+        rows={isMobile ? 1 : 3} // 1 seule ligne sur mobile !
+        className={cn(
+          "w-full px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-lg outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm resize-none custom-scrollbar text-sm pr-12",
+          !selectedAgentId && 'opacity-50 cursor-not-allowed'
+        )}
+        disabled={!selectedAgentId}
+        readOnly={isThinking}
+        value={mode === "prompter" ? userInstruction : testMessage}
+        onChange={(e) => {
+          if (mode === "prompter") {
+            setUserInstruction(e.target.value);
+          } else {
+            setTestMessage(e.target.value);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (mode === "prompter") {
+              handleSendInstruction();
+            } else {
+              handleSendTestMessage();
+            }
+          }
+        }}
+      />
+
+      {/* Send Button */}
+      <button
+        className={cn(
+          "absolute bottom-2 right-2 p-1.5 rounded-md transition-all duration-200 flex items-center justify-center",
+          (mode === "prompter" ? userInstruction.trim() : testMessage.trim()) && selectedAgentId && !isThinking
+            ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg transform hover:scale-105"
+            : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
+        )}
+        disabled={!(mode === "prompter" ? userInstruction.trim() : testMessage.trim()) || !selectedAgentId || isThinking}
+        onClick={mode === "prompter" ? handleSendInstruction : handleSendTestMessage}
+      >
+        {isThinking ? (
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        )}
+      </button>
+    </div>
+
+    {/* Message d'info plus discret sur mobile */}
+    {!isMobile && (
+      <p className="text-xs text-gray-500 text-center bg-gray-800/30 rounded-md px-2 py-1.5 border border-gray-700/30">
+        Using your personal API key • Monitor usage carefully
+      </p>
+    )}
+  </div>
+</div>
+    </div>
+  );
+
+  return (
+    <RequireApiKey>
+      <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar">
+      {/* ===== MOBILE TAB NAVIGATION ===== */}
+      {isMobile && (
+        <div className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50">
+          <div className="flex bg-gray-800/50 m-2 rounded-xl p-1 border border-gray-700/30">
+            <button
+              onClick={() => setMobileView("config")}
+              className={cn(
+                "flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden",
+                mobileView === "config"
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-400 hover:text-white hover:bg-gray-700/30"
+              )}
+            >
+              {mobileView === "config" && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
+              )}
+              <Settings className="w-4 h-4 relative z-10" />
+              <span className="relative z-10">Configuration</span>
+              {isModified && <div className="w-2 h-2 rounded-full bg-emerald-400 relative z-10" />}
+            </button>
+            <button
+              onClick={() => setMobileView("test")}
+              className={cn(
+                "flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden",
+                mobileView === "test"
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-400 hover:text-white hover:bg-gray-700/30"
+              )}
+            >
+              {mobileView === "test" && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
+              )}
+              <TestTube className="w-4 h-4 relative z-10" />
+              <span className="relative z-10">Testing</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ===== MAIN LAYOUT ===== */}
+      <div className={cn(
+        "flex",
+        isMobile ? "flex-col h-[calc(100vh-112px)]" : "h-[calc(100vh-64px)]"
+      )}>
+        {/* Configuration Panel */}
+        {(!isMobile || mobileView === "config") && renderConfigPanel()}
+
+        {/* Testing Panel */}
+        {(!isMobile || mobileView === "test") && renderTestPanel()}
+      </div>
+
+      {/* ===== MODALS (preservés exactement comme avant) ===== */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-md mx-auto animate-fade-in">
@@ -1092,30 +1172,23 @@ export default function AgentLab() {
                   <Trash2 className="text-red-400" size={24} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-                    Delete Version
-                  </h2>
+                  <h2 className="text-xl font-bold text-white">Delete Version</h2>
                   <p className="text-sm text-gray-400 mt-0.5">Select a version to delete</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200 group"
+                className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200"
               >
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gray-500/0 to-gray-500/0 group-hover:from-gray-500/10 group-hover:to-gray-500/10 transition-all duration-200"></div>
-                <X size={20} className="relative z-10" />
+                <X size={20} />
               </button>
             </div>
-
             <div className="p-6">
               <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
                 {versions.map((version, i) => {
                   const isLatest = i === 0;
                   return (
-                    <div
-                      key={version._id}
-                      className="flex justify-between items-center bg-gray-800/40 border border-gray-700/50 px-4 py-3 rounded-xl backdrop-blur-sm"
-                    >
+                    <div key={version._id} className="flex justify-between items-center bg-gray-800/40 border border-gray-700/50 px-4 py-3 rounded-xl backdrop-blur-sm">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-blue-400" />
                         <span className="text-sm text-white font-medium">
@@ -1131,21 +1204,14 @@ export default function AgentLab() {
                         <button
                           className="bg-red-600/20 border border-red-500/30 hover:bg-red-600/30 text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center gap-2 text-xs font-medium"
                           onClick={async () => {
-                            const res = await fetch(
-                              `/api/agents/${selectedAgentId}/versions/${version._id}`,
-                              { method: "DELETE" }
-                            );
-
+                            const res = await fetch(`/api/agents/${selectedAgentId}/versions/${version._id}`, { method: "DELETE" });
                             if (res.ok) {
                               toast.success("Version deleted successfully");
-
                               const updatedVersions = versions.filter((v) => v._id !== version._id);
                               setVersions(updatedVersions);
-
                               if (selectedVersionId === version._id && updatedVersions.length > 0) {
                                 const newVersion = updatedVersions[0];
                                 setSelectedVersionId(newVersion._id);
-
                                 const fetchRes = await fetch(`/api/agents/${selectedAgentId}/versions/${newVersion._id}`);
                                 const data = await fetchRes.json();
                                 if (data.version) {
@@ -1156,7 +1222,6 @@ export default function AgentLab() {
                                   setTopP(data.version.top_p);
                                 }
                               }
-
                               if (updatedVersions.length === 0) {
                                 setShowDeleteModal(false);
                               }
@@ -1178,11 +1243,10 @@ export default function AgentLab() {
           </div>
         </div>
       )}
-      {/* Add API Key Modal */}
+
       {showAddApiModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-md mx-auto">
-            {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-blue-500/20 border-2 border-blue-500/40 flex items-center justify-center shadow-lg">
@@ -1200,8 +1264,6 @@ export default function AgentLab() {
                 <X size={20} />
               </button>
             </div>
-
-            {/* Content */}
             <div className="p-6">
               <p className="text-gray-300 text-center">
                 Go to <span className="text-blue-400 font-medium">API Key page</span> to add new API keys.
@@ -1313,7 +1375,7 @@ export default function AgentLab() {
         />
       )}
 
-      {/* ===== ENHANCED STYLES ===== */}
+{/* ===== STYLES RESPONSIFS COMPLETS ===== */}
       <style jsx>{`
         .slider-enhanced::-webkit-slider-thumb {
           appearance: none;
@@ -1401,49 +1463,23 @@ export default function AgentLab() {
           }
         }
 
-        /* Mobile responsive adjustments */
-        @media (max-width: 768px) {
-          .mobile-stack {
-            flex-direction: column;
-          }
-          
-          .mobile-full {
-            width: 100%;
-          }
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
         }
-
-        /* Dark mode optimizations */
-        @media (prefers-color-scheme: dark) {
-          .dark-optimized {
-            color-scheme: dark;
-          }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(17, 24, 39, 0.3);
+          border-radius: 10px;
         }
-
-        /* Reduced motion preferences */
-        @media (prefers-reduced-motion: reduce) {
-          .animate-shimmer,
-          .animate-fade-in {
-            animation: none;
-          }
-          
-          * {
-            transition-duration: 0.01ms !important;
-          }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(to bottom, rgba(59, 130, 246, 0.5), rgba(6, 182, 212, 0.5));
+          border-radius: 10px;
         }
-
-        /* High contrast mode support */
-        @media (prefers-contrast: high) {
-          .high-contrast {
-            border-width: 2px;
-            border-style: solid;
-          }
-        }
-
-        /* Print styles */
-        @media print {
-          .no-print {
-            display: none !important;
-          }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(to bottom, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8));
         }
 
         /* SCROLL FIX - Remove page scroll, keep only internal scroll */
@@ -1489,7 +1525,107 @@ export default function AgentLab() {
         .left-panel-scroll::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(to bottom, rgba(59, 130, 246, 0.9), rgba(6, 182, 212, 0.9));
         }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 768px) {
+          .mobile-stack {
+            flex-direction: column;
+          }
+          
+          .mobile-full {
+            width: 100%;
+          }
+
+          /* Optimize touch targets */
+          button {
+            min-height: 44px;
+          }
+
+          /* Better spacing on small screens */
+          .mobile-spacing {
+            padding: 0.75rem;
+          }
+
+          /* Text sizing adjustments */
+          .mobile-text {
+            font-size: 0.875rem;
+          }
+        }
+
+        /* Tablet optimizations */
+        @media (min-width: 769px) and (max-width: 1023px) {
+          .tablet-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+
+        /* Dark mode optimizations */
+        @media (prefers-color-scheme: dark) {
+          .dark-optimized {
+            color-scheme: dark;
+          }
+        }
+
+        /* Reduced motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+          .animate-shimmer,
+          .animate-fade-in {
+            animation: none;
+          }
+          
+          * {
+            transition-duration: 0.01ms !important;
+          }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+          .high-contrast {
+            border-width: 2px;
+            border-style: solid;
+          }
+        }
+
+        /* Print styles */
+        @media print {
+          .no-print {
+            display: none !important;
+          }
+        }
+
+        /* Prevent body scroll on mobile */
+        @media (max-width: 1023px) {
+          body {
+            overflow: hidden;
+          }
+        }
+
+        /* Focus states for accessibility */
+        button:focus,
+        input:focus,
+        textarea:focus,
+        select:focus {
+          outline: 2px solid rgba(59, 130, 246, 0.6);
+          outline-offset: 2px;
+        }
+
+        /* Landscape mobile optimizations */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+          .landscape-compact {
+            padding: 0.5rem;
+          }
+        }
+
+        /* Safe area insets for mobile devices */
+        @supports (padding: max(0px)) {
+          .safe-area-inset {
+            padding-left: max(1rem, env(safe-area-inset-left));
+            padding-right: max(1rem, env(safe-area-inset-right));
+            padding-bottom: max(1rem, env(safe-area-inset-bottom));
+          }
+        }
       `}</style>
+      </div>
     </RequireApiKey>
   );
 }
