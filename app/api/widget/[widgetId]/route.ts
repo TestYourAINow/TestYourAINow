@@ -366,42 +366,46 @@ export async function GET(
       40% { transform: translateY(-6px); opacity: 1; }
     }
 
-/* 📱 RESPONSIVE */
-@media (max-width: 768px) {
-  .chat-widget {
-    bottom: 16px !important;
-    right: 16px !important;
-  }
-  
-  /* Interface plein écran mobile */
-  .chat-window {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    border-radius: 0 !important;
-    animation: mobileSlideUp 0.3s ease-out !important;
-  }
-  
-  /* Éviter le zoom sur l'input */
-  .chat-input {
-    font-size: 16px !important;
-  }
-  
-  /* Input flottant en bas */
-  .chat-input-area {
-    position: sticky !important;
-    bottom: 0 !important;
-    background: ${isDark ? '#1f2937' : '#ffffff'} !important;
-  }
-}
-
-/* Animation mobile */
-@keyframes mobileSlideUp {
-  0% { transform: translateY(100%); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
-}
+    /* 📱 RESPONSIVE - FIXES CHIRURGICAUX SEULEMENT */
+    @media (max-width: 768px) {
+      .chat-widget {
+        bottom: 16px !important;
+        right: 16px !important;
+      }
+      
+      /* Interface plein écran mobile */
+      .chat-window.mobile-fullscreen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        animation: mobileSlideUp 0.3s ease-out !important;
+        box-shadow: none !important;
+      }
+      
+      /* Éviter le zoom automatique sur l'input */
+      .chat-input {
+        font-size: 16px !important;
+      }
+      
+      /* Input flottant en bas */
+      .mobile-fullscreen .chat-input-area {
+        position: sticky !important;
+        bottom: 0 !important;
+        z-index: 10 !important;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
+      }
+    }
+    
+    /* Animation mobile spécifique */
+    @keyframes mobileSlideUp {
+      0% { transform: translateY(100%); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
   </style>
 </head>
 
@@ -529,6 +533,11 @@ function loadConversation() {
                 chatWindow?.classList.remove('hidden');
                 popup?.classList.add('hidden');
                 
+                // Ajouter classe mobile si nécessaire
+                if (window.innerWidth <= 768) {
+                  chatWindow?.classList.add('mobile-fullscreen');
+                }
+                
                 // 🎯 NOUVEAU: Envoyer message pour redimensionner l'iframe
                 parent.postMessage({ 
                   type: 'WIDGET_OPEN', 
@@ -602,13 +611,18 @@ function loadConversation() {
       }
     });
     
-    // Fonctions MODIFIÉES
+    // Fonctions MODIFIÉES avec gestion mobile
     function toggleChat() {
       isOpen = !isOpen;
       if (isOpen) {
         button?.classList.add('hidden');
         chatWindow?.classList.remove('hidden');
         popup?.classList.add('hidden');
+        
+        // Ajouter classe mobile si nécessaire
+        if (window.innerWidth <= 768) {
+          chatWindow?.classList.add('mobile-fullscreen');
+        }
         
         // Message de bienvenue seulement si pas de conversation sauvée
         if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
@@ -635,6 +649,7 @@ function loadConversation() {
     function closeChat() {
       isOpen = false;
       chatWindow?.classList.add('hidden');
+      chatWindow?.classList.remove('mobile-fullscreen');
       button?.classList.remove('hidden');
       parent.postMessage({ type: 'WIDGET_CLOSE', data: {} }, '*');
       
@@ -820,4 +835,4 @@ function loadConversation() {
       },
     });
   }
-} 
+}
