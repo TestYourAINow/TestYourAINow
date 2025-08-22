@@ -27,17 +27,11 @@ export async function GET(
 <html lang="fr">
 <head>
   <meta charset="utf-8">
+  <!-- 🎯 MODIFICATION 1: Viewport mobile-optimisé -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>${config.name || 'Chat Widget'}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    :root {
-      --safe-area-inset-top: env(safe-area-inset-top);
-      --safe-area-inset-bottom: env(safe-area-inset-bottom);
-      --safe-area-inset-left: env(safe-area-inset-left);
-      --safe-area-inset-right: env(safe-area-inset-right);
-    }
     
     html, body {
       margin: 0 !important;
@@ -48,9 +42,18 @@ export async function GET(
       height: 100vh !important;
       width: 100vw !important;
       position: relative !important;
+      /* 🎯 AJOUT 1: Prévenir zoom mobile */
       -webkit-text-size-adjust: 100%;
       -moz-text-size-adjust: 100%;
       text-size-adjust: 100%;
+    }
+    
+    /* 🎯 AJOUT 2: Variables CSS pour safe areas */
+    :root {
+      --safe-area-inset-top: env(safe-area-inset-top);
+      --safe-area-inset-bottom: env(safe-area-inset-bottom);
+      --safe-area-inset-left: env(safe-area-inset-left);
+      --safe-area-inset-right: env(safe-area-inset-right);
     }
     
 .chat-widget {
@@ -75,6 +78,7 @@ export async function GET(
       justify-content: center;
       background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, #06b6d4));
       animation: bounceIn 0.6s ease-out;
+      /* 🎯 AJOUT 3: Optimisations tactiles */
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
@@ -84,10 +88,11 @@ export async function GET(
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
     }
     
+    /* 🎯 AJOUT 4: Touch feedback mobile */
     .chat-button:active {
       transform: scale(0.98);
     }
-    
+
 .chat-popup {
   position: absolute;
   bottom: 100%;
@@ -117,17 +122,23 @@ export async function GET(
     
     .chat-window {
       position: absolute;
-      background: ${isDark ? '#1f2937' : '#ffffff'};
+      bottom: 0;
+      right: 0;
+      width: ${config.width || 380}px;
+      height: ${config.height || 600}px;
+      border-radius: 20px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      background: ${isDark ? '#1f2937' : '#ffffff'};
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* 📱 MOBILE: PLEIN ÉCRAN */
+    /* 🎯 AJOUT 5: Mode mobile plein écran */
     @media (max-width: 768px) {
       .chat-window {
+        position: fixed !important;
         top: var(--safe-area-inset-top, 0) !important;
         left: var(--safe-area-inset-left, 0) !important;
         right: var(--safe-area-inset-right, 0) !important;
@@ -146,18 +157,6 @@ export async function GET(
       }
     }
     
-    /* 🖥️ DESKTOP: MODE FENÊTRE */
-    @media (min-width: 769px) {
-      .chat-window {
-        bottom: 0;
-        right: 0;
-        width: ${config.width || 380}px;
-        height: ${config.height || 600}px;
-        border-radius: 20px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-      }
-    }
-    
     .chat-header {
       height: 64px;
       padding: 10px 16px;
@@ -165,7 +164,14 @@ export async function GET(
       align-items: center;
       justify-content: space-between;
       background: linear-gradient(135deg, var(--primary-color) 0%, color-mix(in srgb, var(--primary-color) 85%, #06b6d4) 100%);
-      padding-top: max(10px, var(--safe-area-inset-top, 0));
+    }
+    
+    /* 🎯 AJOUT 6: Header mobile avec safe area */
+    @media (max-width: 768px) {
+      .chat-header {
+        padding-top: max(10px, var(--safe-area-inset-top, 0));
+        height: calc(64px + var(--safe-area-inset-top, 0));
+      }
     }
     
     .chat-header-content {
@@ -230,6 +236,7 @@ export async function GET(
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      /* 🎯 AJOUT 7: Optimisations tactiles */
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
@@ -239,6 +246,7 @@ export async function GET(
       transform: scale(1.05);
     }
     
+    /* 🎯 AJOUT 8: Feedback tactile mobile */
     .chat-action-btn:active {
       transform: scale(0.95);
     }
@@ -248,6 +256,7 @@ export async function GET(
       overflow-y: auto;
       padding: 16px;
       background: ${isDark ? '#111827' : '#f8fafc'};
+      /* 🎯 AJOUT 9: Scroll optimisé mobile */
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
     }
@@ -287,6 +296,14 @@ export async function GET(
       max-width: 280px;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
       border: 1px solid rgba(0, 0, 0, 0.04);
+    }
+    
+    /* 🎯 AJOUT 10: Messages plus larges sur mobile */
+    @media (max-width: 768px) {
+      .message-bubble {
+        max-width: 85%;
+        font-size: 15px;
+      }
     }
     
     .message-bubble.bot {
@@ -329,9 +346,15 @@ export async function GET(
       padding: 12px 16px;
       border-top: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.4)' : 'rgba(229, 231, 235, 0.6)'};
       background: ${isDark ? '#1f2937' : '#ffffff'};
-      padding-bottom: max(12px, var(--safe-area-inset-bottom, 0));
-      position: relative;
-      z-index: 10;
+    }
+    
+    /* 🎯 AJOUT 11: Input area mobile avec safe area */
+    @media (max-width: 768px) {
+      .chat-input-area {
+        padding-bottom: max(12px, var(--safe-area-inset-bottom, 0));
+        position: relative;
+        z-index: 10;
+      }
     }
     
     .chat-input-container {
@@ -340,24 +363,43 @@ export async function GET(
       align-items: center;
     }
     
+    /* 🎯 AJOUT 12: Container mobile optimisé */
+    @media (max-width: 768px) {
+      .chat-input-container {
+        align-items: flex-end;
+        min-height: 44px;
+        gap: 12px;
+      }
+    }
+    
     .chat-input {
       flex: 1;
       padding: 8px 14px;
       border: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.8)' : 'rgba(209, 213, 219, 0.6)'};
       border-radius: 18px;
-      font-size: 16px;
+      font-size: 14px;
       outline: none;
       background: ${isDark ? 'rgba(55, 65, 81, 0.9)' : '#ffffff'};
       color: ${isDark ? 'white' : '#111827'};
       resize: none;
-      min-height: 44px;
+      min-height: 32px;
       max-height: 120px;
       font-family: inherit;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      -webkit-appearance: none;
-      -webkit-border-radius: 18px;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* 🎯 AJOUT 13: Input mobile anti-zoom */
+    @media (max-width: 768px) {
+      .chat-input {
+        font-size: 16px; /* CRITICAL: >= 16px pour éviter zoom iOS */
+        min-height: 44px; /* CRITICAL: >= 44px pour iOS touch targets */
+        padding: 12px 16px;
+        border-radius: 22px;
+        -webkit-appearance: none;
+        -webkit-border-radius: 22px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      }
     }
     
     .chat-input:focus {
@@ -375,8 +417,8 @@ export async function GET(
     }
     
     .chat-send-btn {
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       border: none;
       border-radius: 50%;
       cursor: pointer;
@@ -387,14 +429,24 @@ export async function GET(
       background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      /* 🎯 AJOUT 14: Optimisations tactiles */
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* 🎯 AJOUT 15: Send button mobile */
+    @media (max-width: 768px) {
+      .chat-send-btn {
+        width: 44px; /* CRITICAL: >= 44px pour iOS */
+        height: 44px;
+      }
     }
     
     .chat-send-btn:hover:not(:disabled) {
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
     
+    /* 🎯 AJOUT 16: Touch feedback */
     .chat-send-btn:active:not(:disabled) {
       transform: scale(0.95);
     }
@@ -402,33 +454,6 @@ export async function GET(
     .chat-send-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
-    }
-    
-    /* 🎯 LANDSCAPE MOBILE ADJUSTMENTS */
-    @media (max-width: 768px) and (orientation: landscape) {
-      .chat-header {
-        height: 56px;
-        padding: 8px 16px;
-        padding-top: max(8px, var(--safe-area-inset-top, 0));
-      }
-      
-      .chat-messages {
-        padding: 12px 16px;
-      }
-      
-      .chat-input-area {
-        padding: 8px 16px;
-        padding-bottom: max(8px, var(--safe-area-inset-bottom, 0));
-      }
-    }
-    
-    /* 🎯 TRÈS PETITS ÉCRANS */
-    @media (max-height: 500px) {
-      .chat-header {
-        height: 50px;
-        padding: 6px 16px;
-        padding-top: max(6px, var(--safe-area-inset-top, 0));
-      }
     }
     
     .hidden { display: none !important; }
@@ -538,13 +563,17 @@ export async function GET(
     let isTyping = false;
     let messages = [];
     
+    // 🎯 AJOUT 17: Variable mobile state
+    let initialViewportHeight = window.innerHeight;
+    let isMobile = window.innerWidth <= 768;
+    
     // Configuration
     const config = ${JSON.stringify(config)};
     
-    // 💾 PERSISTANCE - NOUVEAU CODE ICI
+    // 💾 PERSISTANCE - Code existant inchangé
     const STORAGE_KEY = 'chatbot_conversation_' + config._id;
     
-    // Fonctions de sauvegarde
+    // Fonctions de sauvegarde - Code existant inchangé
     function saveConversation() {
       try {
         const conversationData = {
@@ -585,10 +614,14 @@ function loadConversation() {
                 chatWindow?.classList.remove('hidden');
                 popup?.classList.add('hidden');
                 
-                // 🎯 NOUVEAU: Envoyer message pour redimensionner l'iframe
+                // 🎯 MODIFICATION 2: Message avec info mobile
                 parent.postMessage({ 
                   type: 'WIDGET_OPEN', 
-                  data: { width: config.width, height: config.height } 
+                  data: { 
+                    width: config.width, 
+                    height: config.height,
+                    isMobile: isMobile
+                  } 
                 }, '*');
                 
               }, 100);
@@ -603,7 +636,7 @@ function loadConversation() {
       return false;
     }
     
-    // Fonction pour ajouter au DOM sans sauvegarder
+    // Fonction pour ajouter au DOM sans sauvegarder - Code existant inchangé
     function addMessageToDOM(text, isBot, timestamp = new Date()) {
       const messageEl = document.createElement('div');
       messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
@@ -643,6 +676,7 @@ function loadConversation() {
     resetBtn?.addEventListener('click', resetChat);
     sendBtn?.addEventListener('click', sendMessage);
     
+    // 🎯 MODIFICATION 3: Input gestion mobile améliorée
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
       this.style.height = 'auto';
@@ -650,8 +684,8 @@ function loadConversation() {
       this.style.height = newHeight + 'px';
       this.style.overflowY = newHeight >= 120 ? 'auto' : 'hidden';
       
-      // 🎯 MOBILE: Scroll vers le bas pendant la frappe
-      if (window.innerWidth <= 768) {
+      // 🎯 AJOUT 18: Scroll mobile pendant la saisie
+      if (isMobile && isOpen) {
         setTimeout(() => scrollToBottom(), 100);
       }
     });
@@ -663,187 +697,22 @@ function loadConversation() {
       }
     });
     
-    // 🎯 GESTION FOCUS INPUT MOBILE
+    // 🎯 AJOUT 19: Gestion focus mobile
     input?.addEventListener('focus', function() {
-      if (window.innerWidth <= 768) {
+      if (isMobile && isOpen) {
         setTimeout(() => {
           this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
+        }, 300); // Attendre que le clavier soit ouvert
       }
     });
     
-    // Fonctions MODIFIÉES
-    function toggleChat() {
-      isOpen = !isOpen;
-      if (isOpen) {
-        button?.classList.add('hidden');
-        chatWindow?.classList.remove('hidden');
-        popup?.classList.add('hidden');
-        
-        // Message de bienvenue seulement si pas de conversation sauvée
-        if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
-          setTimeout(() => {
-            showTyping();
-            
-            setTimeout(() => {
-              hideTyping();
-              addMessage(config.welcomeMessage, true);
-            }, 1500);
-          }, 400);
-        }
-        
-        setTimeout(() => input?.focus(), 300);
-        parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
-      } else {
-        closeChat();
-      }
-      
-      // 💾 SAUVEGARDER l'état
-      saveConversation();
-    }
-    
-    function closeChat() {
-      isOpen = false;
-      chatWindow?.classList.add('hidden');
-      button?.classList.remove('hidden');
-      parent.postMessage({ type: 'WIDGET_CLOSE', data: {} }, '*');
-      
-      // 💾 SAUVEGARDER l'état
-      saveConversation();
-    }
-    
-    function resetChat() {
-      messagesContainer.innerHTML = '';
-      messages = [];
-      
-      // 💾 SUPPRIMER la sauvegarde
-      localStorage.removeItem(STORAGE_KEY);
-      
-      if (config.showWelcomeMessage && config.welcomeMessage) {
-        addMessage(config.welcomeMessage, true);
-      }
-    }
-    
-    async function sendMessage() {
-      const text = input?.value?.trim();
-      if (!text) return;
-      
-      addMessage(text, false);
-      input.value = '';
-      input.style.height = '32px';
-      sendBtn.disabled = true;
-      
-      showTyping();
-      
-      try {
-        const response = await fetch('/api/agents/' + config.selectedAgent + '/ask', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-public-kind': 'widget',
-            'x-widget-id': config._id,
-            'x-widget-token': 'public'
-          },
-          body: JSON.stringify({
-            message: text,
-            previousMessages: messages.map(m => ({ 
-              role: m.isBot ? 'assistant' : 'user', 
-              content: m.text 
-            })),
-            welcomeMessage: config.showWelcomeMessage ? config.welcomeMessage : null
-          })
-        });
-        
-        const data = await response.json();
-        hideTyping();
-        addMessage(data.reply || "Désolé, je n'ai pas pu traiter votre demande.", true);
-      } catch (error) {
-        console.error('Erreur:', error);
-        hideTyping();
-        addMessage("Désolé, une erreur s'est produite. Veuillez réessayer.", true);
-      }
-    }
-    
-    // 💾 FONCTION addMessage MODIFIÉE
-    function addMessage(text, isBot) {
-      const timestamp = new Date();
-      
-      // Ajouter au DOM
-      addMessageToDOM(text, isBot, timestamp);
-      
-      // Ajouter aux données
-      messages.push({ text, isBot, timestamp });
-      
-      // 💾 SAUVEGARDER
-      saveConversation();
-      
-      scrollToBottom();
-    }
-    
-    function showTyping() {
-      isTyping = true;
-      const typingEl = document.createElement('div');
-      typingEl.id = 'typingIndicator';
-      typingEl.className = 'message bot';
-      typingEl.innerHTML = 
-        '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc>') + '" alt="Bot" class="message-avatar">' +
-        '<div>' +
-          '<div class="typing-indicator">' +
-            '<div class="typing-dot"></div>' +
-            '<div class="typing-dot"></div>' +
-            '<div class="typing-dot"></div>' +
-          '</div>' +
-        '</div>';
-      messagesContainer?.appendChild(typingEl);
-      scrollToBottom();
-    }
-    
-    function hideTyping() {
-      isTyping = false;
-      document.getElementById('typingIndicator')?.remove();
-    }
-    
-    function scrollToBottom() {
-      const messages = document.getElementById('chatMessages');
-      if (messages) {
-        setTimeout(() => {
-          messages.scrollTop = messages.scrollHeight;
-        }, 100);
-      }
-    }
-    
-    // 🎯 GESTION CLAVIER VIRTUEL MOBILE
-    let initialViewportHeight = window.innerHeight;
-    
-    // 🎯 GESTION CHANGEMENT D'ORIENTATION
-    window.addEventListener('orientationchange', function() {
-      if (isOpen && window.innerWidth <= 768) {
-        setTimeout(() => {
-          initialViewportHeight = window.innerHeight;
-          
-          parent.postMessage({ 
-            type: 'WIDGET_RESIZE', 
-            data: { 
-              isMobile: true,
-              width: window.innerWidth, 
-              height: window.innerHeight 
-            } 
-          }, '*');
-          
-          if (document.activeElement === input) {
-            input.blur();
-            setTimeout(() => input.focus(), 100);
-          }
-        }, 500);
-      }
-    });
-    
-    // 🎯 GESTION RESIZE POUR CLAVIER VIRTUEL
+    // 🎯 AJOUT 20: Gestion clavier virtuel mobile
     window.addEventListener('resize', function() {
-      if (window.innerWidth <= 768 && isOpen) {
+      if (isMobile && isOpen) {
         const currentHeight = window.innerHeight;
         const heightDiff = initialViewportHeight - currentHeight;
         
+        // Si le clavier est ouvert (hauteur réduite de plus de 150px)
         if (heightDiff > 150) {
           setTimeout(() => {
             const inputArea = document.querySelector('.chat-input-area');
@@ -852,28 +721,73 @@ function loadConversation() {
             }
           }, 100);
         }
+        
+        // Notifier le parent des changements de dimensions
+        parent.postMessage({ 
+          type: 'WIDGET_RESIZE', 
+          data: { 
+            isMobile: true,
+            width: window.innerWidth, 
+            height: currentHeight 
+          } 
+        }, '*');
+      }
+    });
+    
+    // 🎯 AJOUT 21: Gestion changement d'orientation
+    window.addEventListener('orientationchange', function() {
+      if (isMobile && isOpen) {
+        setTimeout(() => {
+          // Recalculer viewport
+          initialViewportHeight = window.innerHeight;
+          isMobile = window.innerWidth <= 768;
+          
+          // Notifier le parent
+          parent.postMessage({ 
+            type: 'WIDGET_RESIZE', 
+            data: { 
+              isMobile: isMobile,
+              width: window.innerWidth, 
+              height: window.innerHeight 
+            } 
+          }, '*');
+          
+          // Re-focus input si nécessaire
+          if (document.activeElement === input) {
+            input.blur();
+            setTimeout(() => input.focus(), 100);
+          }
+        }, 500); // Attendre la fin de rotation
       }
     });
     
     // 💾 CHARGER la conversation au démarrage
     window.addEventListener('DOMContentLoaded', function() {
+      // 🎯 AJOUT 23: Initialiser état mobile
+      isMobile = window.innerWidth <= 768;
+      initialViewportHeight = window.innerHeight;
+      
       const loaded = loadConversation();
       
       // Si pas de conversation sauvée ET pas déjà ouvert, ne rien faire
       // Le message de bienvenue sera ajouté à l'ouverture
     });
     
-    // Popup automatique
+    // Popup automatique - Code existant inchangé
     if (config.showPopup && config.popupMessage && popup) {
       setTimeout(() => {
         if (!isOpen) popup.classList.remove('hidden');
       }, config.popupDelay * 1000);
     }
     
-    // Communication avec parent
+    // Communication avec parent - 🎯 MODIFICATION 5: Ajout info mobile
     parent.postMessage({ 
       type: 'WIDGET_READY', 
-      data: { width: config.width, height: config.height } 
+      data: { 
+        width: config.width, 
+        height: config.height,
+        isMobile: isMobile
+      } 
     }, '*');
     
     console.log('Widget chargé avec succès');

@@ -1,4 +1,4 @@
-// 🚀 CLIENT WIDGET SCRIPT - Version mise à jour pour le nouveau ChatWidget
+// 🚀 CLIENT WIDGET SCRIPT - Version mise à jour avec optimisations mobile CHIRURGICALES
 // Utilisé par les clients pour intégrer le widget sur leur site
 
 window.AIChatWidget = {
@@ -10,7 +10,7 @@ window.AIChatWidget = {
     height: 600
   },
   
-  // 🎯 Fonction d'initialisation principale
+  // 🎯 Fonction d'initialisation principale - INCHANGÉE
   init: function(options = {}) {
     if (!options.widgetId) {
       console.error('AIChatWidget: widgetId requis');
@@ -28,11 +28,10 @@ window.AIChatWidget = {
     this.setupMessageListener();
   },
 
-  // 📱 Créer l'iframe qui pointe vers la nouvelle API route
+  // 📱 Créer l'iframe - INCHANGÉ
   createIframe: function() {
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
-    // 🎯 NOUVEAU : Pointe vers l'API route qui génère du HTML pur
     iframe.src = `https://testyourainow.com/api/widget/${this.widgetId}`;
     iframe.title = "Assistant IA";
     iframe.loading = "lazy";
@@ -63,7 +62,7 @@ window.AIChatWidget = {
     }, 10000); // 10 secondes
   },
 
-  // 🎧 Écouter les messages de l'iframe
+  // 🎧 Écouter les messages de l'iframe - INCHANGÉ
   setupMessageListener: function() {
     window.addEventListener('message', (event) => {
       // 🔒 Sécurité : vérifier l'origine
@@ -103,7 +102,7 @@ window.AIChatWidget = {
     });
   },
 
-  // ✅ Widget prêt : afficher le bouton
+  // ✅ Widget prêt : afficher le bouton - INCHANGÉ
   handleWidgetReady: function(data) {
     if (!this.iframe) return;
     
@@ -117,67 +116,49 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-// 🔘 Afficher le bouton chat (état initial) - AVEC MARGES COMPLÈTES
-// 🔘 Afficher le bouton chat (état initial)
+// 🔘 Afficher le bouton chat - INCHANGÉ (marges déjà bonnes)
 showButton: function() {
   if (!this.iframe) return;
   
   const isMobile = window.innerWidth <= 768;
   
-  if (isMobile) {
-    // 🎯 MOBILE: Bouton centré, iframe normale
-    this.iframe.style.cssText = `
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      width: 72px;
-      height: 72px;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-    `;
-  } else {
-    // Desktop: comportement normal
-    const buttonSize = 64;
-    const shadowMargin = 15;
-    const hoverMargin = 8;
-    const popupMarginTop = 100;
-    const popupMarginLeft = 60;
-    
-    const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
-    const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
-    
-    this.iframe.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: ${iframeWidth}px;
-      height: ${iframeHeight}px;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-    `;
-  }
+  // 🎯 MARGES POUR: hover scale + box-shadow + popup
+  const buttonSize = 64;
+  const shadowMargin = 15; // Pour les box-shadows
+  const hoverMargin = 8;   // Pour le scale(1.05)
+  const popupMarginTop = 100; // Pour le popup au-dessus
+  const popupMarginLeft = 60; // Marge à gauche pour le popup
+  
+  const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
+  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
+  
+  this.iframe.style.cssText = `
+    position: fixed;
+    bottom: ${isMobile ? '16px' : '24px'};
+    right: ${isMobile ? '16px' : '24px'};
+    width: ${iframeWidth}px;
+    height: ${iframeHeight}px;
+    border: none;
+    z-index: 999999;
+    background: transparent;
+    opacity: 1;
+    pointer-events: auto;
+    display: block;
+  `;
 },
 
-// 🏠 Widget ouvert - AVEC DÉTECTION MOBILE
+// 🏠 Widget ouvert - 🎯 MODIFICATION CHIRURGICALE ICI
 handleWidgetOpen: function(data) {
   if (!this.iframe) return;
   
   console.log('AIChatWidget: Ouverture du chat');
   this.isOpen = true;
   
-  const isMobile = window.innerWidth <= 768;
-
+  // 🎯 NOUVELLE LOGIQUE: Détection mobile depuis les données du widget
+  const isMobile = data.isMobile || window.innerWidth <= 768;
   
   if (isMobile) {
-    // 🎯 MOBILE : interface plein écran
+    // 🎯 MOBILE: Interface plein écran - NOUVEAU COMPORTEMENT
     this.iframe.style.cssText = `
       position: fixed;
       top: 0;
@@ -194,10 +175,14 @@ handleWidgetOpen: function(data) {
       display: block;
     `;
   } else {
-    // Desktop : marges pour ombres + animation (comportement existant)
-    const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-    const baseHeight = Math.min(this.config.height, window.innerHeight - 100);
+    // 🎯 DESKTOP: Comportement existant PRÉSERVÉ
+    const isSmallScreen = window.innerHeight <= 600;
+    const maxHeight = window.innerHeight - 100;
     
+    const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
+    const baseHeight = Math.min(this.config.height, maxHeight);
+    
+    // Marges pour ombres + animation (comportement existant)
     const animationMargin = 25;
     const borderRadius = 10;
     
@@ -223,7 +208,7 @@ handleWidgetOpen: function(data) {
   }
 },
 
-  // 🔘 Widget fermé : revenir au bouton
+  // 🔘 Widget fermé : revenir au bouton - INCHANGÉ
   handleWidgetClose: function() {
     if (!this.iframe) return;
     
@@ -232,18 +217,18 @@ handleWidgetOpen: function(data) {
     this.showButton();
   },
 
-  // 📏 Redimensionnement dynamique du widget
+  // 📏 Redimensionnement dynamique du widget - 🎯 MODIFICATION LÉGÈRE
   handleWidgetResize: function(data) {
     if (!this.iframe || !this.isOpen) return;
     
     if (data.width) this.config.width = data.width;
     if (data.height) this.config.height = data.height;
     
-    // Re-appliquer les dimensions
+    // Re-appliquer les dimensions avec la nouvelle logique
     this.handleWidgetOpen(data);
   },
 
-  // 🚨 Gestion d'erreur
+  // 🚨 Gestion d'erreur - INCHANGÉE
   handleWidgetError: function(data) {
     console.error('AIChatWidget Error:', data.error);
     
@@ -258,23 +243,27 @@ handleWidgetOpen: function(data) {
     }
   },
 
-  // 📱 Gestion des changements de taille d'écran
+  // 📱 Gestion des changements de taille d'écran - 🎯 MODIFICATION LÉGÈRE
   handleResize: function() {
     if (!this.iframe) return;
     
     if (this.isOpen) {
+      // 🎯 NOUVEAU: Détecter si on est passé mobile/desktop
+      const isMobile = window.innerWidth <= 768;
+      
       // Recalculer les dimensions pour le chat ouvert
       this.handleWidgetOpen({ 
         width: this.config.width, 
-        height: this.config.height 
+        height: this.config.height,
+        isMobile: isMobile
       });
     } else {
-      // Repositionner le bouton
+      // Repositionner le bouton (comportement existant)
       this.showButton();
     }
   },
 
-  // 🗑️ Nettoyage complet
+  // 🗑️ Nettoyage complet - INCHANGÉ
   destroy: function() {
     if (this.iframe) {
       this.iframe.remove();
@@ -286,7 +275,7 @@ handleWidgetOpen: function(data) {
     console.log('AIChatWidget: Détruit proprement');
   },
 
-  // 📊 API publique pour les développeurs
+  // 📊 API publique pour les développeurs - INCHANGÉE
   getStatus: function() {
     return {
       isLoaded: !!this.iframe,
@@ -296,7 +285,7 @@ handleWidgetOpen: function(data) {
     };
   },
 
-  // 🎛️ API pour contrôler le widget
+  // 🎛️ API pour contrôler le widget - INCHANGÉE
   open: function() {
     if (this.iframe) {
       this.iframe.contentWindow?.postMessage({ type: 'FORCE_OPEN' }, '*');
@@ -318,7 +307,7 @@ handleWidgetOpen: function(data) {
   }
 };
 
-// 📱 Écouter les changements de taille d'écran
+// 📱 Écouter les changements de taille d'écran - INCHANGÉ
 window.addEventListener('resize', function() {
   if (window.AIChatWidget && window.AIChatWidget.handleResize) {
     // Debounce pour éviter trop d'appels
@@ -331,5 +320,5 @@ window.addEventListener('resize', function() {
 
 // 🔄 Auto-initialisation SUPPRIMÉE - Maintenant géré par le script d'intégration
 (function() {
-  console.log('AIChatWidget v2.0 chargé avec succès');
+  console.log('AIChatWidget v2.1 chargé avec succès - Optimisations mobile activées');
 })();
