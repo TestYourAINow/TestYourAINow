@@ -387,8 +387,7 @@ export async function GET(
     left: 0px !important;
     right: 0px !important;
     bottom: 0px !important;
-    width: calc(100vw - 20px) !important;
-    height: calc(100vh - 20px) !important;
+    border-radius: 0 !important;
   }
   
   /* Header mobile plus compact */
@@ -417,19 +416,16 @@ export async function GET(
   
   /* Input mobile optimisé */
 .chat-input-area {
-  position: fixed !important;
+  position: sticky !important;  /* Au lieu de relative */
   bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  background: white !important;
+  background: ${isDark ? '#1f2937' : '#ffffff'} !important;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+  z-index: 10 !important;
 }
   
 .chat-input {
-  font-size: 16px !important; /* Évite zoom iOS */
-  padding: 10px 14px !important;
-  min-height: 40px !important;
-  transform: translateZ(0) !important; /* AJOUTER cette ligne */
+  font-size: 16px !important;
+  transform: translateZ(0) !important;
 }
   
   .chat-send-btn {
@@ -441,6 +437,8 @@ export async function GET(
   .chat-messages {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+      padding-bottom: 0 !important;  /* Le sticky input gère l'espace */
+  height: calc(100vh - 56px - 60px) !important;
   }
 }
   </style>
