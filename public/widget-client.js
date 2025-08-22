@@ -118,34 +118,52 @@ window.AIChatWidget = {
   },
 
 // 🔘 Afficher le bouton chat (état initial) - AVEC MARGES COMPLÈTES
+// 🔘 Afficher le bouton chat (état initial)
 showButton: function() {
   if (!this.iframe) return;
   
   const isMobile = window.innerWidth <= 768;
   
-  // 🎯 MARGES POUR: hover scale + box-shadow + popup
-  const buttonSize = 64;
-  const shadowMargin = 15; // Pour les box-shadows
-  const hoverMargin = 8;   // Pour le scale(1.05)
-  const popupMarginTop = 100; // Pour le popup au-dessus
-  const popupMarginLeft = 60; // 🎯 NOUVEAU: Marge à gauche pour le popup
-  
-  const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
-  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
-  
-  this.iframe.style.cssText = `
-    position: fixed;
-    bottom: ${isMobile ? '16px' : '24px'};
-    right: ${isMobile ? '16px' : '24px'};
-    width: ${iframeWidth}px;
-    height: ${iframeHeight}px;
-    border: none;
-    z-index: 999999;
-    background: transparent;
-    opacity: 1;
-    pointer-events: auto;
-    display: block;
-  `;
+  if (isMobile) {
+    // 🎯 MOBILE: Bouton centré, iframe normale
+    this.iframe.style.cssText = `
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      width: 72px;
+      height: 72px;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+    `;
+  } else {
+    // Desktop: comportement normal
+    const buttonSize = 64;
+    const shadowMargin = 15;
+    const hoverMargin = 8;
+    const popupMarginTop = 100;
+    const popupMarginLeft = 60;
+    
+    const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
+    const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
+    
+    this.iframe.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: ${iframeWidth}px;
+      height: ${iframeHeight}px;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+    `;
+  }
 },
 
 // 🏠 Widget ouvert - AVEC DÉTECTION MOBILE
@@ -156,8 +174,7 @@ handleWidgetOpen: function(data) {
   this.isOpen = true;
   
   const isMobile = window.innerWidth <= 768;
-  const isSmallScreen = window.innerHeight <= 600;
-  const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
+
   
   if (isMobile) {
     // 🎯 MOBILE : interface plein écran
@@ -179,7 +196,7 @@ handleWidgetOpen: function(data) {
   } else {
     // Desktop : marges pour ombres + animation (comportement existant)
     const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-    const baseHeight = Math.min(this.config.height, maxHeight);
+    const baseHeight = Math.min(this.config.height, window.innerHeight - 100);
     
     const animationMargin = 25;
     const borderRadius = 10;
