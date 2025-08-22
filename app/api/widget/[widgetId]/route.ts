@@ -394,6 +394,8 @@ export async function GET(
     right: 0px !important;
     bottom: 0px !important;
     border-radius: 0 !important;
+    width: 100vw !important;     /* Override le desktop */
+    height: 100vh !important;
   }
   
   /* Header mobile plus compact */
@@ -421,12 +423,16 @@ export async function GET(
   }
   
   /* Input mobile optimisé */
-.chat-input-area {
-  position: sticky !important;  /* Au lieu de relative */
+
+  .chat-input-area {
+  position: fixed !important;  /* Fixed, pas sticky */
   bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
   background: ${isDark ? '#1f2937' : '#ffffff'} !important;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
-  z-index: 10 !important;
+  z-index: 1000 !important;
 }
   
 .chat-input {
@@ -440,11 +446,12 @@ export async function GET(
   }
   
   /* Scroll mobile amélioré */
+
   .chat-messages {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-      padding-bottom: 0 !important;  /* Le sticky input gère l'espace */
-  height: calc(100vh - 56px - 60px) !important;
+  padding-bottom: 80px !important;  /* Espace pour l'input flottant */
+  height: calc(100vh - 56px) !important;
   }
 }
   </style>

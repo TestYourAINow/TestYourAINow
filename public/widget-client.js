@@ -184,6 +184,8 @@ handleWidgetOpen: function(data) {
       bottom: 0;
       width: 100%;
       height: 100vh;
+        margin: 0 !important;
+  padding: 0 !important;
       border: none;
       z-index: 999999;
       background: transparent;
