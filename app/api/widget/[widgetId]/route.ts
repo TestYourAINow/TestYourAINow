@@ -111,7 +111,7 @@ export async function GET(
       display: flex;
       flex-direction: column;
 
-  max-height: calc(100vh - 138px);
+
   min-height: 300px;
       background: ${isDark ? '#1f2937' : '#ffffff'};
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
