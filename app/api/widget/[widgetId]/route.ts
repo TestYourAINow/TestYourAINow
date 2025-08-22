@@ -369,6 +369,12 @@ export async function GET(
     /* 🎯 MOBILE ONLY - Desktop non affecté */
 @media only screen and (max-width: 767px) and (hover: none) and (pointer: coarse) {
   /* Popup mobile plus large */
+
+  .chat-widget {
+    bottom: 0 !important;
+    right: 0 !important;
+  }
+
   .chat-popup {
     max-width: calc(100vw - 120px) !important;
     right: -20px !important;
