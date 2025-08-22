@@ -103,8 +103,8 @@ export async function GET(
       position: absolute;
       bottom: 0;
       right: 0;
-      width: ${config.width || 380}px;
-      height: ${config.height || 600}px;
+      width: calc(100vw - 20px);
+      height: calc(100vh - 20px);
       border-radius: 20px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       overflow: hidden;
@@ -383,10 +383,10 @@ export async function GET(
   /* Chat window fullscreen sur mobile */
   .chat-window {
     position: fixed !important;
-    top: 10px !important;
-    left: 10px !important;
-    right: 10px !important;
-    bottom: 10px !important;
+    top: 0px !important;
+    left: 0px !important;
+    right: 0px !important;
+    bottom: 0px !important;
     width: calc(100vw - 20px) !important;
     height: calc(100vh - 20px) !important;
     border-radius: 16px !important;
@@ -417,8 +417,11 @@ export async function GET(
   }
   
   /* Input mobile optimisé */
-  .chat-input-area {
-    padding: 10px 12px !important;
+  .chat-input {
+  font-size: 16px !important; /* Évite zoom iOS */
+  padding: 10px 14px !important;
+  min-height: 40px !important;
+  transform: translateZ(0) !important; /* AJOUTER cette ligne */
   }
   
   .chat-input {
