@@ -156,19 +156,13 @@ handleWidgetOpen: function(data) {
   this.isOpen = true;
   
   const isMobile = window.innerWidth <= 768;
-  const isSmallScreen = window.innerHeight <= 600;
-  const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
   
   if (isMobile) {
-    // Mobile : interface plein écran (pas de problème d'ombres)
+    // Mobile : plein écran
     this.iframe.style.cssText = `
       position: fixed;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      top: ${isSmallScreen ? '10px' : '20px'};
-      width: 100%;
-      height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%; height: 100%;
       border: none;
       z-index: 999999;
       background: transparent;
@@ -177,27 +171,35 @@ handleWidgetOpen: function(data) {
       display: block;
     `;
   } else {
-    // Desktop : marges pour ombres + animation
-    const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-    const baseHeight = Math.min(this.config.height, maxHeight);
+    // Desktop : adaptatif avec proportions 380:600
+    const maxWidth = 380;
+    const maxHeight = 600;
+    const aspectRatio = maxWidth / maxHeight;
     
-    // 🎯 MARGES COMPLÈTES
-
-    const animationMargin = 25; // Pour expandIn translateY + scale
-    const borderRadius = 10;    // Marge pour border-radius
+    const availableWidth = window.innerWidth - 100;
+    const availableHeight = window.innerHeight - 100;
     
-    const totalMarginWidth = animationMargin + borderRadius;
-    const totalMarginHeight = animationMargin + borderRadius;
+    let finalWidth = Math.min(maxWidth, availableWidth);
+    let finalHeight = Math.min(maxHeight, availableHeight);
     
-    const finalWidth = baseWidth + totalMarginWidth;
-    const finalHeight = baseHeight + totalMarginHeight;
+    // Maintenir les proportions
+    if (finalWidth / finalHeight !== aspectRatio) {
+      if (finalWidth / aspectRatio > finalHeight) {
+        finalWidth = finalHeight * aspectRatio;
+      } else {
+        finalHeight = finalWidth / aspectRatio;
+      }
+    }
+    
+    // Marges pour animations/ombres
+    const marginWidth = 50;
+    const marginHeight = 50;
     
     this.iframe.style.cssText = `
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: ${finalWidth}px;
-      height: ${finalHeight}px;
+      bottom: 24px; right: 24px;
+      width: ${finalWidth + marginWidth}px;
+      height: ${finalHeight + marginHeight}px;
       border: none;
       z-index: 999999;
       background: transparent;

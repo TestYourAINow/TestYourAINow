@@ -27,7 +27,7 @@ export async function GET(
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>${config.name || 'Chat Widget'}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -366,20 +366,22 @@ export async function GET(
       40% { transform: translateY(-6px); opacity: 1; }
     }
 
-        /* 📱 RESPONSIVE */
-    @media (max-width: 768px) {
-      .chat-widget {
-        bottom: 16px !important;
-        right: 16px !important;
-      }
-      
-      .chat-window {
-        width: calc(100vw - 32px) !important;
-        height: calc(100vh - 100px) !important;
-        bottom: 0 !important;
-        right: 0 !important;
-      }
-    }
+    /* Mobile : chat prend tout l'écran */
+@media (max-width: 768px) {
+  .chat-window {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+  }
+  
+  .chat-input {
+    font-size: 16px !important; /* Évite le zoom */
+  }
+}
   </style>
 </head>
 
