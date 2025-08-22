@@ -1,4 +1,4 @@
-// 🚀 CLIENT WIDGET SCRIPT - Version mise à jour pour le nouveau ChatWidget
+// 🚀 CLIENT WIDGET SCRIPT - Version MOBILE OPTIMISÉE
 // Utilisé par les clients pour intégrer le widget sur leur site
 
 window.AIChatWidget = {
@@ -26,13 +26,49 @@ window.AIChatWidget = {
     this.widgetId = options.widgetId;
     this.createIframe();
     this.setupMessageListener();
+    this.setupMobileOptimizations();
+  },
+
+  // 📱 Nouvelles optimisations mobile
+  setupMobileOptimizations: function() {
+    // Détecter le changement d'orientation
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => this.handleResize(), 200);
+    });
+    
+    // Gérer le viewport mobile
+    this.updateViewportHeight();
+    window.addEventListener('resize', () => this.updateViewportHeight());
+  },
+
+  // 📏 Calculer la vraie hauteur disponible sur mobile
+  updateViewportHeight: function() {
+    // CSS custom property pour la vraie hauteur de viewport
+    document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+  },
+
+  // 📱 Détecter le type d'appareil
+  getDeviceInfo: function() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const isMobile = width <= 768;
+    const isTablet = width > 768 && width <= 1024;
+    const isSmallHeight = height <= 600;
+    const isLandscape = width > height;
+    
+    return { 
+      isMobile, 
+      isTablet, 
+      isSmallHeight, 
+      isLandscape,
+      availableHeight: height - (isMobile ? 20 : 40) // Marge pour status bar
+    };
   },
 
   // 📱 Créer l'iframe qui pointe vers la nouvelle API route
   createIframe: function() {
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
-    // 🎯 NOUVEAU : Pointe vers l'API route qui génère du HTML pur
     iframe.src = `https://testyourainow.com/api/widget/${this.widgetId}`;
     iframe.title = "Assistant IA";
     iframe.loading = "lazy";
@@ -40,8 +76,8 @@ window.AIChatWidget = {
     // 🔧 Style initial : invisible jusqu'à ce que le widget soit prêt
     iframe.style.cssText = `
       position: fixed;
-      bottom: 24px;
-      right: 24px;
+      bottom: 0;
+      right: 0;
       width: 0px;
       height: 0px;
       border: none;
@@ -49,18 +85,19 @@ window.AIChatWidget = {
       background: transparent;
       opacity: 0;
       pointer-events: none;
+      transition: all 0.3s ease;
     `;
 
     this.iframe = iframe;
     document.body.appendChild(iframe);
     
-    // 🔄 Timeout de sécurité si le widget ne charge pas
+    // 🔄 Timeout de sécurité
     setTimeout(() => {
       if (this.iframe && this.iframe.style.opacity === '0') {
         console.warn('AIChatWidget: Timeout de chargement, affichage forcé');
         this.showButton();
       }
-    }, 10000); // 10 secondes
+    }, 10000);
   },
 
   // 🎧 Écouter les messages de l'iframe
@@ -83,19 +120,15 @@ window.AIChatWidget = {
         case 'WIDGET_READY':
           this.handleWidgetReady(data);
           break;
-          
         case 'WIDGET_OPEN':
           this.handleWidgetOpen(data);
           break;
-          
         case 'WIDGET_CLOSE':
           this.handleWidgetClose();
           break;
-          
         case 'WIDGET_ERROR':
           this.handleWidgetError(data);
           break;
-          
         case 'WIDGET_RESIZE':
           this.handleWidgetResize(data);
           break;
@@ -109,7 +142,6 @@ window.AIChatWidget = {
     
     console.log('AIChatWidget: Widget prêt à être affiché');
     
-    // Sauvegarder la config
     if (data.width) this.config.width = data.width;
     if (data.height) this.config.height = data.height;
     
@@ -117,96 +149,133 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-// 🔘 Afficher le bouton chat (état initial) - AVEC MARGES COMPLÈTES
-showButton: function() {
-  if (!this.iframe) return;
-  
-  const isMobile = window.innerWidth <= 768;
-  
-  // 🎯 MARGES POUR: hover scale + box-shadow + popup
-  const buttonSize = 64;
-  const shadowMargin = 15; // Pour les box-shadows
-  const hoverMargin = 8;   // Pour le scale(1.05)
-  const popupMarginTop = 100; // Pour le popup au-dessus
-  const popupMarginLeft = 60; // 🎯 NOUVEAU: Marge à gauche pour le popup
-  
-  const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
-  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
-  
-  this.iframe.style.cssText = `
-    position: fixed;
-    bottom: ${isMobile ? '16px' : '24px'};
-    right: ${isMobile ? '16px' : '24px'};
-    width: ${iframeWidth}px;
-    height: ${iframeHeight}px;
-    border: none;
-    z-index: 999999;
-    background: transparent;
-    opacity: 1;
-    pointer-events: auto;
-    display: block;
-  `;
-},
-
-// 🏠 Widget ouvert - AVEC MARGES COMPLÈTES POUR OMBRES
-handleWidgetOpen: function(data) {
-  if (!this.iframe) return;
-  
-  console.log('AIChatWidget: Ouverture du chat');
-  this.isOpen = true;
-  
-  const isMobile = window.innerWidth <= 768;
-  const isSmallScreen = window.innerHeight <= 600;
-  const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
-  
-  if (isMobile) {
-    // Mobile : interface plein écran (pas de problème d'ombres)
+  // 🔘 Afficher le bouton chat - VERSION SIMPLIFIÉE MOBILE
+  showButton: function() {
+    if (!this.iframe) return;
+    
+    const device = this.getDeviceInfo();
+    
+    // Tailles simplifiées selon l'appareil
+    let buttonSize, margin, safeArea;
+    
+    if (device.isMobile) {
+      buttonSize = device.isLandscape ? 56 : 64; // Plus petit en landscape
+      margin = 16;
+      safeArea = 20; // Pour les encoches/safe areas
+    } else {
+      buttonSize = 64;
+      margin = 24;
+      safeArea = 0;
+    }
+    
+    // Taille d'iframe simplifiée : juste bouton + popup space
+    const iframeWidth = buttonSize + 200; // 200px pour popup à gauche
+    const iframeHeight = buttonSize + 120; // 120px pour popup au-dessus
+    
     this.iframe.style.cssText = `
       position: fixed;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      top: ${isSmallScreen ? '10px' : '20px'};
-      width: 100%;
-      height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
+      bottom: ${margin + safeArea}px;
+      right: ${margin}px;
+      width: ${iframeWidth}px;
+      height: ${iframeHeight}px;
       border: none;
       z-index: 999999;
       background: transparent;
       opacity: 1;
       pointer-events: auto;
       display: block;
+      transition: all 0.3s ease;
     `;
-  } else {
-    // Desktop : marges pour ombres + animation
-    const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-    const baseHeight = Math.min(this.config.height, maxHeight);
-    
-    // 🎯 MARGES COMPLÈTES
+  },
 
-    const animationMargin = 25; // Pour expandIn translateY + scale
-    const borderRadius = 10;    // Marge pour border-radius
+  // 🏠 Widget ouvert - VERSION MOBILE OPTIMISÉE
+  handleWidgetOpen: function(data) {
+    if (!this.iframe) return;
     
-    const totalMarginWidth = animationMargin + borderRadius;
-    const totalMarginHeight = animationMargin + borderRadius;
+    console.log('AIChatWidget: Ouverture du chat');
+    this.isOpen = true;
     
-    const finalWidth = baseWidth + totalMarginWidth;
-    const finalHeight = baseHeight + totalMarginHeight;
+    const device = this.getDeviceInfo();
+    
+    if (device.isMobile) {
+      // 📱 MOBILE : Interface adaptative
+      this.openMobileFullscreen(device);
+    } else if (device.isTablet) {
+      // 📟 TABLET : Interface hybride
+      this.openTabletMode(device);
+    } else {
+      // 💻 DESKTOP : Interface classique
+      this.openDesktopMode(device);
+    }
+  },
+
+  // 📱 Mode mobile plein écran AMÉLIORÉ
+  openMobileFullscreen: function(device) {
+    const topMargin = device.isLandscape ? 10 : 20;
+    const height = device.isLandscape ? 
+      `calc(100vh - ${topMargin}px)` : 
+      `calc(var(--vh, 1vh) * 100 - ${topMargin}px)`;
+    
+    this.iframe.style.cssText = `
+      position: fixed;
+      top: ${topMargin}px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: ${height};
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+      transition: all 0.3s ease;
+    `;
+  },
+
+  // 📟 Mode tablet optimisé
+  openTabletMode: function(device) {
+    const maxWidth = Math.min(this.config.width + 40, device.isLandscape ? 500 : 420);
+    const maxHeight = Math.min(this.config.height + 40, device.availableHeight);
+    
+    this.iframe.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: ${maxWidth}px;
+      height: ${maxHeight}px;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+      border-radius: 20px;
+      transition: all 0.3s ease;
+    `;
+  },
+
+  // 💻 Mode desktop classique
+  openDesktopMode: function(device) {
+    const width = Math.min(this.config.width + 30, window.innerWidth - 60);
+    const height = Math.min(this.config.height + 30, device.availableHeight);
     
     this.iframe.style.cssText = `
       position: fixed;
       bottom: 24px;
       right: 24px;
-      width: ${finalWidth}px;
-      height: ${finalHeight}px;
+      width: ${width}px;
+      height: ${height}px;
       border: none;
       z-index: 999999;
       background: transparent;
       opacity: 1;
       pointer-events: auto;
       display: block;
+      transition: all 0.3s ease;
     `;
-  }
-},
+  },
 
   // 🔘 Widget fermé : revenir au bouton
   handleWidgetClose: function() {
@@ -217,14 +286,14 @@ handleWidgetOpen: function(data) {
     this.showButton();
   },
 
-  // 📏 Redimensionnement dynamique du widget
+  // 📏 Redimensionnement SIMPLIFIÉ
   handleWidgetResize: function(data) {
     if (!this.iframe || !this.isOpen) return;
     
     if (data.width) this.config.width = data.width;
     if (data.height) this.config.height = data.height;
     
-    // Re-appliquer les dimensions
+    // Re-appliquer selon le mode actuel
     this.handleWidgetOpen(data);
   },
 
@@ -232,29 +301,29 @@ handleWidgetOpen: function(data) {
   handleWidgetError: function(data) {
     console.error('AIChatWidget Error:', data.error);
     
-    // Tentative de récupération automatique
     if (this.iframe) {
       this.iframe.style.opacity = '0';
       setTimeout(() => {
         if (this.iframe) {
-          this.iframe.src = this.iframe.src; // Recharger
+          this.iframe.src = this.iframe.src;
         }
       }, 2000);
     }
   },
 
-  // 📱 Gestion des changements de taille d'écran
+  // 📱 Gestion des changements de taille d'écran AMÉLIORÉE
   handleResize: function() {
     if (!this.iframe) return;
     
+    // Mettre à jour la hauteur du viewport
+    this.updateViewportHeight();
+    
     if (this.isOpen) {
-      // Recalculer les dimensions pour le chat ouvert
       this.handleWidgetOpen({ 
         width: this.config.width, 
         height: this.config.height 
       });
     } else {
-      // Repositionner le bouton
       this.showButton();
     }
   },
@@ -268,16 +337,18 @@ handleWidgetOpen: function(data) {
     this.isOpen = false;
     this.widgetId = null;
     window.removeEventListener('resize', this.handleResize.bind(this));
+    window.removeEventListener('orientationchange', this.handleResize.bind(this));
     console.log('AIChatWidget: Détruit proprement');
   },
 
-  // 📊 API publique pour les développeurs
+  // 📊 API publique
   getStatus: function() {
     return {
       isLoaded: !!this.iframe,
       isOpen: this.isOpen,
       widgetId: this.widgetId,
-      config: this.config
+      config: this.config,
+      device: this.getDeviceInfo()
     };
   },
 
@@ -303,18 +374,25 @@ handleWidgetOpen: function(data) {
   }
 };
 
-// 📱 Écouter les changements de taille d'écran
+// 📱 Event listeners optimisés
+let resizeTimeout;
 window.addEventListener('resize', function() {
   if (window.AIChatWidget && window.AIChatWidget.handleResize) {
-    // Debounce pour éviter trop d'appels
-    clearTimeout(window.AIChatWidget.resizeTimeout);
-    window.AIChatWidget.resizeTimeout = setTimeout(() => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
       window.AIChatWidget.handleResize();
-    }, 150);
+    }, 100); // Plus rapide pour mobile
   }
 });
 
-// 🔄 Auto-initialisation SUPPRIMÉE - Maintenant géré par le script d'intégration
-(function() {
-  console.log('AIChatWidget v2.0 chargé avec succès');
-})();
+// Optimisation pour le changement d'orientation
+window.addEventListener('orientationchange', function() {
+  if (window.AIChatWidget && window.AIChatWidget.handleResize) {
+    // Délai plus long pour laisser le navigateur s'adapter
+    setTimeout(() => {
+      window.AIChatWidget.handleResize();
+    }, 300);
+  }
+});
+
+console.log('AIChatWidget v2.1 Mobile Optimized chargé avec succès');
