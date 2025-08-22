@@ -175,7 +175,7 @@ handleWidgetOpen: function(data) {
   const isMobile = this.isMobileDevice();
   
   if (isMobile) {
-    // 🎯 MOBILE UNIQUEMENT : Fullscreen
+    // 🎯 MOBILE : Fullscreen simple et propre
     this.iframe.style.cssText = `
       position: fixed;
       top: 0;
@@ -192,11 +192,9 @@ handleWidgetOpen: function(data) {
       display: block;
     `;
   } else {
-    // 🎯 DESKTOP : TON CODE ACTUEL COPIÉ-COLLÉ
-    const isSmallScreen = window.innerHeight <= 600;
-    const maxHeight = window.innerHeight - 100;
+    // 🎯 DESKTOP : Version simplifiée de ton code (sans logique mobile)
     const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-    const baseHeight = Math.min(this.config.height, maxHeight);
+    const baseHeight = Math.min(this.config.height, window.innerHeight - 100);
     
     const animationMargin = 25;
     const borderRadius = 10;
