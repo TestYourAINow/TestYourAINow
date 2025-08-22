@@ -389,7 +389,6 @@ export async function GET(
     bottom: 0px !important;
     width: calc(100vw - 20px) !important;
     height: calc(100vh - 20px) !important;
-    border-radius: 16px !important;
   }
   
   /* Header mobile plus compact */
@@ -417,18 +416,21 @@ export async function GET(
   }
   
   /* Input mobile optimisé */
-  .chat-input {
+.chat-input-area {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  background: white !important;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+}
+  
+.chat-input {
   font-size: 16px !important; /* Évite zoom iOS */
   padding: 10px 14px !important;
   min-height: 40px !important;
   transform: translateZ(0) !important; /* AJOUTER cette ligne */
-  }
-  
-  .chat-input {
-    font-size: 16px !important; /* Évite zoom iOS */
-    padding: 10px 14px !important;
-    min-height: 40px !important;
-  }
+}
   
   .chat-send-btn {
     width: 44px !important;
