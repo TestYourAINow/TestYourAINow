@@ -372,13 +372,6 @@ export async function GET(
         bottom: 16px !important;
         right: 16px !important;
       }
-      
-      .chat-window {
-        width: calc(100vw - 32px) !important;
-        height: calc(100vh - 100px) !important;
-        bottom: 0 !important;
-        right: 0 !important;
-      }
     }
   </style>
 </head>
