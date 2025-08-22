@@ -121,31 +121,48 @@ window.AIChatWidget = {
 showButton: function() {
   if (!this.iframe) return;
   
-  const isMobile = window.innerWidth <= 768;
+  const isMobile = this.isMobileDevice();
   
-  // 🎯 MARGES POUR: hover scale + box-shadow + popup
-  const buttonSize = 64;
-  const shadowMargin = 15; // Pour les box-shadows
-  const hoverMargin = 8;   // Pour le scale(1.05)
-  const popupMarginTop = 100; // Pour le popup au-dessus
-  const popupMarginLeft = 60; // 🎯 NOUVEAU: Marge à gauche pour le popup
-  
-  const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
-  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
-  
-  this.iframe.style.cssText = `
-    position: fixed;
-    bottom: ${isMobile ? '16px' : '24px'};
-    right: ${isMobile ? '16px' : '24px'};
-    width: ${iframeWidth}px;
-    height: ${iframeHeight}px;
-    border: none;
-    z-index: 999999;
-    background: transparent;
-    opacity: 1;
-    pointer-events: auto;
-    display: block;
-  `;
+  if (isMobile) {
+    // 🎯 MOBILE UNIQUEMENT : Bouton simple
+    this.iframe.style.cssText = `
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      width: 80px;
+      height: 80px;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+    `;
+  } else {
+    // 🎯 DESKTOP : TON CODE ACTUEL COPIÉ-COLLÉ
+    const buttonSize = 64;
+    const shadowMargin = 15;
+    const hoverMargin = 8;
+    const popupMarginTop = 100;
+    const popupMarginLeft = 60;
+    
+    const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
+    const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
+    
+    this.iframe.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: ${iframeWidth}px;
+      height: ${iframeHeight}px;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+    `;
+  }
 },
 
 // 🏠 Widget ouvert - AVEC MARGES COMPLÈTES POUR OMBRES
@@ -155,20 +172,18 @@ handleWidgetOpen: function(data) {
   console.log('AIChatWidget: Ouverture du chat');
   this.isOpen = true;
   
-  const isMobile = window.innerWidth <= 768;
-  const isSmallScreen = window.innerHeight <= 600;
-  const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
+  const isMobile = this.isMobileDevice();
   
   if (isMobile) {
-    // Mobile : interface plein écran (pas de problème d'ombres)
+    // 🎯 MOBILE UNIQUEMENT : Fullscreen
     this.iframe.style.cssText = `
       position: fixed;
-      bottom: 0;
-      right: 0;
+      top: 0;
       left: 0;
-      top: ${isSmallScreen ? '10px' : '20px'};
+      right: 0;
+      bottom: 0;
       width: 100%;
-      height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
+      height: 100vh;
       border: none;
       z-index: 999999;
       background: transparent;
@@ -177,15 +192,14 @@ handleWidgetOpen: function(data) {
       display: block;
     `;
   } else {
-    // Desktop : marges pour ombres + animation
+    // 🎯 DESKTOP : TON CODE ACTUEL COPIÉ-COLLÉ
+    const isSmallScreen = window.innerHeight <= 600;
+    const maxHeight = window.innerHeight - 100;
     const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
     const baseHeight = Math.min(this.config.height, maxHeight);
     
-    // 🎯 MARGES COMPLÈTES
-
-    const animationMargin = 25; // Pour expandIn translateY + scale
-    const borderRadius = 10;    // Marge pour border-radius
-    
+    const animationMargin = 25;
+    const borderRadius = 10;
     const totalMarginWidth = animationMargin + borderRadius;
     const totalMarginHeight = animationMargin + borderRadius;
     
@@ -280,6 +294,16 @@ handleWidgetOpen: function(data) {
       config: this.config
     };
   },
+
+  // 🟢 AJOUTER après la ligne "getStatus: function() { ... },"
+isMobileDevice: function() {
+  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+  const isMobileWidth = window.innerWidth <= 768;
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
+  return isMobileUA || (isMobileWidth && isTouchDevice);
+},
 
   // 🎛️ API pour contrôler le widget
   open: function() {
