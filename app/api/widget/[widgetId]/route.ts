@@ -103,13 +103,16 @@ export async function GET(
       position: absolute;
       bottom: 0;
       right: 0;
-      width:  calc(100% - 35px);
-      height: calc(100% - 35px);
+      width: 380px;
+      height: 600px;
       border-radius: 20px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       overflow: hidden;
       display: flex;
       flex-direction: column;
+
+  max-height: calc(100vh - 138px);
+  min-height: 300px;
       background: ${isDark ? '#1f2937' : '#ffffff'};
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
