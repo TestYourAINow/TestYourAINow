@@ -216,7 +216,7 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
                   <p className="text-sm text-blue-300">Preview how it looks before deploying</p>
                 </div>
                 <a
-                  href={`${baseUrl}/widget/${widgetId}`}
+                  href={`${baseUrl}/api/widget/${widgetId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 border border-blue-500/40"
