@@ -28,7 +28,7 @@ interface DemoConfig {
   showWelcomeMessage: boolean;
   chatTitle: string;
   subtitle: string;
-  usageLimit: number; // ✅ NOUVEAU
+  usageLimit: number;
 }
 
 interface Message {
@@ -49,13 +49,7 @@ interface DemoItem {
   name: string;
 }
 
-// ❌ SUPPRIMÉ : TypingDots Component (maintenant dans le CSS Module)
-// ❌ SUPPRIMÉ : CollapsibleSection Component (reste identique)
-// ❌ SUPPRIMÉ : ChatButton Component 
-// ❌ SUPPRIMÉ : ChatHeader Component
-// ❌ SUPPRIMÉ : ChatWindow Component
-
-// CollapsibleSection Component avec auto-scroll (INCHANGÉ)
+// CollapsibleSection Component - Mobile optimized
 const CollapsibleSection: React.FC<{
   title: string;
   icon: React.ReactNode;
@@ -81,14 +75,15 @@ const CollapsibleSection: React.FC<{
     <div ref={sectionRef} className="border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm overflow-hidden">
       <button
         onClick={handleToggle}
-        className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-700/30 transition-colors"
+        className="w-full lg:px-4 lg:py-4 px-3 py-3 flex items-center justify-between hover:bg-gray-700/30 transition-colors"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center lg:gap-3 gap-2">
           {icon}
-          <span className="font-medium text-gray-200">{title}</span>
+          <span className="font-medium text-gray-200 lg:text-base text-sm">{title}</span>
         </div>
         <div className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}>
-          <ChevronRight size={18} className="text-gray-400" />
+          <ChevronRight size={16} className="text-gray-400 lg:hidden" />
+          <ChevronRight size={18} className="text-gray-400 hidden lg:block" />
         </div>
       </button>
       
@@ -97,7 +92,7 @@ const CollapsibleSection: React.FC<{
       )}
       
       <div className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
-        <div className="px-4 pb-4 pt-4">
+        <div className="lg:px-4 lg:pb-4 lg:pt-4 px-3 pb-3 pt-3">
           {children}
         </div>
       </div>
@@ -105,7 +100,7 @@ const CollapsibleSection: React.FC<{
   );
 };
 
-// Composant pour les actions de démo (INCHANGÉ)
+// Composant pour les actions de démo
 const DemoActions = ({ 
   demo, 
   onView, 
@@ -136,7 +131,7 @@ const DemoActions = ({
 };
 
 export default function DemoAgentPage() {
-  // Configuration states - AJOUTÉ usageLimit
+  // Configuration states
   const [config, setConfig] = useState<DemoConfig>({
     name: 'AI Assistant Demo',
     agentId: '',
@@ -151,7 +146,7 @@ export default function DemoAgentPage() {
     showWelcomeMessage: true,
     chatTitle: 'AI Assistant',
     subtitle: 'Online',
-    usageLimit: 150, // ✅ NOUVEAU
+    usageLimit: 150,
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -167,13 +162,11 @@ export default function DemoAgentPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [showPopupBubble, setShowPopupBubble] = useState(false);
 
-  // ❌ SUPPRIMÉ : animateMessages (géré par le composant maintenant)
-
-  // Agents and demos states (INCHANGÉS)
+  // Agents and demos states
   const [agents, setAgents] = useState<Agent[]>([]);
   const [userDemos, setUserDemos] = useState<DemoItem[]>([]);
 
-  // Modal states (INCHANGÉS)
+  // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedDemoId, setSelectedDemoId] = useState<string | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -185,13 +178,15 @@ export default function DemoAgentPage() {
   });
   const [isDeletingDemo, setIsDeletingDemo] = useState(false);
 
-  // Color picker state (INCHANGÉS)
+  // Mobile responsive state
+  const [mobileView, setMobileView] = useState<'preview' | 'config'>('preview');
+
+  // Color picker state
   const [customColor, setCustomColor] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
-
-  // Load agents (INCHANGÉ)
+  // Load agents
   useEffect(() => {
     fetch("/api/agents")
       .then((res) => res.json())
@@ -199,7 +194,7 @@ export default function DemoAgentPage() {
       .catch((err) => console.error('Error loading agents:', err));
   }, []);
 
-  // Load user demos (INCHANGÉ)
+  // Load user demos
   useEffect(() => {
     fetch('/api/demo/list')
       .then((res) => res.json())
@@ -207,7 +202,7 @@ export default function DemoAgentPage() {
       .catch((err) => console.error('Error loading demos:', err));
   }, []);
 
-  // Welcome message handling (INCHANGÉ)
+  // Welcome message handling
   useEffect(() => {
     if (config.showWelcomeMessage) {
       setMessages([{
@@ -221,7 +216,7 @@ export default function DemoAgentPage() {
     }
   }, [config.showWelcomeMessage, config.welcomeMessage]);
 
-  // Popup handling (INCHANGÉ)
+  // Popup handling
   useEffect(() => {
     if (config.showPopup && !isOpen) {
       const timer = setTimeout(() => {
@@ -233,10 +228,7 @@ export default function DemoAgentPage() {
     }
   }, [config.showPopup, config.popupDelay, isOpen]);
 
-  // ❌ SUPPRIMÉ : Scroll to bottom when new message (géré par le composant)
-  // ❌ SUPPRIMÉ : Focus input when opened (géré par le composant)
-
-  // Color picker handling (INCHANGÉ)
+  // Color picker handling
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
@@ -253,8 +245,7 @@ export default function DemoAgentPage() {
     };
   }, [showPicker]);
 
-
-  // Utility functions - AJOUTÉ adjustUsageLimit
+  // Utility functions
   const updateConfig = (key: keyof DemoConfig, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
@@ -266,14 +257,13 @@ export default function DemoAgentPage() {
     }));
   };
 
-  // ✅ SIMPLIFIÉ : Toggle chat
+  // Toggle chat
   const toggleChat = () => {
     setIsOpen(!isOpen);
     setShowPopupBubble(false);
   };
 
-
-  // Modal functions (INCHANGÉS)
+  // Modal functions
   const openInfoModal = (id: string) => {
     setSelectedDemoId(id);
     setShowInfoModal(true);
@@ -316,7 +306,7 @@ export default function DemoAgentPage() {
     }
   };
 
-  // Predefined colors (INCHANGÉS)
+  // Predefined colors
   const colorPresets = [
     '#3B82F6', '#10B981', '#EF4444', '#F59E0B',
     '#06B6D4', '#8B5CF6', '#EC4899', '#6B7280'
@@ -327,16 +317,48 @@ export default function DemoAgentPage() {
 
   return (
     <RequireApiKey>
-      <div className="h-[calc(100vh-64px)] overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+      <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
         
-        {/* Structure principale - 2 colonnes fixes (INCHANGÉE) */}
-        <div className="flex h-full">
+        {/* Mobile Navigation Tabs - Sticky et fixed height */}
+        <div className="lg:hidden bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 flex sticky top-0 z-50 h-12">
+          <button
+            onClick={() => setMobileView('preview')}
+            className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 ${
+              mobileView === 'preview'
+                ? 'text-white bg-blue-600/20 border-b-2 border-blue-500'
+                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Monitor size={16} />
+              <span>Preview</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setMobileView('config')}
+            className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 ${
+              mobileView === 'config'
+                ? 'text-white bg-blue-600/20 border-b-2 border-blue-500'
+                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Settings size={16} />
+              <span>Settings</span>
+            </div>
+          </button>
+        </div>
+        
+        {/* Structure principale - Responsive flex avec hauteur corrigée */}
+        <div className="flex lg:h-full h-[calc(100%-48px)] lg:flex-row flex-col">
           
-          {/* COLONNE GAUCHE - Preview Panel (INCHANGÉE sauf le chat) */}
-          <div className="flex-1 bg-gray-900/95 backdrop-blur-xl border-r border-gray-700/50 relative overflow-hidden bg-grid-pattern">
+          {/* COLONNE GAUCHE - Preview Panel - Responsive avec hauteur fixe */}
+          <div className={`flex-1 bg-gray-900/95 backdrop-blur-xl lg:border-r border-gray-700/50 relative bg-grid-pattern lg:h-full h-full ${
+            mobileView === 'preview' ? 'block' : 'hidden lg:block'
+          }`}>
             
-            {/* Enhanced Device Frame - repositionné (INCHANGÉ) */}
-            <div className="absolute top-4 left-4 bg-gray-800/50 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center gap-3 border border-gray-700/50 z-10">
+            {/* Enhanced Device Frame - responsive */}
+            <div className="absolute top-4 left-4 bg-gray-800/50 backdrop-blur-sm rounded-xl px-3 py-2 items-center gap-3 border border-gray-700/50 z-10 hidden lg:flex">
               <div className="flex gap-2">
                 <div className="w-3 h-3 bg-red-500 rounded-full" />
                 <div className="w-3 h-3 bg-yellow-500 rounded-full" />
@@ -347,22 +369,23 @@ export default function DemoAgentPage() {
               <span className="text-xs text-gray-400 font-medium">Live Preview</span>
             </div>
 
-            {/* Enhanced Live Indicator - repositionné (INCHANGÉ) */}
-            <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl backdrop-blur-sm z-10">
+            {/* Enhanced Live Indicator - responsive */}
+            <div className="absolute top-4 right-4 items-center gap-2 px-3 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl backdrop-blur-sm z-10 hidden lg:flex">
               <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
               <span className="text-xs text-emerald-400 font-medium">Live</span>
             </div>
 
-            {/* Your Demos Button - Premium flottant (INCHANGÉ) */}
-            <div className="absolute top-16 left-4 z-10">
+            {/* Your Demos Button - Responsive positioning */}
+            <div className="absolute lg:top-16 lg:left-4 top-4 left-4 z-10">
               <button
                 onClick={() => setShowDemosModal(true)}
-                className="group flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 border border-blue-500/30 hover:border-blue-400/50 rounded-xl backdrop-blur-xl transition-all duration-300 shadow-lg hover:shadow-blue-500/20 transform hover:scale-105"
+                className="group flex items-center gap-3 lg:px-4 lg:py-3 px-3 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 border border-blue-500/30 hover:border-blue-400/50 rounded-xl backdrop-blur-xl transition-all duration-300 shadow-lg hover:shadow-blue-500/20 transform hover:scale-105"
               >
                 <div className="relative">
-                  <Smartphone size={18} className="text-blue-300 group-hover:text-blue-200 transition-colors" />
+                  <Smartphone size={18} className="text-blue-300 group-hover:text-blue-200 transition-colors hidden lg:block" />
+                  <Smartphone size={16} className="text-blue-300 group-hover:text-blue-200 transition-colors block lg:hidden" />
                 </div>
-                <div className="flex flex-col items-start">
+                <div className="hidden lg:flex lg:flex-col lg:items-start">
                   <span className="text-sm font-semibold text-white group-hover:text-blue-100 transition-colors">
                     Your Demos
                   </span>
@@ -376,13 +399,14 @@ export default function DemoAgentPage() {
                     </span>
                   )}
                 </div>
-                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-xs font-medium text-white block lg:hidden">Demos</span>
+                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity hidden lg:block">
                   <ChevronRight size={14} className="text-blue-300" />
                 </div>
               </button>
             </div>
 
-            {/* Preview Content - SIMPLIFIÉ avec DemoAgentChatWidget */}
+            {/* Preview Content */}
             {!config.agentId ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-8">
                 <div className="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-800 rounded-3xl flex items-center justify-center mb-8 shadow-2xl border border-gray-600/50">
@@ -401,10 +425,10 @@ export default function DemoAgentPage() {
               </div>
             ) : (
               <>
-                {/* Background Pattern (INCHANGÉ) */}
+                {/* Background Pattern */}
                 <div className="absolute inset-0 bg-grid opacity-5" />
                 
-                {/* Enhanced Watermark (INCHANGÉ) */}
+                {/* Enhanced Watermark */}
                 <div style={{
                   position: 'absolute',
                   top: '50%',
@@ -424,7 +448,7 @@ export default function DemoAgentPage() {
                   <span>Interactive Preview</span>
                 </div>
 
-                {/* ✅ NOUVEAU : DemoAgentChatWidget remplace tout le chat custom */}
+                {/* DemoAgentChatWidget */}
                 <DemoAgentChatWidget
                   config={config}
                   isPreview={true}
@@ -442,20 +466,23 @@ export default function DemoAgentPage() {
             )}
           </div>
 
-          {/* COLONNE DROITE - Configuration Panel (INCHANGÉE) */}
-          <div className="w-96 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white flex flex-col h-full">
+          {/* COLONNE DROITE - Configuration Panel - Responsive avec hauteur fixe */}
+          <div className={`lg:w-96 w-full bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white flex flex-col lg:h-full h-full ${
+            mobileView === 'config' ? 'block' : 'hidden lg:block'
+          }`}>
 
-            {/* Header Configuration Panel (INCHANGÉ) */}
-            <div className="p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 flex-shrink-0">
-              <div className="flex items-center gap-3 mb-2">
-                <Settings className="text-blue-400" size={24} />
-                <h2 className="text-xl font-bold text-white">Configuration Panel</h2>
+            {/* Header Configuration Panel - Mobile-friendly */}
+            <div className="lg:p-6 p-3 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 flex-shrink-0">
+              <div className="flex items-center gap-2 lg:gap-3 mb-1 lg:mb-2">
+                <Settings className="text-blue-400 hidden lg:block" size={24} />
+                <Settings className="text-blue-400 block lg:hidden" size={18} />
+                <h2 className="lg:text-xl text-base font-bold text-white">Configuration</h2>
               </div>
-              <p className="text-gray-400 text-sm">Customize your demo experience</p>
+              <p className="text-gray-400 lg:text-sm text-xs">Customize your demo</p>
             </div>
 
-            {/* Configuration Sections - Scrollable (TOUTES INCHANGÉES) */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+            {/* Configuration Sections - Mobile-optimized */}
+            <div className="flex-1 overflow-y-auto lg:p-6 p-3 lg:space-y-4 space-y-3 custom-scrollbar">
               
               {/* General Configuration */}
               <CollapsibleSection
@@ -463,25 +490,25 @@ export default function DemoAgentPage() {
                 icon={<Settings className="text-blue-400" size={20} />}
                 defaultOpen={true}
               >
-                <div className="space-y-4">
+                <div className="lg:space-y-4 space-y-3">
                   <div>
                     <input
                       type="text"
                       value={config.name}
                       onChange={(e) => updateConfig('name', e.target.value)}
                       placeholder="Demo name"
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
                       Choose Agent
                     </label>
                     <select
                       value={config.agentId}
                       onChange={(e) => updateConfig('agentId', e.target.value)}
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm font-medium"
+                      className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm font-medium lg:text-base text-sm"
                     >
                       <option value="">Select an agent...</option>
                       {agents.map((agent) => (
@@ -494,21 +521,21 @@ export default function DemoAgentPage() {
                 </div>
               </CollapsibleSection>
 
-              {/* Appearance Section */}
+              {/* Appearance Section - Mobile optimized */}
               <CollapsibleSection
                 title="Appearance"
                 icon={<Palette className="text-blue-400" size={20} />}
                 defaultOpen={false}
               >
-                <div className="space-y-6">
-                  {/* Bot Avatar */}
+                <div className="lg:space-y-6 space-y-4">
+                  {/* Bot Avatar - Mobile optimized */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
                       Bot Avatar
                     </label>
                     {config.avatar === '/Default Avatar.png' ? (
                       <div
-                        className="border-2 border-dashed border-gray-600/50 rounded-xl p-8 text-center hover:border-blue-400/50 transition-all cursor-pointer bg-gray-900/30 backdrop-blur-sm group"
+                        className="border-2 border-dashed border-gray-600/50 rounded-xl lg:p-8 p-6 text-center hover:border-blue-400/50 transition-all cursor-pointer bg-gray-900/30 backdrop-blur-sm group"
                         onDrop={(e) => {
                           e.preventDefault();
                           const file = e.dataTransfer.files[0];
@@ -557,81 +584,81 @@ export default function DemoAgentPage() {
                           }}
                         />
                         <div className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                          <div className="mx-auto w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mb-4 group-hover:bg-gray-600/50 transition-colors">
-                            <Upload className="w-8 h-8" />
+                          <div className="mx-auto lg:w-16 lg:h-16 w-12 h-12 bg-gray-700/50 rounded-full flex items-center justify-center lg:mb-4 mb-3 group-hover:bg-gray-600/50 transition-colors">
+                            <Upload className="lg:w-8 lg:h-8 w-6 h-6" />
                           </div>
-                          <p className="text-sm font-medium">Upload Bot Avatar</p>
+                          <p className="lg:text-sm text-xs font-medium">Upload Bot Avatar</p>
                           <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF (max 1MB)</p>
                         </div>
                       </div>
                     ) : (
-                      <div className="relative bg-gray-900/30 backdrop-blur-sm rounded-xl p-4 border border-gray-700/30">
-                        <div className="flex items-center gap-4">
+                      <div className="relative bg-gray-900/30 backdrop-blur-sm rounded-xl lg:p-4 p-3 border border-gray-700/30">
+                        <div className="flex items-center lg:gap-4 gap-3">
                           <img
                             src={config.avatar}
                             alt="Avatar"
-                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-600/50"
+                            className="lg:w-16 lg:h-16 w-12 h-12 rounded-full object-cover border-2 border-gray-600/50"
                             onError={(e) => {
                               const target = e.currentTarget as HTMLImageElement;
                               target.src = '/Default Avatar.png';
                             }}
                           />
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-white">✅ Avatar uploaded successfully</p>
-                            <p className="text-xs text-gray-400 mt-1">Ready to use in your demo</p>
+                            <p className="lg:text-sm text-xs font-medium text-white">✅ Avatar uploaded successfully</p>
+                            <p className="text-xs text-gray-400 mt-1 lg:block hidden">Ready to use in your demo</p>
                           </div>
                           <button
                             onClick={() => updateConfig('avatar', '/Default Avatar.png')}
-                            className="w-8 h-8 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg flex items-center justify-center transition-colors"
+                            className="lg:w-8 lg:h-8 w-7 h-7 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg flex items-center justify-center transition-colors"
                             title="Remove avatar"
                           >
-                            <X size={16} />
+                            <X size={14} />
                           </button>
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Theme */}
+                  {/* Theme - Mobile optimized */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
                       Theme
                     </label>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center lg:space-x-3 space-x-2">
                       <button
                         onClick={() => updateConfig('theme', 'light')}
-                        className={`flex items-center gap-2 px-4 py-3.5 rounded-xl transition-all duration-300 backdrop-blur-sm ${config.theme === 'light'
+                        className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${config.theme === 'light'
                           ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
                           : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
                           }`}
                       >
-                        <Sun className="w-4 h-4" />
+                        <Sun className="lg:w-4 lg:h-4 w-3.5 h-3.5" />
                         Light
                       </button>
                       <button
                         onClick={() => updateConfig('theme', 'dark')}
-                        className={`flex items-center gap-2 px-4 py-3.5 rounded-xl transition-all duration-300 backdrop-blur-sm ${config.theme === 'dark'
+                        className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${config.theme === 'dark'
                           ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
                           : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
                           }`}
                       >
-                        <Moon className="w-4 h-4" />
+                        <Moon className="lg:w-4 lg:h-4 w-3.5 h-3.5" />
                         Dark
                       </button>
                     </div>
                   </div>
 
-                  {/* Primary Color */}
+                  {/* Primary Color - Mobile grid optimized */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
                       Primary Color
                     </label>
-                    <div className="grid grid-cols-4 gap-3 mb-4">
+                    <div className="grid lg:grid-cols-4 grid-cols-4 lg:gap-3 gap-2 lg:mb-4 mb-3">
                       {colorPresets.map((color) => (
                         <button
                           key={color}
                           onClick={() => updateConfig('primaryColor', color)}
-                          className={`w-full h-12 rounded-xl border-2 transition-all hover:scale-105 relative ${config.primaryColor === color
+                          className={`w-full lg:h-12 h-10 rounded-xl border-2 transition-all hover:scale-105 relative ${config.primaryColor === color
                             ? 'border-white ring-2 ring-blue-500 shadow-xl'
                             : 'border-gray-600/50 hover:border-gray-500'
                             }`}
@@ -643,18 +670,18 @@ export default function DemoAgentPage() {
                         </button>
                       ))}
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center lg:gap-3 gap-2">
                       <input
                         type="color"
                         value={config.primaryColor}
                         onChange={(e) => updateConfig('primaryColor', e.target.value)}
-                        className="w-12 h-10 border border-gray-700/50 rounded-xl cursor-pointer bg-gray-900/80 backdrop-blur-sm"
+                        className="lg:w-12 lg:h-10 w-10 h-9 border border-gray-700/50 rounded-xl cursor-pointer bg-gray-900/80 backdrop-blur-sm"
                       />
                       <input
                         type="text"
                         value={config.primaryColor}
                         onChange={(e) => updateConfig('primaryColor', e.target.value)}
-                        className="flex-1 px-4 py-3 text-sm bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-pink-500/60 focus:ring-2 focus:ring-pink-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-mono"
+                        className="flex-1 lg:px-4 lg:py-3 px-3 py-2.5 lg:text-sm text-xs bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-pink-500/60 focus:ring-2 focus:ring-pink-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-mono"
                         placeholder="#3B82F6"
                       />
                     </div>
@@ -662,45 +689,45 @@ export default function DemoAgentPage() {
                 </div>
               </CollapsibleSection>
 
-              {/* Messages Section */}
+              {/* Messages Section - Mobile optimized */}
               <CollapsibleSection
                 title="Messages"
                 icon={<MessageCircle className="text-blue-400" size={20} />}
                 defaultOpen={false}
               >
-                <div className="space-y-4">
+                <div className="lg:space-y-4 space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">Chat Title</label>
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Chat Title</label>
                     <input
                       type="text"
                       value={config.chatTitle}
                       onChange={(e) => updateConfig('chatTitle', e.target.value)}
                       placeholder="Chat title"
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">Subtitle</label>
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Subtitle</label>
                     <input
                       type="text"
                       value={config.subtitle}
                       onChange={(e) => updateConfig('subtitle', e.target.value)}
                       placeholder="Subtitle"
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">Input Placeholder</label>
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Input Placeholder</label>
                     <input
                       type="text"
                       value={config.placeholderText}
                       onChange={(e) => updateConfig('placeholderText', e.target.value)}
                       placeholder="Type your message..."
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                     />
                   </div>
                   <div>
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between lg:mb-3 mb-2">
                       <label className="text-sm font-medium text-gray-300">Show Welcome Message</label>
                       <input
                         type="checkbox"
@@ -714,20 +741,20 @@ export default function DemoAgentPage() {
                       value={config.welcomeMessage}
                       onChange={(e) => updateConfig('welcomeMessage', e.target.value)}
                       placeholder="Hello! How can I help you today?"
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                     />
                   </div>
                 </div>
               </CollapsibleSection>
 
-              {/* Client Message Section */}
+              {/* Client Message Section - Mobile optimized */}
               <CollapsibleSection
                 title="Client Message"
                 icon={<Bot className="text-blue-400" size={20} />}
                 defaultOpen={false}
               >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="lg:space-y-4 space-y-3">
+                  <div className="flex items-center justify-between lg:mb-3 mb-2">
                     <label className="text-sm font-medium text-gray-300">Enable Popup</label>
                     <input
                       type="checkbox"
@@ -737,39 +764,39 @@ export default function DemoAgentPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">Popup Message</label>
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Popup Message</label>
                     <input
                       type="text"
                       value={config.popupMessage}
                       onChange={(e) => updateConfig('popupMessage', e.target.value)}
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
+                      className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                       placeholder="Hello! Need any help?"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">Delay (seconds)</label>
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Delay (seconds)</label>
                     <input
                       type="number"
                       value={config.popupDelay}
                       onChange={(e) => updateConfig('popupDelay', parseInt(e.target.value) || 2)}
                       min="0"
                       max="30"
-                      className="w-24 px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm font-medium"
+                      className="lg:w-24 w-20 lg:px-4 lg:py-3 px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm font-medium lg:text-base text-sm"
                     />
                   </div>
                 </div>
               </CollapsibleSection>
 
-              {/* ✅ NOUVELLE SECTION : Demo Settings */}
+              {/* Demo Settings Section - Mobile optimized */}
               <CollapsibleSection
                 title="Demo Settings"
                 icon={<Sparkles className="text-blue-400" size={20} />}
                 defaultOpen={false}
               >
-                <div className="space-y-4">
+                <div className="lg:space-y-4 space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">Usage Limit</label>
-                    <div className="flex items-center gap-4">
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Usage Limit</label>
+                    <div className="flex items-center lg:gap-4 gap-3">
                       <div className="flex-1">
                         <div className="relative">
                           <input
@@ -778,50 +805,50 @@ export default function DemoAgentPage() {
                             max={150}
                             value={config.usageLimit}
                             onChange={(e) => updateConfig('usageLimit', parseInt(e.target.value) || 150)}
-                            className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 outline-none focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/20 transition-all font-medium backdrop-blur-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 outline-none focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/20 transition-all font-medium backdrop-blur-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none lg:text-base text-sm pr-20"
                             placeholder="150"
                           />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
-                            responses max
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 lg:text-sm text-xs font-medium">
+                            max
                           </span>
                         </div>
                       </div>
                       
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col lg:gap-2 gap-1.5">
                         <button
                           type="button"
                           onClick={() => adjustUsageLimit(1)}
-                          className="w-10 h-8 bg-gray-700/60 hover:bg-gray-600/60 border border-gray-600/50 hover:border-gray-500/50 rounded-lg text-white text-sm flex items-center justify-center transition-all backdrop-blur-sm"
+                          className="lg:w-10 lg:h-8 w-9 h-7 bg-gray-700/60 hover:bg-gray-600/60 border border-gray-600/50 hover:border-gray-500/50 rounded-lg text-white text-sm flex items-center justify-center transition-all backdrop-blur-sm"
                         >
-                          <Plus size={14} />
+                          <Plus size={12} />
                         </button>
                         <button
                           type="button"
                           onClick={() => adjustUsageLimit(-1)}
-                          className="w-10 h-8 bg-gray-700/60 hover:bg-gray-600/60 border border-gray-600/50 hover:border-gray-500/50 rounded-lg text-white text-sm flex items-center justify-center transition-all backdrop-blur-sm"
+                          className="lg:w-10 lg:h-8 w-9 h-7 bg-gray-700/60 hover:bg-gray-600/60 border border-gray-600/50 hover:border-gray-500/50 rounded-lg text-white text-sm flex items-center justify-center transition-all backdrop-blur-sm"
                         >
-                          <Minus size={14} />
+                          <Minus size={12} />
                         </button>
                       </div>
                     </div>
                     
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="lg:text-xs text-xs text-gray-400 lg:mt-2 mt-1.5">
                       Limit the number of responses the AI can provide (maximum 150)
                     </p>
                   </div>
                 </div>
               </CollapsibleSection>
 
-              {/* Create Demo Button */}
+              {/* Create Demo Button - Mobile optimized */}
               <div className="border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm overflow-hidden">
-                <div className="p-4">
+                <div className="lg:p-4 p-3">
                   <button
                     onClick={() => setShowCreateModal(true)}
                     disabled={!config.agentId}
-                    className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center justify-center gap-3 relative overflow-hidden group"
+                    className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 text-white lg:py-4 py-3.5 lg:px-6 px-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center justify-center lg:gap-3 gap-2 relative overflow-hidden group lg:text-base text-sm"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    <CheckCircle className="w-5 h-5 relative z-10" />
+                    <CheckCircle className="lg:w-5 lg:h-5 w-4 h-4 relative z-10" />
                     <span className="relative z-10">Create Demo</span>
                   </button>
                 </div>
@@ -830,45 +857,46 @@ export default function DemoAgentPage() {
           </div>
         </div>
 
-        {/* Tous les modals restent EXACTEMENT identiques */}
+        {/* Modal Your Demos - Mobile optimized */}
         {showDemosModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-              <div className="p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center lg:p-4 p-2 bg-black/50 backdrop-blur-sm">
+            <div className="bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full lg:max-w-2xl max-w-full lg:max-h-[80vh] max-h-[90vh] overflow-hidden">
+              <div className="lg:p-6 p-4 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Smartphone className="text-blue-400" size={24} />
-                    <h2 className="text-xl font-bold text-white">Your Demos</h2>
+                  <div className="flex items-center lg:gap-3 gap-2">
+                    <Smartphone className="text-blue-400 lg:block hidden" size={24} />
+                    <Smartphone className="text-blue-400 block lg:hidden" size={20} />
+                    <h2 className="lg:text-xl text-lg font-bold text-white">Your Demos</h2>
                     {userDemos.length > 0 && (
-                      <span className="bg-blue-500/20 text-blue-400 text-sm px-3 py-1 rounded-full font-medium border border-blue-500/30">
+                      <span className="bg-blue-500/20 text-blue-400 lg:text-sm text-xs lg:px-3 lg:py-1 px-2 py-0.5 rounded-full font-medium border border-blue-500/30">
                         {userDemos.length}
                       </span>
                     )}
                   </div>
                   <button
                     onClick={() => setShowDemosModal(false)}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
+                    className="lg:p-2 p-1.5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
                   >
-                    <X size={20} />
+                    <X size={18} />
                   </button>
                 </div>
               </div>
-              <div className="p-6 max-h-96 overflow-y-auto custom-scrollbar">
+              <div className="lg:p-6 p-4 lg:max-h-96 max-h-80 overflow-y-auto custom-scrollbar">
                 {userDemos.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-600/50">
-                      <Smartphone className="w-8 h-8 text-gray-500" />
+                  <div className="text-center lg:py-12 py-8">
+                    <div className="lg:w-16 lg:h-16 w-12 h-12 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto lg:mb-4 mb-3 border border-gray-600/50">
+                      <Smartphone className="lg:w-8 lg:h-8 w-6 h-6 text-gray-500" />
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">No demos created yet</h3>
-                    <p className="text-gray-400">Create your first demo to get started</p>
+                    <h3 className="lg:text-lg text-base font-semibold text-white mb-2">No demos created yet</h3>
+                    <p className="text-gray-400 lg:text-base text-sm">Create your first demo to get started</p>
                   </div>
                 ) : (
-                  <div className="grid gap-4">
+                  <div className="grid lg:gap-4 gap-3">
                     {userDemos.map((demo) => (
-                      <div key={demo._id} className="bg-gray-800/50 backdrop-blur-sm border border-gray-600/50 rounded-xl p-4 hover:bg-gray-700/50 transition-all duration-300 group">
+                      <div key={demo._id} className="bg-gray-800/50 backdrop-blur-sm border border-gray-600/50 rounded-xl lg:p-4 p-3 hover:bg-gray-700/50 transition-all duration-300 group">
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-white font-medium truncate group-hover:text-blue-300 transition-colors">{demo.name}</h4>
+                            <h4 className="text-white font-medium truncate group-hover:text-blue-300 transition-colors lg:text-base text-sm">{demo.name}</h4>
                             <p className="text-xs text-gray-400 mt-1">Interactive demo widget</p>
                           </div>
                           <DemoActions
@@ -909,7 +937,7 @@ export default function DemoAgentPage() {
             showPopup: config.showPopup,
             popupMessage: config.popupMessage,
             popupDelay: config.popupDelay,
-            usageLimit: config.usageLimit, // ✅ NOUVEAU
+            usageLimit: config.usageLimit,
           }}
           onCreateSuccess={async () => {
             const res = await fetch('/api/demo/list');
@@ -932,7 +960,7 @@ export default function DemoAgentPage() {
           isDeleting={isDeletingDemo}
         />
 
-        {/* ❌ SUPPRIMÉ : Tout le CSS custom chat - maintenant dans ChatWidget.module.css */}
+        {/* Styles CSS */}
         <style jsx>{`
           .bg-grid {
             background-image: 

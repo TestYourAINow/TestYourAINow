@@ -27,7 +27,7 @@ export async function GET(
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>${config.name || 'Chat Widget'}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -41,6 +41,8 @@ export async function GET(
       height: 100vh !important;
       width: 100vw !important;
       position: relative !important;
+      /* 📱 FIX: Support des zones sûres iOS */
+      padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
     }
     
 .chat-widget {
@@ -276,6 +278,8 @@ export async function GET(
       padding: 12px 16px;
       border-top: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.4)' : 'rgba(229, 231, 235, 0.6)'};
       background: ${isDark ? '#1f2937' : '#ffffff'};
+      /* 📱 FIX: Gestion du clavier virtuel */
+      padding-bottom: calc(12px + env(keyboard-inset-height, 0px));
     }
     
     .chat-input-container {
@@ -366,18 +370,66 @@ export async function GET(
       40% { transform: translateY(-6px); opacity: 1; }
     }
 
-        /* 📱 RESPONSIVE */
+    /* 📱 RESPONSIVE - FIXES CHIRURGICAUX */
     @media (max-width: 768px) {
       .chat-widget {
         bottom: 16px !important;
         right: 16px !important;
       }
       
+      /* 📱 FIX: Interface plein écran comme Claude */
       .chat-window {
-        width: calc(100vw - 32px) !important;
-        height: calc(100vh - 100px) !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
         bottom: 0 !important;
         right: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        animation: mobileSlideUp 0.3s ease-out !important;
+      }
+      
+      /* 📱 FIX: Taille police 16px pour éviter le zoom */
+      .chat-input {
+        font-size: 16px !important;
+      }
+      
+      /* 📱 FIX: Header avec bouton retour sur mobile */
+      .chat-header {
+        padding-top: calc(10px + env(safe-area-inset-top, 0px));
+        height: calc(64px + env(safe-area-inset-top, 0px));
+      }
+      
+      /* 📱 FIX: Messages avec padding safe-area */
+      .chat-messages {
+        padding: 16px calc(16px + env(safe-area-inset-left, 0px)) 16px calc(16px + env(safe-area-inset-right, 0px));
+      }
+      
+      /* 📱 FIX: Input area avec padding pour clavier virtuel */
+      .chat-input-area {
+        padding: 12px calc(16px + env(safe-area-inset-left, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-right, 0px));
+      }
+    }
+    
+    /* 📱 FIX: Animation mobile spécifique */
+    @keyframes mobileSlideUp {
+      0% { 
+        opacity: 0; 
+        transform: translateY(100%); 
+      }
+      100% { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    
+    /* 📱 FIX: Support du clavier virtuel iOS */
+    @supports (height: 100dvh) {
+      @media (max-width: 768px) {
+        .chat-window {
+          height: 100dvh !important;
+        }
       }
     }
   </style>
@@ -559,6 +611,21 @@ function loadConversation() {
     const resetBtn = document.getElementById('resetBtn');
     const closeBtn = document.getElementById('closeBtn');
     
+    // 📱 FIX: Gestion spéciale mobile pour le focus
+    function focusInputSafely() {
+      if (window.innerWidth <= 768) {
+        // Sur mobile, focus avec délai pour éviter les problèmes
+        setTimeout(() => {
+          input?.focus();
+          // 📱 FIX: Scroll vers le bas pour s'assurer que l'input est visible
+          input?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 300);
+      } else {
+        // Desktop: focus immédiat
+        setTimeout(() => input?.focus(), 300);
+      }
+    }
+    
     // Event listeners
     button?.addEventListener('click', toggleChat);
     closeBtn?.addEventListener('click', closeChat);
@@ -580,6 +647,28 @@ function loadConversation() {
       }
     });
     
+    // 📱 FIX: Gestion du clavier virtuel mobile
+    if (window.innerWidth <= 768) {
+      let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      
+      function handleViewportChange() {
+        if (window.visualViewport) {
+          const currentHeight = window.visualViewport.height;
+          const keyboardHeight = initialViewportHeight - currentHeight;
+          
+          if (keyboardHeight > 150) { // Clavier visible
+            document.documentElement.style.setProperty('--keyboard-height', keyboardHeight + 'px');
+          } else { // Clavier masqué
+            document.documentElement.style.setProperty('--keyboard-height', '0px');
+          }
+        }
+      }
+      
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportChange);
+      }
+    }
+    
     // Fonctions MODIFIÉES
     function toggleChat() {
       isOpen = !isOpen;
@@ -600,7 +689,8 @@ function loadConversation() {
           }, 400);
         }
         
-        setTimeout(() => input?.focus(), 300);
+        // 📱 FIX: Focus sécurisé mobile
+        focusInputSafely();
         parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
       } else {
         closeChat();
@@ -798,4 +888,4 @@ function loadConversation() {
       },
     });
   }
-} 
+}
