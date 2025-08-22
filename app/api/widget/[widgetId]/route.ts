@@ -103,8 +103,8 @@ export async function GET(
       position: absolute;
       bottom: 0;
       right: 0;
-      width: 100vw;
-      height: 100vh;
+      width:  calc(100% - 35px);
+      height: calc(100% - 35px);
       border-radius: 20px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       overflow: hidden;
