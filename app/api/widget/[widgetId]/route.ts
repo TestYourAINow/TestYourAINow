@@ -365,6 +365,79 @@ export async function GET(
       0%, 80%, 100% { transform: translateY(0); opacity: 0.7; }
       40% { transform: translateY(-6px); opacity: 1; }
     }
+
+    /* 🎯 MOBILE ONLY - Desktop non affecté */
+@media only screen and (max-width: 767px) and (hover: none) and (pointer: coarse) {
+  /* Popup mobile plus large */
+  .chat-popup {
+    max-width: calc(100vw - 120px) !important;
+    right: -20px !important;
+    font-size: 13px !important;
+    padding: 8px 6px 8px 8px !important;
+  }
+  
+  .chat-popup::after {
+    right: 40px !important;
+  }
+  
+  /* Chat window fullscreen sur mobile */
+  .chat-window {
+    position: fixed !important;
+    top: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    width: calc(100vw - 20px) !important;
+    height: calc(100vh - 20px) !important;
+    border-radius: 16px !important;
+  }
+  
+  /* Header mobile plus compact */
+  .chat-header {
+    height: 56px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .chat-avatar {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  
+  .chat-title {
+    font-size: 14px !important;
+  }
+  
+  .chat-subtitle {
+    font-size: 11px !important;
+  }
+  
+  .chat-action-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  /* Input mobile optimisé */
+  .chat-input-area {
+    padding: 10px 12px !important;
+  }
+  
+  .chat-input {
+    font-size: 16px !important; /* Évite zoom iOS */
+    padding: 10px 14px !important;
+    min-height: 40px !important;
+  }
+  
+  .chat-send-btn {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  
+  /* Scroll mobile amélioré */
+  .chat-messages {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
   </style>
 </head>
 
