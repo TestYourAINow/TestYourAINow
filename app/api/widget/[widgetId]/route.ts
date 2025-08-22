@@ -27,10 +27,17 @@ export async function GET(
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>${config.name || 'Chat Widget'}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --safe-area-inset-top: env(safe-area-inset-top);
+      --safe-area-inset-bottom: env(safe-area-inset-bottom);
+      --safe-area-inset-left: env(safe-area-inset-left);
+      --safe-area-inset-right: env(safe-area-inset-right);
+    }
     
     html, body {
       margin: 0 !important;
@@ -41,6 +48,9 @@ export async function GET(
       height: 100vh !important;
       width: 100vw !important;
       position: relative !important;
+      -webkit-text-size-adjust: 100%;
+      -moz-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
     
 .chat-widget {
@@ -65,11 +75,17 @@ export async function GET(
       justify-content: center;
       background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, #06b6d4));
       animation: bounceIn 0.6s ease-out;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     
     .chat-button:hover {
       transform: scale(1.05);
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
+    }
+    
+    .chat-button:active {
+      transform: scale(0.98);
     }
     
 .chat-popup {
@@ -101,17 +117,45 @@ export async function GET(
     
     .chat-window {
       position: absolute;
-      bottom: 0;
-      right: 0;
-      width: ${config.width || 380}px;
-      height: ${config.height || 600}px;
-      border-radius: 20px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-      overflow: hidden;
+      background: ${isDark ? '#1f2937' : '#ffffff'};
       display: flex;
       flex-direction: column;
-      background: ${isDark ? '#1f2937' : '#ffffff'};
+      overflow: hidden;
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* 📱 MOBILE: PLEIN ÉCRAN */
+    @media (max-width: 768px) {
+      .chat-window {
+        top: var(--safe-area-inset-top, 0) !important;
+        left: var(--safe-area-inset-left, 0) !important;
+        right: var(--safe-area-inset-right, 0) !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: calc(100vh - var(--safe-area-inset-top, 0)) !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
+      
+      .chat-button {
+        width: 56px;
+        height: 56px;
+        bottom: 16px;
+        right: 16px;
+      }
+    }
+    
+    /* 🖥️ DESKTOP: MODE FENÊTRE */
+    @media (min-width: 769px) {
+      .chat-window {
+        bottom: 0;
+        right: 0;
+        width: ${config.width || 380}px;
+        height: ${config.height || 600}px;
+        border-radius: 20px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+      }
     }
     
     .chat-header {
@@ -121,6 +165,7 @@ export async function GET(
       align-items: center;
       justify-content: space-between;
       background: linear-gradient(135deg, var(--primary-color) 0%, color-mix(in srgb, var(--primary-color) 85%, #06b6d4) 100%);
+      padding-top: max(10px, var(--safe-area-inset-top, 0));
     }
     
     .chat-header-content {
@@ -185,6 +230,8 @@ export async function GET(
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     
     .chat-action-btn:hover {
@@ -192,11 +239,17 @@ export async function GET(
       transform: scale(1.05);
     }
     
+    .chat-action-btn:active {
+      transform: scale(0.95);
+    }
+    
     .chat-messages {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
       background: ${isDark ? '#111827' : '#f8fafc'};
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
     
     .chat-messages::-webkit-scrollbar {
@@ -276,6 +329,9 @@ export async function GET(
       padding: 12px 16px;
       border-top: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.4)' : 'rgba(229, 231, 235, 0.6)'};
       background: ${isDark ? '#1f2937' : '#ffffff'};
+      padding-bottom: max(12px, var(--safe-area-inset-bottom, 0));
+      position: relative;
+      z-index: 10;
     }
     
     .chat-input-container {
@@ -289,15 +345,19 @@ export async function GET(
       padding: 8px 14px;
       border: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.8)' : 'rgba(209, 213, 219, 0.6)'};
       border-radius: 18px;
-      font-size: 14px;
+      font-size: 16px;
       outline: none;
       background: ${isDark ? 'rgba(55, 65, 81, 0.9)' : '#ffffff'};
       color: ${isDark ? 'white' : '#111827'};
       resize: none;
-      min-height: 32px;
+      min-height: 44px;
       max-height: 120px;
       font-family: inherit;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-appearance: none;
+      -webkit-border-radius: 18px;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     
     .chat-input:focus {
@@ -315,8 +375,8 @@ export async function GET(
     }
     
     .chat-send-btn {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border: none;
       border-radius: 50%;
       cursor: pointer;
@@ -327,15 +387,48 @@ export async function GET(
       background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     
     .chat-send-btn:hover:not(:disabled) {
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
     
+    .chat-send-btn:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+    
     .chat-send-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+    
+    /* 🎯 LANDSCAPE MOBILE ADJUSTMENTS */
+    @media (max-width: 768px) and (orientation: landscape) {
+      .chat-header {
+        height: 56px;
+        padding: 8px 16px;
+        padding-top: max(8px, var(--safe-area-inset-top, 0));
+      }
+      
+      .chat-messages {
+        padding: 12px 16px;
+      }
+      
+      .chat-input-area {
+        padding: 8px 16px;
+        padding-bottom: max(8px, var(--safe-area-inset-bottom, 0));
+      }
+    }
+    
+    /* 🎯 TRÈS PETITS ÉCRANS */
+    @media (max-height: 500px) {
+      .chat-header {
+        height: 50px;
+        padding: 6px 16px;
+        padding-top: max(6px, var(--safe-area-inset-top, 0));
+      }
     }
     
     .hidden { display: none !important; }
@@ -556,12 +649,26 @@ function loadConversation() {
       const newHeight = Math.min(this.scrollHeight, 120);
       this.style.height = newHeight + 'px';
       this.style.overflowY = newHeight >= 120 ? 'auto' : 'hidden';
+      
+      // 🎯 MOBILE: Scroll vers le bas pendant la frappe
+      if (window.innerWidth <= 768) {
+        setTimeout(() => scrollToBottom(), 100);
+      }
     });
     
     input?.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
+      }
+    });
+    
+    // 🎯 GESTION FOCUS INPUT MOBILE
+    input?.addEventListener('focus', function() {
+      if (window.innerWidth <= 768) {
+        setTimeout(() => {
+          this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
       }
     });
     
@@ -705,6 +812,49 @@ function loadConversation() {
       }
     }
     
+    // 🎯 GESTION CLAVIER VIRTUEL MOBILE
+    let initialViewportHeight = window.innerHeight;
+    
+    // 🎯 GESTION CHANGEMENT D'ORIENTATION
+    window.addEventListener('orientationchange', function() {
+      if (isOpen && window.innerWidth <= 768) {
+        setTimeout(() => {
+          initialViewportHeight = window.innerHeight;
+          
+          parent.postMessage({ 
+            type: 'WIDGET_RESIZE', 
+            data: { 
+              isMobile: true,
+              width: window.innerWidth, 
+              height: window.innerHeight 
+            } 
+          }, '*');
+          
+          if (document.activeElement === input) {
+            input.blur();
+            setTimeout(() => input.focus(), 100);
+          }
+        }, 500);
+      }
+    });
+    
+    // 🎯 GESTION RESIZE POUR CLAVIER VIRTUEL
+    window.addEventListener('resize', function() {
+      if (window.innerWidth <= 768 && isOpen) {
+        const currentHeight = window.innerHeight;
+        const heightDiff = initialViewportHeight - currentHeight;
+        
+        if (heightDiff > 150) {
+          setTimeout(() => {
+            const inputArea = document.querySelector('.chat-input-area');
+            if (inputArea) {
+              inputArea.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+          }, 100);
+        }
+      }
+    });
+    
     // 💾 CHARGER la conversation au démarrage
     window.addEventListener('DOMContentLoaded', function() {
       const loaded = loadConversation();
@@ -783,4 +933,4 @@ function loadConversation() {
       },
     });
   }
-} 
+}
