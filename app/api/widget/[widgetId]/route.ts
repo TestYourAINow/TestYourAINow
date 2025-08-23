@@ -370,6 +370,12 @@ export async function GET(
 @media only screen and (max-width: 767px) and (hover: none) and (pointer: coarse) {
   /* Popup mobile plus large */
 
+  html, body {
+    -webkit-text-size-adjust: 100% !important;
+    -webkit-user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+
   .chat-widget {
     bottom: 0 !important;
     right: 0 !important;
@@ -438,6 +444,10 @@ export async function GET(
 .chat-input {
   font-size: 16px !important;
   transform: translateZ(0) !important;
+  -webkit-text-size-adjust: 100% !important;
+  -webkit-appearance: none !important;
+  border-radius: 0 !important;
+  zoom: 1 !important;
 }
   
   .chat-send-btn {
@@ -453,6 +463,23 @@ export async function GET(
   padding-bottom: 80px !important;  /* Espace pour l'input flottant */
   height: calc(100vh - 56px) !important;
   }
+
+  .chat-input-container {
+  position: relative !important;
+}
+
+.chat-input-container::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 2px;
+}
+
 }
   </style>
 </head>
