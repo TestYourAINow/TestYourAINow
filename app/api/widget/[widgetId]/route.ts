@@ -103,8 +103,8 @@ export async function GET(
       position: absolute;
       bottom: 0;
       right: 0;
-      width: ${config.width || 380}px;
-      height: ${config.height || 600}px;
+      width: calc(100vw - 20px);
+      height: calc(100vh - 20px);
       border-radius: 20px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       overflow: hidden;
@@ -365,6 +365,122 @@ export async function GET(
       0%, 80%, 100% { transform: translateY(0); opacity: 0.7; }
       40% { transform: translateY(-6px); opacity: 1; }
     }
+
+    /* 🎯 MOBILE ONLY - Desktop non affecté */
+@media only screen and (max-width: 767px) and (hover: none) and (pointer: coarse) {
+  /* Popup mobile plus large */
+
+  html, body {
+    -webkit-text-size-adjust: 100% !important;
+    -webkit-user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+
+  .chat-widget {
+    bottom: 0 !important;
+    right: 0 !important;
+  }
+
+  .chat-popup {
+    max-width: calc(100vw - 120px) !important;
+    right: -20px !important;
+    font-size: 13px !important;
+    padding: 8px 6px 8px 8px !important;
+  }
+  
+  .chat-popup::after {
+    right: 40px !important;
+  }
+  
+  /* Chat window fullscreen sur mobile */
+  .chat-window {
+    position: fixed !important;
+    top: 0px !important;
+    left: 0px !important;
+    right: 0px !important;
+    bottom: 0px !important;
+    border-radius: 0 !important;
+    width: 100vw !important;     /* Override le desktop */
+    height: 100vh !important;
+  }
+  
+  /* Header mobile plus compact */
+  .chat-header {
+    height: 56px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .chat-avatar {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  
+  .chat-title {
+    font-size: 14px !important;
+  }
+  
+  .chat-subtitle {
+    font-size: 11px !important;
+  }
+  
+  .chat-action-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  /* Input mobile optimisé */
+
+  .chat-input-area {
+  position: fixed !important;  /* Fixed, pas sticky */
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  background: ${isDark ? '#1f2937' : '#ffffff'} !important;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+  z-index: 1000 !important;
+}
+  
+.chat-input {
+  font-size: 16px !important;
+  transform: translateZ(0) !important;
+  -webkit-text-size-adjust: 100% !important;
+  -webkit-appearance: none !important;
+  border-radius: 0 !important;
+  zoom: 1 !important;
+}
+  
+  .chat-send-btn {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  
+  /* Scroll mobile amélioré */
+
+  .chat-messages {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  padding-bottom: 80px !important;  /* Espace pour l'input flottant */
+  height: calc(100vh - 56px) !important;
+  }
+
+  .chat-input-container {
+  position: relative !important;
+}
+
+.chat-input-container::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 2px;
+}
+
+}
   </style>
 </head>
 
