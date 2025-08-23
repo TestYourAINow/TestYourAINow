@@ -192,6 +192,7 @@ handleWidgetOpen: function(data) {
       opacity: 1;
       pointer-events: auto;
       display: block;
+      overflow: hidden !important;  /* ← Ajoute ça */
     `;
   } else {
     // 🎯 DESKTOP : Version simplifiée de ton code (sans logique mobile)

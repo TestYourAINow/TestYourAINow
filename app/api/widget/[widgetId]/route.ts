@@ -374,12 +374,21 @@ export async function GET(
     -webkit-text-size-adjust: 100% !important;
     -webkit-user-select: none !important;
     -webkit-touch-callout: none !important;
+      overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
   }
 
-  .chat-widget {
-    bottom: 0 !important;
-    right: 0 !important;
-  }
+.chat-widget {
+  position: fixed !important;  /* Au lieu de juste bottom/right */
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
 
   .chat-popup {
     max-width: calc(100vw - 120px) !important;
