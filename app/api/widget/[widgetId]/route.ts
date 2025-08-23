@@ -834,7 +834,10 @@ function loadConversation() {
       }
     }
 
-    function checkScrollPosition() {
+function checkScrollPosition() {
+  // Vérifier si mobile
+  if (window.innerWidth > 767) return;
+  
   const messages = document.getElementById('chatMessages');
   if (!messages || !scrollDownBtn) return;
   
@@ -847,10 +850,18 @@ function loadConversation() {
   }
 }
 
-// Event listener pour le bouton
+// Event listener pour le bouton - avec condition mobile
 scrollDownBtn?.addEventListener('click', () => {
+  if (window.innerWidth > 767) return;
   scrollToBottom();
   scrollDownBtn.classList.remove('show');
+});
+
+// Event listener pour détecter le scroll - avec condition mobile
+document.getElementById('chatMessages')?.addEventListener('scroll', () => {
+  if (window.innerWidth <= 767) {
+    checkScrollPosition();
+  }
 });
 
 // Event listener pour détecter le scroll
