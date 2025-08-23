@@ -371,7 +371,7 @@ export async function GET(
   /* Popup mobile plus large */
 
 
-
+  
   html, body {
     -webkit-text-size-adjust: 100% !important;
     -webkit-user-select: none !important;
@@ -443,14 +443,13 @@ export async function GET(
 
   .chat-input-area {
   position: fixed !important;  /* Fixed, pas sticky */
-  bottom: env(safe-area-inset-bottom, 0px) !important;
+  bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
   background: ${isDark ? '#1f2937' : '#ffffff'} !important;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
   z-index: 1000 !important;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px !important;
 }
   
 .chat-input {

@@ -194,14 +194,9 @@ handleWidgetOpen: function(data) {
       display: block;
       overflow: hidden !important;  /* ← Ajoute ça */
     `;
-  const parentDoc = window.document;
-  parentDoc.body.style.overflow = 'hidden';
-  parentDoc.body.style.position = 'fixed';
-  parentDoc.body.style.width = '100%';
-  parentDoc.body.style.height = '100%';
-  parentDoc.body.style.touchAction = 'none';
-  parentDoc.body.style.webkitUserSelect = 'none'; // Ajoute ça
-  parentDoc.body.style.webkitTouchCallout = 'none';
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+
 
   } else {
     // 🎯 DESKTOP : Version simplifiée de ton code (sans logique mobile)
@@ -240,13 +235,9 @@ handleWidgetOpen: function(data) {
     this.isOpen = false;
     this.showButton();
 
-  document.body.style.overflow = '';
+      document.body.style.overflow = '';
   document.body.style.position = '';
-  document.body.style.width = '';
-  document.body.style.height = '';
-  document.body.style.touchAction = '';
-  document.body.style.webkitUserSelect = ''; // Restore
-  document.body.style.webkitTouchCallout = ''; 
+
   },
 
   // 📏 Redimensionnement dynamique du widget
