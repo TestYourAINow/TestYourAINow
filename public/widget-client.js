@@ -119,55 +119,67 @@ window.AIChatWidget = {
     this.showButton();
   },
 
-  // 🔘 Afficher le bouton chat (état initial) - AVEC MARGES COMPLÈTES
+  // 🚨 Fonction mobile dédiée pour bouton
+  showButtonMobile: function() {
+    if (!this.iframe) return;
+    
+    console.log('🔧 Affichage bouton mobile forcé');
+    
+    this.iframe.style.cssText = `
+      position: fixed !important;
+      bottom: 20px !important;
+      right: 20px !important;
+      width: 70px !important;
+      height: 70px !important;
+      border: none !important;
+      z-index: 999999 !important;
+      background: transparent !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      display: block !important;
+      border-radius: 50% !important;
+    `;
+  },
+
+  // 🔘 Afficher le bouton chat (état initial) - VERSION CORRIGÉE
   showButton: function() {
     if (!this.iframe) return;
     
     const isMobile = this.isMobileDevice();
+    const screenWidth = window.innerWidth || document.documentElement.clientWidth;
     
-    if (isMobile) {
-      // Mobile : Bouton simple et propre
-      this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        width: 80px;
-        height: 80px;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        display: block;
-      `;
-    } else {
-      // Desktop : Version avec marges pour ombres et popup
-      const buttonSize = 64;
-      const shadowMargin = 15;
-      const hoverMargin = 8;
-      const popupMarginTop = 100;
-      const popupMarginLeft = 60;
-      
-      const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
-      const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
-      
-      this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        width: ${iframeWidth}px;
-        height: ${iframeHeight}px;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        display: block;
-      `;
+    // 🔥 FORCE MOBILE si écran petit même si détection échoue
+    if (screenWidth <= 768 || isMobile) {
+      this.showButtonMobile();
+      return;
     }
+    
+    // Version desktop (code existant)
+    const buttonSize = 64;
+    const shadowMargin = 15;
+    const hoverMargin = 8;
+    const popupMarginTop = 100;
+    const popupMarginLeft = 60;
+    
+    const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
+    const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
+    
+    this.iframe.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: ${iframeWidth}px;
+      height: ${iframeHeight}px;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+    `;
   },
 
-  // 🏠 Widget ouvert - AVEC SOLUTION MOBILE COMPLETE
+  // 🏠 Widget ouvert - VERSION CORRIGÉE AVEC FALLBACK
   handleWidgetOpen: function(data) {
     if (!this.iframe) return;
     
@@ -175,8 +187,11 @@ window.AIChatWidget = {
     this.isOpen = true;
     
     const isMobile = this.isMobileDevice();
+    const screenWidth = window.innerWidth || document.documentElement.clientWidth;
     
-    if (isMobile) {
+    // 🔥 FORCE MOBILE si écran petit même si détection échoue  
+    if (screenWidth <= 768 || isMobile) {
+      console.log('🎯 Mode mobile activé');
       // 🎯 MOBILE : Solution complète avec gestion clavier
       this.iframe.style.cssText = `
         position: fixed !important;
@@ -208,6 +223,7 @@ window.AIChatWidget = {
       document.documentElement.style.overflow = 'hidden';
       
     } else {
+      console.log('🖥️ Mode desktop activé');
       // 🎯 DESKTOP : Version propre sans code mobile
       const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
       const baseHeight = Math.min(this.config.height, window.innerHeight - 100);
@@ -243,8 +259,9 @@ window.AIChatWidget = {
     console.log('AIChatWidget: Fermeture du chat');
     this.isOpen = false;
     
-    // 🚀 Restaurer le scroll du body sur mobile
-    if (this.isMobileDevice()) {
+    // 🚀 Restaurer le scroll du body sur mobile (avec fallback)
+    const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+    if (screenWidth <= 768 || this.isMobileDevice()) {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
     }
@@ -278,29 +295,47 @@ window.AIChatWidget = {
     }
   },
 
-  // 🎯 Amélioration de isMobileDevice avec plus de précision
+  // 🚨 Détection mobile CORRIGÉE - Plus robuste
   isMobileDevice: function() {
-    // Check 1: User Agent
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    // Method 1: User Agent (plus permissif)
+    const userAgent = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+    const mobileKeywords = ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone', 'webos'];
+    const isMobileUA = mobileKeywords.some(keyword => userAgent.includes(keyword));
     
-    // Check 2: Screen size ET touch capability
-    const isMobileScreen = window.innerWidth <= 768 && window.innerHeight <= 1024;
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    // Method 2: Touch capability (corrigé)
+    const isTouchDevice = (
+      'ontouchstart' in window ||
+      (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+      (navigator.msMaxTouchPoints && navigator.msMaxTouchPoints > 0) ||
+      (window.DocumentTouch && document instanceof window.DocumentTouch)
+    );
     
-    // Check 3: Ratio d'aspect mobile typique
-    const aspectRatio = window.innerWidth / window.innerHeight;
-    const isMobileRatio = aspectRatio < 1.2; // Portrait ou presque carré
+    // Method 3: Screen size (plus permissif)
+    const screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    const screenHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    const isMobileScreen = screenWidth <= 768 || screenHeight <= 768;
     
-    // Décision finale
-    const result = isMobileUA || (isMobileScreen && isTouchDevice) || (isTouchDevice && isMobileRatio);
+    // Method 4: CSS media query check
+    const isMobileMediaQuery = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
     
-    console.log('🎯 Détection mobile:', {
+    // Method 5: Orientation (mobile souvent en portrait)
+    const isPortrait = screenHeight > screenWidth;
+    
+    // Décision finale (plus permissive)
+    const result = isMobileUA || 
+                   (isTouchDevice && isMobileScreen) || 
+                   (isTouchDevice && isPortrait) ||
+                   isMobileMediaQuery ||
+                   screenWidth <= 768;
+    
+    console.log('🎯 Détection mobile (corrigée):', {
       userAgent: isMobileUA,
-      screen: isMobileScreen,
       touch: isTouchDevice,
-      ratio: isMobileRatio,
-      result: result
+      screen: isMobileScreen,
+      mediaQuery: isMobileMediaQuery,
+      portrait: isPortrait,
+      screenSize: `${screenWidth}x${screenHeight}`,
+      finalResult: result
     });
     
     return result;
@@ -373,8 +408,9 @@ window.AIChatWidget = {
 
   // 🗑️ Nettoyage complet
   destroy: function() {
-    // Restaurer le scroll si nécessaire
-    if (this.isMobileDevice()) {
+    // Restaurer le scroll si nécessaire (avec fallback)
+    const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+    if (screenWidth <= 768 || this.isMobileDevice()) {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
     }
