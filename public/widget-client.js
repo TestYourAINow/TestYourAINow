@@ -192,11 +192,7 @@ handleWidgetOpen: function(data) {
       opacity: 1;
       pointer-events: auto;
       display: block;
-      overflow: hidden !important;  /* ← Ajoute ça */
     `;
-  document.body.style.overflow = 'hidden';
-
-
   } else {
     // 🎯 DESKTOP : Version simplifiée de ton code (sans logique mobile)
     const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
@@ -233,9 +229,6 @@ handleWidgetOpen: function(data) {
     console.log('AIChatWidget: Fermeture du chat');
     this.isOpen = false;
     this.showButton();
-
-      document.body.style.overflow = '';
-
   },
 
   // 📏 Redimensionnement dynamique du widget

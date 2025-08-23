@@ -38,7 +38,7 @@ export async function GET(
       background: transparent !important;
       overflow: hidden !important;
       font-family: Inter, system-ui, sans-serif;
-      height: 100dvh !important;
+      height: 100vh !important;
       width: 100vw !important;
       position: relative !important;
     }
@@ -104,7 +104,7 @@ export async function GET(
       bottom: 0;
       right: 0;
       width: calc(100vw - 20px);
-      height: calc(100dvh - 20px);
+      height: calc(100vh - 20px);
       border-radius: 20px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       overflow: hidden;
@@ -370,12 +370,7 @@ export async function GET(
 @media only screen and (max-width: 767px) and (hover: none) and (pointer: coarse) {
   /* Popup mobile plus large */
 
-
-  
   html, body {
-    -webkit-text-size-adjust: 100% !important;
-    -webkit-user-select: none !important;
-    -webkit-touch-callout: none !important;
       overflow: hidden !important;
   position: fixed !important;
   width: 100% !important;
@@ -389,7 +384,7 @@ export async function GET(
   right: 0 !important;
   bottom: 0 !important;
   width: 100vw !important;
-  height: 100dvh !important;
+  height: 100vh !important;
 }
 
   .chat-popup {
@@ -412,7 +407,7 @@ export async function GET(
     bottom: 0px !important;
     border-radius: 0 !important;
     width: 100vw !important;     /* Override le desktop */
-    height: 100dvh !important;
+    height: 100vh !important;
   }
   
   /* Header mobile plus compact */
@@ -471,14 +466,8 @@ export async function GET(
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   padding-bottom: 80px !important;  /* Espace pour l'input flottant */
-  height: calc(100dvh - 56px) !important;
+  height: calc(100vh - 56px) !important;
   }
-
-  input, textarea {
-  -webkit-user-select: text;
-  -webkit-overflow-scrolling: touch;
-  touch-action: manipulation;
-}
 
 }
   </style>
@@ -544,7 +533,6 @@ export async function GET(
             id="messageInput" 
             placeholder="${config.placeholderText || 'Tapez votre message...'}"
             rows="1"
-            id="messageInput" autocapitalize="off" autocorrect="off" autocomplete="off" rows="1" inputmode="text">
           ></textarea>
           <button class="chat-send-btn" id="sendBtn" disabled>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -844,29 +832,6 @@ function loadConversation() {
     }, '*');
     
     console.log('Widget chargé avec succès');
-if (typeof window !== 'undefined' && 'visualViewport' in window) {
-  window.visualViewport.addEventListener('resize', () => {
-    try {
-      const chatWindow = document.getElementById('chatWindow');
-      const chatMessages = document.getElementById('chatMessages');
-
-      if (chatWindow && window.visualViewport?.height) {
-        chatWindow.style.height = window.visualViewport.height + 'px';
-      }
-
-      if (chatMessages && window.visualViewport?.height) {
-        const headerHeight = 56;
-        const inputHeight = 80;
-        chatMessages.style.height = (window.visualViewport.height - headerHeight - inputHeight) + 'px';
-      }
-    } catch (err) {
-      console.error('Erreur visualViewport resize:', err);
-    }
-  });
-}
-
-
-    
   </script>
 </body>
 </html>`;
