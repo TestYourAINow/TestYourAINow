@@ -22,7 +22,7 @@ export async function GET(
     const config = JSON.parse(JSON.stringify(rawConfig));
     const isDark = config.theme === 'dark';
 
-    // 🎯 HTML COMPLET - VOTRE CODE ORIGINAL + FIX CLAVIER MINIMAL
+    // 🎯 HTML COMPLET SANS NEXT.JS
     const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -365,116 +365,6 @@ export async function GET(
       0%, 80%, 100% { transform: translateY(0); opacity: 0.7; }
       40% { transform: translateY(-6px); opacity: 1; }
     }
-
-    /* 🎯 FIX CLAVIER MOBILE - AJOUT MINIMAL */
-    :root {
-      --vh: 1vh;
-      --keyboard-offset: 0px;
-    }
-
-    /* MOBILE ONLY - Fix clavier */
-    @media only screen and (max-width: 767px) and (hover: none) and (pointer: coarse) {
-      
-      html, body {
-        height: calc(var(--vh, 1vh) * 100) !important;
-      }
-
-      .chat-widget {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100vw !important;
-        height: calc(var(--vh, 1vh) * 100) !important;
-      }
-
-      .chat-popup {
-        max-width: calc(100vw - 120px) !important;
-        right: -20px !important;
-        font-size: 13px !important;
-        padding: 8px 6px 8px 8px !important;
-      }
-      
-      .chat-popup::after {
-        right: 40px !important;
-      }
-      
-      /* Chat window fullscreen sur mobile */
-      .chat-window {
-        position: fixed !important;
-        top: 0px !important;
-        left: 0px !important;
-        right: 0px !important;
-        bottom: 0px !important;
-        border-radius: 0 !important;
-        width: 100vw !important;
-        height: calc(var(--vh, 1vh) * 100) !important;
-      }
-      
-      /* Header mobile plus compact */
-      .chat-header {
-        height: 56px !important;
-        padding: 8px 12px !important;
-      }
-      
-      .chat-avatar {
-        width: 36px !important;
-        height: 36px !important;
-      }
-      
-      .chat-title {
-        font-size: 14px !important;
-      }
-      
-      .chat-subtitle {
-        font-size: 11px !important;
-      }
-      
-      .chat-action-btn {
-        width: 32px !important;
-        height: 32px !important;
-      }
-      
-      /* Messages avec espace pour input flottant */
-      .chat-messages {
-        padding-bottom: 100px !important;
-      }
-
-      /* 🚀 INPUT FLOTTANT - FIX CLAVIER */
-      .chat-input-area {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        width: 100% !important;
-        background: ${isDark ? '#1f2937' : '#ffffff'} !important;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
-        z-index: 1000 !important;
-        transform: translateY(var(--keyboard-offset, 0px));
-        transition: transform 0.3s ease;
-      }
-      
-      .chat-input {
-        font-size: 16px !important; /* Empêche zoom iOS */
-        padding: 12px 16px !important;
-        min-height: 44px !important;
-      }
-      
-      .chat-send-btn {
-        width: 44px !important;
-        height: 44px !important;
-      }
-      
-      /* Quand clavier ouvert */
-      body.keyboard-open .chat-input-area {
-        transform: translateY(-280px);
-      }
-      
-      body.keyboard-open .chat-messages {
-        padding-bottom: 380px !important;
-      }
-    }
   </style>
 </head>
 
@@ -550,7 +440,7 @@ export async function GET(
   </div>
   
 <script>
-    // Variables globales - VOTRE CODE ORIGINAL
+    // Variables globales
     let isOpen = false;
     let isTyping = false;
     let messages = [];
@@ -558,9 +448,10 @@ export async function GET(
     // Configuration
     const config = ${JSON.stringify(config)};
     
-    // 💾 PERSISTANCE - VOTRE CODE ORIGINAL
+    // 💾 PERSISTANCE - NOUVEAU CODE ICI
     const STORAGE_KEY = 'chatbot_conversation_' + config._id;
     
+    // Fonctions de sauvegarde
     function saveConversation() {
       try {
         const conversationData = {
@@ -574,16 +465,18 @@ export async function GET(
       }
     }
     
-    function loadConversation() {
+function loadConversation() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const data = JSON.parse(saved);
           
+          // Vérifier que ce n'est pas trop vieux (1h max)
           const maxAge = 60 * 60 * 1000; // 1 heure
           if (Date.now() - data.timestamp < maxAge) {
             messages = data.messages || [];
             
+            // Restaurer les messages dans le DOM
             if (messages.length > 0) {
               messagesContainer.innerHTML = '';
               messages.forEach(msg => {
@@ -591,6 +484,7 @@ export async function GET(
               });
             }
             
+            // 🎯 FIX: Restaurer l'état ouvert CORRECTEMENT
             if (data.isOpen) {
               setTimeout(() => {
                 isOpen = true;
@@ -598,6 +492,7 @@ export async function GET(
                 chatWindow?.classList.remove('hidden');
                 popup?.classList.add('hidden');
                 
+                // 🎯 NOUVEAU: Envoyer message pour redimensionner l'iframe
                 parent.postMessage({ 
                   type: 'WIDGET_OPEN', 
                   data: { width: config.width, height: config.height } 
@@ -615,6 +510,7 @@ export async function GET(
       return false;
     }
     
+    // Fonction pour ajouter au DOM sans sauvegarder
     function addMessageToDOM(text, isBot, timestamp = new Date()) {
       const messageEl = document.createElement('div');
       messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
@@ -636,6 +532,7 @@ export async function GET(
       
       messagesContainer?.appendChild(messageEl);
     }
+    // FIN PERSISTANCE
     
     // Éléments DOM
     const popup = document.getElementById('chatPopup');
@@ -647,7 +544,7 @@ export async function GET(
     const resetBtn = document.getElementById('resetBtn');
     const closeBtn = document.getElementById('closeBtn');
     
-    // Event listeners - VOTRE CODE ORIGINAL
+    // Event listeners
     button?.addEventListener('click', toggleChat);
     closeBtn?.addEventListener('click', closeChat);
     resetBtn?.addEventListener('click', resetChat);
@@ -668,7 +565,7 @@ export async function GET(
       }
     });
     
-    // Fonctions - VOTRE CODE ORIGINAL
+    // Fonctions MODIFIÉES
     function toggleChat() {
       isOpen = !isOpen;
       if (isOpen) {
@@ -676,6 +573,7 @@ export async function GET(
         chatWindow?.classList.remove('hidden');
         popup?.classList.add('hidden');
         
+        // Message de bienvenue seulement si pas de conversation sauvée
         if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
           setTimeout(() => {
             showTyping();
@@ -693,6 +591,7 @@ export async function GET(
         closeChat();
       }
       
+      // 💾 SAUVEGARDER l'état
       saveConversation();
     }
     
@@ -702,6 +601,7 @@ export async function GET(
       button?.classList.remove('hidden');
       parent.postMessage({ type: 'WIDGET_CLOSE', data: {} }, '*');
       
+      // 💾 SAUVEGARDER l'état
       saveConversation();
     }
     
@@ -709,6 +609,7 @@ export async function GET(
       messagesContainer.innerHTML = '';
       messages = [];
       
+      // 💾 SUPPRIMER la sauvegarde
       localStorage.removeItem(STORAGE_KEY);
       
       if (config.showWelcomeMessage && config.welcomeMessage) {
@@ -756,11 +657,17 @@ export async function GET(
       }
     }
     
+    // 💾 FONCTION addMessage MODIFIÉE
     function addMessage(text, isBot) {
       const timestamp = new Date();
       
+      // Ajouter au DOM
       addMessageToDOM(text, isBot, timestamp);
+      
+      // Ajouter aux données
       messages.push({ text, isBot, timestamp });
+      
+      // 💾 SAUVEGARDER
       saveConversation();
       
       scrollToBottom();
@@ -798,33 +705,12 @@ export async function GET(
       }
     }
     
-    // 🎯 FIX CLAVIER MOBILE - AJOUT MINIMAL
-    if (window.innerWidth <= 768) {
-      // Fix viewport height mobile
-      function setViewportHeight() {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', vh + 'px');
-      }
-      setViewportHeight();
-      window.addEventListener('resize', setViewportHeight);
-      
-      // Détecter clavier mobile
-      if (input) {
-        input.addEventListener('focus', () => {
-          console.log('📱 Clavier mobile ouvert');
-          document.body.classList.add('keyboard-open');
-        });
-        
-        input.addEventListener('blur', () => {
-          console.log('📱 Clavier mobile fermé');
-          document.body.classList.remove('keyboard-open');
-        });
-      }
-    }
-    
-    // Charger la conversation au démarrage
+    // 💾 CHARGER la conversation au démarrage
     window.addEventListener('DOMContentLoaded', function() {
       const loaded = loadConversation();
+      
+      // Si pas de conversation sauvée ET pas déjà ouvert, ne rien faire
+      // Le message de bienvenue sera ajouté à l'ouverture
     });
     
     // Popup automatique
@@ -897,4 +783,4 @@ export async function GET(
       },
     });
   }
-}
+} 
