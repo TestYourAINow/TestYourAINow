@@ -370,6 +370,8 @@ export async function GET(
 @media only screen and (max-width: 767px) and (hover: none) and (pointer: coarse) {
   /* Popup mobile plus large */
 
+
+  
   html, body {
     -webkit-text-size-adjust: 100% !important;
     -webkit-user-select: none !important;

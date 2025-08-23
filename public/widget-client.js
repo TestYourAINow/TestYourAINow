@@ -194,6 +194,15 @@ handleWidgetOpen: function(data) {
       display: block;
       overflow: hidden !important;  /* ← Ajoute ça */
     `;
+  const parentDoc = window.document;
+  parentDoc.body.style.overflow = 'hidden';
+  parentDoc.body.style.position = 'fixed';
+  parentDoc.body.style.width = '100%';
+  parentDoc.body.style.height = '100%';
+  parentDoc.body.style.touchAction = 'none';
+  parentDoc.body.style.webkitUserSelect = 'none'; // Ajoute ça
+  parentDoc.body.style.webkitTouchCallout = 'none';
+
   } else {
     // 🎯 DESKTOP : Version simplifiée de ton code (sans logique mobile)
     const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
@@ -230,6 +239,14 @@ handleWidgetOpen: function(data) {
     console.log('AIChatWidget: Fermeture du chat');
     this.isOpen = false;
     this.showButton();
+
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
+  document.body.style.height = '';
+  document.body.style.touchAction = '';
+  document.body.style.webkitUserSelect = ''; // Restore
+  document.body.style.webkitTouchCallout = ''; 
   },
 
   // 📏 Redimensionnement dynamique du widget
