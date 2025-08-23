@@ -195,7 +195,6 @@ handleWidgetOpen: function(data) {
       overflow: hidden !important;  /* ← Ajoute ça */
     `;
   document.body.style.overflow = 'hidden';
-  document.body.style.position = 'fixed';
 
 
   } else {
@@ -236,7 +235,6 @@ handleWidgetOpen: function(data) {
     this.showButton();
 
       document.body.style.overflow = '';
-  document.body.style.position = '';
 
   },
 
