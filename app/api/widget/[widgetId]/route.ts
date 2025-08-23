@@ -464,20 +464,26 @@ export async function GET(
   height: calc(100vh - 56px) !important;
   }
 
-  .chat-input-container {
-  position: relative !important;
+  .scroll-down-btn {
+  position: fixed !important;
+  bottom: 90px !important;
+  right: 16px !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: rgba(0,0,0,0.7) !important;
+  color: white !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1001 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
 }
 
-.chat-input-container::after {
-  content: '';
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 36px;
-  height: 4px;
-  background: rgba(0,0,0,0.2);
-  border-radius: 2px;
+.scroll-down-btn.show {
+  display: flex !important;
 }
 
 }
@@ -531,10 +537,16 @@ export async function GET(
       </div>
       
       <!-- Messages -->
-      <div class="chat-messages" id="chatMessages">
-        <div id="messagesContainer">
-        </div>
-      </div>
+<div class="chat-messages" id="chatMessages">
+  <div id="messagesContainer">
+  </div>
+  <!-- Bouton scroll down -->
+  <button class="scroll-down-btn" id="scrollDownBtn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 16L6 10H18L12 16Z"/>
+    </svg>
+  </button>
+</div>
       
       <!-- Input -->
       <div class="chat-input-area">
@@ -659,6 +671,7 @@ function loadConversation() {
     const sendBtn = document.getElementById('sendBtn');
     const resetBtn = document.getElementById('resetBtn');
     const closeBtn = document.getElementById('closeBtn');
+    const scrollDownBtn = document.getElementById('scrollDownBtn');
     
     // Event listeners
     button?.addEventListener('click', toggleChat);
@@ -820,6 +833,28 @@ function loadConversation() {
         }, 100);
       }
     }
+
+    function checkScrollPosition() {
+  const messages = document.getElementById('chatMessages');
+  if (!messages || !scrollDownBtn) return;
+  
+  const isAtBottom = messages.scrollTop + messages.clientHeight >= messages.scrollHeight - 100;
+  
+  if (!isAtBottom) {
+    scrollDownBtn.classList.add('show');
+  } else {
+    scrollDownBtn.classList.remove('show');
+  }
+}
+
+// Event listener pour le bouton
+scrollDownBtn?.addEventListener('click', () => {
+  scrollToBottom();
+  scrollDownBtn.classList.remove('show');
+});
+
+// Event listener pour détecter le scroll
+document.getElementById('chatMessages')?.addEventListener('scroll', checkScrollPosition);
     
     // 💾 CHARGER la conversation au démarrage
     window.addEventListener('DOMContentLoaded', function() {
