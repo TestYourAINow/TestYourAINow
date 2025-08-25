@@ -22,7 +22,7 @@ export async function GET(
     const config = JSON.parse(JSON.stringify(rawConfig));
     const isDark = config.theme === 'dark';
 
-    // 🎯 HTML COMPLET - GARDE TES VALEURS, AJOUTE MOBILE
+    // 🎯 HTML COMPLET - TON CODE ORIGINAL + LAYER MOBILE UNIQUEMENT
     const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -57,12 +57,7 @@ export async function GET(
       --primary-color: ${config.primaryColor || '#3b82f6'};
     }
     
-    /* 🎯 DETECTION MOBILE */
-    .is-mobile {
-      --is-mobile: 1;
-    }
-    
-    /* 🔘 BOUTON CHAT - TON CODE ORIGINAL */
+    /* 🔘 BOUTON CHAT - TON CODE ORIGINAL INCHANGÉ */
     .chat-button {
       width: 64px;
       height: 64px;
@@ -83,7 +78,7 @@ export async function GET(
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
     }
     
-    /* POPUP - TON CODE ORIGINAL */
+    /* POPUP - TON CODE ORIGINAL INCHANGÉ */
     .chat-popup {
       position: absolute;
       bottom: 100%;
@@ -111,7 +106,7 @@ export async function GET(
       transform: rotate(45deg);
     }
     
-    /* 🖥️ DESKTOP CHAT WINDOW - TON CODE ORIGINAL INCHANGÉ */
+    /* 🏠 CHAT WINDOW - TON CODE ORIGINAL */
     .chat-window {
       position: absolute;
       bottom: 0;
@@ -127,9 +122,10 @@ export async function GET(
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     
-    /* 📱 MOBILE: Override spécifique pour mobile */
+    /* 📱 MOBILE OVERRIDES - STRUCTURE UNIQUEMENT, COULEURS INTACTES */
     @media (max-width: 768px) {
       .chat-widget.is-mobile .chat-window {
+        /* Structure mobile plein écran */
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
@@ -140,68 +136,57 @@ export async function GET(
         border-radius: 0 !important;
         box-shadow: none !important;
         animation: slideInFromBottom 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+        /* Safe areas iOS */
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
       }
       
       .chat-widget.is-mobile .chat-header {
-        background: ${isDark ? '#1f2937' : '#ffffff'} !important;
-        border-bottom: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.8)'} !important;
+        /* Garde TES couleurs, ajuste juste la hauteur */
         height: 60px !important;
         padding-top: calc(8px + env(safe-area-inset-top)) !important;
       }
       
-      .chat-widget.is-mobile .chat-title {
-        color: ${isDark ? 'white' : '#111827'} !important;
-        text-shadow: none !important;
-      }
-      
-      .chat-widget.is-mobile .chat-subtitle {
-        color: ${isDark ? 'rgba(156, 163, 175, 0.8)' : '#6b7280'} !important;
-      }
-      
       .chat-widget.is-mobile .chat-avatar {
+        /* Avatar plus petit sur mobile */
         width: 36px !important;
         height: 36px !important;
-        border: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.4)' : 'rgba(229, 231, 235, 0.6)'} !important;
-        box-shadow: none !important;
       }
       
-      .chat-widget.is-mobile .chat-action-btn {
-        background: ${isDark ? 'rgba(55, 65, 81, 0.8)' : 'rgba(243, 244, 246, 0.9)'} !important;
-        color: ${isDark ? 'rgba(156, 163, 175, 0.9)' : '#6b7280'} !important;
-        border: none !important;
-        backdrop-filter: none !important;
+      .chat-widget.is-mobile .chat-input-area {
+        /* Zone input plus haute - safe area */
+        padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
       }
       
       .chat-widget.is-mobile .chat-input {
-        font-size: 16px !important;
+        /* Input mobile optimisé */
+        font-size: 16px !important; /* Évite le zoom iOS */
         min-height: 40px !important;
         padding: 10px 16px !important;
         border-radius: 20px !important;
       }
       
       .chat-widget.is-mobile .chat-send-btn {
+        /* Bouton plus grand sur tactile */
         width: 44px !important;
         height: 44px !important;
       }
       
-      .chat-widget.is-mobile .chat-input-area {
-        padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
-      }
-      
       .chat-widget.is-mobile .message-avatar {
+        /* Avatar message plus petit */
         width: 28px !important;
         height: 28px !important;
       }
       
       .chat-widget.is-mobile .message-bubble {
+        /* Bulles optimisées mobile */
         font-size: 15px !important;
         padding: 8px 12px !important;
         max-width: calc(100vw - 120px) !important;
       }
       
       .chat-widget.is-mobile .chat-messages {
+        /* Messages mobile avec scroll tactile */
         padding: 12px 16px !important;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
@@ -489,7 +474,7 @@ export async function GET(
       <div class="chat-header">
         <div class="chat-header-content">
           <div style="position: relative;">
-            <img src="${config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc='}" alt="Avatar" class="chat-avatar">
+            <img src="${config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+'}" alt="Avatar" class="chat-avatar">
             <div class="chat-status"></div>
           </div>
           <div>
@@ -548,7 +533,7 @@ export async function GET(
     // Configuration - TES VALEURS ORIGINALES
     const config = ${JSON.stringify(config)};
     
-    // 🎯 DETECTION MOBILE - NOUVELLE PARTIE
+    // 🎯 DETECTION MOBILE - APPLIQUE JUSTE LA CLASSE
     function detectDevice() {
       const width = window.innerWidth;
       const userAgent = navigator.userAgent.toLowerCase();
@@ -588,12 +573,10 @@ export async function GET(
         if (saved) {
           const data = JSON.parse(saved);
           
-          // Vérifier que ce n'est pas trop vieux (1h max)
-          const maxAge = 60 * 60 * 1000; // 1 heure
+          const maxAge = 60 * 60 * 1000;
           if (Date.now() - data.timestamp < maxAge) {
             messages = data.messages || [];
             
-            // Restaurer les messages dans le DOM
             if (messages.length > 0) {
               messagesContainer.innerHTML = '';
               messages.forEach(msg => {
@@ -601,7 +584,6 @@ export async function GET(
               });
             }
             
-            // Restaurer l'état ouvert CORRECTEMENT
             if (data.isOpen) {
               setTimeout(() => {
                 isOpen = true;
@@ -609,7 +591,6 @@ export async function GET(
                 chatWindow?.classList.remove('hidden');
                 popup?.classList.add('hidden');
                 
-                // 🎯 NOUVEAU: Envoyer message avec info mobile
                 parent.postMessage({ 
                   type: 'WIDGET_OPEN', 
                   data: { width: config.width, height: config.height, isMobile } 
@@ -627,14 +608,14 @@ export async function GET(
       return false;
     }
     
-    // Fonction pour ajouter au DOM sans sauvegarder - TON CODE ORIGINAL
+    // Fonction pour ajouter au DOM - TON CODE ORIGINAL
     function addMessageToDOM(text, isBot, timestamp = new Date()) {
       const messageEl = document.createElement('div');
       messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
       
       if (isBot) {
         messageEl.innerHTML = 
-          '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc>') + '" alt="Bot" class="message-avatar">' +
+          '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS01MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc>') + '" alt="Bot" class="message-avatar">' +
           '<div>' +
             '<div class="message-bubble bot">' + text + '</div>' +
             '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
@@ -681,7 +662,7 @@ export async function GET(
       }
     });
     
-    // 🎯 RESIZE LISTENER - NOUVEAU pour détecter changements mobile/desktop
+    // 🎯 RESIZE LISTENER - Redetection mobile/desktop
     window.addEventListener('resize', function() {
       detectDevice();
     });
@@ -694,12 +675,13 @@ export async function GET(
         chatWindow?.classList.remove('hidden');
         popup?.classList.add('hidden');
         
-        // 🎯 MOBILE: Empêcher scroll du body
+        // 🎯 MOBILE: Empêcher scroll du body + fix viewport
         if (isMobile) {
           document.body.style.overflow = 'hidden';
+          document.body.style.position = 'fixed';
+          document.body.style.width = '100%';
         }
         
-        // Message de bienvenue seulement si pas de conversation sauvée
         if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
           setTimeout(() => {
             showTyping();
@@ -713,7 +695,6 @@ export async function GET(
         
         setTimeout(() => input?.focus(), 300);
         
-        // 🎯 NOTIFIER LE PARENT avec info mobile
         parent.postMessage({ 
           type: 'WIDGET_OPEN', 
           data: { width: config.width, height: config.height, isMobile } 
@@ -732,7 +713,8 @@ export async function GET(
       
       // 🎯 MOBILE: Restaurer scroll du body
       if (isMobile) {
-        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
       }
       
       parent.postMessage({ 
@@ -761,7 +743,7 @@ export async function GET(
       
       addMessage(text, false);
       input.value = '';
-      input.style.height = isMobile ? '40px' : '32px'; // Hauteur différente selon device
+      input.style.height = isMobile ? '40px' : '32px';
       sendBtn.disabled = true;
       
       showTyping();
@@ -799,10 +781,8 @@ export async function GET(
     function addMessage(text, isBot) {
       const timestamp = new Date();
       
-      // Ajouter au DOM
       addMessageToDOM(text, isBot, timestamp);
       
-      // Ajouter aux données
       messages.push({ text, isBot, timestamp });
       
       saveConversation();
@@ -872,8 +852,8 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=300", // 5 minutes
-        "X-Frame-Options": "ALLOWALL", // Permet l'iframe
+        "Cache-Control": "public, max-age=300",
+        "X-Frame-Options": "ALLOWALL",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET",
         "Access-Control-Allow-Headers": "*"
@@ -883,7 +863,6 @@ export async function GET(
   } catch (error) {
     console.error('Erreur chargement widget:', error);
     
-    // Page d'erreur simple
     const errorHtml = `<!DOCTYPE html>
 <html>
 <head>
