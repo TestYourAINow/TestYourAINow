@@ -158,10 +158,13 @@ export async function GET(
       }
       
       .chat-widget.is-mobile .chat-input-area {
-        /* Zone input BEAUCOUP plus haute - safe area + keyboard */
-        padding-top: 16px !important;
-        padding-bottom: calc(20px + env(safe-area-inset-bottom)) !important;
-        min-height: calc(70px + env(safe-area-inset-bottom)) !important;
+        /* Zone input BEAUCOUP plus haute - safe area + keyboard + barre iPhone */
+        padding-top: 20px !important;
+        padding-bottom: calc(40px + env(safe-area-inset-bottom)) !important;
+        min-height: calc(100px + env(safe-area-inset-bottom)) !important;
+        /* S'assurer qu'elle soit visible */
+        position: relative !important;
+        z-index: 10 !important;
       }
       
       .chat-widget.is-mobile .chat-input {
@@ -672,16 +675,24 @@ export async function GET(
       }
     });
     
-    // 🎯 FONCTION POUR EMPÊCHER LE SCROLL PARENT SUR MOBILE
+    // 🎯 FONCTION POUR EMPÊCHER LE SCROLL PARENT SUR MOBILE SEULEMENT
     function preventParentScroll(e) {
-      if (isMobile && isOpen) {
-        // Seulement si on n'est PAS dans la zone de messages
-        const messagesEl = document.getElementById('chatMessages');
-        if (messagesEl && !messagesEl.contains(e.target)) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
+      // SEULEMENT sur mobile ET chat ouvert
+      if (!isMobile || !isOpen) return;
+      
+      // Seulement si on n'est PAS dans la zone de messages
+      const messagesEl = document.getElementById('chatMessages');
+      const inputEl = document.getElementById('messageInput');
+      
+      // Laisser scroller dans les messages et taper dans l'input
+      if ((messagesEl && messagesEl.contains(e.target)) || 
+          (inputEl && inputEl.contains(e.target))) {
+        return;
       }
+      
+      // Bloquer partout ailleurs
+      e.preventDefault();
+      e.stopPropagation();
     }
     
     // 🎯 RESIZE LISTENER - Redetection mobile/desktop
@@ -697,7 +708,7 @@ export async function GET(
         chatWindow?.classList.remove('hidden');
         popup?.classList.add('hidden');
         
-        // 🎯 MOBILE: Empêcher scroll du body + VRAIMENT bloquer interaction
+        // 🎯 MOBILE SEULEMENT: Empêcher scroll du body + VRAIMENT bloquer interaction
         if (isMobile) {
           document.body.style.overflow = 'hidden';
           document.body.style.position = 'fixed';
@@ -709,6 +720,7 @@ export async function GET(
           document.addEventListener('touchmove', preventParentScroll, { passive: false });
           document.addEventListener('wheel', preventParentScroll, { passive: false });
         }
+        // 🖥️ DESKTOP: Rien à faire, scroll normal
         
         if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
           setTimeout(() => {
