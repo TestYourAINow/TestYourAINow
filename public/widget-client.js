@@ -224,27 +224,22 @@ window.AIChatWidget = {
     document.body.style.overflow = 'hidden';
   },
 
-  // 🖥️ MODE DESKTOP - TON COMPORTEMENT ORIGINAL avec TES VALEURS
+  // 🖥️ MODE DESKTOP - FENÊTRE RESPONSIVE (s'adapte à l'écran)
   openDesktopChat: function() {
     if (!this.iframe) return;
     
-    console.log('AIChatWidget: Mode Desktop - Fenêtre');
+    console.log('AIChatWidget: Mode Desktop - Fenêtre responsive');
     
-    var maxHeight = window.innerHeight - 100;
+    // 🎯 RESPONSIVE: Utilise tes valeurs mais s'adapte à l'écran
+    var desiredWidth = this.config.width || 380;
+    var desiredHeight = this.config.height || 600;
     
-    // 🎯 UTILISER TES VALEURS width/height de la DB ChatbotConfig
-    var baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-    var baseHeight = Math.min(this.config.height, maxHeight);
+    // S'adapter à l'écran disponible
+    var maxWidth = window.innerWidth - 60;  // Marge 30px de chaque côté
+    var maxHeight = window.innerHeight - 100; // Marge 50px top/bottom
     
-    // TES MARGES ORIGINALES pour animations et ombres
-    var animationMargin = 25;
-    var borderRadius = 10;
-    
-    var totalMarginWidth = animationMargin + borderRadius;
-    var totalMarginHeight = animationMargin + borderRadius;
-    
-    var finalWidth = baseWidth + totalMarginWidth;
-    var finalHeight = baseHeight + totalMarginHeight;
+    var finalWidth = Math.min(desiredWidth, maxWidth) + 40; // +40 pour marges/ombres
+    var finalHeight = Math.min(desiredHeight, maxHeight) + 40;
     
     this.iframe.style.cssText = [
       'position: fixed',

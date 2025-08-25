@@ -106,13 +106,14 @@ export async function GET(
       transform: rotate(45deg);
     }
     
-    /* 🏠 CHAT WINDOW - TON CODE ORIGINAL */
+    /* 🏠 CHAT WINDOW - RESPONSIVE DESKTOP + FIXE MOBILE */
     .chat-window {
       position: absolute;
       bottom: 0;
       right: 0;
-      width: calc(100vw - 20px);
-      height: calc(100vh - 20px);
+      /* 🎯 RESPONSIVE: S'adapte à l'écran mais garde le ratio */
+      width: min(380px, calc(100vw - 40px));
+      height: min(600px, calc(100vh - 80px));
       border-radius: 20px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       overflow: hidden;
@@ -122,10 +123,10 @@ export async function GET(
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     
-    /* 📱 MOBILE OVERRIDES - STRUCTURE UNIQUEMENT, COULEURS INTACTES */
+    /* 📱 MOBILE OVERRIDES - STRUCTURE + VRAIMENT FULL SCREEN */
     @media (max-width: 768px) {
       .chat-widget.is-mobile .chat-window {
-        /* Structure mobile plein écran */
+        /* Structure mobile VRAIMENT plein écran */
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
@@ -136,15 +137,18 @@ export async function GET(
         border-radius: 0 !important;
         box-shadow: none !important;
         animation: slideInFromBottom 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-        /* Safe areas iOS */
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
+        /* Safe areas iOS - VRAIMENT tout l'écran */
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        /* Empêcher interaction avec le parent */
+        z-index: 2147483647 !important;
       }
       
       .chat-widget.is-mobile .chat-header {
-        /* Garde TES couleurs, ajuste juste la hauteur */
-        height: 60px !important;
+        /* Header mobile avec status bar */
+        height: calc(60px + env(safe-area-inset-top)) !important;
         padding-top: calc(8px + env(safe-area-inset-top)) !important;
+        padding-bottom: 8px !important;
       }
       
       .chat-widget.is-mobile .chat-avatar {
@@ -154,22 +158,26 @@ export async function GET(
       }
       
       .chat-widget.is-mobile .chat-input-area {
-        /* Zone input plus haute - safe area */
-        padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+        /* Zone input BEAUCOUP plus haute - safe area + keyboard */
+        padding-top: 16px !important;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom)) !important;
+        min-height: calc(70px + env(safe-area-inset-bottom)) !important;
       }
       
       .chat-widget.is-mobile .chat-input {
-        /* Input mobile optimisé */
+        /* Input mobile optimisé - PAS de zoom */
         font-size: 16px !important; /* Évite le zoom iOS */
-        min-height: 40px !important;
-        padding: 10px 16px !important;
-        border-radius: 20px !important;
+        min-height: 44px !important; /* Zone tactile Apple */
+        padding: 12px 18px !important;
+        border-radius: 22px !important;
+        transform: translateZ(0); /* Force GPU acceleration */
       }
       
       .chat-widget.is-mobile .chat-send-btn {
         /* Bouton plus grand sur tactile */
         width: 44px !important;
         height: 44px !important;
+        flex-shrink: 0 !important;
       }
       
       .chat-widget.is-mobile .message-avatar {
@@ -181,15 +189,17 @@ export async function GET(
       .chat-widget.is-mobile .message-bubble {
         /* Bulles optimisées mobile */
         font-size: 15px !important;
-        padding: 8px 12px !important;
-        max-width: calc(100vw - 120px) !important;
+        padding: 10px 14px !important;
+        max-width: calc(100vw - 100px) !important;
       }
       
       .chat-widget.is-mobile .chat-messages {
         /* Messages mobile avec scroll tactile */
-        padding: 12px 16px !important;
+        padding: 16px !important;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
+        /* Empêcher le scroll parent de passer à travers */
+        touch-action: pan-y !important;
       }
     }
     
@@ -662,6 +672,18 @@ export async function GET(
       }
     });
     
+    // 🎯 FONCTION POUR EMPÊCHER LE SCROLL PARENT SUR MOBILE
+    function preventParentScroll(e) {
+      if (isMobile && isOpen) {
+        // Seulement si on n'est PAS dans la zone de messages
+        const messagesEl = document.getElementById('chatMessages');
+        if (messagesEl && !messagesEl.contains(e.target)) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    }
+    
     // 🎯 RESIZE LISTENER - Redetection mobile/desktop
     window.addEventListener('resize', function() {
       detectDevice();
@@ -675,11 +697,17 @@ export async function GET(
         chatWindow?.classList.remove('hidden');
         popup?.classList.add('hidden');
         
-        // 🎯 MOBILE: Empêcher scroll du body + fix viewport
+        // 🎯 MOBILE: Empêcher scroll du body + VRAIMENT bloquer interaction
         if (isMobile) {
           document.body.style.overflow = 'hidden';
           document.body.style.position = 'fixed';
           document.body.style.width = '100%';
+          document.body.style.height = '100%';
+          document.documentElement.style.overflow = 'hidden';
+          
+          // Empêcher tous les événements touch sur le parent
+          document.addEventListener('touchmove', preventParentScroll, { passive: false });
+          document.addEventListener('wheel', preventParentScroll, { passive: false });
         }
         
         if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
