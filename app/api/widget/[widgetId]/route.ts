@@ -158,13 +158,17 @@ export async function GET(
       }
       
       .chat-widget.is-mobile .chat-input-area {
-        /* Zone input BEAUCOUP plus haute - safe area + keyboard + barre iPhone */
+        /* Zone input BEAUCOUP plus haute + push up quand keyboard */
         padding-top: 20px !important;
-        padding-bottom: calc(40px + env(safe-area-inset-bottom)) !important;
-        min-height: calc(100px + env(safe-area-inset-bottom)) !important;
-        /* S'assurer qu'elle soit visible */
-        position: relative !important;
-        z-index: 10 !important;
+        padding-bottom: calc(30px + env(safe-area-inset-bottom)) !important;
+        min-height: calc(80px + env(safe-area-inset-bottom)) !important;
+        /* Transition smooth pour keyboard */
+        transition: transform 0.3s ease-in-out;
+      }
+      
+      .chat-widget.is-mobile .chat-input-area.keyboard-active {
+        /* Pousser vers le haut quand keyboard ouvert */
+        transform: translateY(-50px);
       }
       
       .chat-widget.is-mobile .chat-input {
@@ -675,24 +679,49 @@ export async function GET(
       }
     });
     
-    // 🎯 FONCTION POUR EMPÊCHER LE SCROLL PARENT SUR MOBILE SEULEMENT
+    // 🎯 MOBILE: Gérer focus/blur pour cacher barres navigation
+    input?.addEventListener('focus', handleInputFocus);
+    input?.addEventListener('blur', handleInputBlur);
+    
+    // 🎯 FONCTION POUR EMPÊCHER LE SCROLL PARENT - SEULEMENT SUR MOBILE OUVERT
     function preventParentScroll(e) {
-      // SEULEMENT sur mobile ET chat ouvert
+      // ⚡ IMPORTANT: Seulement si mobile ET chat ouvert
       if (!isMobile || !isOpen) return;
       
       // Seulement si on n'est PAS dans la zone de messages
       const messagesEl = document.getElementById('chatMessages');
-      const inputEl = document.getElementById('messageInput');
-      
-      // Laisser scroller dans les messages et taper dans l'input
-      if ((messagesEl && messagesEl.contains(e.target)) || 
-          (inputEl && inputEl.contains(e.target))) {
-        return;
+      if (messagesEl && !messagesEl.contains(e.target)) {
+        e.preventDefault();
+        e.stopPropagation();
       }
-      
-      // Bloquer partout ailleurs
-      e.preventDefault();
-      e.stopPropagation();
+    }
+    
+    // 🎯 MOBILE: Auto-hide navigation bars quand on focus input
+    function handleInputFocus() {
+      if (isMobile) {
+        // Forcer full screen + cacher les barres iOS
+        setTimeout(() => {
+          window.scrollTo(0, 1); // Cache la barre d'adresse
+          
+          // Meta viewport pour cacher les barres
+          let viewport = document.querySelector('meta[name="viewport"]');
+          if (viewport) {
+            viewport.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, minimal-ui';
+          }
+        }, 100);
+      }
+    }
+    
+    function handleInputBlur() {
+      if (isMobile) {
+        // Restaurer viewport normal
+        setTimeout(() => {
+          let viewport = document.querySelector('meta[name="viewport"]');
+          if (viewport) {
+            viewport.content = 'width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover';
+          }
+        }, 300);
+      }
     }
     
     // 🎯 RESIZE LISTENER - Redetection mobile/desktop
@@ -708,7 +737,7 @@ export async function GET(
         chatWindow?.classList.remove('hidden');
         popup?.classList.add('hidden');
         
-        // 🎯 MOBILE SEULEMENT: Empêcher scroll du body + VRAIMENT bloquer interaction
+        // 🎯 MOBILE SEULEMENT: Empêcher scroll + AUTO-HIDE barres dès ouverture
         if (isMobile) {
           document.body.style.overflow = 'hidden';
           document.body.style.position = 'fixed';
@@ -716,11 +745,21 @@ export async function GET(
           document.body.style.height = '100%';
           document.documentElement.style.overflow = 'hidden';
           
-          // Empêcher tous les événements touch sur le parent
+          // Empêcher tous les événements touch sur le parent - SEULEMENT MOBILE
           document.addEventListener('touchmove', preventParentScroll, { passive: false });
           document.addEventListener('wheel', preventParentScroll, { passive: false });
+          
+          // 🎯 AUTO-HIDE barres Safari dès l'ouverture !
+          setTimeout(() => {
+            window.scrollTo(0, 1); // Cache la barre d'adresse
+            
+            // Meta viewport pour cacher TOUTES les barres
+            let viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+              viewport.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, minimal-ui';
+            }
+          }, 300); // Petit délai pour que l'animation se termine
         }
-        // 🖥️ DESKTOP: Rien à faire, scroll normal
         
         if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
           setTimeout(() => {
