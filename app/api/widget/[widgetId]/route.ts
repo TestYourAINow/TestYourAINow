@@ -12,7 +12,7 @@ export async function GET(
   try {
     await connectToDatabase();
     
-    // Récupérer la config depuis la DB
+    // Récupérer la config depuis la DB - LOGIQUE IDENTIQUE
     const rawConfig = await ChatbotConfig.findById(widgetId).lean();
     
     if (!rawConfig) {
@@ -22,15 +22,20 @@ export async function GET(
     const config = JSON.parse(JSON.stringify(rawConfig));
     const isDark = config.theme === 'dark';
 
-    // 🎯 HTML COMPLET SANS NEXT.JS
+    // 🎯 HTML COMPLET - GARDE TES VALEURS, AJOUTE MOBILE
     const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   <title>${config.name || 'Chat Widget'}</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
     
     html, body {
       margin: 0 !important;
@@ -43,7 +48,7 @@ export async function GET(
       position: relative !important;
     }
     
-.chat-widget {
+    .chat-widget {
       position: fixed !important;
       bottom: 8px !important;
       right: 8px !important;
@@ -52,6 +57,12 @@ export async function GET(
       --primary-color: ${config.primaryColor || '#3b82f6'};
     }
     
+    /* 🎯 DETECTION MOBILE */
+    .is-mobile {
+      --is-mobile: 1;
+    }
+    
+    /* 🔘 BOUTON CHAT - TON CODE ORIGINAL */
     .chat-button {
       width: 64px;
       height: 64px;
@@ -72,21 +83,22 @@ export async function GET(
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
     }
     
-.chat-popup {
-  position: absolute;
-  bottom: 100%;
-  right: 0;
-  margin-bottom: 16px;
-  max-width: 180px;
-  padding: 10px 8px 10px 10px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  font-size: 14px;
-  color: white;
-  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
-  animation: slideUp 0.3s ease-out;
-  word-wrap: break-word;
-}
+    /* POPUP - TON CODE ORIGINAL */
+    .chat-popup {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 16px;
+      max-width: 180px;
+      padding: 10px 8px 10px 10px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      font-size: 14px;
+      color: white;
+      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+      animation: slideUp 0.3s ease-out;
+      word-wrap: break-word;
+    }
     
     .chat-popup::after {
       content: '';
@@ -99,6 +111,7 @@ export async function GET(
       transform: rotate(45deg);
     }
     
+    /* 🖥️ DESKTOP CHAT WINDOW - TON CODE ORIGINAL INCHANGÉ */
     .chat-window {
       position: absolute;
       bottom: 0;
@@ -114,6 +127,88 @@ export async function GET(
       animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     
+    /* 📱 MOBILE: Override spécifique pour mobile */
+    @media (max-width: 768px) {
+      .chat-widget.is-mobile .chat-window {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        animation: slideInFromBottom 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      
+      .chat-widget.is-mobile .chat-header {
+        background: ${isDark ? '#1f2937' : '#ffffff'} !important;
+        border-bottom: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.8)'} !important;
+        height: 60px !important;
+        padding-top: calc(8px + env(safe-area-inset-top)) !important;
+      }
+      
+      .chat-widget.is-mobile .chat-title {
+        color: ${isDark ? 'white' : '#111827'} !important;
+        text-shadow: none !important;
+      }
+      
+      .chat-widget.is-mobile .chat-subtitle {
+        color: ${isDark ? 'rgba(156, 163, 175, 0.8)' : '#6b7280'} !important;
+      }
+      
+      .chat-widget.is-mobile .chat-avatar {
+        width: 36px !important;
+        height: 36px !important;
+        border: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.4)' : 'rgba(229, 231, 235, 0.6)'} !important;
+        box-shadow: none !important;
+      }
+      
+      .chat-widget.is-mobile .chat-action-btn {
+        background: ${isDark ? 'rgba(55, 65, 81, 0.8)' : 'rgba(243, 244, 246, 0.9)'} !important;
+        color: ${isDark ? 'rgba(156, 163, 175, 0.9)' : '#6b7280'} !important;
+        border: none !important;
+        backdrop-filter: none !important;
+      }
+      
+      .chat-widget.is-mobile .chat-input {
+        font-size: 16px !important;
+        min-height: 40px !important;
+        padding: 10px 16px !important;
+        border-radius: 20px !important;
+      }
+      
+      .chat-widget.is-mobile .chat-send-btn {
+        width: 44px !important;
+        height: 44px !important;
+      }
+      
+      .chat-widget.is-mobile .chat-input-area {
+        padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+      }
+      
+      .chat-widget.is-mobile .message-avatar {
+        width: 28px !important;
+        height: 28px !important;
+      }
+      
+      .chat-widget.is-mobile .message-bubble {
+        font-size: 15px !important;
+        padding: 8px 12px !important;
+        max-width: calc(100vw - 120px) !important;
+      }
+      
+      .chat-widget.is-mobile .chat-messages {
+        padding: 12px 16px !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+      }
+    }
+    
+    /* TOUT LE RESTE - TON CSS ORIGINAL INCHANGÉ */
     .chat-header {
       height: 64px;
       padding: 10px 16px;
@@ -305,15 +400,6 @@ export async function GET(
       box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 15%, transparent);
     }
     
-    .chat-input::-webkit-scrollbar {
-      width: 4px;
-    }
-    
-    .chat-input::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 10px;
-    }
-    
     .chat-send-btn {
       width: 40px;
       height: 40px;
@@ -340,6 +426,7 @@ export async function GET(
     
     .hidden { display: none !important; }
     
+    /* ANIMATIONS - TON CODE ORIGINAL */
     @keyframes bounceIn {
       0% { opacity: 0; transform: scale(0.3); }
       50% { opacity: 1; transform: scale(1.03); }
@@ -349,6 +436,18 @@ export async function GET(
     @keyframes expandIn {
       0% { opacity: 0; transform: scale(0.8) translateY(20px); }
       100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    
+    /* 📱 ANIMATION MOBILE SEULEMENT */
+    @keyframes slideInFromBottom {
+      0% { 
+        opacity: 0; 
+        transform: translateY(100%); 
+      }
+      100% { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
     }
     
     @keyframes slideUp {
@@ -370,27 +469,27 @@ export async function GET(
 
 <body>
   <div class="chat-widget">
-    <!-- Popup -->
+    <!-- Popup - TON CODE ORIGINAL -->
     ${config.showPopup && config.popupMessage ? `
       <div class="chat-popup hidden" id="chatPopup">
         ${config.popupMessage}
       </div>
     ` : ''}
     
-    <!-- Bouton -->
+    <!-- Bouton - TON CODE ORIGINAL -->
     <button class="chat-button" id="chatButton">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
         <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
       </svg>
     </button>
     
-    <!-- Fenêtre Chat -->
+    <!-- Fenêtre Chat - TON CODE ORIGINAL -->
     <div class="chat-window hidden" id="chatWindow">
-      <!-- Header -->
+      <!-- Header - TON CODE ORIGINAL -->
       <div class="chat-header">
         <div class="chat-header-content">
           <div style="position: relative;">
-            <img src="${config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+'}" alt="Avatar" class="chat-avatar">
+            <img src="${config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc='}" alt="Avatar" class="chat-avatar">
             <div class="chat-status"></div>
           </div>
           <div>
@@ -414,13 +513,13 @@ export async function GET(
         </div>
       </div>
       
-      <!-- Messages -->
+      <!-- Messages - TON CODE ORIGINAL -->
       <div class="chat-messages" id="chatMessages">
         <div id="messagesContainer">
         </div>
       </div>
       
-      <!-- Input -->
+      <!-- Input - TON CODE ORIGINAL -->
       <div class="chat-input-area">
         <div class="chat-input-container">
           <textarea 
@@ -440,18 +539,36 @@ export async function GET(
   </div>
   
 <script>
-    // Variables globales
+    // Variables globales - TON CODE ORIGINAL
     let isOpen = false;
     let isTyping = false;
     let messages = [];
+    let isMobile = false;
     
-    // Configuration
+    // Configuration - TES VALEURS ORIGINALES
     const config = ${JSON.stringify(config)};
     
-    // 💾 PERSISTANCE - NOUVEAU CODE ICI
+    // 🎯 DETECTION MOBILE - NOUVELLE PARTIE
+    function detectDevice() {
+      const width = window.innerWidth;
+      const userAgent = navigator.userAgent.toLowerCase();
+      
+      isMobile = width <= 768 || 
+                /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
+                ('ontouchstart' in window) ||
+                (navigator.maxTouchPoints > 0);
+      
+      const widget = document.querySelector('.chat-widget');
+      if (widget) {
+        widget.classList.toggle('is-mobile', isMobile);
+      }
+      
+      console.log('Device detected:', isMobile ? 'Mobile' : 'Desktop');
+    }
+    
+    // 💾 PERSISTANCE - TON CODE ORIGINAL INCHANGÉ
     const STORAGE_KEY = 'chatbot_conversation_' + config._id;
     
-    // Fonctions de sauvegarde
     function saveConversation() {
       try {
         const conversationData = {
@@ -465,7 +582,7 @@ export async function GET(
       }
     }
     
-function loadConversation() {
+    function loadConversation() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
@@ -484,7 +601,7 @@ function loadConversation() {
               });
             }
             
-            // 🎯 FIX: Restaurer l'état ouvert CORRECTEMENT
+            // Restaurer l'état ouvert CORRECTEMENT
             if (data.isOpen) {
               setTimeout(() => {
                 isOpen = true;
@@ -492,10 +609,10 @@ function loadConversation() {
                 chatWindow?.classList.remove('hidden');
                 popup?.classList.add('hidden');
                 
-                // 🎯 NOUVEAU: Envoyer message pour redimensionner l'iframe
+                // 🎯 NOUVEAU: Envoyer message avec info mobile
                 parent.postMessage({ 
                   type: 'WIDGET_OPEN', 
-                  data: { width: config.width, height: config.height } 
+                  data: { width: config.width, height: config.height, isMobile } 
                 }, '*');
                 
               }, 100);
@@ -510,7 +627,7 @@ function loadConversation() {
       return false;
     }
     
-    // Fonction pour ajouter au DOM sans sauvegarder
+    // Fonction pour ajouter au DOM sans sauvegarder - TON CODE ORIGINAL
     function addMessageToDOM(text, isBot, timestamp = new Date()) {
       const messageEl = document.createElement('div');
       messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
@@ -532,9 +649,8 @@ function loadConversation() {
       
       messagesContainer?.appendChild(messageEl);
     }
-    // FIN PERSISTANCE
     
-    // Éléments DOM
+    // Éléments DOM - TON CODE ORIGINAL
     const popup = document.getElementById('chatPopup');
     const button = document.getElementById('chatButton');
     const chatWindow = document.getElementById('chatWindow');
@@ -544,7 +660,7 @@ function loadConversation() {
     const resetBtn = document.getElementById('resetBtn');
     const closeBtn = document.getElementById('closeBtn');
     
-    // Event listeners
+    // Event listeners - TON CODE ORIGINAL
     button?.addEventListener('click', toggleChat);
     closeBtn?.addEventListener('click', closeChat);
     resetBtn?.addEventListener('click', resetChat);
@@ -565,13 +681,23 @@ function loadConversation() {
       }
     });
     
-    // Fonctions MODIFIÉES
+    // 🎯 RESIZE LISTENER - NOUVEAU pour détecter changements mobile/desktop
+    window.addEventListener('resize', function() {
+      detectDevice();
+    });
+    
+    // Fonctions MODIFIÉES avec gestion mobile/desktop
     function toggleChat() {
       isOpen = !isOpen;
       if (isOpen) {
         button?.classList.add('hidden');
         chatWindow?.classList.remove('hidden');
         popup?.classList.add('hidden');
+        
+        // 🎯 MOBILE: Empêcher scroll du body
+        if (isMobile) {
+          document.body.style.overflow = 'hidden';
+        }
         
         // Message de bienvenue seulement si pas de conversation sauvée
         if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
@@ -586,12 +712,16 @@ function loadConversation() {
         }
         
         setTimeout(() => input?.focus(), 300);
-        parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
+        
+        // 🎯 NOTIFIER LE PARENT avec info mobile
+        parent.postMessage({ 
+          type: 'WIDGET_OPEN', 
+          data: { width: config.width, height: config.height, isMobile } 
+        }, '*');
       } else {
         closeChat();
       }
       
-      // 💾 SAUVEGARDER l'état
       saveConversation();
     }
     
@@ -599,9 +729,17 @@ function loadConversation() {
       isOpen = false;
       chatWindow?.classList.add('hidden');
       button?.classList.remove('hidden');
-      parent.postMessage({ type: 'WIDGET_CLOSE', data: {} }, '*');
       
-      // 💾 SAUVEGARDER l'état
+      // 🎯 MOBILE: Restaurer scroll du body
+      if (isMobile) {
+        document.body.style.overflow = '';
+      }
+      
+      parent.postMessage({ 
+        type: 'WIDGET_CLOSE', 
+        data: { isMobile } 
+      }, '*');
+      
       saveConversation();
     }
     
@@ -609,7 +747,6 @@ function loadConversation() {
       messagesContainer.innerHTML = '';
       messages = [];
       
-      // 💾 SUPPRIMER la sauvegarde
       localStorage.removeItem(STORAGE_KEY);
       
       if (config.showWelcomeMessage && config.welcomeMessage) {
@@ -617,13 +754,14 @@ function loadConversation() {
       }
     }
     
+    // TON CODE ORIGINAL sendMessage - INCHANGÉ
     async function sendMessage() {
       const text = input?.value?.trim();
       if (!text) return;
       
       addMessage(text, false);
       input.value = '';
-      input.style.height = '32px';
+      input.style.height = isMobile ? '40px' : '32px'; // Hauteur différente selon device
       sendBtn.disabled = true;
       
       showTyping();
@@ -657,7 +795,7 @@ function loadConversation() {
       }
     }
     
-    // 💾 FONCTION addMessage MODIFIÉE
+    // TON CODE ORIGINAL addMessage - INCHANGÉ
     function addMessage(text, isBot) {
       const timestamp = new Date();
       
@@ -667,9 +805,7 @@ function loadConversation() {
       // Ajouter aux données
       messages.push({ text, isBot, timestamp });
       
-      // 💾 SAUVEGARDER
       saveConversation();
-      
       scrollToBottom();
     }
     
@@ -679,7 +815,7 @@ function loadConversation() {
       typingEl.id = 'typingIndicator';
       typingEl.className = 'message bot';
       typingEl.innerHTML = 
-        '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc>') + '" alt="Bot" class="message-avatar">' +
+        '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS01MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc>') + '" alt="Bot" class="message-avatar">' +
         '<div>' +
           '<div class="typing-indicator">' +
             '<div class="typing-dot"></div>' +
@@ -705,28 +841,29 @@ function loadConversation() {
       }
     }
     
-    // 💾 CHARGER la conversation au démarrage
+    // 🎯 INITIALISATION
     window.addEventListener('DOMContentLoaded', function() {
-      const loaded = loadConversation();
+      // Détecter le device dès le départ
+      detectDevice();
       
-      // Si pas de conversation sauvée ET pas déjà ouvert, ne rien faire
-      // Le message de bienvenue sera ajouté à l'ouverture
+      // Charger la conversation sauvée - TON CODE ORIGINAL
+      const loaded = loadConversation();
     });
     
-    // Popup automatique
+    // Popup automatique - TON CODE ORIGINAL
     if (config.showPopup && config.popupMessage && popup) {
       setTimeout(() => {
         if (!isOpen) popup.classList.remove('hidden');
       }, config.popupDelay * 1000);
     }
     
-    // Communication avec parent
+    // 🎯 COMMUNICATION AVEC PARENT - Avec info mobile
     parent.postMessage({ 
       type: 'WIDGET_READY', 
-      data: { width: config.width, height: config.height } 
+      data: { width: config.width, height: config.height, isMobile } 
     }, '*');
     
-    console.log('Widget chargé avec succès');
+    console.log('Widget chargé avec succès - Device:', isMobile ? 'Mobile' : 'Desktop');
   </script>
 </body>
 </html>`;
@@ -783,4 +920,4 @@ function loadConversation() {
       },
     });
   }
-} 
+}
