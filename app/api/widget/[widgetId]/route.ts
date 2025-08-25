@@ -679,9 +679,24 @@ export async function GET(
       }
     });
     
-    // 🎯 MOBILE: Gérer focus/blur pour cacher barres navigation
-    input?.addEventListener('focus', handleInputFocus);
-    input?.addEventListener('blur', handleInputBlur);
+    // 🎯 Input events simplifiés - juste pour keyboard push
+    input?.addEventListener('focus', function() {
+      if (isMobile) {
+        const inputArea = document.querySelector('.chat-input-area');
+        if (inputArea) {
+          inputArea.classList.add('keyboard-active');
+        }
+      }
+    });
+    
+    input?.addEventListener('blur', function() {
+      if (isMobile) {
+        const inputArea = document.querySelector('.chat-input-area');
+        if (inputArea) {
+          inputArea.classList.remove('keyboard-active');
+        }
+      }
+    });
     
     // 🎯 FONCTION POUR EMPÊCHER LE SCROLL PARENT - SEULEMENT SUR MOBILE OUVERT
     function preventParentScroll(e) {
@@ -737,28 +752,23 @@ export async function GET(
         chatWindow?.classList.remove('hidden');
         popup?.classList.add('hidden');
         
-        // 🎯 MOBILE SEULEMENT: Empêcher scroll + AUTO-HIDE barres dès ouverture
+        // 🎯 MOBILE SEULEMENT: Setup complet
         if (isMobile) {
+          // Bloquer scroll parent
           document.body.style.overflow = 'hidden';
           document.body.style.position = 'fixed';
           document.body.style.width = '100%';
           document.body.style.height = '100%';
           document.documentElement.style.overflow = 'hidden';
           
-          // Empêcher tous les événements touch sur le parent - SEULEMENT MOBILE
+          // Events de protection - SEULEMENT MOBILE
           document.addEventListener('touchmove', preventParentScroll, { passive: false });
           document.addEventListener('wheel', preventParentScroll, { passive: false });
           
-          // 🎯 AUTO-HIDE barres Safari dès l'ouverture !
+          // 🎯 CACHER barres navigation - VRAIE SOLUTION UNIVERSELLE
           setTimeout(() => {
-            window.scrollTo(0, 1); // Cache la barre d'adresse
-            
-            // Meta viewport pour cacher TOUTES les barres
-            let viewport = document.querySelector('meta[name="viewport"]');
-            if (viewport) {
-              viewport.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, minimal-ui';
-            }
-          }, 300); // Petit délai pour que l'animation se termine
+            hideNavigationBars();
+          }, 500); // Délai plus long pour que l'animation finisse
         }
         
         if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
