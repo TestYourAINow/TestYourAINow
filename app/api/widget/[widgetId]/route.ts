@@ -527,13 +527,10 @@ html, body {
   <div class="chat-widget">
     <!-- Popup -->
     ${config.showPopup && config.popupMessage ? `
-  <div class="chat-popup hidden" id="chatPopup">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-      <div style="flex: 1;">${config.popupMessage}</div>
-      <button style="background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; padding: 0; width: 16px; height: 16px; font-size: 12px;" onclick="dismissPopup()">×</button>
-    </div>
-  </div>
-` : ''}
+      <div class="chat-popup hidden" id="chatPopup">
+        ${config.popupMessage}
+      </div>
+    ` : ''}
     
     <!-- Bouton -->
     <button class="chat-button" id="chatButton">
@@ -616,44 +613,6 @@ html, body {
     
     // 💾 PERSISTANCE - Code existant
     const STORAGE_KEY = 'chatbot_conversation_' + config._id;
-
-    // 💾 POPUP PERSISTANCE
-const POPUP_STORAGE_KEY = 'chatbot_popup_dismissed_' + config._id;
-
-function savePopupState(dismissed = false) {
-  try {
-    localStorage.setItem(POPUP_STORAGE_KEY, JSON.stringify({
-      dismissed: dismissed,
-      timestamp: Date.now()
-    }));
-  } catch (error) {
-    console.log('Impossible de sauvegarder l\'état du popup');
-  }
-}
-
-function shouldShowPopup() {
-  try {
-    const saved = localStorage.getItem(POPUP_STORAGE_KEY);
-    if (saved) {
-      const data = JSON.parse(saved);
-      const maxAge = 60 * 60 * 1000; // 1 heure (même durée que conversation)
-      
-      // Si popup dismissed et pas trop vieux, ne pas montrer
-      if (data.dismissed && (Date.now() - data.timestamp < maxAge)) {
-        return false;
-      }
-    }
-    return true;
-  } catch (error) {
-    return true; // En cas d'erreur, montrer le popup
-  }
-}
-
-// Fonction pour masquer définitivement le popup
-function dismissPopup() {
-  popup?.classList.add('hidden');
-  savePopupState(true);
-}
     
     function saveConversation() {
       try {
@@ -752,7 +711,6 @@ function dismissPopup() {
     closeBtn?.addEventListener('click', closeChat);
     resetBtn?.addEventListener('click', resetChat);
     sendBtn?.addEventListener('click', sendMessage);
-    popup?.addEventListener('click', dismissPopup);
     
     // INPUT MOBILE OPTIMISÉ
     input?.addEventListener('input', function() {
@@ -777,24 +735,12 @@ function dismissPopup() {
       }
     });
     
-input?.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    if (isMobile) {
-      // 🎯 MOBILE: Enter seul = nouvelle ligne, Shift+Enter = envoyer
-      if (e.shiftKey) {
+    input?.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
-      // Sinon laisser Enter créer une nouvelle ligne normalement
-    } else {
-      // 🎯 DESKTOP: Enter = envoyer, Shift+Enter = nouvelle ligne (comportement classique)
-      if (!e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    }
-  }
-});
+    });
     
     // MOBILE: Gestion du resize pour clavier virtuel
     if (isMobile) {
@@ -900,9 +846,6 @@ input?.addEventListener('keydown', function(e) {
       messages = [];
       localStorage.removeItem(STORAGE_KEY);
       
-  // 🎯 RESET POPUP aussi quand on reset la conversation
-  localStorage.removeItem(POPUP_STORAGE_KEY);
-
       if (config.showWelcomeMessage && config.welcomeMessage) {
         addMessage(config.welcomeMessage, true);
       }
@@ -1035,9 +978,9 @@ input?.addEventListener('keydown', function(e) {
       }
     });
     
-    if (config.showPopup && config.popupMessage && popup && shouldShowPopup()) {
+    if (config.showPopup && config.popupMessage && popup) {
   setTimeout(() => {
-    if (!isOpen) {
+    if (!isOpen) { // Retiré la condition mobile qui masquait le popup
       popup.classList.remove('hidden');
     }
   }, (config.popupDelay || 3) * 1000);
