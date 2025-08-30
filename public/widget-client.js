@@ -1,9 +1,10 @@
-// 🚀 CLIENT WIDGET SCRIPT - Version mise à jour pour le nouveau ChatWidget
-// Utilisé par les clients pour intégrer le widget sur leur site
+// 🚀 CLIENT WIDGET SCRIPT - Version mobile optimisée
+// public/widget-client.js
 
 window.AIChatWidget = {
   iframe: null,
   isOpen: false,
+  isMobile: false,
   widgetId: null,
   config: {
     width: 380,
@@ -24,49 +25,76 @@ window.AIChatWidget = {
     }
 
     this.widgetId = options.widgetId;
+    this.isMobile = this.detectMobile();
     this.createIframe();
     this.setupMessageListener();
+    this.setupMobileHandlers();
   },
 
-  // 📱 Créer l'iframe qui pointe vers la nouvelle API route
+  // 🎯 DÉTECTION MOBILE AMÉLIORÉE
+  detectMobile: function() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
+           window.innerWidth <= 768;
+  },
+
+  // 📱 Créer l'iframe
   createIframe: function() {
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
-    // 🎯 NOUVEAU : Pointe vers l'API route qui génère du HTML pur
     iframe.src = `https://testyourainow.com/api/widget/${this.widgetId}`;
     iframe.title = "Assistant IA";
     iframe.loading = "lazy";
     
-    // 🔧 Style initial : invisible jusqu'à ce que le widget soit prêt
-    iframe.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 0px;
-      height: 0px;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 0;
-      pointer-events: none;
-    `;
+    // 🎯 MOBILE: Empêcher le zoom
+    if (this.isMobile) {
+      iframe.style.cssText = `
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        width: 0px;
+        height: 0px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 0;
+        pointer-events: none;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      `;
+    } else {
+      iframe.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 0px;
+        height: 0px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 0;
+        pointer-events: none;
+      `;
+    }
 
     this.iframe = iframe;
     document.body.appendChild(iframe);
     
-    // 🔄 Timeout de sécurité si le widget ne charge pas
+    // Timeout de sécurité
     setTimeout(() => {
       if (this.iframe && this.iframe.style.opacity === '0') {
         console.warn('AIChatWidget: Timeout de chargement, affichage forcé');
         this.showButton();
       }
-    }, 10000); // 10 secondes
+    }, 10000);
   },
 
   // 🎧 Écouter les messages de l'iframe
   setupMessageListener: function() {
     window.addEventListener('message', (event) => {
-      // 🔒 Sécurité : vérifier l'origine
+      // Sécurité : vérifier l'origine
       const allowedOrigins = [
         'https://testyourainow.com',
         'http://localhost:3000',
@@ -89,7 +117,7 @@ window.AIChatWidget = {
           break;
           
         case 'WIDGET_CLOSE':
-          this.handleWidgetClose();
+          this.handleWidgetClose(data);
           break;
           
         case 'WIDGET_ERROR':
@@ -103,128 +131,228 @@ window.AIChatWidget = {
     });
   },
 
-  // ✅ Widget prêt : afficher le bouton
+  // 🎯 GESTIONNAIRES MOBILES
+  setupMobileHandlers: function() {
+    if (!this.isMobile) return;
+
+    // Gestion du scroll du body quand le widget est ouvert
+    let initialBodyOverflow = '';
+    
+    this.lockBodyScroll = () => {
+      initialBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      
+      // Empêcher le bounce sur iOS
+      document.addEventListener('touchmove', this.preventBounce, { passive: false });
+    };
+    
+    this.unlockBodyScroll = () => {
+      document.body.style.overflow = initialBodyOverflow;
+      document.documentElement.style.overflow = '';
+      document.removeEventListener('touchmove', this.preventBounce);
+    };
+    
+    this.preventBounce = (e) => {
+      // Permettre le scroll seulement dans l'iframe
+      if (!e.target.closest('#ai-chat-widget')) {
+        e.preventDefault();
+      }
+    };
+
+    // Gestion du changement d'orientation
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        this.isMobile = this.detectMobile();
+        if (this.isOpen) {
+          this.handleWidgetOpen({ 
+            width: this.config.width, 
+            height: this.config.height,
+            isMobile: this.isMobile 
+          });
+        }
+      }, 500);
+    });
+
+    // Gestion du resize pour détection mobile dynamique
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const wasMobile = this.isMobile;
+        this.isMobile = this.detectMobile();
+        
+        if (wasMobile !== this.isMobile) {
+          // Changement mobile/desktop
+          if (this.isOpen) {
+            this.handleWidgetOpen({ 
+              width: this.config.width, 
+              height: this.config.height,
+              isMobile: this.isMobile 
+            });
+          } else {
+            this.showButton();
+          }
+        }
+      }, 150);
+    });
+  },
+
+  // ✅ Widget prêt
   handleWidgetReady: function(data) {
     if (!this.iframe) return;
     
-    console.log('AIChatWidget: Widget prêt à être affiché');
+    console.log('AIChatWidget: Widget prêt - Mobile:', data.isMobile || this.isMobile);
     
-    // Sauvegarder la config
     if (data.width) this.config.width = data.width;
     if (data.height) this.config.height = data.height;
+    if (data.isMobile !== undefined) this.isMobile = data.isMobile;
     
     this.isOpen = false;
     this.showButton();
   },
 
-// 🔘 Afficher le bouton chat (état initial) - AVEC MARGES COMPLÈTES
-showButton: function() {
-  if (!this.iframe) return;
-  
-  const isMobile = window.innerWidth <= 768;
-  
-  // 🎯 MARGES POUR: hover scale + box-shadow + popup
-  const buttonSize = 64;
-  const shadowMargin = 15; // Pour les box-shadows
-  const hoverMargin = 8;   // Pour le scale(1.05)
-  const popupMarginTop = 100; // Pour le popup au-dessus
-  const popupMarginLeft = 60; // 🎯 NOUVEAU: Marge à gauche pour le popup
-  
-  const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
-  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
-  
-  this.iframe.style.cssText = `
-    position: fixed;
-    bottom: ${isMobile ? '16px' : '24px'};
-    right: ${isMobile ? '16px' : '24px'};
-    width: ${iframeWidth}px;
-    height: ${iframeHeight}px;
-    border: none;
-    z-index: 999999;
-    background: transparent;
-    opacity: 1;
-    pointer-events: auto;
-    display: block;
-  `;
-},
-
-// 🏠 Widget ouvert - AVEC MARGES COMPLÈTES POUR OMBRES
-handleWidgetOpen: function(data) {
-  if (!this.iframe) return;
-  
-  console.log('AIChatWidget: Ouverture du chat');
-  this.isOpen = true;
-  
-  const isMobile = window.innerWidth <= 768;
-  const isSmallScreen = window.innerHeight <= 600;
-  const maxHeight = window.innerHeight - (isMobile ? 60 : 100);
-  
-  if (isMobile) {
-    // Mobile : interface plein écran (pas de problème d'ombres)
-    this.iframe.style.cssText = `
-      position: fixed;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      top: ${isSmallScreen ? '10px' : '20px'};
-      width: 100%;
-      height: calc(100vh - ${isSmallScreen ? '10px' : '20px'});
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-    `;
-  } else {
-    // Desktop : marges pour ombres + animation
-    const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-    const baseHeight = Math.min(this.config.height, maxHeight);
-    
-    // 🎯 MARGES COMPLÈTES
-
-    const animationMargin = 25; // Pour expandIn translateY + scale
-    const borderRadius = 10;    // Marge pour border-radius
-    
-    const totalMarginWidth = animationMargin + borderRadius;
-    const totalMarginHeight = animationMargin + borderRadius;
-    
-    const finalWidth = baseWidth + totalMarginWidth;
-    const finalHeight = baseHeight + totalMarginHeight;
-    
-    this.iframe.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: ${finalWidth}px;
-      height: ${finalHeight}px;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-    `;
-  }
-},
-
-  // 🔘 Widget fermé : revenir au bouton
-  handleWidgetClose: function() {
+  // 🔘 Afficher le bouton chat
+  showButton: function() {
     if (!this.iframe) return;
     
-    console.log('AIChatWidget: Fermeture du chat');
+    const buttonSize = 64;
+    const shadowMargin = 15;
+    const hoverMargin = 8;
+    const popupMarginTop = 100;
+    const popupMarginLeft = 60;
+    
+    const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
+    const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
+    
+    if (this.isMobile) {
+      this.iframe.style.cssText = `
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        width: ${iframeWidth}px;
+        height: ${iframeHeight}px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      `;
+    } else {
+      this.iframe.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: ${iframeWidth}px;
+        height: ${iframeHeight}px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+      `;
+    }
+  },
+
+  // 🏠 Widget ouvert
+  handleWidgetOpen: function(data) {
+    if (!this.iframe) return;
+    
+    console.log('AIChatWidget: Ouverture du chat - Mobile:', data.isMobile || this.isMobile);
+    this.isOpen = true;
+    
+    // Mettre à jour l'état mobile si fourni
+    if (data.isMobile !== undefined) {
+      this.isMobile = data.isMobile;
+    }
+    
+    if (this.isMobile) {
+      // 🎯 MOBILE: Plein écran
+      this.iframe.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      `;
+      
+      // Verrouiller le scroll du body
+      if (this.lockBodyScroll) {
+        this.lockBodyScroll();
+      }
+      
+    } else {
+      // Desktop : comportement normal avec marges pour ombres
+      const maxHeight = window.innerHeight - 100;
+      const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
+      const baseHeight = Math.min(this.config.height, maxHeight);
+      
+      const animationMargin = 25;
+      const borderRadius = 10;
+      const totalMarginWidth = animationMargin + borderRadius;
+      const totalMarginHeight = animationMargin + borderRadius;
+      
+      const finalWidth = baseWidth + totalMarginWidth;
+      const finalHeight = baseHeight + totalMarginHeight;
+      
+      this.iframe.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: ${finalWidth}px;
+        height: ${finalHeight}px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+      `;
+    }
+  },
+
+  // 🔘 Widget fermé
+  handleWidgetClose: function(data) {
+    if (!this.iframe) return;
+    
+    console.log('AIChatWidget: Fermeture du chat - Mobile:', data?.isMobile || this.isMobile);
     this.isOpen = false;
+    
+    // Déverrouiller le scroll du body sur mobile
+    if (this.isMobile && this.unlockBodyScroll) {
+      this.unlockBodyScroll();
+    }
+    
     this.showButton();
   },
 
-  // 📏 Redimensionnement dynamique du widget
+  // 📏 Redimensionnement dynamique
   handleWidgetResize: function(data) {
     if (!this.iframe || !this.isOpen) return;
     
     if (data.width) this.config.width = data.width;
     if (data.height) this.config.height = data.height;
+    if (data.isMobile !== undefined) this.isMobile = data.isMobile;
     
-    // Re-appliquer les dimensions
     this.handleWidgetOpen(data);
   },
 
@@ -232,12 +360,11 @@ handleWidgetOpen: function(data) {
   handleWidgetError: function(data) {
     console.error('AIChatWidget Error:', data.error);
     
-    // Tentative de récupération automatique
     if (this.iframe) {
       this.iframe.style.opacity = '0';
       setTimeout(() => {
         if (this.iframe) {
-          this.iframe.src = this.iframe.src; // Recharger
+          this.iframe.src = this.iframe.src;
         }
       }, 2000);
     }
@@ -247,14 +374,27 @@ handleWidgetOpen: function(data) {
   handleResize: function() {
     if (!this.iframe) return;
     
+    const wasMobile = this.isMobile;
+    this.isMobile = this.detectMobile();
+    
+    if (wasMobile !== this.isMobile) {
+      // Changement de mode mobile/desktop
+      if (this.isOpen) {
+        if (this.isMobile && this.lockBodyScroll) {
+          this.lockBodyScroll();
+        } else if (!this.isMobile && this.unlockBodyScroll) {
+          this.unlockBodyScroll();
+        }
+      }
+    }
+    
     if (this.isOpen) {
-      // Recalculer les dimensions pour le chat ouvert
       this.handleWidgetOpen({ 
         width: this.config.width, 
-        height: this.config.height 
+        height: this.config.height,
+        isMobile: this.isMobile
       });
     } else {
-      // Repositionner le bouton
       this.showButton();
     }
   },
@@ -265,23 +405,30 @@ handleWidgetOpen: function(data) {
       this.iframe.remove();
       this.iframe = null;
     }
+    
+    // Déverrouiller le scroll si nécessaire
+    if (this.isMobile && this.unlockBodyScroll) {
+      this.unlockBodyScroll();
+    }
+    
     this.isOpen = false;
     this.widgetId = null;
     window.removeEventListener('resize', this.handleResize.bind(this));
     console.log('AIChatWidget: Détruit proprement');
   },
 
-  // 📊 API publique pour les développeurs
+  // 📊 API publique
   getStatus: function() {
     return {
       isLoaded: !!this.iframe,
       isOpen: this.isOpen,
+      isMobile: this.isMobile,
       widgetId: this.widgetId,
       config: this.config
     };
   },
 
-  // 🎛️ API pour contrôler le widget
+  // 🎛️ Contrôles
   open: function() {
     if (this.iframe) {
       this.iframe.contentWindow?.postMessage({ type: 'FORCE_OPEN' }, '*');
@@ -303,10 +450,9 @@ handleWidgetOpen: function(data) {
   }
 };
 
-// 📱 Écouter les changements de taille d'écran
+// 📱 Gestionnaire de resize global avec debounce
 window.addEventListener('resize', function() {
   if (window.AIChatWidget && window.AIChatWidget.handleResize) {
-    // Debounce pour éviter trop d'appels
     clearTimeout(window.AIChatWidget.resizeTimeout);
     window.AIChatWidget.resizeTimeout = setTimeout(() => {
       window.AIChatWidget.handleResize();
@@ -314,7 +460,7 @@ window.addEventListener('resize', function() {
   }
 });
 
-// 🔄 Auto-initialisation SUPPRIMÉE - Maintenant géré par le script d'intégration
+// 🔄 Log de chargement
 (function() {
-  console.log('AIChatWidget v2.0 chargé avec succès');
+  console.log('AIChatWidget v2.1 Mobile chargé avec succès');
 })();

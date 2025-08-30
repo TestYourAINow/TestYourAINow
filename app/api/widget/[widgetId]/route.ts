@@ -22,15 +22,27 @@ export async function GET(
     const config = JSON.parse(JSON.stringify(rawConfig));
     const isDark = config.theme === 'dark';
 
-    // 🎯 HTML COMPLET SANS NEXT.JS
+    // 🎯 HTML COMPLET MOBILE OPTIMISÉ
     const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- 🎯 META MOBILE OPTIMISÉ -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>${config.name || 'Chat Widget'}</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
     
     html, body {
       margin: 0 !important;
@@ -39,17 +51,82 @@ export async function GET(
       overflow: hidden !important;
       font-family: Inter, system-ui, sans-serif;
       height: 100vh !important;
+      height: 100dvh !important; /* Dynamic viewport height pour mobile */
       width: 100vw !important;
       position: relative !important;
+      /* 🎯 EMPÊCHER LE ZOOM SUR MOBILE */
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+      touch-action: manipulation;
     }
     
-.chat-widget {
+    /* 🎯 SUPPORT POUR L'ENCOCHE iPhone */
+    html {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+    
+    .chat-widget {
       position: fixed !important;
       bottom: 8px !important;
       right: 8px !important;
       z-index: 999999 !important;
       font-family: Inter, system-ui, sans-serif;
       --primary-color: ${config.primaryColor || '#3b82f6'};
+    }
+    
+    /* 🎯 MOBILE: Widget plein écran avec gestion clavier */
+    @media (max-width: 768px) and (pointer: coarse) {
+      .chat-widget.mobile-fullscreen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        z-index: 999999 !important;
+      }
+      
+      .chat-widget.mobile-fullscreen .chat-window {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 0 !important;
+        max-width: none !important;
+        max-height: none !important;
+      }
+      
+      /* 🎯 GESTION DU CLAVIER: Input toujours visible */
+      .chat-widget.mobile-fullscreen .chat-input-area {
+        position: sticky !important;
+        bottom: 0 !important;
+        background: ${isDark ? '#1f2937' : '#ffffff'} !important;
+        z-index: 10 !important;
+        /* 🎯 PADDING POUR ZONE SÉCURISÉE iPhone */
+        padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+      }
+      
+      /* 🎯 Messages avec espace pour input sticky */
+      .chat-widget.mobile-fullscreen .chat-messages {
+        padding-bottom: 80px !important; /* Espace pour l'input sticky */
+        height: calc(100vh - 64px - 80px) !important; /* Header + Input space */
+        height: calc(100dvh - 64px - 80px) !important;
+      }
+      
+      /* 🎯 EMPÊCHER LE ZOOM SUR L'INPUT */
+      .chat-input {
+        font-size: 16px !important; /* 16px+ évite le zoom sur iOS */
+        transform-origin: left top;
+        zoom: 1 !important;
+      }
     }
     
     .chat-button {
@@ -65,6 +142,10 @@ export async function GET(
       justify-content: center;
       background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, #06b6d4));
       animation: bounceIn 0.6s ease-out;
+      /* 🎯 MOBILE: Empêcher la sélection */
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
     }
     
     .chat-button:hover {
@@ -72,21 +153,32 @@ export async function GET(
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15);
     }
     
-.chat-popup {
-  position: absolute;
-  bottom: 100%;
-  right: 0;
-  margin-bottom: 16px;
-  max-width: 180px;
-  padding: 10px 8px 10px 10px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  font-size: 14px;
-  color: white;
-  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
-  animation: slideUp 0.3s ease-out;
-  word-wrap: break-word;
-}
+    /* 🎯 MOBILE: Pas de hover sur tactile */
+    @media (hover: none) {
+      .chat-button:hover {
+        transform: none;
+      }
+      
+      .chat-button:active {
+        transform: scale(0.95);
+      }
+    }
+    
+    .chat-popup {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 16px;
+      max-width: 180px;
+      padding: 10px 8px 10px 10px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      font-size: 14px;
+      color: white;
+      background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+      animation: slideUp 0.3s ease-out;
+      word-wrap: break-word;
+    }
     
     .chat-popup::after {
       content: '';
@@ -121,6 +213,10 @@ export async function GET(
       align-items: center;
       justify-content: space-between;
       background: linear-gradient(135deg, var(--primary-color) 0%, color-mix(in srgb, var(--primary-color) 85%, #06b6d4) 100%);
+      /* 🎯 MOBILE: Padding pour zone sécurisée */
+      padding-top: max(10px, env(safe-area-inset-top)) !important;
+      height: calc(64px + env(safe-area-inset-top)) !important;
+      flex-shrink: 0;
     }
     
     .chat-header-content {
@@ -185,6 +281,7 @@ export async function GET(
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-tap-highlight-color: transparent;
     }
     
     .chat-action-btn:hover {
@@ -192,11 +289,27 @@ export async function GET(
       transform: scale(1.05);
     }
     
+    /* 🎯 MOBILE: Pas de hover, utiliser active */
+    @media (hover: none) {
+      .chat-action-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: none;
+      }
+      
+      .chat-action-btn:active {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(0.95);
+      }
+    }
+    
     .chat-messages {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
       background: ${isDark ? '#111827' : '#f8fafc'};
+      /* 🎯 SCROLL OPTIMISÉ MOBILE */
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
     
     .chat-messages::-webkit-scrollbar {
@@ -234,6 +347,16 @@ export async function GET(
       max-width: 280px;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
       border: 1px solid rgba(0, 0, 0, 0.04);
+      /* 🎯 MOBILE: Texte sélectionnable */
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    
+    /* 🎯 MOBILE: Largeur adaptée */
+    @media (max-width: 768px) {
+      .message-bubble {
+        max-width: calc(100vw - 120px);
+      }
     }
     
     .message-bubble.bot {
@@ -276,33 +399,41 @@ export async function GET(
       padding: 12px 16px;
       border-top: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.4)' : 'rgba(229, 231, 235, 0.6)'};
       background: ${isDark ? '#1f2937' : '#ffffff'};
+      flex-shrink: 0;
     }
     
     .chat-input-container {
       display: flex;
       gap: 10px;
-      align-items: center;
+      align-items: flex-end; /* 🎯 Alignement avec le bouton */
     }
     
     .chat-input {
       flex: 1;
-      padding: 8px 14px;
+      padding: 12px 16px; /* 🎯 Plus de padding pour mobile */
       border: 1px solid ${isDark ? 'rgba(75, 85, 99, 0.8)' : 'rgba(209, 213, 219, 0.6)'};
-      border-radius: 18px;
-      font-size: 14px;
+      border-radius: 24px; /* 🎯 Plus arrondi pour mobile */
+      font-size: 16px !important; /* 🎯 16px+ évite le zoom iOS */
       outline: none;
       background: ${isDark ? 'rgba(55, 65, 81, 0.9)' : '#ffffff'};
       color: ${isDark ? 'white' : '#111827'};
       resize: none;
-      min-height: 32px;
+      min-height: 44px; /* 🎯 Taille tactile iOS (44px minimum) */
       max-height: 120px;
       font-family: inherit;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      /* 🎯 EMPÊCHER LE ZOOM */
+      -webkit-text-size-adjust: 100%;
+      -webkit-appearance: none;
+      -webkit-tap-highlight-color: transparent;
     }
     
     .chat-input:focus {
       border-color: var(--primary-color);
       box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 15%, transparent);
+      /* 🎯 MOBILE: Pas de zoom au focus */
+      zoom: 1;
+      -webkit-text-size-adjust: 100%;
     }
     
     .chat-input::-webkit-scrollbar {
@@ -315,8 +446,8 @@ export async function GET(
     }
     
     .chat-send-btn {
-      width: 40px;
-      height: 40px;
+      width: 44px; /* 🎯 Taille tactile iOS */
+      height: 44px;
       border: none;
       border-radius: 50%;
       cursor: pointer;
@@ -327,10 +458,23 @@ export async function GET(
       background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
     }
     
     .chat-send-btn:hover:not(:disabled) {
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* 🎯 MOBILE: Active au lieu de hover */
+    @media (hover: none) {
+      .chat-send-btn:hover:not(:disabled) {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      
+      .chat-send-btn:active:not(:disabled) {
+        transform: scale(0.95);
+      }
     }
     
     .chat-send-btn:disabled {
@@ -364,6 +508,22 @@ export async function GET(
     @keyframes typingBounce {
       0%, 80%, 100% { transform: translateY(0); opacity: 0.7; }
       40% { transform: translateY(-6px); opacity: 1; }
+    }
+    
+    /* 🎯 MOBILE: Orientation landscape */
+    @media (max-width: 768px) and (orientation: landscape) {
+      .chat-header {
+        height: 50px !important;
+        padding-top: 8px !important;
+      }
+      
+      .chat-messages {
+        padding: 8px 16px;
+      }
+      
+      .chat-input-area {
+        padding: 8px 16px;
+      }
     }
   </style>
 </head>
@@ -439,19 +599,26 @@ export async function GET(
     </div>
   </div>
   
-<script>
+  <script>
     // Variables globales
     let isOpen = false;
     let isTyping = false;
     let messages = [];
+    let isMobile = false;
     
     // Configuration
     const config = ${JSON.stringify(config)};
     
-    // 💾 PERSISTANCE - NOUVEAU CODE ICI
+    // 🎯 DÉTECTION MOBILE AMÉLIORÉE
+    function detectMobile() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+             (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
+             window.innerWidth <= 768;
+    }
+    
+    // 💾 PERSISTANCE - Code existant
     const STORAGE_KEY = 'chatbot_conversation_' + config._id;
     
-    // Fonctions de sauvegarde
     function saveConversation() {
       try {
         const conversationData = {
@@ -465,18 +632,16 @@ export async function GET(
       }
     }
     
-function loadConversation() {
+    function loadConversation() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const data = JSON.parse(saved);
           
-          // Vérifier que ce n'est pas trop vieux (1h max)
           const maxAge = 60 * 60 * 1000; // 1 heure
           if (Date.now() - data.timestamp < maxAge) {
             messages = data.messages || [];
             
-            // Restaurer les messages dans le DOM
             if (messages.length > 0) {
               messagesContainer.innerHTML = '';
               messages.forEach(msg => {
@@ -484,7 +649,6 @@ function loadConversation() {
               });
             }
             
-            // 🎯 FIX: Restaurer l'état ouvert CORRECTEMENT
             if (data.isOpen) {
               setTimeout(() => {
                 isOpen = true;
@@ -492,10 +656,14 @@ function loadConversation() {
                 chatWindow?.classList.remove('hidden');
                 popup?.classList.add('hidden');
                 
-                // 🎯 NOUVEAU: Envoyer message pour redimensionner l'iframe
+                // 🎯 MOBILE: Appliquer le mode plein écran
+                if (isMobile) {
+                  chatWidget?.classList.add('mobile-fullscreen');
+                }
+                
                 parent.postMessage({ 
                   type: 'WIDGET_OPEN', 
-                  data: { width: config.width, height: config.height } 
+                  data: { width: config.width, height: config.height, isMobile: isMobile } 
                 }, '*');
                 
               }, 100);
@@ -510,14 +678,13 @@ function loadConversation() {
       return false;
     }
     
-    // Fonction pour ajouter au DOM sans sauvegarder
     function addMessageToDOM(text, isBot, timestamp = new Date()) {
       const messageEl = document.createElement('div');
       messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
       
       if (isBot) {
         messageEl.innerHTML = 
-          '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc>') + '" alt="Bot" class="message-avatar">' +
+          '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
           '<div>' +
             '<div class="message-bubble bot">' + text + '</div>' +
             '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
@@ -532,12 +699,12 @@ function loadConversation() {
       
       messagesContainer?.appendChild(messageEl);
     }
-    // FIN PERSISTANCE
     
     // Éléments DOM
     const popup = document.getElementById('chatPopup');
     const button = document.getElementById('chatButton');
     const chatWindow = document.getElementById('chatWindow');
+    const chatWidget = document.querySelector('.chat-widget');
     const messagesContainer = document.getElementById('messagesContainer');
     const input = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
@@ -550,12 +717,27 @@ function loadConversation() {
     resetBtn?.addEventListener('click', resetChat);
     sendBtn?.addEventListener('click', sendMessage);
     
+    // INPUT MOBILE OPTIMISÉ
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
+      
       this.style.height = 'auto';
       const newHeight = Math.min(this.scrollHeight, 120);
       this.style.height = newHeight + 'px';
       this.style.overflowY = newHeight >= 120 ? 'auto' : 'hidden';
+    });
+    
+    // MOBILE: Gestion du clavier virtuel
+    input?.addEventListener('focus', function() {
+      if (isMobile) {
+        setTimeout(() => {
+          const messages = document.getElementById('chatMessages');
+          if (messages) {
+            messages.scrollTop = messages.scrollHeight;
+          }
+          this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 300);
+      }
     });
     
     input?.addEventListener('keydown', function(e) {
@@ -565,7 +747,38 @@ function loadConversation() {
       }
     });
     
-    // Fonctions MODIFIÉES
+    // MOBILE: Gestion du resize pour clavier virtuel
+    if (isMobile) {
+      let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      
+      function handleViewportChange() {
+        if (window.visualViewport) {
+          const currentHeight = window.visualViewport.height;
+          const heightDiff = initialViewportHeight - currentHeight;
+          
+          if (heightDiff > 150 && isOpen) {
+            const messages = document.getElementById('chatMessages');
+            if (messages) {
+              messages.style.height = 'calc(100vh - 64px - 80px - ' + heightDiff + 'px)';
+              setTimeout(() => {
+                messages.scrollTop = messages.scrollHeight;
+              }, 100);
+            }
+          } else if (heightDiff < 50 && isOpen) {
+            const messages = document.getElementById('chatMessages');
+            if (messages) {
+              messages.style.height = 'calc(100vh - 64px - 80px)';
+            }
+          }
+        }
+      }
+      
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportChange);
+      }
+    }
+    
+    // FONCTIONS MODIFIÉES POUR MOBILE
     function toggleChat() {
       isOpen = !isOpen;
       if (isOpen) {
@@ -573,11 +786,15 @@ function loadConversation() {
         chatWindow?.classList.remove('hidden');
         popup?.classList.add('hidden');
         
-        // Message de bienvenue seulement si pas de conversation sauvée
+        if (isMobile) {
+          chatWidget?.classList.add('mobile-fullscreen');
+          document.body.style.overflow = 'hidden';
+          document.documentElement.style.overflow = 'hidden';
+        }
+        
         if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
           setTimeout(() => {
             showTyping();
-            
             setTimeout(() => {
               hideTyping();
               addMessage(config.welcomeMessage, true);
@@ -585,13 +802,25 @@ function loadConversation() {
           }, 400);
         }
         
-        setTimeout(() => input?.focus(), 300);
-        parent.postMessage({ type: 'WIDGET_OPEN', data: { width: config.width, height: config.height } }, '*');
+        setTimeout(() => {
+          input?.focus();
+          if (isMobile && input) {
+            input.style.fontSize = '16px';
+          }
+        }, 300);
+        
+        parent.postMessage({ 
+          type: 'WIDGET_OPEN', 
+          data: { 
+            width: config.width, 
+            height: config.height, 
+            isMobile: isMobile 
+          } 
+        }, '*');
       } else {
         closeChat();
       }
       
-      // 💾 SAUVEGARDER l'état
       saveConversation();
     }
     
@@ -599,17 +828,27 @@ function loadConversation() {
       isOpen = false;
       chatWindow?.classList.add('hidden');
       button?.classList.remove('hidden');
-      parent.postMessage({ type: 'WIDGET_CLOSE', data: {} }, '*');
       
-      // 💾 SAUVEGARDER l'état
+      if (isMobile) {
+        chatWidget?.classList.remove('mobile-fullscreen');
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        if (input) {
+          input.blur();
+        }
+      }
+      
+      parent.postMessage({ 
+        type: 'WIDGET_CLOSE', 
+        data: { isMobile: isMobile } 
+      }, '*');
+      
       saveConversation();
     }
     
     function resetChat() {
       messagesContainer.innerHTML = '';
       messages = [];
-      
-      // 💾 SUPPRIMER la sauvegarde
       localStorage.removeItem(STORAGE_KEY);
       
       if (config.showWelcomeMessage && config.welcomeMessage) {
@@ -623,8 +862,13 @@ function loadConversation() {
       
       addMessage(text, false);
       input.value = '';
-      input.style.height = '32px';
+      input.style.height = isMobile ? '44px' : '32px';
       sendBtn.disabled = true;
+      
+      if (isMobile && input) {
+        input.blur();
+        setTimeout(() => input.focus(), 100);
+      }
       
       showTyping();
       
@@ -657,19 +901,11 @@ function loadConversation() {
       }
     }
     
-    // 💾 FONCTION addMessage MODIFIÉE
     function addMessage(text, isBot) {
       const timestamp = new Date();
-      
-      // Ajouter au DOM
       addMessageToDOM(text, isBot, timestamp);
-      
-      // Ajouter aux données
       messages.push({ text, isBot, timestamp });
-      
-      // 💾 SAUVEGARDER
       saveConversation();
-      
       scrollToBottom();
     }
     
@@ -679,7 +915,7 @@ function loadConversation() {
       typingEl.id = 'typingIndicator';
       typingEl.className = 'message bot';
       typingEl.innerHTML = 
-        '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc>') + '" alt="Bot" class="message-avatar">' +
+        '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
         '<div>' +
           '<div class="typing-indicator">' +
             '<div class="typing-dot"></div>' +
@@ -705,28 +941,66 @@ function loadConversation() {
       }
     }
     
-    // 💾 CHARGER la conversation au démarrage
-    window.addEventListener('DOMContentLoaded', function() {
-      const loaded = loadConversation();
-      
-      // Si pas de conversation sauvée ET pas déjà ouvert, ne rien faire
-      // Le message de bienvenue sera ajouté à l'ouverture
-    });
-    
-    // Popup automatique
-    if (config.showPopup && config.popupMessage && popup) {
-      setTimeout(() => {
-        if (!isOpen) popup.classList.remove('hidden');
-      }, config.popupDelay * 1000);
+    function handleOrientationChange() {
+      if (isMobile && isOpen) {
+        setTimeout(() => {
+          const messages = document.getElementById('chatMessages');
+          if (messages) {
+            messages.scrollTop = messages.scrollHeight;
+          }
+          
+          if (document.activeElement === input) {
+            input.blur();
+            setTimeout(() => input.focus(), 100);
+          }
+        }, 500);
+      }
     }
     
-    // Communication avec parent
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', function() {
+      const wasMobile = isMobile;
+      isMobile = detectMobile();
+      
+      if (wasMobile !== isMobile && isOpen) {
+        if (isMobile) {
+          chatWidget?.classList.add('mobile-fullscreen');
+          document.body.style.overflow = 'hidden';
+        } else {
+          chatWidget?.classList.remove('mobile-fullscreen');
+          document.body.style.overflow = '';
+        }
+      }
+    });
+    
+    window.addEventListener('DOMContentLoaded', function() {
+      isMobile = detectMobile();
+      const loaded = loadConversation();
+      
+      if (isMobile && input) {
+        input.style.fontSize = '16px';
+        input.style.minHeight = '44px';
+      }
+    });
+    
+    if (config.showPopup && config.popupMessage && popup) {
+      setTimeout(() => {
+        if (!isOpen && (!isMobile || config.showPopupOnMobile)) {
+          popup.classList.remove('hidden');
+        }
+      }, (config.popupDelay || 3) * 1000);
+    }
+    
     parent.postMessage({ 
       type: 'WIDGET_READY', 
-      data: { width: config.width, height: config.height } 
+      data: { 
+        width: config.width, 
+        height: config.height,
+        isMobile: isMobile
+      } 
     }, '*');
     
-    console.log('Widget chargé avec succès');
+    console.log('Widget chargé avec succès - Mobile:', isMobile);
   </script>
 </body>
 </html>`;
@@ -735,8 +1009,8 @@ function loadConversation() {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=300", // 5 minutes
-        "X-Frame-Options": "ALLOWALL", // Permet l'iframe
+        "Cache-Control": "public, max-age=300",
+        "X-Frame-Options": "ALLOWALL",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET",
         "Access-Control-Allow-Headers": "*"
@@ -746,7 +1020,6 @@ function loadConversation() {
   } catch (error) {
     console.error('Erreur chargement widget:', error);
     
-    // Page d'erreur simple
     const errorHtml = `<!DOCTYPE html>
 <html>
 <head>
@@ -783,4 +1056,4 @@ function loadConversation() {
       },
     });
   }
-} 
+}
