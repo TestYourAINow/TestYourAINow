@@ -122,7 +122,7 @@ html, body {
   max-width: calc(100vw - 40px); /* Sécurité pour petits écrans */
   max-height: calc(100vh - 40px); /* Sécurité pour petits écrans */
   border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -645,31 +645,24 @@ html, body {
             }
             
             if (data.isOpen) {
-  setTimeout(() => {
-    isOpen = true;
-    
-    // Appliquer immédiatement les styles mobiles si nécessaire
-    if (isMobile) {
-      chatWidget?.classList.add('mobile-fullscreen');
-      if (input) {
-        input.style.fontSize = '16px';
-        input.style.minHeight = '44px';
-        input.style.padding = '12px 16px';
-        input.style.borderRadius = '24px';
-      }
-    }
-    
-    button?.classList.add('hidden');
-    chatWindow?.classList.remove('hidden');
-    popup?.classList.add('hidden');
-    
-    parent.postMessage({ 
-      type: 'WIDGET_OPEN', 
-      data: { width: config.width, height: config.height, isMobile: isMobile } 
-    }, '*');
-    
-  }, 100);
-}
+              setTimeout(() => {
+                isOpen = true;
+                button?.classList.add('hidden');
+                chatWindow?.classList.remove('hidden');
+                popup?.classList.add('hidden');
+                
+                // 🎯 MOBILE: Appliquer le mode plein écran
+                if (isMobile) {
+                  chatWidget?.classList.add('mobile-fullscreen');
+                }
+                
+                parent.postMessage({ 
+                  type: 'WIDGET_OPEN', 
+                  data: { width: config.width, height: config.height, isMobile: isMobile } 
+                }, '*');
+                
+              }, 100);
+            }
             
             return true;
           }
@@ -742,12 +735,22 @@ html, body {
       }
     });
     
-    input?.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
+input?.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    // Sur mobile : Entrée = toujours saut de ligne
+    if (isMobile) {
+      // Ne rien faire, laisser le comportement par défaut (saut de ligne)
+      return;
+    }
+    
+    // Sur desktop : Entrée seule = envoyer, Shift+Entrée = saut de ligne
+    if (!e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+    // Si Shift+Entrée, ne rien faire = saut de ligne par défaut
+  }
+});
     
     // MOBILE: Gestion du resize pour clavier virtuel
     if (isMobile) {
@@ -975,17 +978,15 @@ html, body {
       }
     });
     
-window.addEventListener('DOMContentLoaded', function() {
-  isMobile = detectMobile();
-  
-  // Pré-configurer l'input pour mobile dès le départ
-  if (isMobile && input) {
-    input.style.fontSize = '16px';
-    input.style.minHeight = '44px';
-  }
-  
-  loadConversation();
-});
+    window.addEventListener('DOMContentLoaded', function() {
+      isMobile = detectMobile();
+      const loaded = loadConversation();
+      
+      if (isMobile && input) {
+        input.style.fontSize = '16px';
+        input.style.minHeight = '44px';
+      }
+    });
     
     if (config.showPopup && config.popupMessage && popup) {
   setTimeout(() => {
