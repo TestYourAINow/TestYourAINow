@@ -645,24 +645,31 @@ html, body {
             }
             
             if (data.isOpen) {
-              setTimeout(() => {
-                isOpen = true;
-                button?.classList.add('hidden');
-                chatWindow?.classList.remove('hidden');
-                popup?.classList.add('hidden');
-                
-                // 🎯 MOBILE: Appliquer le mode plein écran
-                if (isMobile) {
-                  chatWidget?.classList.add('mobile-fullscreen');
-                }
-                
-                parent.postMessage({ 
-                  type: 'WIDGET_OPEN', 
-                  data: { width: config.width, height: config.height, isMobile: isMobile } 
-                }, '*');
-                
-              }, 100);
-            }
+  setTimeout(() => {
+    isOpen = true;
+    
+    // Appliquer immédiatement les styles mobiles si nécessaire
+    if (isMobile) {
+      chatWidget?.classList.add('mobile-fullscreen');
+      if (input) {
+        input.style.fontSize = '16px';
+        input.style.minHeight = '44px';
+        input.style.padding = '12px 16px';
+        input.style.borderRadius = '24px';
+      }
+    }
+    
+    button?.classList.add('hidden');
+    chatWindow?.classList.remove('hidden');
+    popup?.classList.add('hidden');
+    
+    parent.postMessage({ 
+      type: 'WIDGET_OPEN', 
+      data: { width: config.width, height: config.height, isMobile: isMobile } 
+    }, '*');
+    
+  }, 100);
+}
             
             return true;
           }
@@ -968,15 +975,17 @@ html, body {
       }
     });
     
-    window.addEventListener('DOMContentLoaded', function() {
-      isMobile = detectMobile();
-      const loaded = loadConversation();
-      
-      if (isMobile && input) {
-        input.style.fontSize = '16px';
-        input.style.minHeight = '44px';
-      }
-    });
+window.addEventListener('DOMContentLoaded', function() {
+  isMobile = detectMobile();
+  
+  // Pré-configurer l'input pour mobile dès le départ
+  if (isMobile && input) {
+    input.style.fontSize = '16px';
+    input.style.minHeight = '44px';
+  }
+  
+  loadConversation();
+});
     
     if (config.showPopup && config.popupMessage && popup) {
   setTimeout(() => {
