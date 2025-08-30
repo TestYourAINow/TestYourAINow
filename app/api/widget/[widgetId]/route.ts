@@ -122,7 +122,7 @@ html, body {
   max-width: calc(100vw - 40px); /* Sécurité pour petits écrans */
   max-height: calc(100vh - 40px); /* Sécurité pour petits écrans */
   border-radius: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   display: flex;
   flex-direction: column;
