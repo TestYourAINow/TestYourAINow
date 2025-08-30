@@ -114,8 +114,8 @@ html, body {
 
 .chat-window {
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: 16px;
+  right: 16px;
   /* 🎯 DIMENSIONS DESKTOP NORMALES - PAS PLEIN ÉCRAN */
   width: 380px;  /* Largeur fixe pour desktop */
   height: 600px; /* Hauteur fixe pour desktop */
