@@ -112,13 +112,15 @@ html, body {
   transform: rotate(45deg);
 }
 
-/* 🎯 DESKTOP UNIQUEMENT - Chat window normale */
 .chat-window {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: calc(100vw - 20px);
-  height: calc(100vh - 20px);
+  /* 🎯 DIMENSIONS DESKTOP NORMALES - PAS PLEIN ÉCRAN */
+  width: 380px;  /* Largeur fixe pour desktop */
+  height: 500px; /* Hauteur fixe pour desktop */
+  max-width: calc(100vw - 40px); /* Sécurité pour petits écrans */
+  max-height: calc(100vh - 40px); /* Sécurité pour petits écrans */
   border-radius: 20px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
   overflow: hidden;
