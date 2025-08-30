@@ -673,27 +673,30 @@ html, body {
       return false;
     }
     
-    function addMessageToDOM(text, isBot, timestamp = new Date()) {
-      const messageEl = document.createElement('div');
-      messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
-      
-      if (isBot) {
-        messageEl.innerHTML = 
-          '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
-          '<div>' +
-            '<div class="message-bubble bot">' + text + '</div>' +
-            '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
-          '</div>';
-      } else {
-        messageEl.innerHTML = 
-          '<div>' +
-            '<div class="message-bubble user">' + text + '</div>' +
-            '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
-          '</div>';
-      }
-      
-      messagesContainer?.appendChild(messageEl);
-    }
+function addMessageToDOM(text, isBot, timestamp = new Date()) {
+  const messageEl = document.createElement('div');
+  messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
+  
+  // Convertir les sauts de ligne en <br> pour l'affichage
+  const displayText = text.replace(/\n/g, '<br>');
+  
+  if (isBot) {
+    messageEl.innerHTML = 
+      '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc>') + '" alt="Bot" class="message-avatar">' +
+      '<div>' +
+        '<div class="message-bubble bot">' + displayText + '</div>' +
+        '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
+      '</div>';
+  } else {
+    messageEl.innerHTML = 
+      '<div>' +
+        '<div class="message-bubble user">' + displayText + '</div>' +
+        '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
+      '</div>';
+  }
+  
+  messagesContainer?.appendChild(messageEl);
+}
     
     // Éléments DOM
     const popup = document.getElementById('chatPopup');
