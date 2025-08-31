@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from './ChatWidget.module.css'; // ✅ RÉUTILISE le même CSS !
 
-// ✨ TYPES - Adaptés pour la demo page (INCHANGÉ de ton demo-agent)
+// ✨ TYPES - Adaptés pour la demo page
 interface DemoConfig {
   name: string;
   agentId: string;
@@ -30,7 +30,7 @@ interface Message {
 interface DemoPageChatWidgetProps {
   config: DemoConfig;
   isPreview?: boolean;
-  // ✅ NOUVEAUX PROPS pour contrôler depuis la page parent
+  // ✅ PROPS contrôlés depuis la page parent
   isOpen: boolean;
   onToggle: () => void;
   messages: Message[];
@@ -42,7 +42,7 @@ interface DemoPageChatWidgetProps {
   showPopupBubble: boolean;
 }
 
-// 🎯 COMPOSANT PRINCIPAL - Logique identique à ChatWidget mais adapté pour Demo
+// 🎯 COMPOSANT PRINCIPAL - Identique à route.ts mais adapté pour Demo
 export default function DemoPageChatWidget({ 
   config, 
   isPreview = true, // Demo = toujours preview 
@@ -57,16 +57,32 @@ export default function DemoPageChatWidget({
   showPopupBubble
 }: DemoPageChatWidgetProps) {
   
+  // ========== ÉTATS LOCAUX (Identiques à route.ts) ==========
+  const [isMobile, setIsMobile] = useState(false);
+
   // ========== REFS (IDENTIQUES) ==========
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // ========== COMPUTED (IDENTIQUES) ==========
   const isDark = config.theme === 'dark';
-  const primaryColor = config.primaryColor || '#3B82F6';
+  const primaryColor = config.primaryColor || '#3b82f6';
+
+  // ========== DÉTECTION MOBILE (Identique à route.ts) ==========
+  const detectMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
+           window.innerWidth <= 768;
+  };
 
   // ========== EFFETS ==========
   
+  // 🏁 Initialisation mobile
+  useEffect(() => {
+    setIsMobile(detectMobile());
+  }, []);
+
   // 🔄 Auto-scroll des messages
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -79,32 +95,91 @@ export default function DemoPageChatWidget({
     }
   }, [messages, isTyping]);
 
-  // 🎯 Focus automatique quand ouvert
+  // 🎯 Focus automatique et mobile setup
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 300);
+      setTimeout(() => {
+        inputRef.current?.focus();
+        if (isMobile && inputRef.current) {
+          inputRef.current.style.fontSize = '16px';
+        }
+      }, 300);
     }
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
 
-  // 📏 Auto-resize textarea
+  // 📏 Auto-resize textarea (Identique à route.ts)
   useEffect(() => {
     const textarea = inputRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      
-      const scrollHeight = textarea.scrollHeight;
-      const maxHeight = 120;
-      const minHeight = 32;
-      
-      if (scrollHeight <= maxHeight) {
-        textarea.style.height = Math.max(scrollHeight, minHeight) + 'px';
-        textarea.style.overflowY = 'hidden';
-      } else {
-        textarea.style.height = maxHeight + 'px';
-        textarea.style.overflowY = 'auto';
-      }
+      const newHeight = Math.min(textarea.scrollHeight, 120);
+      textarea.style.height = newHeight + 'px';
+      textarea.style.overflowY = newHeight >= 120 ? 'auto' : 'hidden';
     }
   }, [inputValue]);
+
+  // 📱 Gestion resize et orientation (Identique à route.ts)
+  useEffect(() => {
+    const handleResize = () => {
+      const wasMobile = isMobile;
+      setIsMobile(detectMobile());
+      
+      if (wasMobile !== isMobile && isOpen) {
+        // Logique de changement mobile/desktop si nécessaire
+      }
+    };
+
+    const handleOrientationChange = () => {
+      if (isMobile && isOpen) {
+        setTimeout(() => {
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
+          
+          if (document.activeElement === inputRef.current && inputRef.current) {
+            inputRef.current.blur();
+            setTimeout(() => inputRef.current?.focus(), 100);
+          }
+        }, 500);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, [isMobile, isOpen]);
+
+  // 📱 Gestion du clavier virtuel mobile (Identique à route.ts)
+  useEffect(() => {
+    if (!isMobile) return;
+
+    let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    
+    const handleViewportChange = () => {
+      if (window.visualViewport) {
+        const currentHeight = window.visualViewport.height;
+        const heightDiff = initialViewportHeight - currentHeight;
+        
+        if (heightDiff > 150 && isOpen && messagesContainerRef.current) {
+          messagesContainerRef.current.style.height = `calc(100vh - 64px - 80px - ${heightDiff}px)`;
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        } else if (heightDiff < 50 && isOpen && messagesContainerRef.current) {
+          messagesContainerRef.current.style.height = 'calc(100vh - 64px - 80px)';
+        }
+      }
+    };
+    
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      return () => window.visualViewport?.removeEventListener('resize', handleViewportChange);
+    }
+  }, [isMobile, isOpen]);
 
   // ========== FONCTIONS ==========
 
@@ -125,11 +200,22 @@ export default function DemoPageChatWidget({
     onMessagesChange(updatedMessages); // ← Notifier le parent
     onInputChange(''); // ← Reset input via parent
     
+    // Reset textarea height
+    if (inputRef.current) {
+      inputRef.current.style.height = isMobile ? '44px' : '32px';
+    }
+
+    // Blur et refocus sur mobile
+    if (isMobile && inputRef.current) {
+      inputRef.current.blur();
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+    
     // Animation typing
     setTimeout(() => onTypingChange(true), 200);
 
     try {
-      // 🎯 API CALL - Identique à ChatWidget mais avec agentId
+      // 🎯 API CALL - Identique à route.ts mais avec agentId
       const history = updatedMessages
         .filter(msg => msg.id !== 'welcome')
         .map(msg => ({
@@ -208,28 +294,48 @@ export default function DemoPageChatWidget({
     onMessagesChange(welcomeMessages); // ← Notifier le parent
   };
 
-  // 🎹 Gestion Enter dans l'input (IDENTIQUE)
+  // 🎹 Gestion Enter dans l'input (Identique à route.ts)
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      if (e.shiftKey) {
+      // Sur mobile : Entrée = toujours saut de ligne
+      if (isMobile) {
+        // Ne rien faire, laisser le comportement par défaut (saut de ligne)
         return;
-      } else {
+      }
+      
+      // Sur desktop : Entrée seule = envoyer, Shift+Entrée = saut de ligne
+      if (!e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
+      // Si Shift+Entrée, ne rien faire = saut de ligne par défaut
     }
   };
 
-  // ========== STYLES (IDENTIQUES) ==========
+  // 🎯 Focus mobile optimisé (Identique à route.ts)
+  const handleInputFocus = () => {
+    if (isMobile) {
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 300);
+    }
+  };
+
+  // ========== STYLES (Identiques à route.ts) ==========
   const getWidgetClasses = () => {
     let classes = styles.chatWidget;
     if (isPreview) classes += ` ${styles.preview}`;
+    if (isMobile && isOpen) classes += ` ${styles.mobileFullscreen}`;
     return classes;
   };
 
   const getWidgetStyles = () => {
     return {
       '--primary-color': primaryColor,
+      '--chat-bg': isDark ? '#1f2937' : '#ffffff',
       position: 'absolute',
       bottom: '24px',
       right: '24px',
@@ -243,7 +349,12 @@ export default function DemoPageChatWidget({
     };
   };
 
-  // ========== RENDER (IDENTIQUE structure, styles CSS Module) ==========
+  // ========== UTILITAIRES ==========
+  const getDefaultAvatar = () => {
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+';
+  };
+
+  // ========== RENDER (Identique structure, styles route.ts) ==========
   return (
     <div 
       className={getWidgetClasses()}
@@ -264,7 +375,8 @@ export default function DemoPageChatWidget({
           onClick={onToggle}
           aria-label="Ouvrir le chat"
         >
-          <svg viewBox="0 0 24 24" fill="currentColor">
+          {/* SVG exact de route.ts */}
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
             <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
           </svg>
         </button>
@@ -282,12 +394,12 @@ export default function DemoPageChatWidget({
             <div className={styles.chatHeaderContent}>
               <div className={styles.chatAvatarContainer}>
                 <img
-                  src={config.avatar || '/Default Avatar.png'}
+                  src={config.avatar || getDefaultAvatar()}
                   alt="Assistant Avatar"
                   className={styles.chatAvatar}
                   onError={(e) => {
                     const target = e.currentTarget as HTMLImageElement;
-                    target.src = '/Default Avatar.png';
+                    target.src = getDefaultAvatar();
                   }}
                 />
                 <div className={styles.chatStatus} />
@@ -308,7 +420,8 @@ export default function DemoPageChatWidget({
                 title="Nouvelle conversation"
                 aria-label="Nouvelle conversation"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                {/* SVG exact de route.ts */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="1 4 1 10 7 10"></polyline>
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                 </svg>
@@ -319,7 +432,8 @@ export default function DemoPageChatWidget({
                 title="Fermer"
                 aria-label="Fermer le chat"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                {/* SVG exact de route.ts */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
@@ -328,7 +442,10 @@ export default function DemoPageChatWidget({
           </div>
 
           {/* 💬 MESSAGES */}
-          <div className={`${styles.chatMessages} ${isDark ? styles.dark : ''}`}>
+          <div 
+            ref={messagesContainerRef}
+            className={`${styles.chatMessages} ${isDark ? styles.dark : ''}`}
+          >
             <div className={styles.messagesContainer}>
               {messages.map((message) => (
                 <div
@@ -337,12 +454,12 @@ export default function DemoPageChatWidget({
                 >
                   {message.isBot && (
                     <img
-                      src={config.avatar || '/Default Avatar.png'}
+                      src={config.avatar || getDefaultAvatar()}
                       alt="Bot Avatar"
                       className={styles.messageAvatar}
                       onError={(e) => {
                         const target = e.currentTarget as HTMLImageElement;
-                        target.src = '/Default Avatar.png';
+                        target.src = getDefaultAvatar();
                       }}
                     />
                   )}
@@ -364,12 +481,12 @@ export default function DemoPageChatWidget({
               {isTyping && (
                 <div className={`${styles.message} ${styles.bot}`}>
                   <img
-                    src={config.avatar || '/Default Avatar.png'}
+                    src={config.avatar || getDefaultAvatar()}
                     alt="Bot Avatar"
                     className={styles.messageAvatar}
                     onError={(e) => {
                       const target = e.currentTarget as HTMLImageElement;
-                      target.src = '/Default Avatar.png';
+                      target.src = getDefaultAvatar();
                     }}
                   />
                   <div className={styles.messageContent}>
@@ -390,24 +507,34 @@ export default function DemoPageChatWidget({
           <div className={`${styles.chatInputArea} ${isDark ? styles.dark : ''}`}>
             <div className={styles.chatInputContainer}>
               <textarea
-                ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+                ref={inputRef}
                 value={inputValue}
                 onChange={(e) => onInputChange(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={handleInputFocus}
                 placeholder={config.placeholderText || 'Tapez votre message...'}
                 className={`${styles.chatInput} ${isDark ? styles.dark : ''}`}
                 disabled={isTyping}
                 autoComplete="off"
                 rows={1}
-                style={{ resize: 'none' }}
+                style={{ 
+                  resize: 'none',
+                  fontSize: isMobile ? '16px' : '14px',
+                  minHeight: isMobile ? '44px' : '32px'
+                }}
               />
               <button
                 onClick={sendMessage}
                 disabled={!inputValue.trim() || isTyping}
                 className={styles.chatSendBtn}
                 aria-label="Envoyer le message"
+                style={{
+                  width: isMobile ? '44px' : '40px',
+                  height: isMobile ? '44px' : '40px'
+                }}
               >
-                <svg viewBox="0 0 24 24" fill="currentColor">
+                {/* SVG exact de route.ts */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M2.01 21L23 12 2.01 3 2 10L17 12 2 14Z"/>
                 </svg>
               </button>

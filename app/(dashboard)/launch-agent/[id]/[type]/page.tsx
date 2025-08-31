@@ -238,7 +238,7 @@ export default function ConnectionDetailsPage() {
 
   const getIntegrationDisplayName = (type: string) => {
     switch (type) {
-      case 'instagram-dms': return 'Instagram DM Agent'
+      case 'instagram-dms': return 'Instagram DMs Agent'
       case 'facebook-messenger': return 'Facebook Messenger Agent'
       default: return type
     }

@@ -224,7 +224,12 @@ html, body {
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6));
+  background: linear-gradient(to bottom, rgba(0,0,0,0.28), rgba(0,0,0,0.18));
+  border-radius: 8px;
+}
+
+.chat-messages.dark::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, rgba(255,255,255,0.30), rgba(255,255,255,0.20));
   border-radius: 8px;
 }
 

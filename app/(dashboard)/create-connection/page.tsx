@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { 
   ArrowLeft, Settings, Zap, MessageSquare, Globe, Bot, 
   CheckCircle, Rocket, Layers, Sparkles, Users, Monitor,
-  ArrowRight, Play, Wifi, Link as LinkIcon
+  ArrowRight, Play, Wifi
 } from 'lucide-react'
 import FadeInSection from '@/components/FadeInSection'
 
@@ -62,6 +62,7 @@ const WebsiteIcon = ({ size = 24, className = "" }) => (
   </svg>
 )
 
+// Suppression de l'API Integration - seulement 4 intégrations maintenant
 const integrations = [
   { 
     label: 'Website Widget', 
@@ -85,7 +86,7 @@ const integrations = [
     icon: InstagramIcon,
     description: 'Handle Instagram direct messages',
     color: 'from-pink-500 to-purple-500',
-    popular: true
+    popular: false
   },
   { 
     label: 'SMS Integration', 
@@ -93,14 +94,6 @@ const integrations = [
     icon: SMSIcon,
     description: 'Text message conversations',
     color: 'from-green-500 to-emerald-500',
-    popular: false
-  },
-  { 
-    label: 'API Integration', 
-    value: 'api', 
-    icon: () => <LinkIcon size={24} className="text-purple-400" />,
-    description: 'Custom API connections',
-    color: 'from-purple-500 to-violet-500',
     popular: false
   }
 ]
@@ -296,9 +289,6 @@ export default function CreateConnectionPage() {
     }
   }
 
-  const selectedIntegration = integrations.find(i => i.value === integration);
-  const selectedAgent = agents.find(a => a._id === aiBuildId);
-
   const canProceedToStep2 = name.trim() !== '';
   const canProceedToStep3 = canProceedToStep2 && integration !== '';
   const canSubmit = canProceedToStep3 && aiBuildId !== '';
@@ -392,7 +382,7 @@ export default function CreateConnectionPage() {
                   <p className="text-gray-400">Select where you want to deploy your AI agent</p>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {integrations.map((item) => (
                     <PlatformCard
                       key={item.value}
@@ -492,151 +482,7 @@ export default function CreateConnectionPage() {
         </div>
       </FadeInSection>
 
-      {/* Connection Preview Sidebar (Fixed) */}
-      {(name || selectedIntegration || selectedAgent) && (
-        <div className="fixed top-24 right-8 w-80 bg-gray-900/90 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-2xl z-40 hidden xl:block">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 border border-cyan-500/40 rounded-xl flex items-center justify-center">
-              <Monitor className="text-cyan-400" size={20} />
-            </div>
-            <div>
-              <h3 className="font-bold text-white">Connection Preview</h3>
-              <p className="text-xs text-gray-400">Live preview of your setup</p>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="bg-gray-800/50 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Settings size={14} className="text-blue-400" />
-                <span className="text-sm font-medium text-blue-200">Name</span>
-              </div>
-              <p className="text-white font-medium">{name || 'Not set'}</p>
-            </div>
-            
-            <div className="bg-gray-800/50 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Layers size={14} className="text-purple-400" />
-                <span className="text-sm font-medium text-purple-200">Platform</span>
-              </div>
-              {selectedIntegration ? (
-                <div className="flex items-center gap-2">
-                  <selectedIntegration.icon size={16} />
-                  <span className="text-white font-medium">{selectedIntegration.label}</span>
-                </div>
-              ) : (
-                <p className="text-gray-400">Not selected</p>
-              )}
-            </div>
-            
-            <div className="bg-gray-800/50 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Bot size={14} className="text-emerald-400" />
-                <span className="text-sm font-medium text-emerald-200">AI Agent</span>
-              </div>
-              <p className="text-white font-medium">{selectedAgent?.name || 'Not selected'}</p>
-            </div>
-            
-            {/* Progress Indicator */}
-            <div className="bg-gray-800/50 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={14} className="text-yellow-400" />
-                <span className="text-sm font-medium text-yellow-200">Progress</span>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-400">Setup Complete</span>
-                  <span className="text-white font-medium">
-                    {Math.round(((name ? 1 : 0) + (integration ? 1 : 0) + (aiBuildId ? 1 : 0)) / 3 * 100)}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-700/50 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-emerald-500 to-blue-500 h-2 rounded-full transition-all duration-500"
-                    style={{ 
-                      width: `${((name ? 1 : 0) + (integration ? 1 : 0) + (aiBuildId ? 1 : 0)) / 3 * 100}%` 
-                    }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Success Tips */}
-      <FadeInSection>
-        <div className="max-w-4xl mx-auto mt-16">
-          <div className="text-center mb-8">
-            <h3 className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent mb-2">
-              Pro Tips for Success
-            </h3>
-            <p className="text-gray-400">Make the most out of your AI deployments</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/40 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Users size={20} className="text-blue-400" />
-              </div>
-              <h4 className="font-semibold text-white mb-2">Know Your Audience</h4>
-              <p className="text-sm text-gray-400">Choose platforms where your users are most active for better engagement.</p>
-            </div>
-            
-            <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-600/20 to-blue-600/20 border border-emerald-500/40 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Zap size={20} className="text-emerald-400" />
-              </div>
-              <h4 className="font-semibold text-white mb-2">Start Simple</h4>
-              <p className="text-sm text-gray-400">Begin with one platform, test thoroughly, then expand to others.</p>
-            </div>
-            
-            <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/40 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Monitor size={20} className="text-purple-400" />
-              </div>
-              <h4 className="font-semibold text-white mb-2">Monitor Performance</h4>
-              <p className="text-sm text-gray-400">Track your deployment analytics to optimize user experience.</p>
-            </div>
-          </div>
-        </div>
-      </FadeInSection>
-
-      {/* Quick Actions */}
-      <FadeInSection>
-        <div className="max-w-4xl mx-auto mt-12">
-          <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/30 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-xl">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 border border-yellow-500/40 rounded-xl flex items-center justify-center">
-                  <Sparkles className="text-yellow-400" size={20} />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-white">Need Help Getting Started?</h4>
-                  <p className="text-sm text-gray-400">Check out our resources and documentation</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-3">
-                <Link
-                  href="/video-guides"
-                  className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-all text-sm"
-                >
-                  <Play size={16} />
-                  Video Guides
-                </Link>
-                <Link
-                  href="/agents"
-                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-all text-sm"
-                >
-                  <Bot size={16} />
-                  Manage Agents
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </FadeInSection>
 
       {/* Custom CSS for shimmer animation */}
       <style jsx>{`

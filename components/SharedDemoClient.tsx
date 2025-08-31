@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, RotateCcw, X, Activity, Clock, User } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { Activity, Clock, User, MessageCircle, Zap, Shield, Sparkles } from 'lucide-react';
+import DemoAgentChatWidget from './DemoAgentChatWidget';
 
 // Types
 interface DemoConfig {
@@ -36,277 +36,12 @@ interface Props {
   demoToken: string;
 }
 
-// Composant TypingDots
-function TypingDots() {
-  return (
-    <div className="flex gap-1 items-center justify-center h-5 mt-1">
-      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounceDots" style={{ animationDelay: '0s' }} />
-      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounceDots" style={{ animationDelay: '0.2s' }} />
-      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounceDots" style={{ animationDelay: '0.4s' }} />
-    </div>
-  );
-}
-
-// Composant ChatButton
-const ChatButton: React.FC<{
-  isOpen: boolean;
-  onClick: () => void;
-  config: DemoConfig;
-  showPopup: boolean;
-}> = ({ isOpen, onClick, config, showPopup }) => {
-  return (
-    <>
-      {/* Popup Bubble */}
-      {showPopup && !isOpen && (
-        <div
-          className="chat-popup"
-          style={{ backgroundColor: config.color }}
-        >
-          {config.popupMessage}
-        </div>
-      )}
-
-      {/* Chat Button */}
-      <button
-        className="chat-button"
-        onClick={onClick}
-        style={{ backgroundColor: config.color }}
-      >
-        <div style={{
-          transition: 'all 0.3s ease',
-          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-        }}>
-          {isOpen ? (
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-white" />
-              <span className="w-2 h-2 rounded-full bg-white" />
-              <span className="w-2 h-2 rounded-full bg-white" />
-            </div>
-          ) : (
-            <MessageCircle size={24} color="white" />
-          )}
-        </div>
-      </button>
-    </>
-  );
-};
-
-// Composant ChatHeader
-const ChatHeader: React.FC<{
-  config: DemoConfig;
-  onNewChat: () => void;
-  onClose: () => void;
-}> = ({ config, onNewChat, onClose }) => {
-  const defaultAvatarSrc = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSA5VjIyQzE5IDIyIDE3IDIxIDE1Ljk5IDE5LjM2QzE2LjA1IDE5LjkgMTYgMTkuOTEgMTYgMjBDMTYgMjEuMSAxNS4xIDIyIDE0IDIySDE0QzguOSAyMiA4IDIxLjEgOCAyMFYxNEgxMFYxMEwxMiA5TDE0IDlMMTYgMTBWMTRIMThWMTBMMjAgOUgyMSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
-
-  return (
-    <div className="chat-header">
-      <div className="chat-header-content">
-        <div className="chat-avatar-container">
-          <img
-            src={config.avatarUrl || defaultAvatarSrc}
-            alt="Avatar"
-            className="chat-avatar"
-            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-              const target = e.currentTarget;
-              target.src = defaultAvatarSrc;
-            }}
-          />
-          <div className="chat-status"></div>
-        </div>
-        <div className="chat-info">
-          <h3 className="chat-title">{config.chatTitle}</h3>
-          <p className="chat-subtitle">{config.subtitle}</p>
-        </div>
-      </div>
-      <div className="chat-actions">
-        <button
-          className="chat-action-btn"
-          onClick={onNewChat}
-          title="Nouvelle conversation"
-        >
-          <RotateCcw size={18} />
-        </button>
-        <button
-          className="chat-action-btn"
-          onClick={onClose}
-          title="Réduire"
-        >
-          <X size={18} />
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// Composant ChatWindow
-const ChatWindow: React.FC<{
-  isOpen: boolean;
-  config: DemoConfig;
-  messages: Message[];
-  isTyping: boolean;
-  inputValue: string;
-  usedCount: number;
-  onInputChange: (value: string) => void;
-  onSendMessage: () => void;
-  onNewChat: () => void;
-  onClose: () => void;
-  messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  inputRef: React.RefObject<HTMLInputElement | null>;
-}> = ({
-  isOpen,
-  config,
-  messages,
-  isTyping,
-  inputValue,
-  usedCount,
-  onInputChange,
-  onSendMessage,
-  onNewChat,
-  onClose,
-  messagesEndRef,
-  inputRef
-}) => {
-    const defaultBotAvatarSrc = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS44IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA3LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
-
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        onSendMessage();
-      }
-    };
-
-    const isLimitReached = usedCount >= config.usageLimit;
-
-    return (
-      <div
-        className={`chat-window ${isOpen ? 'open' : 'closed'} ${config.theme === 'dark' ? 'dark' : ''}`}
-        style={{
-          width: `480px`,
-          height: `650px`,
-          '--primary-color': config.color
-        } as React.CSSProperties}
-      >
-        {/* Header */}
-        <ChatHeader
-          config={config}
-          onNewChat={onNewChat}
-          onClose={onClose}
-        />
-
-        {/* Usage Counter */}
-        <div className={`px-4 py-2 border-b text-xs ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-          <div className="flex items-center justify-between">
-            <span>Messages used: {usedCount} / {config.usageLimit}</span>
-            <div className="flex items-center gap-1">
-              <div className={`w-2 h-2 rounded-full ${isLimitReached ? 'bg-red-500' : usedCount / config.usageLimit > 0.8 ? 'bg-yellow-500' : 'bg-green-500'}`} />
-              <span className={isLimitReached ? 'text-red-500' : usedCount / config.usageLimit > 0.8 ? 'text-yellow-500' : 'text-green-500'}>
-                {isLimitReached ? 'Limite atteinte' : 'Available'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className={`chat-messages ${config.theme === 'dark' ? 'dark' : ''} custom-scrollbar`} style={{ height: 'calc(100% - 140px)' }}>
-          <div className="messages-container show">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.isBot ? 'items-start' : 'items-end'} mb-3 ${message.isBot ? 'flex-row' : 'flex-row-reverse'}`}
-              >
-                {message.isBot && (
-                  <img
-                    src={config.avatarUrl || defaultBotAvatarSrc}
-                    alt="Bot"
-                    className="w-8 h-8 rounded-full self-start mr-2"
-                    style={{ flexShrink: 0 }}
-                    onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                      const target = e.currentTarget;
-                      target.src = defaultBotAvatarSrc;
-                    }}
-                  />
-                )}
-                <div className="flex flex-col max-w-sm relative">
-                  <div className={`chat-bubble ${message.isBot ? 'bot' : 'user'}`}>
-                    {message.text}
-                  </div>
-                  <div className={`chat-timestamp ${message.isBot ? 'bot' : 'user'}`}>
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {isTyping && (
-              <div className="flex items-start mb-3 flex-row">
-                <img
-                  src={config.avatarUrl || defaultBotAvatarSrc}
-                  alt="Bot"
-                  className="w-8 h-8 rounded-full self-start mr-2"
-                />
-                <div
-                  className="chat-bubble bot"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '12px 16px'
-                  }}
-                >
-                  {[0, 1, 2].map(i => (
-                    <span
-                      key={i}
-                      className="inline-block w-2 h-2 rounded-full animate-bounceDots"
-                      style={{
-                        backgroundColor: config.theme === 'dark' ? '#9ca3af' : '#6b7280',
-                        animationDelay: `${i * 0.2}s`
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-
-        {/* Input Area */}
-        <div className={`chat-input-area ${config.theme === 'dark' ? 'dark' : ''}`}>
-          <div className="chat-input-container">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => onInputChange(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={isLimitReached ? 'Limite de messages atteinte' : config.placeholderText}
-              className={`chat-input ${config.theme === 'dark' ? 'dark' : ''}`}
-              disabled={isLimitReached}
-            />
-            <button
-              onClick={onSendMessage}
-              disabled={!inputValue.trim() || isLimitReached}
-              className="chat-send-btn"
-              style={{ backgroundColor: config.color }}
-            >
-              <Send size={18} />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
 export default function SharedDemoClient({ demo, demoId, demoToken }: Props) {
-  // États pour le chat
+  // ========== ÉTATS POUR LE CHAT ==========
   const [messages, setMessages] = useState<Message[]>(() => {
     if (demo.showWelcome && demo.welcomeMessage) {
       return [{
-        id: '1',
+        id: 'welcome',
         text: demo.welcomeMessage,
         isBot: true,
         timestamp: new Date()
@@ -318,17 +53,31 @@ export default function SharedDemoClient({ demo, demoId, demoToken }: Props) {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [usedCount, setUsedCount] = useState(demo.usedCount || 0);
+  const [isProcessing, setIsProcessing] = useState(false); // 🔧 Éviter les doublons
 
-  // États pour l'interface
-  const [isOpen, setIsOpen] = useState(false); // Fermé par défaut
+  // ========== ÉTATS POUR L'INTERFACE ==========
+  const [isOpen, setIsOpen] = useState(false);
   const [showPopupBubble, setShowPopupBubble] = useState(false);
-  const [mobileView, setMobileView] = useState<'info' | 'chat'>('info'); // Nouveau: gestion 2 pages mobile
+  const [mobileView, setMobileView] = useState<'info' | 'chat'>('info');
 
-  // Refs pour le chat
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  // ========== CONFIGURATION POUR DemoAgentChatWidget ==========
+  const chatConfig = {
+    name: demo.name,
+    agentId: demo.agentId,
+    avatar: demo.avatarUrl,
+    welcomeMessage: demo.welcomeMessage,
+    placeholderText: demo.placeholderText,
+    theme: demo.theme,
+    primaryColor: demo.color,
+    popupMessage: demo.popupMessage,
+    popupDelay: demo.popupDelay,
+    showPopup: demo.showPopup,
+    showWelcomeMessage: demo.showWelcome,
+    chatTitle: demo.chatTitle,
+    subtitle: demo.subtitle,
+  };
 
-  // Gestion du popup (si chat fermé)
+  // ========== LOGIQUE POPUP ==========
   useEffect(() => {
     if (demo.showPopup && !isOpen) {
       const timer = setTimeout(() => {
@@ -340,41 +89,42 @@ export default function SharedDemoClient({ demo, demoId, demoToken }: Props) {
     }
   }, [demo.showPopup, demo.popupDelay, isOpen]);
 
-  // Scroll to bottom when new message
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Focus input when opened
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+  // ========== FONCTIONS ==========
+  
+  // 🔧 CORRIGÉ : Gestion des messages sans doublons et flash
+  const handleMessagesChange = (newMessages: Message[]) => {
+    // Si c'est juste un reset ou une modification, pas d'API
+    if (newMessages.length <= messages.length) {
+      setMessages(newMessages);
+      return;
     }
-  }, [isOpen]);
+    
+    const lastMessage = newMessages[newMessages.length - 1];
+    
+    // Si c'est un nouveau message utilisateur ET qu'on n'est pas déjà en train de traiter
+    if (!lastMessage.isBot && !isProcessing) {
+      // Mettre à jour immédiatement SANS déclencher de re-render
+      setMessages(newMessages);
+      sendMessageToAPI(lastMessage.text, newMessages);
+    }
+  };
 
-  // Fonction pour envoyer un message
-  const sendMessage = async () => {
-    if (!inputValue.trim() || !demo.agentId || usedCount >= demo.usageLimit) return;
+  // 📨 Envoi API séparé et sécurisé - SANS re-render
+  const sendMessageToAPI = async (messageText: string, currentMessages: Message[]) => {
+    if (usedCount >= demo.usageLimit || isProcessing) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputValue,
-      isBot: false,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    const currentInput = inputValue; // Sauvegarder la valeur
-    setInputValue('');
+    setIsProcessing(true);
     setIsTyping(true);
 
     try {
       const body: any = {
-        message: currentInput, // Utiliser la valeur sauvegardée
-        previousMessages: messages.map(msg => ({
-          role: msg.isBot ? 'assistant' : 'user',
-          content: msg.text
-        }))
+        message: messageText,
+        previousMessages: currentMessages
+          .filter(msg => msg.id !== 'welcome')
+          .map(msg => ({
+            role: msg.isBot ? 'assistant' : 'user',
+            content: msg.text
+          }))
       };
 
       if (demo.showWelcome && demo.welcomeMessage?.trim()) {
@@ -385,7 +135,6 @@ export default function SharedDemoClient({ demo, demoId, demoToken }: Props) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 🆕 Headers pour le mode public
           'x-public-kind': 'demo',
           'x-demo-id': demoId,
           'x-demo-token': demoToken
@@ -396,487 +145,379 @@ export default function SharedDemoClient({ demo, demoId, demoToken }: Props) {
       if (response.ok) {
         const data = await response.json();
 
-        // IMPORTANT: Arrêter typing AVANT d'ajouter le message
+        // Arrêter typing AVANT d'ajouter le message
         setIsTyping(false);
-
+        
         // Petit délai pour éviter le flash
         setTimeout(() => {
           const botMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            text: data.reply || 'Désolé, je n\'ai pas pu traiter votre demande.',
+            id: crypto.randomUUID(),
+            text: data.reply || 'Sorry, I couldn\'t process your request.',
             isBot: true,
             timestamp: new Date()
           };
           setMessages(prev => [...prev, botMessage]);
           setUsedCount(prev => prev + 1);
-        }, 100);
+          setIsProcessing(false);
+        }, 200);
 
         // Mettre à jour le compteur côté serveur
         await fetch(`/api/demo/${demoId}/usage`, {
           method: 'POST'
         });
       } else {
-        throw new Error('Erreur API');
+        throw new Error('API Error');
       }
     } catch (error) {
-      console.error('Erreur lors de l\'envoi du message:', error);
-
-      // IMPORTANT: Arrêter typing AVANT d'ajouter le message d'erreur
+      console.error('Error sending message:', error);
+      
       setIsTyping(false);
-
       setTimeout(() => {
-        const botMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          text: "Désolé, une erreur s'est produite. Veuillez réessayer.",
+        const errorMessage: Message = {
+          id: crypto.randomUUID(),
+          text: "Sorry, an error occurred. Please try again.",
           isBot: true,
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, botMessage]);
-      }, 100);
+        setMessages(prev => [...prev, errorMessage]);
+        setIsProcessing(false);
+      }, 200);
     }
   };
 
-  // Toggle chat pour mobile (change de page)
-  const toggleChatMobile = () => {
-    if (mobileView === 'info') {
-      setMobileView('chat');
-    } else {
-      setMobileView('info');
-    }
-    setShowPopupBubble(false);
-  };
-
-  // Toggle chat pour desktop
+  // 🎭 Toggle chat (desktop)
   const toggleChat = () => {
     setIsOpen(!isOpen);
     setShowPopupBubble(false);
   };
 
-  // New chat function
-  const startNewChat = () => {
-    if (demo.showWelcome) {
-      setMessages([{
-        id: '1',
-        text: demo.welcomeMessage,
-        isBot: true,
-        timestamp: new Date()
-      }]);
+  // 📱 Toggle mobile avec gestion des états corrects
+  const toggleMobile = () => {
+    if (mobileView === 'info') {
+      setMobileView('chat');
+      // Ne pas changer isOpen ici - le widget le gère
     } else {
-      setMessages([]);
+      setMobileView('info');
+      setIsOpen(false); // Fermer le chat quand on revient à info
     }
+    setShowPopupBubble(false);
   };
 
+  // 🔙 Retour vers info page (flèche back)
+  const backToInfo = () => {
+    setMobileView('info');
+    setIsOpen(false);
+    setShowPopupBubble(false);
+  };
+
+  // 📊 Calculs stats
   const usagePercentage = (usedCount / demo.usageLimit) * 100;
   const isLimitReached = usedCount >= demo.usageLimit;
 
-  // Fonction pour gérer Enter dans l'input
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const defaultBotAvatarSrc = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHN2ZyB4PSI2IiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMCAyQzEwLjkgMiAxMS43IDIuOSAxMS43IDRDMTEuNyA1LjEgMTAuOSA2IDEwIDZDOS4xIDYgOC4zIDUuMSA4LjMgNEM4LjMgMi45IDkuMSAyIDEwIDJaTTE3LjUgN1YxOEMxNS44IDE4IDE0LjIgMTcuMyAxMy4zIDE2LjFDMTMuNCAxNi42IDEzLjMgMTYuNiAxMy4zIDE2LjdDMTMuMyAxNy41IDEyLjYgMTguMyAxMS43IDE4LjNIOC4zQzcuNSAxOC4zIDYuNyAxNy41IDYuNyAxNi43VjExLjdIOC4zVjguM0wxMCA3LjVMMTEuNyA3LjVMMTMuMyA4LjNWMTEuN0gxNVY4LjNMMTYuNyA7LjVIMTcuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo=';
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-cyan-600/5" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+      
+      <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
         <div className="w-full max-w-7xl mx-auto">
 
-          {/* Mobile/Tablet Layout */}
+          {/* 📱 MOBILE/TABLET LAYOUT */}
           <div className="block lg:hidden">
             {mobileView === 'info' ? (
-              // PAGE 1 - Infos
-              <div className="max-w-2xl mx-auto space-y-6 text-white min-h-screen flex flex-col justify-center">
-                {/* Header Mobile */}
-                <div className="text-center">
-                  <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              /* PAGE 1 - Info Mobile */
+              <div className="max-w-2xl mx-auto space-y-8 text-white min-h-screen flex flex-col justify-center py-8">
+                
+                {/* Hero Section */}
+                <div className="text-center space-y-6">
+                  <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 backdrop-blur-sm">
+                    <Sparkles className="w-4 h-4 text-blue-400 mr-2" />
+                    <span className="text-sm font-medium text-blue-300">Live AI Demo</span>
+                  </div>
+                  
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent leading-tight">
                     {demo.name}
                   </h1>
-                  <p className="text-lg text-gray-300 leading-relaxed">
-                    Test our AI assistant in real time.
+                  
+                  <p className="text-xl text-slate-300 leading-relaxed max-w-lg mx-auto">
+                    Experience the power of AI conversation in real-time. Test our intelligent assistant with your own questions.
                   </p>
                 </div>
 
-                {/* Stats Mobile */}
+                {/* Quick Stats - pas de features grid */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Activity className="text-blue-400" size={18} />
-                      <h3 className="font-semibold text-blue-200 text-sm">Usage</h3>
+                  <div className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                        <Activity className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">Usage</h3>
+                        <p className="text-xs text-slate-400">Messages sent</p>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-400">{usedCount} / {demo.usageLimit}</div>
+                    <div className="text-2xl font-bold text-white mb-2">{usedCount}</div>
+                    <div className="text-sm text-slate-400">of {demo.usageLimit} available</div>
                   </div>
 
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Clock className="text-purple-400" size={18} />
-                      <h3 className="font-semibold text-purple-200 text-sm">Status</h3>
+                  <div className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        isLimitReached ? 'bg-gradient-to-br from-red-500 to-red-600' : 'bg-gradient-to-br from-green-500 to-green-600'
+                      }`}>
+                        <Shield className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">Status</h3>
+                        <p className="text-xs text-slate-400">Current state</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${usedCount >= demo.usageLimit ? 'bg-red-500' : 'bg-green-500'
-                        }`} />
-                      <span className={`text-xs ${usedCount >= demo.usageLimit ? 'text-red-400' : 'text-green-400'
-                        }`}>
-                        {usedCount >= demo.usageLimit ? 'Limite' : 'Actif'}
-                      </span>
+                    <div className={`text-sm font-semibold ${isLimitReached ? 'text-red-400' : 'text-green-400'}`}>
+                      {isLimitReached ? 'Limit Reached' : 'Active'}
                     </div>
-                  </div>
-                </div>
-
-                {/* Features */}
-                <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6 backdrop-blur-sm">
-                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <User className="text-cyan-400" size={20} />
-                    Features
-                  </h3>
-                  <ul className="space-y-3 text-gray-300">
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                      <span>Real-time conversation</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                      <span>Modern and intuitive interface</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                      <span>Smart contextual responses</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                      <span>Demo limited to {demo.usageLimit} messages</span>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Message expérience desktop */}
-                <div className="bg-gradient-to-r from-orange-600/20 to-yellow-600/20 border border-orange-500/30 rounded-xl p-4 backdrop-blur-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center mt-0.5">
-                      <span className="text-orange-400 text-sm">💻</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-orange-300 font-medium text-sm mb-1">
-                        💡 Conseil
-                      </h4>
-                      <p className="text-orange-200/90 text-xs leading-relaxed">
-                        Pour une expérience optimale avec toutes les fonctionnalités, utilisez un ordinateur ou élargissez votre écran !
-                      </p>
+                    <div className="w-full bg-slate-700/50 rounded-full h-2 mt-2 overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 ${
+                          usagePercentage >= 100 ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                          usagePercentage >= 80 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 
+                          'bg-gradient-to-r from-green-500 to-green-600'
+                        }`}
+                        style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Bouton Principal */}
-                <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-6 backdrop-blur-sm">
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    Ready to get started ?
-                  </h3>
-                  <p className="text-gray-300 text-sm mb-4">
-                    Cliquez sur le bouton pour démarrer la conversation.
-                  </p>
+                {/* CTA Section */}
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-white mb-2">Ready to start?</h3>
+                    <p className="text-slate-400 text-sm mb-6">
+                      Tap the button below to begin your AI conversation experience.
+                    </p>
+                  </div>
+                  
                   <button
-                    onClick={toggleChatMobile}
+                    onClick={toggleMobile}
                     disabled={isLimitReached}
-                    className={`w-full py-4 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-3 text-lg ${isLimitReached
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
-                      }`}
+                    className={`w-full group relative overflow-hidden rounded-2xl p-6 font-medium text-lg transition-all duration-300 ${
+                      isLimitReached
+                        ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white hover:shadow-2xl hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]'
+                    }`}
                   >
-                    <MessageCircle size={24} />
-                    {isLimitReached ? 'Limite atteinte' : 'Ouvrir le Chat'}
+                    {!isLimitReached && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-white/20 to-blue-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                    )}
+                    <div className="relative flex items-center justify-center gap-3">
+                      <MessageCircle className="w-6 h-6" />
+                      {isLimitReached ? 'Demo Limit Reached' : 'Start Conversation'}
+                    </div>
                   </button>
                 </div>
               </div>
             ) : (
-              // PAGE 2 - Chat Fullscreen
-              <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
-                {/* Header Chat Mobile avec couleur */}
-                <div
-                  className="border-b border-gray-700 p-4"
-                  style={{
-                    backgroundColor: demo.color,
-                    background: `linear-gradient(135deg, ${demo.color} 0%, ${demo.color}dd 100%)`
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={toggleChatMobile}
-                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                      <X size={20} className="text-white" />
-                    </button>
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={demo.avatarUrl || defaultBotAvatarSrc}
-                        alt="Bot"
-                        className="w-8 h-8 rounded-full border-2 border-white/20"
-                      />
-                      <div>
-                        <h3 className="text-white font-medium text-sm">{demo.chatTitle}</h3>
-                        <p className="text-white/80 text-xs">{demo.subtitle}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={startNewChat}
-                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                      title="Nouvelle conversation"
-                    >
-                      <RotateCcw size={18} className="text-white" />
-                    </button>
-                  </div>
-
-                  {/* Usage Counter Mobile */}
-                  <div className="mt-3 pt-3 border-t border-white/20">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-white/90">Messages: {usedCount} / {demo.usageLimit}</span>
-                      <div className="flex items-center gap-1">
-                        <div className={`w-2 h-2 rounded-full ${isLimitReached ? 'bg-red-300' : usedCount / demo.usageLimit > 0.8 ? 'bg-yellow-300' : 'bg-green-300'}`} />
-                        <span className={isLimitReached ? 'text-red-200' : usedCount / demo.usageLimit > 0.8 ? 'text-yellow-200' : 'text-green-200'}>
-                          {isLimitReached ? 'Limite' : 'Actif'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+              /* PAGE 2 - Chat Mobile AVEC boutons de navigation */
+              <div className="fixed inset-0 z-50">
+                {/* Bouton retour en haut à gauche */}
+                <div className="absolute top-4 left-4 z-50">
+                  <button
+                    onClick={backToInfo}
+                    className="w-10 h-10 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-200"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M19 12H5"></path>
+                      <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                  </button>
                 </div>
 
-                {/* Messages Fullscreen */}
-                <div className="flex-1 overflow-hidden">
-                  <div className="h-full overflow-y-auto p-4 custom-scrollbar">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${message.isBot ? 'items-start' : 'items-end'} mb-4 ${message.isBot ? 'flex-row' : 'flex-row-reverse'}`}
-                      >
-                        {message.isBot && (
-                          <img
-                            src={demo.avatarUrl || defaultBotAvatarSrc}
-                            alt="Bot"
-                            className="w-8 h-8 rounded-full self-start mr-3"
-                          />
-                        )}
-                        <div className="flex flex-col max-w-xs relative">
-                          <div className={`px-4 py-3 rounded-2xl ${message.isBot
-                              ? 'bg-gray-700 text-white'
-                              : 'bg-blue-600 text-white'
-                            }`}>
-                            {message.text}
-                          </div>
-                          <div className={`text-xs text-gray-400 mt-1 ${message.isBot ? 'text-left' : 'text-right'}`}>
-                            {message.timestamp.toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {isTyping && (
-                      <div className="flex items-start mb-4">
-                        <img
-                          src={demo.avatarUrl || defaultBotAvatarSrc}
-                          alt="Bot"
-                          className="w-8 h-8 rounded-full self-start mr-3"
-                        />
-                        <div className="bg-gray-700 px-4 py-3 rounded-2xl flex items-center gap-1">
-                          {[0, 1, 2].map(i => (
-                            <span
-                              key={i}
-                              className="inline-block w-2 h-2 bg-gray-400 rounded-full animate-bounceDots"
-                              style={{ animationDelay: `${i * 0.2}s` }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                </div>
-
-                {/* Input Fullscreen */}
-                <div className="bg-gray-800 border-t border-gray-700 p-4 flex-shrink-0">
-                  <div className="flex items-center gap-3">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder={isLimitReached ? 'Limite atteinte' : demo.placeholderText}
-                      disabled={isLimitReached}
-                      className="flex-1 bg-gray-700 text-white px-4 py-3 rounded-xl border border-gray-600 focus:border-blue-500 focus:outline-none disabled:opacity-50"
-                    />
-                    <button
-                      onClick={sendMessage}
-                      disabled={!inputValue.trim() || isLimitReached}
-                      className="p-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      style={{ backgroundColor: demo.color }}
-                    >
-                      <Send size={20} className="text-white" />
-                    </button>
-                  </div>
-                </div>
+                <DemoAgentChatWidget
+                  config={chatConfig}
+                  isPreview={false}
+                  isOpen={isOpen} // Contrôlé par les boutons
+                  onToggle={toggleChat} // Le X ferme le chat seulement
+                  messages={messages}
+                  onMessagesChange={handleMessagesChange}
+                  inputValue={inputValue}
+                  onInputChange={setInputValue}
+                  isTyping={isTyping}
+                  onTypingChange={setIsTyping}
+                  showPopupBubble={showPopupBubble}
+                />
               </div>
             )}
           </div>
 
-          {/* Desktop Layout */}
+          {/* 🖥️ DESKTOP LAYOUT */}
           <div className="hidden lg:block">
-            <div className="grid grid-cols-12 gap-8 items-start min-h-[80vh]">
+            {mobileView === 'info' ? (
+              /* PAGE 1 Desktop - Info + Chat Widget */
+              <div className="grid grid-cols-12 gap-12 items-start min-h-[85vh]">
 
-              {/* Left Side - Info (5 colonnes) */}
-              <div className="col-span-5 text-white space-y-6">
-                <div>
-                  <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    {demo.name}
-                  </h1>
-                  <p className="text-xl text-gray-300 leading-relaxed">
-                    Test our AI assistant in real time. An interactive demo to explore its capabilities.
-                  </p>
-                </div>
-
-                {/* Stats Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Activity className="text-blue-400" size={20} />
-                      <h3 className="font-semibold text-blue-200">Usage</h3>
+                {/* Left Side - Info Section (6 colonnes) */}
+                <div className="col-span-6 text-white space-y-8">
+                  
+                  {/* Hero Section */}
+                  <div className="space-y-6">
+                    <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 backdrop-blur-sm">
+                      <Sparkles className="w-4 h-4 text-blue-400 mr-2" />
+                      <span className="text-sm font-medium text-blue-300">Interactive AI Demo</span>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">Messages:</span>
-                        <span className="text-white font-medium">{usedCount} / {demo.usageLimit}</span>
+                    
+                    <h1 className="text-5xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent leading-tight">
+                      {demo.name}
+                    </h1>
+                    
+                    <p className="text-xl text-slate-300 leading-relaxed max-w-2xl">
+                      Experience cutting-edge AI conversation technology. Test our intelligent assistant with real questions and see how it responds with context-aware, helpful answers.
+                    </p>
+                  </div>
+
+                  {/* Stats Dashboard */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Activity className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-white text-lg">Usage Tracking</h3>
+                          <p className="text-sm text-slate-400">Messages sent</p>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                        <div
-                          className={`h-full transition-all duration-300 ${usagePercentage >= 100 ? 'bg-red-500' :
-                              usagePercentage >= 80 ? 'bg-yellow-500' : 'bg-green-500'
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-3xl font-bold text-white">{usedCount}</span>
+                          <span className="text-slate-400 text-sm">of {demo.usageLimit}</span>
+                        </div>
+                        <div className="w-full bg-slate-700/50 rounded-full h-3 overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-500 ${
+                              usagePercentage >= 100 ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                              usagePercentage >= 80 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 
+                              'bg-gradient-to-r from-blue-500 to-blue-600'
                             }`}
-                          style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-                        />
+                            style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${
+                          isLimitReached ? 'bg-gradient-to-br from-red-500 to-red-600' : 'bg-gradient-to-br from-green-500 to-green-600'
+                        }`}>
+                          <Shield className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-white text-lg">Demo Status</h3>
+                          <p className="text-sm text-slate-400">Current availability</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                          isLimitReached 
+                            ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
+                            : 'bg-green-500/20 text-green-300 border border-green-500/30'
+                        }`}>
+                          <div className={`w-2 h-2 rounded-full mr-2 ${isLimitReached ? 'bg-red-400' : 'bg-green-400'}`} />
+                          {isLimitReached ? 'Limit Reached' : 'Active & Ready'}
+                        </div>
+                        <p className="text-xs text-slate-400 mt-2">
+                          {isLimitReached ? 'Demo session completed' : `${demo.usageLimit - usedCount} messages remaining`}
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Clock className="text-purple-400" size={20} />
-                      <h3 className="font-semibold text-purple-200">Status</h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${usedCount >= demo.usageLimit ? 'bg-red-500' : 'bg-green-500'
-                        }`} />
-                      <span className={`text-sm font-medium ${usedCount >= demo.usageLimit ? 'text-red-400' : 'text-green-400'
-                        }`}>
-                        {usedCount >= demo.usageLimit ? 'Limite atteinte' : 'Available'}
-                      </span>
-                    </div>
+                  {/* Call to Action */}
+                  <div className="bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-blue-600/10 border border-blue-500/20 rounded-2xl p-8 backdrop-blur-sm">
+                    <h3 className="text-2xl font-semibold text-white mb-3">
+                      Ready to experience the future?
+                    </h3>
+                    <p className="text-slate-300 mb-6 leading-relaxed">
+                      {isOpen
+                        ? 'Great! The chat window is open. Start asking questions and explore what our AI can do.'
+                        : 'Click the chat button on the right to begin your interactive AI conversation experience.'
+                      }
+                    </p>
+                    {!isOpen && (
+                      <button
+                        onClick={toggleChat}
+                        disabled={isLimitReached}
+                        className={`group relative overflow-hidden rounded-xl px-8 py-4 font-medium text-lg transition-all duration-300 ${
+                          isLimitReached
+                            ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white hover:shadow-2xl hover:shadow-blue-500/25 hover:scale-105 active:scale-95'
+                        }`}
+                      >
+                        {!isLimitReached && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-white/20 to-blue-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                        )}
+                        <div className="relative flex items-center gap-3">
+                          <MessageCircle className="w-5 h-5" />
+                          {isLimitReached ? 'Demo Completed' : 'Launch Chat Experience'}
+                        </div>
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                {/* Features */}
-                <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6 backdrop-blur-sm">
-                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <User className="text-cyan-400" size={20} />
-                    Features
-                  </h3>
-                  <ul className="space-y-3 text-gray-300">
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                      <span>Real-time conversation</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                      <span>Modern and intuitive interface</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                      <span>Smart contextual responses</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                      <span>Demo limited to {demo.usageLimit} messages</span>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* CTA Desktop */}
-                <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-6 backdrop-blur-sm">
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    Ready to get started ?
-                  </h3>
-                  <p className="text-gray-300 text-sm mb-4">
-                    {isOpen
-                      ? 'The chat is open! Start asking your questions.'
-                      : 'Click the chat button to start the conversation.'
-                    }
-                  </p>
-                  {!isOpen && (
-                    <button
-                      onClick={toggleChat}
-                      className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
-                    >
-                      <MessageCircle size={20} />
-                      Ouvrir le Chat
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Center Spacer (2 colonnes) */}
-              <div className="col-span-2"></div>
-
-              {/* Right Side - Chat Widget Container Fixe (5 colonnes) */}
-              <div className="col-span-5">
-                {/* Conteneur invisible fixe comme demo-agent */}
-                <div
-                  className="relative"
-                  style={{
-                    position: 'sticky',
-                    top: '2rem',
-                    height: 'calc(100vh - 4rem)',
-                    maxHeight: '700px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <div
-                    className="chat-widget"
-                    style={{
-                      '--primary-color': demo.color,
-                      position: 'absolute',
-                      bottom: '24px',
-                      right: '24px',
-                    } as React.CSSProperties}
-                  >
-                    <ChatButton
+                {/* Right Side - Chat Widget en bas à droite (6 colonnes) */}
+                <div className="col-span-6 relative">
+                  {/* Container fixe pour le chat widget */}
+                  <div className="fixed bottom-6 right-6 z-40">
+                    <DemoAgentChatWidget
+                      config={chatConfig}
+                      isPreview={true}
                       isOpen={isOpen}
-                      onClick={toggleChat}
-                      config={demo}
-                      showPopup={showPopupBubble}
-                    />
-
-                    <ChatWindow
-                      isOpen={isOpen}
-                      config={demo}
+                      onToggle={toggleChat}
                       messages={messages}
-                      isTyping={isTyping}
+                      onMessagesChange={handleMessagesChange}
                       inputValue={inputValue}
-                      usedCount={usedCount}
                       onInputChange={setInputValue}
-                      onSendMessage={sendMessage}
-                      onNewChat={startNewChat}
-                      onClose={toggleChat}
-                      messagesEndRef={messagesEndRef}
-                      inputRef={inputRef}
+                      isTyping={isTyping}
+                      onTypingChange={setIsTyping}
+                      showPopupBubble={showPopupBubble}
                     />
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              /* PAGE 2 Desktop - Chat avec bouton retour */
+              <div className="fixed inset-0 z-50">
+                {/* Bouton retour en haut à gauche */}
+                <div className="absolute top-6 left-6 z-50">
+                  <button
+                    onClick={backToInfo}
+                    className="w-12 h-12 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-200"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M19 12H5"></path>
+                      <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                  </button>
+                </div>
+
+                <DemoAgentChatWidget
+                  config={chatConfig}
+                  isPreview={false}
+                  isOpen={isOpen}
+                  onToggle={toggleChat}
+                  messages={messages}
+                  onMessagesChange={handleMessagesChange}
+                  inputValue={inputValue}
+                  onInputChange={setInputValue}
+                  isTyping={isTyping}
+                  onTypingChange={setIsTyping}
+                  showPopupBubble={showPopupBubble}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
