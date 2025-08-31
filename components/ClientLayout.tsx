@@ -32,11 +32,14 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/website-widget')) {
       return 'Widget Configuration';
     }
-        if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/instagram-dms')) {
+    if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/instagram-dms')) {
       return 'Chat History';
     }
-            if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/facebook-messenger')) {
+    if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/facebook-messenger')) {
       return 'Chat History';
+    }
+    if (pathname.startsWith('/agents/') && pathname.split('/').length === 3) {
+      return 'Agent Details';
     }
     return 'Dashboard';
   };
@@ -55,11 +58,14 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/website-widget')) {
       return 'Customize & Deploy your Widget';
     }
-        if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/instagram-dms')) {
+    if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/instagram-dms')) {
       return 'View all conversations captured by your Instagram DMs agent';
     }
-            if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/facebook-messenger')) {
+    if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/facebook-messenger')) {
       return 'View all conversations captured by your Facebook DMs agent';
+    }
+    if (pathname.startsWith('/agents/') && pathname.split('/').length === 3) {
+      return 'View your AI agent configuration and prompt';
     }
     return 'Welcome to your AI workspace';
   };

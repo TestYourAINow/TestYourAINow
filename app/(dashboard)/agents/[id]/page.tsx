@@ -450,14 +450,6 @@ export default function AgentPromptPage() {
                             <div className="text-blue-200 text-xs font-medium uppercase tracking-wide">Lines</div>
                           </div>
                         </div>
-                        
-                        {/* Token estimation */}
-                        <div className="bg-blue-500/10 backdrop-blur-sm border border-blue-500/20 rounded-xl p-4 text-center">
-                          <div className="text-lg font-bold text-white mb-2">
-                            ~{Math.ceil(prompt.length / 4).toLocaleString()}
-                          </div>
-                          <div className="text-blue-200 text-xs font-medium uppercase tracking-wide">Est. Tokens</div>
-                        </div>
                       </div>
                     </div>
                   </div>
