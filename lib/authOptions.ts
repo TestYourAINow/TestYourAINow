@@ -88,7 +88,7 @@ export const authOptions: NextAuthOptions = {
       session.user = {
         id: token.id as string,
         email: token.email as string,
-        name: token.name as string,
+        name: dbUser?.username || token.name as string,
         isSubscribed: dbUser?.isSubscribed ?? false,
         stripeCustomerId: dbUser?.stripeCustomerId ?? "",
         openaiApiKey: dbUser?.openaiApiKey ?? "",
