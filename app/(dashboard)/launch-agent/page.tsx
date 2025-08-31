@@ -11,7 +11,6 @@ import {
 import { useRouter } from 'next/navigation'
 import FadeInSection from '@/components/FadeInSection'
 import { DeleteConfirmationModal } from '@/components/DeleteConfirmationModal'
-import RequireApiKey from "@/components/RequireApiKey"
 
 // Composants d'icônes avec gradients
 const InstagramIcon = ({ size = 18, className = "" }) => (
@@ -445,7 +444,6 @@ export default function LaunchAgentPage() {
   const totalConnections = connections.length
 
   return (
-    <RequireApiKey>
       <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
         
         {/* Hero Section avec Stats en Live */}
@@ -861,6 +859,5 @@ export default function LaunchAgentPage() {
           isDeleting={isDeleting}
         />
       </div>
-    </RequireApiKey>
   )
 }

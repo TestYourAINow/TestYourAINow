@@ -13,7 +13,6 @@ import {
   ArrowUp, ArrowDown, Minus, Sparkles, Workflow, Hand
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import RequireApiKey from "@/components/RequireApiKey";
 
 // 🎨 Composants d'icônes avec gradients premium
 const InstagramIcon = ({ size = 24, className = "" }) => (
@@ -196,7 +195,6 @@ export default function DashboardPage() {
   // 🔄 LOADING STATE
   if (loading) {
     return (
-      <RequireApiKey>
         <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
           <div className="space-y-8 px-4 md:px-8">
             <div className="animate-pulse">
@@ -212,14 +210,12 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </RequireApiKey>
     );
   }
 
   // ❌ ERROR STATE
   if (error) {
     return (
-      <RequireApiKey>
         <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
           <div className="max-w-7xl mx-auto">
             <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 text-center">
@@ -235,7 +231,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </RequireApiKey>
     );
   }
 
@@ -287,7 +282,6 @@ export default function DashboardPage() {
 
   // ✅ MAIN DASHBOARD
   return (
-    <RequireApiKey>
       <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
         <div className="space-y-8 px-4 md:px-8">
 
@@ -722,6 +716,5 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
-    </RequireApiKey>
   );
 }

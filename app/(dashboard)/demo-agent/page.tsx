@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 import CreateDemoModal from '@/components/CreateDemoModal';
 import InfoDemoModal from '@/components/InfoDemoModal';
 import { DeleteDemoModal } from '@/components/DeleteDemoModal';
-import RequireApiKey from "@/components/RequireApiKey";
 import DemoAgentChatWidget from '@/components/DemoAgentChatWidget';
 
 // Types - AJOUTÉ usageLimit
@@ -316,7 +315,6 @@ export default function DemoAgentPage() {
   const selectedAgent = agents.find(a => a._id === config.agentId);
 
   return (
-    <RequireApiKey>
       <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
         
         {/* Mobile Navigation Tabs - Sticky et fixed height */}
@@ -977,6 +975,5 @@ export default function DemoAgentPage() {
           }
         `}</style>
       </div>
-    </RequireApiKey>
   );
 }

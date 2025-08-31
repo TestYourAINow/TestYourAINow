@@ -10,7 +10,6 @@ import {
 } from "lucide-react"
 import ModalDeleteAgent from "@/components/ModalDeleteAgent"
 import FadeInSection from "@/components/FadeInSection"
-import RequireApiKey from "@/components/RequireApiKey"
 import CreateFolderModal from "@/components/CreateFolderModal"
 import FolderCard from "@/components/FolderCard"
 import AgentActions from "@/components/Dropdowns/AgentActions"
@@ -587,7 +586,6 @@ export default function AgentsPage() {
   }
 
   return (
-    <RequireApiKey>
       <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
         {agentToDelete && (
           <ModalDeleteAgent
@@ -920,6 +918,5 @@ export default function AgentsPage() {
           </FadeInSection>
         )}
       </div>
-    </RequireApiKey>
   )
 }

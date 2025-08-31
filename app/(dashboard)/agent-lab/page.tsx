@@ -8,7 +8,6 @@ import SelectIntegrationModal, { IntegrationType } from "@/components/integratio
 import WebhookIntegrationModal from "@/components/integrations/WebhookIntegrationModal";
 import CalendlyIntegrationModal from "@/components/integrations/CalendlyIntegrationModal";
 import FileUploadIntegrationModal from "@/components/integrations/FileUploadIntegrationModal";
-import RequireApiKey from "@/components/RequireApiKey";
 import AiModelDropdown from "@/components/Dropdowns/AiModelDropdown";
 import ApiKeyDropdown, { ApiKeyOption } from "@/components/Dropdowns/ApiKeyDropdown";
 import { AgentIntegration } from "@/types/integrations";
@@ -1107,7 +1106,6 @@ export default function AgentLab() {
   );
 
   return (
-    <RequireApiKey>
       <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar">
 {/* ===== MOBILE TAB NAVIGATION COMPACT ===== */}
       {isMobile && (
@@ -1624,6 +1622,5 @@ export default function AgentLab() {
         }
       `}</style>
       </div>
-    </RequireApiKey>
   );
 }
