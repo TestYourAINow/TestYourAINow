@@ -18,6 +18,7 @@ import ApiKeyDropdown, { ApiKeyOption } from "@/components/Dropdowns/ApiKeyDropd
 
 // 🔧 CORRECTION - Import du vrai composant au lieu du mock
 import ImportWebsiteModal from "@/components/ImportWebsiteModal";
+import AddApiKeyModal from "@/components/AddApiKeyModal";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -143,131 +144,8 @@ const CharacterCounter = ({ content, maxLength = 1000 }: { content: string; maxL
   );
 };
 
-// 🎨 NOUVEAU - Modal Add API Key selon design system
-const AddApiKeyModal = ({
-  isOpen,
-  onClose,
-  onApiKeyAdded
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onApiKeyAdded: (newApiKeyData: { id: string; name: string; maskedKey: string; isDefault: boolean }) => void;
-}) => {
-  const [newApiKey, setNewApiKey] = useState("");
-  const [newProjectName, setNewProjectName] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newApiKey.trim() || !newProjectName.trim()) return;
 
-    setIsSubmitting(true);
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const newApiKeyData = {
-        id: Date.now().toString(),
-        name: newProjectName.trim(),
-        maskedKey: `${newApiKey.slice(0, 3)}...${newApiKey.slice(-4)}`,
-        isDefault: false
-      };
-
-      onApiKeyAdded(newApiKeyData);
-      setNewApiKey("");
-      setNewProjectName("");
-      onClose();
-      toast.success("API key added successfully!");
-    } catch (error) {
-      console.error('Error adding API key:', error);
-      toast.error("Failed to add API key");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-md mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/20 border-2 border-blue-500/40 flex items-center justify-center shadow-lg">
-              <Key className="text-blue-400" size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-                Add API Key
-              </h2>
-              <p className="text-sm text-gray-400 mt-0.5">Connect your OpenAI API key</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200 group"
-          >
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gray-500/0 to-gray-500/0 group-hover:from-gray-500/10 group-hover:to-gray-500/10 transition-all duration-200"></div>
-            <X size={20} className="relative z-10" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Project Name <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={newProjectName}
-              onChange={(e) => setNewProjectName(e.target.value)}
-              placeholder="Enter project name..."
-              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              OpenAI API Key <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="password"
-              value={newApiKey}
-              onChange={(e) => setNewApiKey(e.target.value)}
-              placeholder="sk-..."
-              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm font-mono"
-              required
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-6 border-t border-gray-700/50">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-3.5 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-xl font-semibold transition-all backdrop-blur-sm border border-gray-700/50 hover:border-gray-600/50"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              disabled={!newApiKey.trim() || !newProjectName.trim() || isSubmitting}
-              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105 relative overflow-hidden group disabled:opacity-50 disabled:hover:scale-100"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-              {isSubmitting ? 'Adding...' : 'Add API Key'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
 
 // 🎨 NOUVEAU - Step Indicator Premium
 const StepIndicator = ({ currentStep }: { currentStep: Step }) => {
@@ -378,9 +256,26 @@ export default function CreateAgentWizard() {
   const [originalCompanyText, setOriginalCompanyText] = useState("");
   const [isFaqGenerated, setIsFaqGenerated] = useState(false);
 
-  const handleApiKeyAdded = (newApiKeyData: { id: string; name: string; maskedKey: string; isDefault: boolean }) => {
-    setApiKeys((prev: ApiKeyOption[]) => [...prev, newApiKeyData]);
-    updateFormData("apiKey", newApiKeyData.id);
+  const handleApiKeyAdded = async (newApiKeyData: { id: string; name: string; maskedKey: string; isDefault: boolean }) => {
+    // Au lieu d'ajouter juste l'objet temporaire, on refetch toutes les API keys
+    try {
+      const response = await fetch("/api/user/api-key");
+      const data = await response.json();
+      if (response.ok) {
+        setApiKeys(data.apiKeys || []);
+
+        // Définir la nouvelle clé comme sélectionnée (elle sera probablement la dernière ajoutée)
+        const newlyAddedKey = data.apiKeys?.find((key: any) => key.name === newApiKeyData.name);
+        if (newlyAddedKey) {
+          updateFormData("apiKey", newlyAddedKey.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error refetching API keys:", error);
+      // Fallback: ajouter quand même l'objet temporaire
+      setApiKeys((prev: ApiKeyOption[]) => [...prev, newApiKeyData]);
+      updateFormData("apiKey", newApiKeyData.id);
+    }
   };
 
   // 🔧 CORRECTION - Fonction d'import corrigée pour correspondre à l'ancienne version

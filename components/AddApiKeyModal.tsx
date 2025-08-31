@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Key, Eye, EyeOff } from "lucide-react";
+import { X, Key, Eye, EyeOff, Globe, ExternalLink, RefreshCw, Plus } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface AddApiKeyModalProps {
@@ -32,14 +32,15 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
     setSaving(true);
     
     try {
+      // 🔥 VRAIE REQUÊTE - Même logique que la page API Key
       const response = await fetch('/api/user/api-key', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: projectName,
-          apiKey: apiKey,
+          name: projectName.trim(),
+          apiKey: apiKey.trim(),
         }),
       });
       
@@ -48,27 +49,30 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
       if (response.ok) {
         toast.success("API key added successfully!");
         
-        // Notifier le parent avec la nouvelle API key
-        if (onApiKeyAdded && data) {
-          // Adapter la réponse pour correspondre au format attendu
-          const newApiKey = {
-            id: data.id || Date.now().toString(),
-            name: projectName,
-            maskedKey: `sk-...${apiKey.slice(-4)}`,
-            isDefault: data.isDefault || false
-          };
-          onApiKeyAdded(newApiKey);
-        }
+        // Créer l'objet comme il serait retourné par l'API
+        const newApiKeyData = {
+          id: Date.now().toString(), // Temporaire, on va fetch la vraie liste après
+          name: projectName.trim(),
+          maskedKey: `sk-...${apiKey.slice(-4)}`,
+          isDefault: false
+        };
         
-        // Reset et fermer
+        // Reset du formulaire
         setApiKey("");
         setProjectName("");
+        setShowApiKey(false);
         onClose();
+        
+        // Notifier le parent pour refresh la liste
+        if (onApiKeyAdded) {
+          onApiKeyAdded(newApiKeyData);
+        }
       } else {
         toast.error(data.error || "Failed to add API key");
       }
     } catch (error) {
-      toast.error("An error occurred while adding the API key");
+      console.error('Error adding API key:', error);
+      toast.error("Network error. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -78,6 +82,7 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
     if (!saving) {
       setApiKey("");
       setProjectName("");
+      setShowApiKey(false);
       onClose();
     }
   };
@@ -91,10 +96,10 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-600 rounded-lg">
+              <div className="p-2 bg-emerald-600 rounded-lg">
                 <Key className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white">Add New Project API Key</h3>
+              <h3 className="text-xl font-bold text-white">Add New API Key</h3>
             </div>
             <button
               onClick={handleClose}
@@ -110,6 +115,22 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
           </p>
           
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Project Name */}
+            <div>
+              <label className="block text-sm font-medium mb-3 text-gray-300">
+                Project Name
+              </label>
+              <input
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                placeholder="e.g., My Main Project, Test Environment"
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-white placeholder-gray-500 transition-all"
+                disabled={saving}
+                autoFocus
+              />
+            </div>
+            
             {/* OpenAI API Key */}
             <div>
               <label className="block text-sm font-medium mb-3 text-gray-300">
@@ -120,8 +141,8 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
                   type={showApiKey ? "text" : "password"}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="w-full px-4 py-3 pr-12 bg-gray-800 border border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-white placeholder-gray-500 transition-all"
+                  placeholder="sk-proj-..."
+                  className="w-full px-4 py-3 pr-12 bg-gray-800 border border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-white placeholder-gray-500 transition-all font-mono"
                   disabled={saving}
                 />
                 <button
@@ -133,24 +154,19 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
                   {showApiKey ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Your API key is encrypted before being saved.
+              <p className="text-xs text-gray-500 mt-2 flex items-center gap-2">
+                <Globe size={12} />
+                Get your API key from{" "}
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1 font-medium"
+                >
+                  OpenAI Dashboard
+                  <ExternalLink size={12} />
+                </a>
               </p>
-            </div>
-            
-            {/* Project Name */}
-            <div>
-              <label className="block text-sm font-medium mb-3 text-gray-300">
-                Project Name
-              </label>
-              <input
-                type="text"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder="e.g., My Main Project, Test Environment"
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-white placeholder-gray-500 transition-all"
-                disabled={saving}
-              />
             </div>
             
             {/* Action Buttons */}
@@ -166,11 +182,11 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
               <button
                 type="submit"
                 disabled={!apiKey.trim() || !projectName.trim() || saving}
-                className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
               >
                 {saving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <RefreshCw className="w-4 h-4 animate-spin" />
                     Saving...
                   </>
                 ) : (
