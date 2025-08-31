@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { 
-  User, Lock, Shield, Trash2, Save, CheckCircle, AlertCircle, 
+import {
+  User, Lock, Shield, Trash2, Save, CheckCircle, AlertCircle,
   Camera, Upload, X, Edit, Eye, EyeOff, Mail, KeyRound
 } from "lucide-react"
 import { DeleteAccountModal } from "@/components/DeleteAccountModal"
@@ -120,11 +120,11 @@ export default function AccountSettingsPage() {
         if (fileInputRef.current) {
           fileInputRef.current.value = ''
         }
-        
+
         window.dispatchEvent(new CustomEvent('profileImageUpdated', {
           detail: { profileImage: data.profileImage }
         }))
-        
+
         toast.success("Profile image updated successfully!")
       } else {
         toast.error(data.error || "Failed to upload image")
@@ -149,11 +149,11 @@ export default function AccountSettingsPage() {
         if (fileInputRef.current) {
           fileInputRef.current.value = ''
         }
-        
+
         window.dispatchEvent(new CustomEvent('profileImageUpdated', {
           detail: { profileImage: null }
         }))
-        
+
         toast.success("Profile image removed successfully!")
       } else {
         toast.error("Failed to remove image")
@@ -201,6 +201,11 @@ export default function AccountSettingsPage() {
         setIsChangingName(false)
         setNewName("")
         setName(newName) // Update local state
+
+        setTimeout(() => {
+          window.location.reload()
+        }, 500) // Délai pour que l'utilisateur voit le toast
+
       } else {
         toast.error(data.error || "Something went wrong.")
       }
@@ -210,7 +215,6 @@ export default function AccountSettingsPage() {
       setSavingProfile(false)
     }
   }
-
   const handleEmailUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -250,6 +254,11 @@ export default function AccountSettingsPage() {
         setIsChangingEmail(false)
         setNewEmail("")
         setConfirmEmail("")
+
+        // Recharger pour voir le nouvel email
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
       } else {
         toast.error(data.error || "Something went wrong.")
       }
@@ -285,9 +294,9 @@ export default function AccountSettingsPage() {
       const res = await fetch("/api/account/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          currentPassword, 
-          password: newPassword 
+        body: JSON.stringify({
+          currentPassword,
+          password: newPassword
         }),
       })
 
@@ -351,28 +360,27 @@ export default function AccountSettingsPage() {
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
-          
+
           {/* Profile Header Card */}
           <div className="mb-8 bg-gradient-to-r from-gray-900/90 to-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-3xl p-8 shadow-2xl">
             <div className="flex flex-col md:flex-row items-center gap-6">
-              
+
               {/* Avatar Section */}
               <div className="relative group">
-                <div className={`w-32 h-32 rounded-full overflow-hidden flex items-center justify-center border-4 border-gray-600/30 shadow-2xl transition-all duration-300 group-hover:scale-105 ${
-                  previewImage || profileImage 
-                    ? 'bg-gray-800' 
-                    : 'bg-gradient-to-br from-blue-600 to-cyan-600'
-                }`}>
+                <div className={`w-32 h-32 rounded-full overflow-hidden flex items-center justify-center border-4 border-gray-600/30 shadow-2xl transition-all duration-300 group-hover:scale-105 ${previewImage || profileImage
+                  ? 'bg-gray-800'
+                  : 'bg-gradient-to-br from-blue-600 to-cyan-600'
+                  }`}>
                   {previewImage ? (
-                    <img 
-                      src={previewImage} 
-                      alt="Preview" 
+                    <img
+                      src={previewImage}
+                      alt="Preview"
                       className="w-full h-full object-cover"
                     />
                   ) : profileImage ? (
-                    <img 
-                      src={profileImage} 
-                      alt="Profile" 
+                    <img
+                      src={profileImage}
+                      alt="Profile"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -381,7 +389,7 @@ export default function AccountSettingsPage() {
                     </span>
                   )}
                 </div>
-                
+
                 {/* Edit overlay */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -390,7 +398,7 @@ export default function AccountSettingsPage() {
                 >
                   <Camera size={24} />
                 </button>
-                
+
                 {uploadingImage && (
                   <div className="absolute inset-0 bg-black/80 rounded-full flex items-center justify-center">
                     <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -404,7 +412,7 @@ export default function AccountSettingsPage() {
                   {session?.user?.name || name || "User"}
                 </h1>
                 <p className="text-gray-400 text-lg mb-4">{session?.user?.email}</p>
-                
+
                 {/* Photo Actions */}
                 <div className="flex gap-3 justify-center md:justify-start">
                   {previewImage ? (
@@ -439,7 +447,7 @@ export default function AccountSettingsPage() {
                 </div>
               </div>
             </div>
-            
+
             <input
               ref={fileInputRef}
               type="file"
@@ -451,7 +459,7 @@ export default function AccountSettingsPage() {
 
           {/* Settings Grid */}
           <div className="grid gap-8">
-            
+
             {/* Personal Information */}
             <div className="group">
               <div className="flex items-center gap-3 mb-6">
@@ -460,9 +468,9 @@ export default function AccountSettingsPage() {
                 </div>
                 <h2 className="text-2xl font-bold text-white">Personal Information</h2>
               </div>
-              
+
               <div className="grid md:grid-cols-2 gap-6">
-                
+
                 {/* Display Name */}
                 <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300">
                   {!isChangingName ? (
@@ -494,7 +502,7 @@ export default function AccountSettingsPage() {
                           placeholder="Enter new display name"
                         />
                       </div>
-                      
+
                       <div className="flex gap-3">
                         <button
                           type="submit"
@@ -508,7 +516,7 @@ export default function AccountSettingsPage() {
                           )}
                           Save
                         </button>
-                        
+
                         <button
                           type="button"
                           onClick={() => {
@@ -554,7 +562,7 @@ export default function AccountSettingsPage() {
                           className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 text-white rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                         />
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Email</label>
                         <input
@@ -564,7 +572,7 @@ export default function AccountSettingsPage() {
                           className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 text-white rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                         />
                       </div>
-                      
+
                       <div className="flex gap-3">
                         <button
                           type="submit"
@@ -578,7 +586,7 @@ export default function AccountSettingsPage() {
                           )}
                           Save
                         </button>
-                        
+
                         <button
                           type="button"
                           onClick={() => {
@@ -605,7 +613,7 @@ export default function AccountSettingsPage() {
                 </div>
                 <h2 className="text-2xl font-bold text-white">Security</h2>
               </div>
-              
+
               {/* Password */}
               <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300">
                 {!isChangingPassword ? (
@@ -646,7 +654,7 @@ export default function AccountSettingsPage() {
                         </button>
                       </div>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
                       <div className="relative">
@@ -665,7 +673,7 @@ export default function AccountSettingsPage() {
                         </button>
                       </div>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
                       <div className="relative">
@@ -702,7 +710,7 @@ export default function AccountSettingsPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="flex gap-3">
                       <button
                         type="submit"
@@ -716,7 +724,7 @@ export default function AccountSettingsPage() {
                         )}
                         Update Password
                       </button>
-                      
+
                       <button
                         type="button"
                         onClick={() => {
@@ -743,7 +751,7 @@ export default function AccountSettingsPage() {
                 </div>
                 <h2 className="text-2xl font-bold text-white">Danger Zone</h2>
               </div>
-              
+
               <div className="bg-gradient-to-r from-red-900/20 to-red-800/20 backdrop-blur-xl border border-red-500/30 rounded-2xl p-6 hover:border-red-500/50 transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
