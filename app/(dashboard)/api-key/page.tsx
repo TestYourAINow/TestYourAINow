@@ -233,16 +233,16 @@ export default function ApiKeyPage() {
                     <div
                       key={apiKey.id}
                       className={`p-5 rounded-xl border-2 transition-all duration-300 backdrop-blur-sm hover:transform hover:scale-105 ${apiKey.isDefault
-                          ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30 shadow-lg shadow-blue-500/10'
-                          : 'bg-gray-800/50 border-gray-700/50 hover:border-gray-600/50'
+                        ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30 shadow-lg shadow-blue-500/10'
+                        : 'bg-gray-800/50 border-gray-700/50 hover:border-gray-600/50'
                         }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-2">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${apiKey.isDefault
-                                ? 'bg-gradient-to-br from-blue-600 to-cyan-600 shadow-lg shadow-blue-500/20'
-                                : 'bg-gray-700/50'
+                              ? 'bg-gradient-to-br from-blue-600 to-cyan-600 shadow-lg shadow-blue-500/20'
+                              : 'bg-gray-700/50'
                               }`}>
                               <Key className={apiKey.isDefault ? "text-white" : "text-gray-400"} size={18} />
                             </div>
@@ -314,7 +314,8 @@ export default function ApiKeyPage() {
                   <h2 className="text-xl font-bold bg-gradient-to-r from-emerald-200 to-green-200 bg-clip-text text-transparent">Add New API Key</h2>
                 </div>
 
-                <div onSubmit={handleAddApiKey} className="space-y-5">
+                {/* FIXED: Changed from div to form */}
+                <form onSubmit={handleAddApiKey} className="space-y-5">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-3">
                       Project Name
@@ -389,10 +390,9 @@ export default function ApiKeyPage() {
                       Cancel
                     </button>
                   </div>
-                </div>
+                </form>
               </div>
             )}
-
             {/* Enhanced Messages */}
             {message && (
               <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-500/20 rounded-xl backdrop-blur-sm">
