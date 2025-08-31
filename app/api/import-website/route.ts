@@ -10,9 +10,9 @@ interface PageContent {
 export async function POST(req: NextRequest) {
   try {
     const { url } = await req.json();
-    
+
     console.log("Multi-page scraping from:", url);
-    
+
     if (!url || (!url.startsWith("http://") && !url.startsWith("https://"))) {
       return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
     }
@@ -27,17 +27,17 @@ export async function POST(req: NextRequest) {
     async function scrapePage(pageUrl: string): Promise<PageContent | null> {
       try {
         console.log("Scraping page:", pageUrl);
-        
+
         const controller = new AbortController();
         // Timeout généreux pour Vercel Pro
         const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-        const response = await fetch(pageUrl, { 
+        const response = await fetch(pageUrl, {
           headers,
           signal: controller.signal,
           redirect: 'follow'
         });
-        
+
         clearTimeout(timeoutId);
 
         if (!response.ok) return null;
@@ -49,9 +49,9 @@ export async function POST(req: NextRequest) {
         $('script, style, noscript, header, footer, nav, .cookie, .popup').remove();
 
         const title = $('title').text().trim() || $('h1').first().text().trim();
-        
+
         const textElements: string[] = [];
-        
+
         // Extraire le contenu principal
         $('h1, h2, h3, h4, h5, h6, p, li').each((_, element) => {
           const text = $(element).text().trim();
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
         });
 
         const content = textElements.join('\n').trim();
-        
+
         return {
           url: pageUrl,
           title,
@@ -80,29 +80,35 @@ export async function POST(req: NextRequest) {
     }
 
     const pages: PageContent[] = [mainPage];
-    
+
     // 2. Extraire les liens de navigation de la page principale
     const response = await fetch(url, { headers });
     const html = await response.text();
     const $ = cheerio.load(html);
-    
+
     const baseUrl = new URL(url);
     const domain = baseUrl.origin;
-    
+
     // Chercher les liens importants dans la navigation
     const importantLinks = new Set<string>();
-    
+
     // Navigation principale
     $('nav a, .nav a, .navbar a, .menu a, header a, .header a').each((_, element) => {
       const href = $(element).attr('href');
       const text = $(element).text().trim().toLowerCase();
-      
+
       // Filtrer les liens importants
       if (href && (
+        // Anglais
         text.includes('about') || text.includes('services') || text.includes('pricing') ||
         text.includes('contact') || text.includes('help') || text.includes('faq') ||
         text.includes('features') || text.includes('how') || text.includes('why') ||
-        text.includes('team') || text.includes('company') || text.includes('support')
+        text.includes('team') || text.includes('company') || text.includes('support') ||
+        // Français
+        text.includes('à-propos') || text.includes('apropos') || text.includes('tarifs') ||
+        text.includes('prix') || text.includes('aide') || text.includes('équipe') ||
+        text.includes('equipe') || text.includes('nous') || text.includes('entreprise') ||
+        text.includes('pourquoi') || text.includes('comment')
       )) {
         let fullUrl = href;
         if (href.startsWith('/')) {
@@ -110,23 +116,27 @@ export async function POST(req: NextRequest) {
         } else if (!href.startsWith('http')) {
           fullUrl = domain + '/' + href;
         }
-        
+
         // Vérifier que c'est le même domaine
         try {
           const linkUrl = new URL(fullUrl);
           if (linkUrl.origin === domain) {
             importantLinks.add(fullUrl);
           }
-        } catch {}
+        } catch { }
       }
     });
 
     // Aussi chercher des pages communes
     const commonPages = [
-      '/about', '/about-us', '/services', '/pricing', '/contact', 
-      '/faq', '/help', '/features', '/how-it-works', '/support'
+      // Anglais
+      '/about', '/about-us', '/services', '/pricing', '/contact',
+      '/faq', '/help', '/features', '/how-it-works', '/support',
+      // Français
+      '/a-propos', '/apropos', '/services', '/tarifs', '/prix', '/contact',
+      '/aide', '/faq', '/fonctionnalites', '/equipe', '/entreprise', '/nous'
     ];
-    
+
     for (const page of commonPages) {
       importantLinks.add(domain + page);
     }
@@ -136,14 +146,14 @@ export async function POST(req: NextRequest) {
     // 3. Optimisé pour Vercel Pro (60s timeout)
     const maxPages = 10; // 10 pages = ~40-50 secondes sur Vercel Pro
     const linksToScrape = Array.from(importantLinks).slice(0, maxPages);
-    
+
     for (const link of linksToScrape) {
       if (link !== url) { // Éviter de re-scraper la page principale
         const pageContent = await scrapePage(link);
         if (pageContent && pageContent.content.length > 100) {
           pages.push(pageContent);
         }
-        
+
         // Pause optimale pour Vercel Pro
         await new Promise(resolve => setTimeout(resolve, 400));
       }
@@ -153,10 +163,10 @@ export async function POST(req: NextRequest) {
 
     // 4. Compiler tout le contenu
     let finalContent = '';
-    
+
     // Titre principal du site
     finalContent += `# ${pages[0].title}\n\n`;
-    
+
     // Meta description si disponible
     const $main = cheerio.load(html);
     const metaDesc = $main('meta[name="description"]').attr('content');
@@ -182,8 +192,8 @@ export async function POST(req: NextRequest) {
     console.log("Final compiled content length:", finalContent.length);
 
     if (finalContent.length < 200) {
-      return NextResponse.json({ 
-        error: "Could not extract enough content from this website" 
+      return NextResponse.json({
+        error: "Could not extract enough content from this website"
       }, { status: 400 });
     }
 
@@ -192,7 +202,7 @@ export async function POST(req: NextRequest) {
       finalContent = finalContent.slice(0, 15000) + '\n\n[Content truncated due to length...]';
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       content: finalContent,
       metadata: {
         pagesScraped: pages.length,
@@ -203,9 +213,9 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error("Multi-page scraping error:", error);
-    
-    return NextResponse.json({ 
-      error: "Failed to scrape website content" 
+
+    return NextResponse.json({
+      error: "Failed to scrape website content"
     }, { status: 500 });
   }
 }

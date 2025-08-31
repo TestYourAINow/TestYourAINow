@@ -292,10 +292,10 @@ const StepIndicator = ({ currentStep }: { currentStep: Step }) => {
               <div className="flex items-center">
                 {/* Circle avec gradient et effets premium */}
                 <div className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white transform scale-110'
-                    : isActive
-                      ? `bg-gradient-to-r ${step.color} text-white transform scale-110 shadow-lg shadow-blue-500/30`
-                      : 'bg-gray-800/50 text-gray-400 border border-gray-700/50'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white transform scale-110'
+                  : isActive
+                    ? `bg-gradient-to-r ${step.color} text-white transform scale-110 shadow-lg shadow-blue-500/30`
+                    : 'bg-gray-800/50 text-gray-400 border border-gray-700/50'
                   }`}>
                   {/* Glow effect pour step actif */}
                   {isActive && (
@@ -322,8 +322,8 @@ const StepIndicator = ({ currentStep }: { currentStep: Step }) => {
               {isConnected && (
                 <div className="flex-1 mx-4 h-0.5 transition-all duration-500">
                   <div className={`h-full rounded-full transition-all duration-500 ${isCompleted
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-500/20'
-                      : 'bg-gray-700/50'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-500/20'
+                    : 'bg-gray-700/50'
                     }`} />
                 </div>
               )}
@@ -343,7 +343,7 @@ export default function CreateAgentWizard() {
   const [formData, setFormData] = useState<FormData>(defaultFormData);
   const [loading, setLoading] = useState(false);
   const [showAddApiModal, setShowAddApiModal] = useState(false);
-  
+
   // ===== ÉTAPE 2: METTRE À JOUR LE TYPE DES APIKEYS =====
   const [apiKeys, setApiKeys] = useState<ApiKeyOption[]>([]);
 
@@ -581,7 +581,7 @@ export default function CreateAgentWizard() {
                 <Bot className="w-6 h-6 text-blue-400" />
                 <span className="text-blue-400 font-semibold">AI Agent Creation</span>
               </div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-4">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-4 pb-1">
                 Create your AI Agent
               </h1>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto">
@@ -604,7 +604,7 @@ export default function CreateAgentWizard() {
                       <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/30">
                         <Bot className="w-10 h-10 text-white" />
                       </div>
-                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent pb-1">
                         Choose Your AI Type
                       </h2>
                       <p className="text-gray-400 text-lg">Start by selecting the type of AI assistant you want to create</p>
@@ -651,8 +651,8 @@ export default function CreateAgentWizard() {
                             key={template.key}
                             onClick={() => handleTemplateSelect(template.key as any)}
                             className={`group p-6 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden ${isSelected
-                                ? `bg-gradient-to-br ${template.bgGradient} border-transparent shadow-2xl transform scale-105`
-                                : "bg-gray-800/50 border-gray-700/50 hover:border-gray-600/50 hover:bg-gray-800/70"
+                              ? `bg-gradient-to-br ${template.bgGradient} border-transparent shadow-2xl transform scale-105`
+                              : "bg-gray-800/50 border-gray-700/50 hover:border-gray-600/50 hover:bg-gray-800/70"
                               }`}
                           >
                             {/* Background Gradient for selected */}
@@ -662,8 +662,8 @@ export default function CreateAgentWizard() {
 
                             <div className="relative z-10">
                               <div className={`w-16 h-16 rounded-xl mb-4 flex items-center justify-center transition-all duration-300 ${isSelected
-                                  ? `bg-gradient-to-r ${template.gradient} shadow-lg`
-                                  : `bg-gradient-to-r ${template.gradient} opacity-70 group-hover:opacity-100`
+                                ? `bg-gradient-to-r ${template.gradient} shadow-lg`
+                                : `bg-gradient-to-r ${template.gradient} opacity-70 group-hover:opacity-100`
                                 }`}>
                                 <Icon size={28} className="text-white" />
                               </div>
@@ -730,7 +730,7 @@ export default function CreateAgentWizard() {
                       <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/30">
                         <Settings className="w-10 h-10 text-white" />
                       </div>
-                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent pb-1">
                         Model Settings
                       </h2>
                       <p className="text-gray-400 text-lg">Configure your AI model and parameters</p>
@@ -820,7 +820,7 @@ export default function CreateAgentWizard() {
                               contextWindow: "16K",
                             },
                           ];
-                          
+
                           const selectedModel = modelOptions.find(m => m.id === formData.openaiModel);
                           return selectedModel ? (
                             <div className="mt-6 p-4 bg-gray-900/50 rounded-xl">
@@ -979,7 +979,7 @@ export default function CreateAgentWizard() {
                           contextWindow: "16K",
                         },
                       ];
-                      
+
                       const selectedModel = modelOptions.find(m => m.id === formData.openaiModel);
                       return selectedModel ? (
                         <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
@@ -1021,7 +1021,7 @@ export default function CreateAgentWizard() {
                       <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/30">
                         <User className="w-10 h-10 text-white" />
                       </div>
-                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent pb-1">
                         Personality & Knowledge
                       </h2>
                       <p className="text-gray-400 text-lg">Define how your AI should behave and what it knows</p>
@@ -1187,7 +1187,7 @@ export default function CreateAgentWizard() {
                       <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-orange-500/30">
                         <CheckCircle className="w-10 h-10 text-white" />
                       </div>
-                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                      <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent pb-1">
                         Final Review
                       </h2>
                       <p className="text-gray-400 text-lg">Review your AI configuration and generate your assistant</p>
@@ -1215,7 +1215,7 @@ export default function CreateAgentWizard() {
                           <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
                             <span className="text-gray-400 text-sm">Template</span>
                             <span className={`px-3 py-1 text-xs rounded-full text-white ${formData.template === 'sales' ? 'bg-orange-600' :
-                                formData.template === 'support' ? 'bg-blue-600' : 'bg-purple-600'
+                              formData.template === 'support' ? 'bg-blue-600' : 'bg-purple-600'
                               }`}>
                               {formData.template === 'sales' ? 'Sales AI' :
                                 formData.template === 'support' ? 'Support AI' : 'Custom'}
@@ -1323,10 +1323,10 @@ export default function CreateAgentWizard() {
                         <div
                           key={step}
                           className={`w-2 h-2 rounded-full transition-all ${step === currentStep
-                              ? 'bg-blue-400 w-6'
-                              : step < currentStep
-                                ? 'bg-green-400'
-                                : 'bg-gray-600'
+                            ? 'bg-blue-400 w-6'
+                            : step < currentStep
+                              ? 'bg-green-400'
+                              : 'bg-gray-600'
                             }`}
                         />
                       ))}

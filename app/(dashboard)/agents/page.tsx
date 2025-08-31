@@ -741,12 +741,12 @@ export default function AgentsPage() {
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-2 border-blue-500/40 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/20">
                   <Plus size={28} className="text-blue-400 group-hover:text-cyan-300 transition-colors" />
                 </div>
-                <p className="text-xl font-bold text-white mb-2 group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-cyan-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
-                  Create Agent
-                </p>
-                <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-                  Start building your AI
-                </p>
+    <p className="text-xl font-bold text-white mb-2 group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-cyan-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300 pb-1">
+  Create Agent
+</p>
+<p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors pb-1">
+  Start building your AI
+</p>
               </Link>
 
               {/* Folders - INCHANGÉ */}
@@ -852,42 +852,6 @@ export default function AgentsPage() {
                   </Link>
                 </div>
               ))}
-            </div>
-          </FadeInSection>
-        )}
-
-        {/* Enhanced Empty State - INCHANGÉ */}
-        {!loading && agents.length === 0 && folders.length === 0 && (
-          <FadeInSection>
-            <div className="text-center py-20">
-              <div className="relative inline-block mb-8">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full blur-3xl"></div>
-                <div className="relative w-24 h-24 rounded-full bg-gradient-to-r from-gray-800 to-gray-700 border-2 border-gray-600 flex items-center justify-center shadow-2xl">
-                  <Bot className="w-12 h-12 text-gray-400" />
-                </div>
-              </div>
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-4">
-                Ready to organize your AI workspace?
-              </h3>
-              <p className="text-gray-400 mb-8 max-w-md mx-auto text-lg leading-relaxed">
-                Create folders to organize your agents and start building intelligent AI assistants.
-              </p>
-              <div className="flex gap-4 justify-center flex-wrap">
-                <button
-                  onClick={() => setShowCreateFolderModal(true)}
-                  className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
-                >
-                  <FolderPlus size={20} />
-                  Create Folder
-                </button>
-                <Link
-                  href="/agents/new"
-                  className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
-                >
-                  <Plus size={20} />
-                  Create Agent
-                </Link>
-              </div>
             </div>
           </FadeInSection>
         )}
