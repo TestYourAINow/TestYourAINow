@@ -520,13 +520,13 @@ export default function Home() {
                 {/* Features List - Responsive */}
                 <ul className="space-y-3 sm:space-y-4 mb-8 sm:mb-10">
                   {[
-                    "Everything in Starter",
-                    "5 AI agents",
-                    "API access (up to 3 per agent)",
-                    "Custom branding",
-                    "Watermark free",
+                    "Unlimited AI Builds",
+                    "Advanced Prompt Testings",
+                    "Demo Sharing",
+                    "Custom Branding",
                     "AI Agent Templates",
-                    "Analytics & Insights",
+                    "Widget Embeds",
+                    "Multi-Platform Deployment",
                   ].map((feature, i) => (
                     <li key={i} className="flex items-center gap-3 sm:gap-4">
                       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
