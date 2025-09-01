@@ -169,6 +169,7 @@ export default function WebhookIntegrationModal({
           webhookName: name,
           description,
           fields: cleanedFields,
+          agentId,
         }),
       });
 
@@ -247,7 +248,7 @@ export default function WebhookIntegrationModal({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       {/* Modal Container */}
       <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto custom-scrollbar">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
           <div className="flex items-center gap-4">

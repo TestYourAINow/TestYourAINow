@@ -182,7 +182,7 @@ export default function GoogleCalendarIntegrationModal({
       const promptGenRes = await fetch("/api/generate-instructions-google-calendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description }),
+        body: JSON.stringify({ name, description, agentId }),
       });
 
       if (!promptGenRes.ok) {

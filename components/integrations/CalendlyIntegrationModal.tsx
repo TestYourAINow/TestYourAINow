@@ -151,7 +151,7 @@ export default function CalendlyIntegrationModal({
       const promptGenRes = await fetch("/api/generate-instructions-calendly", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description }),
+        body: JSON.stringify({ name, description, agentId }),
       });
 
       if (!promptGenRes.ok) {

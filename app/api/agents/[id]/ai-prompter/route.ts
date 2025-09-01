@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
+import { Agent } from "@/models/Agent";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { createUserOpenAI } from "@/lib/openai";
+import { createAgentOpenAI } from "@/lib/openai";
 import { diffWords } from "diff";
 
 // 🆕 FONCTION HELPER POUR LA DATE LOCALISÉE
@@ -55,14 +56,24 @@ export async function POST(
   context: any
 ) {
   try {
+    const params = await context.params;
+    const { id } = params; // agentId depuis l'URL
+
     await connectToDatabase();
 
     const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
+    if (!session || !session.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { openai, error } = await createUserOpenAI();
+    // 🔧 CHANGEMENT PRINCIPAL - Récupérer l'agent d'abord
+    const agent = await Agent.findOne({ _id: id, userId: session.user.id });
+    if (!agent) {
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+    }
+
+    // 🔧 CHANGEMENT PRINCIPAL - Utiliser la clé spécifique de l'agent
+    const { openai, error } = await createAgentOpenAI(agent);
     
     if (!openai) {
       return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
@@ -146,9 +157,9 @@ Format de sortie attendu:
   } catch (error: any) {
     console.error("AI prompter error:", error);
     
-    if (error.status === 401) {
+    if (error.status === 401 || error.code === 'invalid_api_key') {
       return NextResponse.json(
-        { error: "Invalid OpenAI API key. Please check your API key in settings." },
+        { error: "Invalid OpenAI API key. Please check your agent's selected API key." },
         { status: 400 }
       );
     }

@@ -1,19 +1,47 @@
 import { NextResponse } from "next/server";
-import { createUserOpenAI } from "@/lib/openai";
+import { createAgentOpenAI } from "@/lib/openai";
+import { connectToDatabase } from "@/lib/db";
+import { Agent } from "@/models/Agent";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 export async function POST(req: Request) {
   try {
-    const { openai, error } = await createUserOpenAI();
-    
-    if (!openai) {
-      return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
-    }
-
     const body = await req.json();
-    const { name, description } = body;
+    const { name, description, agentId } = body; // 🔧 AJOUT agentId
 
     if (!name || !description) {
       return NextResponse.json({ error: "Missing fields." }, { status: 400 });
+    }
+
+    // 🔧 NOUVEAU - Si agentId fourni, utiliser sa clé spécifique
+    let openai;
+    if (agentId) {
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      await connectToDatabase();
+      const agent = await Agent.findOne({ _id: agentId, userId: session.user.id });
+      
+      if (!agent) {
+        return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+      }
+
+      const result = await createAgentOpenAI(agent);
+      if (!result.openai) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      openai = result.openai;
+    } else {
+      // 🔧 FALLBACK - Si pas d'agentId, utiliser clé par défaut
+      const { createUserOpenAI } = await import("@/lib/openai");
+      const result = await createUserOpenAI();
+      if (!result.openai) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      openai = result.openai;
     }
 
     const safeName = name.trim();
@@ -89,9 +117,9 @@ Quand tu détectes une demande de rendez-vous :
   } catch (error: any) {
     console.error("[GENERATE_CALENDLY_INSTRUCTIONS]", error);
     
-    if (error.status === 401) {
+    if (error.status === 401 || error.code === 'invalid_api_key') {
       return NextResponse.json(
-        { error: "Invalid OpenAI API key. Please check your API key in settings." },
+        { error: "Invalid OpenAI API key. Please check your agent's selected API key." },
         { status: 400 }
       );
     }
