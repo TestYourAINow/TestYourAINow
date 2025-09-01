@@ -1,20 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createUserOpenAI } from "@/lib/openai";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import { connectToDatabase } from "@/lib/db";
+import User from "@/models/User";
+import OpenAI from "openai";
 
 export async function POST(req: NextRequest) {
   try {
-    const { openai, error } = await createUserOpenAI();
-    
-    if (!openai) {
-      return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
-    }
-
-    const { content } = await req.json();
+    const { content, apiKey } = await req.json();
 
     if (!content || content.trim().length < 10) {
       return NextResponse.json({
         faq: "⚠️ Please provide more detailed content to generate an FAQ.",
       });
+    }
+
+    let openai: OpenAI;
+
+    // Si on reçoit un apiKey spécifique (ID d'une clé), l'utiliser
+    if (apiKey && apiKey !== "user_api_key") {
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      await connectToDatabase();
+      const user = await User.findById(session.user.id);
+      
+      if (!user) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      // Trouver l'API key spécifique par son ID
+      const selectedApiKey = user.apiKeys?.find((key: any) => key._id.toString() === apiKey);
+      
+      if (!selectedApiKey) {
+        return NextResponse.json({ 
+          error: "Selected API key not found. Please check your API key selection." 
+        }, { status: 400 });
+      }
+
+      // Créer l'instance OpenAI avec la clé spécifique
+      openai = new OpenAI({
+        apiKey: selectedApiKey.key,
+      });
+    } else {
+      // Fallback sur la clé par défaut
+      const { openai: defaultOpenai, error } = await createUserOpenAI();
+      if (!defaultOpenai) {
+        return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
+      }
+      openai = defaultOpenai;
     }
 
     const userPrompt = `
@@ -44,9 +81,9 @@ ${content}
   } catch (error: any) {
     console.error("FAQ generation error:", error);
     
-    if (error.status === 401) {
+    if (error.status === 401 || error.code === 'invalid_api_key') {
       return NextResponse.json(
-        { error: "Invalid OpenAI API key. Please check your API key in settings." },
+        { error: "Invalid OpenAI API key. Please check your selected API key." },
         { status: 400 }
       );
     }
