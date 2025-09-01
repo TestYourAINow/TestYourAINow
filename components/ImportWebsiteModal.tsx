@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Dialog } from '@headlessui/react';
-import { Upload, AlertCircle, CheckCircle, Globe, FileText, X, Link as LinkIcon } from "lucide-react";
+import { Upload, AlertCircle, CheckCircle, Globe, X, Link as LinkIcon } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -197,27 +197,6 @@ export default function ImportWebsiteModal({ isOpen, onClose, onImport }: Props)
                 </div>
               </div>
             )}
-
-            {/* Enhanced Tips Section */}
-            <div className="bg-gray-800/60 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 space-y-4">
-              <div className="flex items-center gap-3">
-                <FileText className="text-orange-400" size={20} />
-                <h3 className="text-lg font-bold text-orange-200">Tips for Better Results</h3>
-              </div>
-              
-              <div className="space-y-3">
-                {[
-                  "Use the main page or about page of the website",
-                  "Avoid pages with mostly images or videos", 
-                  "Some websites may block automated access"
-                ].map((tip, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <span className="text-sm text-gray-300">{tip}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Enhanced Action Buttons */}
             <div className="flex gap-3 pt-6 border-t border-gray-700/50">

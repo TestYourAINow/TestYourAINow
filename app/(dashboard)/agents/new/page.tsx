@@ -435,9 +435,12 @@ export default function CreateAgentWizard() {
     <>
       <Toaster
         position="top-center"
+        containerStyle={{
+          top: '80px'
+        }}
         toastOptions={{
           style: {
-            zIndex: 10000,
+            zIndex: 9999,
             background: 'rgba(17, 24, 39, 0.95)',
             backdropFilter: 'blur(16px)',
             border: '1px solid rgba(75, 85, 99, 0.5)',
