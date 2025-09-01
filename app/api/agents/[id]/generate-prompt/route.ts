@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { createUserOpenAI } from "@/lib/openai";
+import { createUserOpenAI, createAgentOpenAI } from "@/lib/openai";
 
 export async function POST(
   req: NextRequest,
@@ -17,16 +17,17 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { openai, error } = await createUserOpenAI();
-    
-    if (!openai) {
-      return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
-    }
-
     const { id } = params;
 
     const agent = await Agent.findOne({ _id: id, userId: session.user.id });
     if (!agent) return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+
+    // 🔧 CHANGEMENT PRINCIPAL - Utiliser la clé spécifique de l'agent
+    const { openai, error } = await createAgentOpenAI(agent);
+    
+    if (!openai) {
+      return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
+    }
 
     const {
       openaiModel = "gpt-4o",
@@ -158,9 +159,9 @@ ${adjustedCompanyInfo}
   } catch (error: any) {
     console.error("Prompt generation error:", error);
     
-    if (error.status === 401) {
+    if (error.status === 401 || error.code === 'invalid_api_key') {
       return NextResponse.json(
-        { error: "Invalid OpenAI API key. Please check your API key in settings." },
+        { error: "Invalid OpenAI API key. Please check your selected API key." },
         { status: 400 }
       );
     }
