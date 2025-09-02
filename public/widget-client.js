@@ -220,27 +220,20 @@ showButton: function() {
   const shadowMargin = 15;
   const hoverMargin = 8;
   
-  // 🎯 CALCUL POPUP INTELLIGENT
-  // Estimation basée sur 80 caractères max
-  const popupMinWidth = 120;
-  const popupMaxWidth = 250;
-  const popupHeight = 60; // ~2 lignes pour 80 caractères
+  // 🎯 CALCUL POUR 55 CARACTÈRES + min-width: 55px
+  const popupMinWidth = 55;
+  const popupMaxWidth = 200; // Comme dans ton CSS
+  const popupHeight = 55; // Estimation pour 55 chars sur ~2 lignes
   const popupMarginTop = popupHeight + 32; // popup + margin
-  const popupMarginLeft = Math.max(60, popupMaxWidth - buttonSize); // Assure que le popup ne dépasse pas
+  const popupMarginLeft = Math.max(60, popupMaxWidth - buttonSize);
   
   // 🎯 DIMENSIONS IFRAME OPTIMISÉES
   const iframeWidth = Math.max(
     buttonSize + (shadowMargin * 2) + hoverMargin, // Minimum pour le bouton
-    popupMaxWidth + 20 // Maximum pour le popup + marges
+    popupMaxWidth + 24 // Maximum pour le popup + marges
   );
   
   const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
-  
-  console.log('Dimensions iframe calculées:', { 
-    width: iframeWidth, 
-    height: iframeHeight,
-    isMobile: this.isMobile 
-  });
   
   if (this.isMobile) {
     this.iframe.style.cssText = `
