@@ -219,15 +219,16 @@ export default function DemoAgentPage() {
 
   // Popup handling
   useEffect(() => {
-    if (config.showPopup && !isOpen) {
-      const timer = setTimeout(() => {
-        setShowPopupBubble(true);
-      }, config.popupDelay * 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowPopupBubble(false);
-    }
-  }, [config.showPopup, config.popupDelay, isOpen]);
+  if (!config.agentId || !config.showPopup || isOpen) return;
+
+  setShowPopupBubble(false); // reset à chaque changement d'agent
+  const timer = setTimeout(() => {
+    setShowPopupBubble(true);
+  }, config.popupDelay * 1000);
+
+  return () => clearTimeout(timer);
+}, [config.agentId, config.popupDelay, config.showPopup, isOpen]);
+
 
   // Color picker handling
   useEffect(() => {
@@ -881,7 +882,7 @@ export default function DemoAgentPage() {
                 <button
                   onClick={() => setShowCreateModal(true)}
                   disabled={!config.agentId}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 text-white lg:py-4 py-3.5 lg:px-6 px-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center justify-center lg:gap-3 gap-2 relative overflow-hidden group lg:text-base text-sm"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 disabled:from-gray-700 disabled:to-gray-700 text-white lg:py-4 py-3.5 lg:px-6 px-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center justify-center lg:gap-3 gap-2 relative overflow-hidden group lg:text-base text-sm"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                   <CheckCircle className="lg:w-5 lg:h-5 w-4 h-4 relative z-10" />
