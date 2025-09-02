@@ -90,12 +90,12 @@ const integrationOptions = [
 ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-2 md:p-4 pt-20 md:pt-4">
       {/* Modal Container */}
-      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-lg mx-auto">
-        
+<div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl md:rounded-2xl shadow-2xl w-full max-w-2xl mx-auto max-h-[85vh] md:max-h-[70vh] overflow-hidden">
+  <div className="overflow-y-auto max-h-[85vh] md:max-h-[70vh] custom-scrollbar">        
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+       <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-700/50">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-2 border-blue-500/40 flex items-center justify-center shadow-lg backdrop-blur-sm">
               <Plus className="text-blue-400" size={24} />
@@ -191,6 +191,7 @@ const integrationOptions = [
           </div>
         </div>
       </div>
-    </div>
+     </div>
+</div>
   );
 }

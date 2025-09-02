@@ -219,12 +219,13 @@ export default function CalendlyIntegrationModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+<div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-2 md:p-4 pt-20 md:pt-4">
       {/* Modal Container */}
-      <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto custom-scrollbar">
-        
+<div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl md:rounded-2xl shadow-2xl w-full max-w-2xl mx-auto max-h-[85vh] md:max-h-[70vh] overflow-hidden">
+  <div className="overflow-y-auto max-h-[85vh] md:max-h-[70vh] custom-scrollbar">        
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-700/50">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border-2 border-emerald-500/40 flex items-center justify-center shadow-lg backdrop-blur-sm">
               <Calendar className="text-emerald-400" size={24} />
@@ -244,7 +245,7 @@ export default function CalendlyIntegrationModal({
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 md:p-6 space-y-4 md:space-y-6">
           {/* Basic Information Section */}
           <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-center gap-3 mb-4">
@@ -352,11 +353,11 @@ export default function CalendlyIntegrationModal({
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-6 border-t border-gray-700/50">
+          <div className="flex flex-col sm:flex-row gap-3 p-4 md:p-6 pt-4 border-t border-gray-700/50">
             <button
               onClick={handleTestApiKey}
               disabled={isTestingKey}
-              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-600 disabled:opacity-75 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105 relative overflow-hidden group"
+              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-600 disabled:opacity-75 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 relative overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
               <span className="relative z-10 flex items-center justify-center gap-2">
@@ -377,7 +378,7 @@ export default function CalendlyIntegrationModal({
             <button
               onClick={handleAddInstructions}
               disabled={!testPassed || !hasBeenSaved || isAddingInstructions}
-              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 transform hover:scale-105 relative overflow-hidden group"
+              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 relative overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
               <span className="relative z-10 flex items-center justify-center gap-2">
@@ -398,7 +399,7 @@ export default function CalendlyIntegrationModal({
             <button
               onClick={handleSave}
               disabled={!testPassed || isSaving}
-              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden group"
+              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 relative overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
               <span className="relative z-10 flex items-center justify-center gap-2">
@@ -418,6 +419,7 @@ export default function CalendlyIntegrationModal({
           </div>
         </div>
       </div>
-    </div>
+  </div>  
+</div>  
   );
 }
