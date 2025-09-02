@@ -251,10 +251,10 @@ export default function InfoDemoModal({ demoId, isOpen, onClose }: Props) {
                   </button>
                   <button
                     onClick={handleOpenDemo}
-                    className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl  relative overflow-hidden group"
+                    className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl  relative overflow-hidden transform hover:scale-105 group"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                    <div className="relative z-10 flex items-center justify-center gap-2">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 "></div>
+                    <div className="relative z-10 flex items-center justify-center gap-2 ">
                       <ExternalLink size={16} />
                       Open Demo
                     </div>
