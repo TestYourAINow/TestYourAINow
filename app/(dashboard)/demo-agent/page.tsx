@@ -413,10 +413,14 @@ export default function DemoAgentPage() {
               <p className="text-gray-400 max-w-md leading-relaxed">
                 Choose an AI agent from the configuration panel to see your demo come to life with real-time interactions
               </p>
-              <div className="mt-8 flex items-center gap-2 text-blue-400">
+              {/* Bouton mobile pour basculer vers les settings */}
+              <button
+                onClick={() => setMobileView('config')}
+                className="mt-8 lg:hidden flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 hover:bg-blue-500/20 px-4 py-3 rounded-xl border border-blue-500/30 hover:border-blue-400/50 backdrop-blur-sm"
+              >
                 <span className="text-2xl">👉</span>
                 <span className="font-medium">Configure your demo settings</span>
-              </div>
+              </button>
             </div>
           ) : (
             <>
@@ -462,7 +466,7 @@ export default function DemoAgentPage() {
         </div>
 
         {/* COLONNE DROITE - Configuration Panel - Responsive avec hauteur fixe */}
-        <div className={`lg:w-96 w-full bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white flex flex-col lg:h-full h-full ${mobileView === 'config' ? 'block' : 'hidden lg:block'
+        <div className={`lg:w-96 w-full bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white lg:flex lg:flex-col lg:h-full ${mobileView === 'config' ? 'flex flex-col h-full' : 'hidden lg:flex'
           }`}>
 
           {/* Header Configuration Panel - Mobile-friendly */}
@@ -478,7 +482,7 @@ export default function DemoAgentPage() {
           {/* Configuration Sections - Mobile-optimized */}
           <div className="flex-1 overflow-y-auto lg:p-6 p-3 lg:space-y-4 space-y-3 custom-scrollbar">
 
-            {/* General Configuration */}
+            {/* General Configuration - AVEC CHAT TITLE AJOUTÉ */}
             <CollapsibleSection
               title="General Configuration"
               icon={<Settings className="text-blue-400" size={20} />}
@@ -494,6 +498,20 @@ export default function DemoAgentPage() {
                     value={config.name}
                     onChange={(e) => updateConfig('name', e.target.value)}
                     placeholder="Demo name"
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
+                  />
+                </div>
+
+                {/* NOUVEAU: Chat Title ajouté ici */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
+                    Chat Title
+                  </label>
+                  <input
+                    type="text"
+                    value={config.chatTitle}
+                    onChange={(e) => updateConfig('chatTitle', e.target.value)}
+                    placeholder="Chat title"
                     className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                   />
                 </div>
@@ -518,14 +536,82 @@ export default function DemoAgentPage() {
               </div>
             </CollapsibleSection>
 
-            {/* Appearance Section - Mobile optimized */}
+            {/* Appearance Section - RÉORGANISÉE : Primary Color, Theme, Bot Avatar */}
             <CollapsibleSection
               title="Appearance"
               icon={<Palette className="text-blue-400" size={20} />}
               defaultOpen={false}
             >
               <div className="lg:space-y-6 space-y-4">
-                {/* Bot Avatar - Mobile optimized */}
+                {/* PRIMARY COLOR EN PREMIER */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
+                    Primary Color
+                  </label>
+                  <div className="grid lg:grid-cols-4 grid-cols-4 lg:gap-3 gap-2 lg:mb-4 mb-3">
+                    {colorPresets.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => updateConfig('primaryColor', color)}
+                        className={`w-full lg:h-12 h-10 rounded-xl border-2 transition-all hover:scale-105 relative ${config.primaryColor === color
+                          ? 'border-white ring-2 ring-blue-500 shadow-xl'
+                          : 'border-gray-600/50 hover:border-gray-500'
+                          }`}
+                        style={{ backgroundColor: color }}
+                      >
+                        {config.primaryColor === color && (
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center lg:gap-3 gap-2">
+                    <input
+                      type="color"
+                      value={config.primaryColor}
+                      onChange={(e) => updateConfig('primaryColor', e.target.value)}
+                      className="lg:w-12 lg:h-10 w-10 h-9 border border-gray-700/50 rounded-xl cursor-pointer bg-gray-900/80 backdrop-blur-sm"
+                    />
+                    <input
+                      type="text"
+                      value={config.primaryColor}
+                      onChange={(e) => updateConfig('primaryColor', e.target.value)}
+                      className="flex-1 lg:px-4 lg:py-3 px-3 py-2.5 lg:text-sm text-xs bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-pink-500/60 focus:ring-2 focus:ring-pink-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-mono"
+                      placeholder="#3B82F6"
+                    />
+                  </div>
+                </div>
+
+                {/* THEME EN DEUXIÈME */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
+                    Theme
+                  </label>
+                  <div className="flex items-center lg:space-x-3 space-x-2">
+                    <button
+                      onClick={() => updateConfig('theme', 'light')}
+                      className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${config.theme === 'light'
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
+                        : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
+                        }`}
+                    >
+                      <Sun className="lg:w-4 lg:h-4 w-3.5 h-3.5" />
+                      Light
+                    </button>
+                    <button
+                      onClick={() => updateConfig('theme', 'dark')}
+                      className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${config.theme === 'dark'
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
+                        : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
+                        }`}
+                    >
+                      <Moon className="lg:w-4 lg:h-4 w-3.5 h-3.5" />
+                      Dark
+                    </button>
+                  </div>
+                </div>
+
+                {/* BOT AVATAR EN DERNIER */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
                     Bot Avatar
@@ -615,94 +701,16 @@ export default function DemoAgentPage() {
                     </div>
                   )}
                 </div>
-
-                {/* Theme - Mobile optimized */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
-                    Theme
-                  </label>
-                  <div className="flex items-center lg:space-x-3 space-x-2">
-                    <button
-                      onClick={() => updateConfig('theme', 'light')}
-                      className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${config.theme === 'light'
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
-                        : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
-                        }`}
-                    >
-                      <Sun className="lg:w-4 lg:h-4 w-3.5 h-3.5" />
-                      Light
-                    </button>
-                    <button
-                      onClick={() => updateConfig('theme', 'dark')}
-                      className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${config.theme === 'dark'
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
-                        : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
-                        }`}
-                    >
-                      <Moon className="lg:w-4 lg:h-4 w-3.5 h-3.5" />
-                      Dark
-                    </button>
-                  </div>
-                </div>
-
-                {/* Primary Color - Mobile grid optimized */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
-                    Primary Color
-                  </label>
-                  <div className="grid lg:grid-cols-4 grid-cols-4 lg:gap-3 gap-2 lg:mb-4 mb-3">
-                    {colorPresets.map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => updateConfig('primaryColor', color)}
-                        className={`w-full lg:h-12 h-10 rounded-xl border-2 transition-all hover:scale-105 relative ${config.primaryColor === color
-                          ? 'border-white ring-2 ring-blue-500 shadow-xl'
-                          : 'border-gray-600/50 hover:border-gray-500'
-                          }`}
-                        style={{ backgroundColor: color }}
-                      >
-                        {config.primaryColor === color && (
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex items-center lg:gap-3 gap-2">
-                    <input
-                      type="color"
-                      value={config.primaryColor}
-                      onChange={(e) => updateConfig('primaryColor', e.target.value)}
-                      className="lg:w-12 lg:h-10 w-10 h-9 border border-gray-700/50 rounded-xl cursor-pointer bg-gray-900/80 backdrop-blur-sm"
-                    />
-                    <input
-                      type="text"
-                      value={config.primaryColor}
-                      onChange={(e) => updateConfig('primaryColor', e.target.value)}
-                      className="flex-1 lg:px-4 lg:py-3 px-3 py-2.5 lg:text-sm text-xs bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-pink-500/60 focus:ring-2 focus:ring-pink-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-mono"
-                      placeholder="#3B82F6"
-                    />
-                  </div>
-                </div>
               </div>
             </CollapsibleSection>
 
-            {/* Messages Section - Mobile optimized */}
+            {/* Messages Section - CHAT TITLE ET SHOW WELCOME MESSAGE SUPPRIMÉS */}
             <CollapsibleSection
               title="Messages"
               icon={<MessageCircle className="text-blue-400" size={20} />}
               defaultOpen={false}
             >
               <div className="lg:space-y-4 space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Chat Title</label>
-                  <input
-                    type="text"
-                    value={config.chatTitle}
-                    onChange={(e) => updateConfig('chatTitle', e.target.value)}
-                    placeholder="Chat title"
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Subtitle</label>
                   <input
@@ -724,15 +732,7 @@ export default function DemoAgentPage() {
                   />
                 </div>
                 <div>
-                  <div className="flex items-center justify-between lg:mb-3 mb-2">
-                    <label className="text-sm font-medium text-gray-300">Show Welcome Message</label>
-                    <input
-                      type="checkbox"
-                      checked={config.showWelcomeMessage}
-                      onChange={(e) => updateConfig('showWelcomeMessage', e.target.checked)}
-                      className="w-4 h-4 text-emerald-600 bg-gray-800 border-gray-600 rounded focus:ring-emerald-500"
-                    />
-                  </div>
+                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Welcome Message</label>
                   <input
                     type="text"
                     value={config.welcomeMessage}
@@ -744,7 +744,7 @@ export default function DemoAgentPage() {
               </div>
             </CollapsibleSection>
 
-            {/* Client Message Section - Mobile optimized */}
+            {/* Client Message Section - SHOW WELCOME MESSAGE AJOUTÉ APRÈS DELAY */}
             <CollapsibleSection
               title="Client Message"
               icon={<Bot className="text-blue-400" size={20} />}
@@ -780,6 +780,19 @@ export default function DemoAgentPage() {
                     max="30"
                     className="lg:w-24 w-20 lg:px-4 lg:py-3 px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm font-medium lg:text-base text-sm"
                   />
+                </div>
+
+                {/* NOUVEAU: Show Welcome Message ajouté ici après Delay */}
+                <div>
+                  <div className="flex items-center justify-between lg:mb-3 mb-2">
+                    <label className="text-sm font-medium text-gray-300">Show Welcome Message</label>
+                    <input
+                      type="checkbox"
+                      checked={config.showWelcomeMessage}
+                      onChange={(e) => updateConfig('showWelcomeMessage', e.target.checked)}
+                      className="w-4 h-4 text-emerald-600 bg-gray-800 border-gray-600 rounded focus:ring-emerald-500"
+                    />
+                  </div>
                 </div>
               </div>
             </CollapsibleSection>
