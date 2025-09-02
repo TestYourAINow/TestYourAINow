@@ -751,7 +751,7 @@ export default function AgentLab() {
         <button
           onClick={handleSave}
           className={cn(
-            "w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 relative overflow-hidden text-sm",
+            "w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-[1.01] relative overflow-hidden text-sm",
             (!selectedAgentId || isSaving || !isModified) && "opacity-50 cursor-not-allowed transform-none hover:scale-100"
           )}
           disabled={!selectedAgentId || isSaving || !isModified}

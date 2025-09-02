@@ -42,7 +42,7 @@ const integrationOptions = [
     borderColor: "border-orange-500/30",
     iconBg: "bg-orange-500/20",
     iconColor: "text-orange-400",
-    shadowColor: "hover:shadow-orange-500/20",
+    shadowColor: "",
     disabled: alreadyHasFileUpload,
     disabledReason: "Only one file upload integration allowed"
   },
@@ -56,20 +56,20 @@ const integrationOptions = [
     borderColor: "border-blue-500/30",
     iconBg: "bg-blue-500/20",
     iconColor: "text-blue-400",
-    shadowColor: "hover:shadow-blue-500/20",
+    shadowColor: "",
     disabled: false
   },
   {
     type: "calendly" as IntegrationType,
     title: "Calendly",
-    description: "Intégrez avec Calendly pour la prise de rendez-vous (liens)",
+    description: "Integrate with Calendly for appointment scheduling",
     icon: Calendar,
     gradient: "from-emerald-600 to-blue-600",
     bgGradient: "from-emerald-500/10 to-blue-500/10",
     borderColor: "border-emerald-500/30",
     iconBg: "bg-emerald-500/20",
     iconColor: "text-emerald-400",
-    shadowColor: "hover:shadow-emerald-500/20",
+    shadowColor: "",
     disabled: false
   }
   // 🚫 GOOGLE CALENDAR TEMPORAIREMENT SUPPRIMÉ
