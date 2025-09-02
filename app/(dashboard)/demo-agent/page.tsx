@@ -139,7 +139,7 @@ export default function DemoAgentPage() {
     avatar: '/Default Avatar.png',
     welcomeMessage: 'Hello! How can I help you today?',
     placeholderText: 'Type your message...',
-    theme: 'dark',
+    theme: 'light',
     primaryColor: '#3B82F6',
     popupMessage: 'Hello! Need any help?',
     popupDelay: 2,
@@ -324,8 +324,8 @@ export default function DemoAgentPage() {
         <button
           onClick={() => setMobileView('preview')}
           className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 ${mobileView === 'preview'
-              ? 'text-white bg-blue-600/20 border-b-2 border-blue-500'
-              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+            ? 'text-white bg-blue-600/20 border-b-2 border-blue-500'
+            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
             }`}
         >
           <div className="flex items-center justify-center gap-2">
@@ -336,8 +336,8 @@ export default function DemoAgentPage() {
         <button
           onClick={() => setMobileView('config')}
           className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 ${mobileView === 'config'
-              ? 'text-white bg-blue-600/20 border-b-2 border-blue-500'
-              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+            ? 'text-white bg-blue-600/20 border-b-2 border-blue-500'
+            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
             }`}
         >
           <div className="flex items-center justify-center gap-2">
@@ -572,7 +572,7 @@ export default function DemoAgentPage() {
                       type="text"
                       value={config.primaryColor}
                       onChange={(e) => updateConfig('primaryColor', e.target.value)}
-                      className="flex-1 lg:px-4 lg:py-3 px-3 py-2.5 lg:text-sm text-xs bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-pink-500/60 focus:ring-2 focus:ring-pink-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-mono"
+                      className="flex-1 lg:px-4 lg:py-3 px-3 py-2.5 lg:text-sm text-xs bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-mono"
                       placeholder="#3B82F6"
                     />
                   </div>
@@ -714,7 +714,7 @@ export default function DemoAgentPage() {
                     value={config.subtitle}
                     onChange={(e) => updateConfig('subtitle', e.target.value)}
                     placeholder="Subtitle"
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                   />
                 </div>
                 <div>
@@ -724,7 +724,7 @@ export default function DemoAgentPage() {
                     value={config.placeholderText}
                     onChange={(e) => updateConfig('placeholderText', e.target.value)}
                     placeholder="Type your message..."
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                   />
                 </div>
                 <div>
@@ -734,7 +734,7 @@ export default function DemoAgentPage() {
                     value={config.welcomeMessage}
                     onChange={(e) => updateConfig('welcomeMessage', e.target.value)}
                     placeholder="Hello! How can I help you today?"
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                   />
                 </div>
               </div>
@@ -756,16 +756,46 @@ export default function DemoAgentPage() {
                     className="w-4 h-4 text-orange-600 bg-gray-800 border-gray-600 rounded focus:ring-orange-500"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Popup Message</label>
+
+                {/* 🎯 INPUT AVEC LIMITE 55 CARACTÈRES */}
+                <div className="relative">
                   <input
                     type="text"
                     value={config.popupMessage}
-                    onChange={(e) => updateConfig('popupMessage', e.target.value)}
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
-                    placeholder="Hello! Need any help?"
+                    onChange={(e) => {
+                      // 🎯 BLOQUER À 55 CARACTÈRES MAX
+                      if (e.target.value.length <= 55) {
+                        updateConfig('popupMessage', e.target.value);
+                      }
+                    }}
+                    placeholder="Hi! Need help?"
+                    maxLength={55} // HTML native
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                   />
+                  {/* 🎯 COMPTEUR 55 CHARS */}
+                  <div className="absolute right-3 bottom-2 text-xs text-gray-500 pointer-events-none">
+                    {config.popupMessage.length}/55
+                  </div>
                 </div>
+
+                {/* 🎯 INDICATEUR VISUEL EN ANGLAIS */}
+                <div className="flex items-center gap-2 text-xs">
+                  <div className={`w-2 h-2 rounded-full ${config.popupMessage.length <= 40
+                      ? 'bg-green-400'
+                      : config.popupMessage.length <= 50
+                        ? 'bg-yellow-400'
+                        : 'bg-red-400'
+                    }`} />
+                  <span className="text-gray-400">
+                    {config.popupMessage.length <= 40
+                      ? 'Perfect length'
+                      : config.popupMessage.length <= 50
+                        ? 'Good length'
+                        : 'Max reached'
+                    }
+                  </span>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Delay (seconds)</label>
                   <input
@@ -774,7 +804,7 @@ export default function DemoAgentPage() {
                     onChange={(e) => updateConfig('popupDelay', parseInt(e.target.value) || 2)}
                     min="0"
                     max="30"
-                    className="lg:w-24 w-20 lg:px-4 lg:py-3 px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20 transition-all backdrop-blur-sm font-medium lg:text-base text-sm"
+                    className="lg:w-24 w-20 lg:px-4 lg:py-3 px-3 py-2.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm font-medium lg:text-base text-sm"
                   />
                 </div>
 
@@ -811,7 +841,7 @@ export default function DemoAgentPage() {
                           max={150}
                           value={config.usageLimit}
                           onChange={(e) => updateConfig('usageLimit', parseInt(e.target.value) || 150)}
-                          className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 outline-none focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/20 transition-all font-medium backdrop-blur-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none lg:text-base text-sm pr-20"
+                          className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium backdrop-blur-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none lg:text-base text-sm pr-20"
                           placeholder="150"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 lg:text-sm text-xs font-medium">

@@ -31,43 +31,53 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
   const [loading, setLoading] = useState(false);
   const [createdDemo, setCreatedDemo] = useState<{ id: string; link: string } | null>(null);
 
-  const handleCreate = async () => {
-    setLoading(true);
+const handleCreate = async () => {
+  setLoading(true);
 
-    try {
-      const res = await fetch('/api/demo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...agentConfig,
-          // ✅ CHANGÉ : utilise agentConfig.usageLimit au lieu de l'état local
-        }),
-      });
+  // 🎯 VALIDATION POPUP MESSAGE - 55 CHARS (NOUVEAU)
+  let validatedPopupMessage = agentConfig.popupMessage || '';
+  if (validatedPopupMessage.length > 55) {
+    validatedPopupMessage = validatedPopupMessage.substring(0, 55);
+    alert('⚠️ Popup message truncated to 55 characters maximum');
+  }
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        alert(errorData.message || 'Erreur lors de la création');
-        setLoading(false);
-        return;
-      }
-
-      const data = await res.json();
-      setCreatedDemo({
-        id: data.id,
-        link: `${window.location.origin}/shared/${data.id}`
-      });
-
-      if (onCreateSuccess) {
-        await onCreateSuccess();
-      }
-
-    } catch (err) {
-      alert('Erreur réseau. Veuillez réessayer.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  // Utiliser validatedPopupMessage au lieu de agentConfig.popupMessage
+  const configToSave = {
+    ...agentConfig,
+    popupMessage: validatedPopupMessage
   };
+
+  try {
+    const res = await fetch('/api/demo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(configToSave), // ✅ CHANGÉ : configToSave au lieu de agentConfig
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      alert(errorData.message || 'Erreur lors de la création');
+      setLoading(false);
+      return;
+    }
+
+    const data = await res.json();
+    setCreatedDemo({
+      id: data.id,
+      link: `${window.location.origin}/shared/${data.id}`
+    });
+
+    if (onCreateSuccess) {
+      await onCreateSuccess();
+    }
+
+  } catch (err) {
+    alert('Erreur réseau. Veuillez réessayer.');
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCopy = async () => {
     if (createdDemo?.link) {

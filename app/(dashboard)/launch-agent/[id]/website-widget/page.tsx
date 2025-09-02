@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { 
+import {
   Send, X, MessageCircle, Settings, Globe, Smartphone, Plus, RotateCcw, User, Bot, Info,
   Monitor, Upload, Palette, Save, ExternalLink, Code, Sparkles, Moon, Sun, ChevronRight, ChevronLeft
 } from 'lucide-react';
@@ -56,9 +56,9 @@ const CollapsibleSection: React.FC<{
     setIsOpen(!isOpen);
     if (!isOpen) {
       setTimeout(() => {
-        sectionRef.current?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'nearest' 
+        sectionRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
         });
       }, 150);
     }
@@ -79,11 +79,11 @@ const CollapsibleSection: React.FC<{
           <ChevronRight size={18} className="text-gray-400 hidden lg:block" />
         </div>
       </button>
-      
+
       {isOpen && (
         <div className="border-t border-gray-700/30" />
       )}
-      
+
       <div className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
         <div className="lg:px-4 lg:pb-4 lg:pt-4 px-3 pb-3 pt-3">
           {children}
@@ -205,6 +205,13 @@ const ChatbotBuilder: React.FC = () => {
   const saveChanges = async () => {
     if (!connectionId) return;
 
+  // 🎯 VALIDATION POPUP MESSAGE - 55 CHARS
+  let validatedPopupMessage = settings.popupMessage || '';
+  if (validatedPopupMessage.length > 55) {
+    validatedPopupMessage = validatedPopupMessage.substring(0, 55);
+    alert('⚠️ Popup message truncated to 55 characters maximum');
+  }
+
     if (saveToastTimer) {
       clearTimeout(saveToastTimer);
     }
@@ -221,6 +228,7 @@ const ChatbotBuilder: React.FC = () => {
           aiBuildId: selectedAgent,
           settings: {
             ...settings,
+            popupMessage: validatedPopupMessage,
             placement: 'bottom-right'
           }
         })
@@ -266,7 +274,7 @@ const ChatbotBuilder: React.FC = () => {
 
       setLastSaved(new Date());
       setSaveSuccess(true);
-      
+
       const timer = setTimeout(() => {
         setSaveSuccess(false);
       }, 3000);
@@ -311,16 +319,15 @@ const ChatbotBuilder: React.FC = () => {
 
   return (
     <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 bg-grid-pattern">
-      
+
       {/* Mobile Navigation Tabs */}
       <div className="lg:hidden bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 flex sticky top-0 z-50 h-12">
         <button
           onClick={() => setMobileView('preview')}
-          className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 ${
-            mobileView === 'preview'
-              ? 'text-white bg-blue-600/20 border-b-2 border-blue-500'
-              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
-          }`}
+          className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 ${mobileView === 'preview'
+            ? 'text-white bg-blue-600/20 border-b-2 border-blue-500'
+            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+            }`}
         >
           <div className="flex items-center justify-center gap-2">
             <Monitor size={16} />
@@ -329,11 +336,10 @@ const ChatbotBuilder: React.FC = () => {
         </button>
         <button
           onClick={() => setMobileView('config')}
-          className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 ${
-            mobileView === 'config'
-              ? 'text-white bg-blue-600/20 border-b-2 border-blue-500'
-              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
-          }`}
+          className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 ${mobileView === 'config'
+            ? 'text-white bg-blue-600/20 border-b-2 border-blue-500'
+            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+            }`}
         >
           <div className="flex items-center justify-center gap-2">
             <Settings size={16} />
@@ -341,15 +347,14 @@ const ChatbotBuilder: React.FC = () => {
           </div>
         </button>
       </div>
-      
+
       {/* Structure principale */}
       <div className="flex lg:h-full h-[calc(100%-48px)] lg:flex-row flex-col">
-        
+
         {/* COLONNE GAUCHE - Preview */}
-        <div className={`flex-1 bg-gray-900/95 backdrop-blur-xl lg:border-r border-gray-700/50 relative bg-grid-pattern lg:h-full h-full ${
-          mobileView === 'preview' ? 'block' : 'hidden lg:block'
-        }`}>
-          
+        <div className={`flex-1 bg-gray-900/95 backdrop-blur-xl lg:border-r border-gray-700/50 relative bg-grid-pattern lg:h-full h-full ${mobileView === 'preview' ? 'block' : 'hidden lg:block'
+          }`}>
+
           {/* Device Frame - Desktop only */}
           <div className="absolute top-4 left-4 bg-gray-800/50 backdrop-blur-sm rounded-xl px-3 py-2 items-center gap-3 border border-gray-700/50 z-10 hidden lg:flex">
             <div className="flex gap-2">
@@ -394,7 +399,7 @@ const ChatbotBuilder: React.FC = () => {
           ) : (
             <>
               <div className="absolute inset-0 bg-grid opacity-5" />
-              
+
               <div style={{
                 position: 'absolute',
                 top: '50%',
@@ -420,26 +425,22 @@ const ChatbotBuilder: React.FC = () => {
         </div>
 
         {/* COLONNE DROITE - Configuration */}
-        <div className={`lg:bg-gray-900/95 lg:backdrop-blur-xl lg:border lg:border-gray-700/50 text-white lg:flex lg:flex-col lg:h-full lg:transition-all lg:duration-300 lg:ease-out ${
-          configPanelCollapsed ? 'lg:w-16' : 'lg:w-96'
-        } ${
-          mobileView === 'config' ? 'w-full bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 flex flex-col h-full' : 'hidden lg:flex'
-        }`}>
+        <div className={`lg:bg-gray-900/95 lg:backdrop-blur-xl lg:border lg:border-gray-700/50 text-white lg:flex lg:flex-col lg:h-full lg:transition-all lg:duration-300 lg:ease-out ${configPanelCollapsed ? 'lg:w-16' : 'lg:w-96'
+          } ${mobileView === 'config' ? 'w-full bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 flex flex-col h-full' : 'hidden lg:flex'
+          }`}>
 
           {/* Header Configuration Panel */}
           <div className="lg:p-6 p-3 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 flex-shrink-0">
             <div className="flex items-center gap-2 lg:gap-3 mb-1 lg:mb-2">
               <Settings className="text-blue-400 hidden lg:block" size={24} />
               <Settings className="text-blue-400 block lg:hidden" size={18} />
-              <div className={`transition-all duration-300 ease-out overflow-hidden ${
-                configPanelCollapsed ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'
-              } w-auto opacity-100`}>
+              <div className={`transition-all duration-300 ease-out overflow-hidden ${configPanelCollapsed ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'
+                } w-auto opacity-100`}>
                 <h2 className="lg:text-xl text-base font-bold text-white whitespace-nowrap">Configuration</h2>
               </div>
             </div>
-            <div className={`transition-all duration-300 ease-out overflow-hidden ${
-              configPanelCollapsed ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'
-            } w-auto opacity-100`}>
+            <div className={`transition-all duration-300 ease-out overflow-hidden ${configPanelCollapsed ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'
+              } w-auto opacity-100`}>
               <p className="text-gray-400 lg:text-sm text-xs whitespace-nowrap">Customize your widget</p>
             </div>
           </div>
@@ -447,7 +448,7 @@ const ChatbotBuilder: React.FC = () => {
           {/* Configuration Sections */}
           {!configPanelCollapsed && (
             <div className="flex-1 overflow-y-auto lg:p-6 p-3 lg:space-y-4 space-y-3 custom-scrollbar">
-              
+
               <CollapsibleSection
                 title="General Configuration"
                 icon={<Settings className="text-blue-400" size={20} />}
@@ -742,15 +743,43 @@ const ChatbotBuilder: React.FC = () => {
                       className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
                     />
                   </div>
-                  <div>
+                  <div className="relative">
                     <input
                       type="text"
                       value={settings.popupMessage || ''}
-                      onChange={(e) => updateSettings('popupMessage', e.target.value)}
-                      placeholder="Hi! Need any help?"
+                      onChange={(e) => {
+                        // 🎯 BLOQUER À 55 CARACTÈRES MAX
+                        if (e.target.value.length <= 55) {
+                          updateSettings('popupMessage', e.target.value);
+                        }
+                      }}
+                      placeholder="Hi! Need help?"
+                      maxLength={55} // HTML native
                       className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm"
                     />
+                    {/* 🎯 COMPTEUR 55 CHARS */}
+                    <div className="absolute right-3 bottom-2 text-xs text-gray-500 pointer-events-none">
+                      {(settings.popupMessage || '').length}/55
+                    </div>
                   </div>
+                  {/* 🎯 INDICATEUR VISUEL EN ANGLAIS */}
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className={`w-2 h-2 rounded-full ${(settings.popupMessage || '').length <= 40
+                        ? 'bg-green-400'
+                        : (settings.popupMessage || '').length <= 50
+                          ? 'bg-yellow-400'
+                          : 'bg-red-400'
+                      }`} />
+                    <span className="text-gray-400">
+                      {(settings.popupMessage || '').length <= 40
+                        ? 'Perfect length'
+                        : (settings.popupMessage || '').length <= 50
+                          ? 'Good length'
+                          : 'Max reached'
+                      }
+                    </span>
+                  </div>
+
                   <div>
                     <label className="block text-xs text-gray-400 lg:mb-2 mb-1.5">Delay (seconds)</label>
                     <input
@@ -774,7 +803,7 @@ const ChatbotBuilder: React.FC = () => {
                     className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-emerald-700 disabled:to-emerald-600 text-white lg:py-4 py-3.5 lg:px-6 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center lg:gap-3 gap-2 shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] disabled:scale-100 disabled:opacity-75 border border-emerald-500/30 relative overflow-hidden group lg:text-base text-sm"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                    
+
                     {isSaving ? (
                       <>
                         <div className="animate-spin rounded-full lg:h-5 lg:w-5 h-4 w-4 border-b-2 border-white relative z-10"></div>
@@ -805,11 +834,10 @@ const ChatbotBuilder: React.FC = () => {
                   <button
                     onClick={() => setShowDeployModal(true)}
                     disabled={!savedWidgetId}
-                    className={`w-full lg:py-4 py-3.5 lg:px-6 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center lg:gap-3 gap-2 shadow-lg border relative overflow-hidden group lg:text-base text-sm ${
-                      savedWidgetId 
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white hover:shadow-blue-500/25 hover:scale-[1.02] border-blue-500/30' 
-                        : 'bg-gray-700 text-gray-400 border-gray-600/50 cursor-not-allowed opacity-75'
-                    }`}
+                    className={`w-full lg:py-4 py-3.5 lg:px-6 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center lg:gap-3 gap-2 shadow-lg border relative overflow-hidden group lg:text-base text-sm ${savedWidgetId
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white hover:shadow-blue-500/25 hover:scale-[1.02] border-blue-500/30'
+                      : 'bg-gray-700 text-gray-400 border-gray-600/50 cursor-not-allowed opacity-75'
+                      }`}
                   >
                     {savedWidgetId && (
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
@@ -832,9 +860,9 @@ const ChatbotBuilder: React.FC = () => {
           style={{ right: configPanelCollapsed ? '56px' : '384px' }}
         >
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/10 group-hover:to-cyan-500/10 transition-all duration-300 pointer-events-none"></div>
-          <ChevronRight 
-            size={18} 
-            className={`transition-all duration-300 relative z-10 ${configPanelCollapsed ? 'rotate-180' : ''} group-hover:scale-110`} 
+          <ChevronRight
+            size={18}
+            className={`transition-all duration-300 relative z-10 ${configPanelCollapsed ? 'rotate-180' : ''} group-hover:scale-110`}
           />
         </button>
       </div>

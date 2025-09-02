@@ -90,15 +90,30 @@ html, body {
   bottom: 100%;
   right: 0;
   margin-bottom: 16px;
-  max-width: 180px;
-  padding: 10px 8px 10px 10px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* 🎯 MÊMES DIMENSIONS QUE TON PREVIEW */
+  min-width: 55px;
+  max-width: min(200px, calc(100vw - 120px));
+  width: max-content;
+  padding: 12px 16px;
+  /* 🎯 STYLE MODERNE UNIFIÉ */
+  border-radius: 20px;
   font-size: 14px;
+  font-weight: 500;
   color: white;
-  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
-  animation: slideUp 0.3s ease-out;
+  line-height: 1.3;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* 🎯 DÉGRADÉ + BORDURE */
+  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  /* 🎯 OMBRE MODERNE */
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  /* 🎯 ANIMATION */
+  animation: slideUpBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .chat-popup::after {
@@ -106,10 +121,12 @@ html, body {
   position: absolute;
   bottom: -6px;
   right: 24px;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
+  width: 8px;
+  height: 8px;
+  background: var(--primary-color);
   transform: rotate(45deg);
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .chat-window {
@@ -525,6 +542,21 @@ html, body {
 @keyframes typingBounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.7; }
   40% { transform: translateY(-6px); opacity: 1; }
+}
+
+@keyframes slideUpBounce {
+  0% { 
+    opacity: 0; 
+    transform: translateY(10px) scale(0.8); 
+  }
+  60% { 
+    opacity: 1; 
+    transform: translateY(-2px) scale(1.02); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
 }
   </style>
 </head>

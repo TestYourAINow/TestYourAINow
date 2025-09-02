@@ -213,52 +213,69 @@ window.AIChatWidget = {
   },
 
   // 🔘 Afficher le bouton chat
-  showButton: function() {
-    if (!this.iframe) return;
-    
-    const buttonSize = 64;
-    const shadowMargin = 15;
-    const hoverMargin = 8;
-    const popupMarginTop = 100;
-    const popupMarginLeft = 60;
-    
-    const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginLeft;
-    const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
-    
-    if (this.isMobile) {
-      this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        width: ${iframeWidth}px;
-        height: ${iframeHeight}px;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        display: block;
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-      `;
-    } else {
-      this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        width: ${iframeWidth}px;
-        height: ${iframeHeight}px;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        display: block;
-      `;
-    }
-  },
+showButton: function() {
+  if (!this.iframe) return;
+  
+  const buttonSize = 64;
+  const shadowMargin = 15;
+  const hoverMargin = 8;
+  
+  // 🎯 CALCUL POPUP INTELLIGENT
+  // Estimation basée sur 80 caractères max
+  const popupMinWidth = 120;
+  const popupMaxWidth = 250;
+  const popupHeight = 60; // ~2 lignes pour 80 caractères
+  const popupMarginTop = popupHeight + 32; // popup + margin
+  const popupMarginLeft = Math.max(60, popupMaxWidth - buttonSize); // Assure que le popup ne dépasse pas
+  
+  // 🎯 DIMENSIONS IFRAME OPTIMISÉES
+  const iframeWidth = Math.max(
+    buttonSize + (shadowMargin * 2) + hoverMargin, // Minimum pour le bouton
+    popupMaxWidth + 20 // Maximum pour le popup + marges
+  );
+  
+  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
+  
+  console.log('Dimensions iframe calculées:', { 
+    width: iframeWidth, 
+    height: iframeHeight,
+    isMobile: this.isMobile 
+  });
+  
+  if (this.isMobile) {
+    this.iframe.style.cssText = `
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      width: ${iframeWidth}px;
+      height: ${iframeHeight}px;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    `;
+  } else {
+    this.iframe.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: ${iframeWidth}px;
+      height: ${iframeHeight}px;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+    `;
+  }
+},
 
   // 🏠 Widget ouvert
   handleWidgetOpen: function(data) {
