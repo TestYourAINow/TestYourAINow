@@ -11,6 +11,8 @@ import CreateDemoModal from '@/components/CreateDemoModal';
 import InfoDemoModal from '@/components/InfoDemoModal';
 import { DeleteDemoModal } from '@/components/DeleteDemoModal';
 import DemoAgentChatWidget from '@/components/DemoAgentChatWidget';
+import SelectAgentDropdown from '@/components/Dropdowns/SelectAgentDropdown';
+import DemoSelectAgentDropdown from '@/components/Dropdowns/DemoSelectAgentDropdown';
 
 // Types - AJOUTÉ usageLimit
 interface DemoConfig {
@@ -466,7 +468,7 @@ export default function DemoAgentPage() {
         </div>
 
         {/* COLONNE DROITE - Configuration Panel - Responsive avec hauteur fixe */}
-        <div className={`lg:w-96 w-full bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white flex flex-col lg:h-full h-full ${mobileView === 'config' ? 'block' : 'hidden lg:block'
+        <div className={`lg:w-96 w-full bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white lg:flex lg:flex-col lg:h-full ${mobileView === 'config' ? 'flex flex-col h-full' : 'hidden lg:flex'
           }`}>
 
           {/* Header Configuration Panel - Mobile-friendly */}
@@ -520,18 +522,12 @@ export default function DemoAgentPage() {
                   <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
                     Choose Agent
                   </label>
-                  <select
-                    value={config.agentId}
-                    onChange={(e) => updateConfig('agentId', e.target.value)}
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm font-medium lg:text-base text-sm"
-                  >
-                    <option value="">Select an agent...</option>
-                    {agents.map((agent) => (
-                      <option key={agent._id} value={agent._id}>
-                        {agent.name}
-                      </option>
-                    ))}
-                  </select>
+                  <DemoSelectAgentDropdown
+                    selectedAgentId={config.agentId}
+                    onAgentSelect={(agentId) => updateConfig('agentId', agentId)}
+                    agents={agents}
+                    className="w-full"
+                  />
                 </div>
               </div>
             </CollapsibleSection>
