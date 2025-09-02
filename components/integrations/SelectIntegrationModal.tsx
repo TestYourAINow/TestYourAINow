@@ -151,9 +151,6 @@ const integrationOptions = [
                       }`}>
                         {option.title}
                       </h3>
-                      {!option.disabled && (
-                        <Sparkles size={16} className="text-blue-400 group-hover:text-cyan-400 transition-colors" />
-                      )}
                     </div>
                     <p className={`text-sm leading-relaxed ${
                       option.disabled ? 'text-gray-500' : 'text-gray-300'
