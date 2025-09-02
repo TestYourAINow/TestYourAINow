@@ -466,7 +466,7 @@ export default function DemoAgentPage() {
         </div>
 
         {/* COLONNE DROITE - Configuration Panel - Responsive avec hauteur fixe */}
-        <div className={`lg:w-96 w-full bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white lg:flex lg:flex-col lg:h-full ${mobileView === 'config' ? 'flex flex-col h-full' : 'hidden lg:flex'
+        <div className={`lg:w-96 w-full bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 text-white flex flex-col lg:h-full h-full ${mobileView === 'config' ? 'block' : 'hidden lg:block'
           }`}>
 
           {/* Header Configuration Panel - Mobile-friendly */}

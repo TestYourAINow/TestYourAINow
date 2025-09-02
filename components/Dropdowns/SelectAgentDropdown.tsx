@@ -104,9 +104,6 @@ export default function SelectAgentDropdown({
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
-              <Bot className="w-3 h-3 text-white" />
-            </div>
             <span className="text-sm font-medium">
               {selectedAgent?.name || 'Select an agent...'}
             </span>
