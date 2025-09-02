@@ -30,6 +30,7 @@ export default function CreateDemoModal({ isOpen, onClose, onCreateSuccess, agen
   // ❌ SUPPRIMÉ : const [usageLimit, setUsageLimit] = useState(150);
   const [loading, setLoading] = useState(false);
   const [createdDemo, setCreatedDemo] = useState<{ id: string; link: string } | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
 
 const handleCreate = async () => {
   setLoading(true);
@@ -82,7 +83,8 @@ const handleCreate = async () => {
   const handleCopy = async () => {
     if (createdDemo?.link) {
       await navigator.clipboard.writeText(createdDemo.link);
-      // Visual feedback could be added here
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
     }
   };
 
@@ -209,7 +211,7 @@ const handleCreate = async () => {
                   <button
                     onClick={handleCreate}
                     disabled={loading || !agentConfig.agentId}
-                    className="flex-1 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden group"
+                    className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 relative overflow-hidden group"
                   >
                     {/* Shimmer effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
@@ -262,10 +264,11 @@ const handleCreate = async () => {
                       />
                       <button
                         onClick={handleCopy}
-                        className="px-4 py-3.5 bg-blue-600/80 hover:bg-blue-500/80 text-white rounded-xl transition-all flex items-center gap-2 backdrop-blur-sm border border-blue-500/30 hover:border-blue-400/40 group"
+                        className="px-4 py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl transition-all flex items-center gap-2 backdrop-blur-sm border border-blue-500/30 hover:border-blue-400/40 group"
                         title="Copy link"
                       >
                         <Copy size={16} className="group-hover:scale-110 transition-transform" />
+                        {copySuccess ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
                   </div>
