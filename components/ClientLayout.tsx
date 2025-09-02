@@ -47,7 +47,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
   // Fonction pour obtenir la description
   const getPageDescription = () => {
     if (pathname === '/agents') return 'Manage your intelligent AI agents';
-    if (pathname === '/agent-lab') return 'Create and improve your AI assistants';
+    if (pathname === '/agent-lab') return 'Improve your AI assistants';
     if (pathname === '/demo-agent') return 'Test and showcase your agents';
     if (pathname === '/launch-agent') return 'Deploy agents to production';
     if (pathname === '/api-key') return 'Manage API access keys';
