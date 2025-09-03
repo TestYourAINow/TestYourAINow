@@ -203,7 +203,7 @@ const ChatbotBuilder: React.FC = () => {
   };
 
   const saveChanges = async () => {
-    if (!connectionId) return;
+  if (!connectionId) return;
 
   // 🎯 VALIDATION POPUP MESSAGE - 55 CHARS
   let validatedPopupMessage = settings.popupMessage || '';
@@ -212,81 +212,91 @@ const ChatbotBuilder: React.FC = () => {
     alert('⚠️ Popup message truncated to 55 characters maximum');
   }
 
-    if (saveToastTimer) {
-      clearTimeout(saveToastTimer);
+  if (saveToastTimer) {
+    clearTimeout(saveToastTimer);
+  }
+
+  setIsSaving(true);
+  try {
+    // 1️⃣ Sauvegarder la connection (comme avant)
+    const connectionResponse = await fetch(`/api/connections/${connectionId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name,
+        aiBuildId: selectedAgent,
+        settings: {
+          ...settings,
+          popupMessage: validatedPopupMessage,
+          placement: 'bottom-right'
+        }
+      })
+    });
+
+    if (!connectionResponse.ok) {
+      const errorData = await connectionResponse.json();
+      throw new Error(errorData.error || 'Error saving connection');
     }
 
-    setIsSaving(true);
-    try {
-      const connectionResponse = await fetch(`/api/connections/${connectionId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name,
-          aiBuildId: selectedAgent,
-          settings: {
-            ...settings,
-            popupMessage: validatedPopupMessage,
-            placement: 'bottom-right'
-          }
-        })
-      });
+    // 2️⃣ Sauvegarder/Mettre à jour le ChatbotConfig avec connectionId
+    const chatbotConfigResponse = await fetch('/api/chatbot-configs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        connectionId: connectionId, // 🆕 PASSER LE CONNECTION ID !
+        name: name || 'AI Assistant',
+        avatar: settings.avatar || '/Default Avatar.png',
+        welcomeMessage: settings.welcomeMessage || 'Hello! How can I help you today?',
+        placeholderText: settings.placeholderText || 'Type your message...',
+        typingText: settings.typingText || 'AI is typing...',
+        theme: settings.theme || 'light',
+        primaryColor: settings.primaryColor || '#3b82f6',
+        width: settings.width || 380,
+        height: settings.height || 600,
+        placement: 'bottom-right',
+        popupMessage: validatedPopupMessage || 'Hi! Need any help?',
+        popupDelay: settings.popupDelay || 2,
+        showPopup: settings.showPopup !== undefined ? settings.showPopup : true,
+        showWelcomeMessage: settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true,
+        selectedAgent: selectedAgent,
+        chatTitle: settings.chatTitle || 'AI Assistant',
+        subtitle: settings.subtitle || 'Online'
+      })
+    });
 
-      if (!connectionResponse.ok) {
-        const errorData = await connectionResponse.json();
-        throw new Error(errorData.error || 'Error saving connection');
-      }
-
-      const chatbotConfigResponse = await fetch('/api/chatbot-configs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: name || 'AI Assistant',
-          avatar: settings.avatar || '/Default Avatar.png',
-          welcomeMessage: settings.welcomeMessage || 'Hello! How can I help you today?',
-          placeholderText: settings.placeholderText || 'Type your message...',
-          typingText: settings.typingText || 'AI is typing...',
-          theme: settings.theme || 'light',
-          primaryColor: settings.primaryColor || '#3b82f6',
-          width: settings.width || 380,
-          height: settings.height || 600,
-          placement: 'bottom-right',
-          popupMessage: settings.popupMessage || 'Hi! Need any help?',
-          popupDelay: settings.popupDelay || 2,
-          showPopup: settings.showPopup !== undefined ? settings.showPopup : true,
-          showWelcomeMessage: settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true,
-          selectedAgent: selectedAgent,
-          chatTitle: settings.chatTitle || 'AI Assistant',
-          subtitle: settings.subtitle || 'Online'
-        })
-      });
-
-      if (chatbotConfigResponse.ok) {
-        const chatbotResult = await chatbotConfigResponse.json();
-        if (chatbotResult.success && chatbotResult.widgetId) {
-          setSavedWidgetId(chatbotResult.widgetId);
+    if (chatbotConfigResponse.ok) {
+      const chatbotResult = await chatbotConfigResponse.json();
+      if (chatbotResult.success && chatbotResult.widgetId) {
+        setSavedWidgetId(chatbotResult.widgetId);
+        
+        // 🆕 Informer l'utilisateur si c'est le même widget ou un nouveau
+        if (chatbotResult.isNewWidget) {
+          console.log('🆕 New widget created:', chatbotResult.widgetId);
+        } else {
+          console.log('🔄 Existing widget updated:', chatbotResult.widgetId);
         }
       }
-
-      setLastSaved(new Date());
-      setSaveSuccess(true);
-
-      const timer = setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
-      setSaveToastTimer(timer);
-
-    } catch (error) {
-      console.error('Save error:', error);
-      alert('Error saving: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    } finally {
-      setIsSaving(false);
     }
-  };
+
+    setLastSaved(new Date());
+    setSaveSuccess(true);
+
+    const timer = setTimeout(() => {
+      setSaveSuccess(false);
+    }, 3000);
+    setSaveToastTimer(timer);
+
+  } catch (error) {
+    console.error('Save error:', error);
+    alert('Error saving: ' + (error instanceof Error ? error.message : 'Unknown error'));
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   const updateName = (newName: string) => {
     setName(newName);

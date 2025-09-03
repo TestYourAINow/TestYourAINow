@@ -3,8 +3,9 @@ import { ChatbotConfig } from '@/models/ChatbotConfig';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
-import { updateAgentDeploymentStatus } from '@/lib/deployment-utils'; // 🆕 IMPORT
+import { updateAgentDeploymentStatus } from '@/lib/deployment-utils';
 
+// 🆕 POST MODIFIÉ - UPDATE au lieu de CREATE si connectionId existe
 export async function POST(request: NextRequest) {
   try {
     await connectToDatabase();
@@ -15,17 +16,62 @@ export async function POST(request: NextRequest) {
     }
 
     const config = await request.json();
+    const { connectionId } = config; // 🆕 Récupérer connectionId du frontend
     
-    // Créer la nouvelle configuration
-    const newConfig = new ChatbotConfig({
-      ...config,
-      userId: session.user.id, // 🔒 Associer à l'utilisateur connecté
-      deployedAt: new Date()
-    });
-    
-    const savedConfig = await newConfig.save();
+    console.log(`💾 [CHATBOT CONFIG] Processing config for connection: ${connectionId}`);
 
-    // 🆕 NOUVEAU - Mettre isDeployed = true sur l'agent choisi (Website Widget)
+    let savedConfig;
+    let isNewConfig = false;
+
+    if (connectionId) {
+      // 🔄 ESSAYER DE METTRE À JOUR un config existant basé sur connectionId
+      const existingConfig = await ChatbotConfig.findOne({ 
+        userId: session.user.id,
+        connectionId: connectionId
+      });
+
+      if (existingConfig) {
+        // ✅ MISE À JOUR - Pas de nouveau widget !
+        console.log(`🔄 [CHATBOT CONFIG] Updating existing config: ${existingConfig._id}`);
+        
+        Object.assign(existingConfig, {
+          ...config,
+          updatedAt: new Date()
+        });
+        
+        savedConfig = await existingConfig.save();
+        console.log(`✅ [CHATBOT CONFIG] Updated successfully - Same Widget ID: ${savedConfig._id}`);
+        
+      } else {
+        // 🆕 CRÉATION - Premier save pour cette connection
+        console.log(`🆕 [CHATBOT CONFIG] Creating new config for connection: ${connectionId}`);
+        
+        const newConfig = new ChatbotConfig({
+          ...config,
+          userId: session.user.id,
+          connectionId: connectionId, // 🆕 Lier à la connection
+          deployedAt: new Date()
+        });
+        
+        savedConfig = await newConfig.save();
+        isNewConfig = true;
+        console.log(`✅ [CHATBOT CONFIG] Created new widget: ${savedConfig._id}`);
+      }
+    } else {
+      // 🤷‍♂️ FALLBACK - Ancien comportement si pas de connectionId
+      console.log(`⚠️ [CHATBOT CONFIG] No connectionId provided, creating new config`);
+      
+      const newConfig = new ChatbotConfig({
+        ...config,
+        userId: session.user.id,
+        deployedAt: new Date()
+      });
+      
+      savedConfig = await newConfig.save();
+      isNewConfig = true;
+    }
+
+    // 🆕 NOUVEAU - Mettre isDeployed = true sur l'agent choisi
     if (config.selectedAgent) {
       await updateAgentDeploymentStatus(config.selectedAgent, true);
       console.log(`🎉 [DEPLOYMENT] Agent ${config.selectedAgent} marked as deployed! (Website Widget)`);
@@ -33,8 +79,9 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: 'Configuration sauvegardée avec succès',
-      widgetId: savedConfig._id.toString() // ⭐ Retourner l'ID
+      message: isNewConfig ? 'Configuration créée avec succès' : 'Configuration mise à jour avec succès',
+      widgetId: savedConfig._id.toString(),
+      isNewWidget: isNewConfig // 🆕 Informer le frontend si c'est un nouveau widget
     });
     
   } catch (error) {
@@ -87,7 +134,7 @@ export async function PUT(request: NextRequest) {
     const updatedConfig = await ChatbotConfig.findOneAndUpdate(
       { 
         _id: widgetId,
-        userId: session.user.id // 🔒 Sécurité: Vérifier que c'est bien son widget
+        userId: session.user.id
       },
       { 
         ...updateData,

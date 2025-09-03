@@ -1,3 +1,5 @@
+// models/ChatbotConfig.ts - Version mise à jour avec connectionId
+
 import mongoose from 'mongoose';
 
 const ChatbotConfigSchema = new mongoose.Schema({
@@ -6,6 +8,13 @@ const ChatbotConfigSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  
+  // 🆕 NOUVEAU - Lien avec Connection
+  connectionId: {
+    type: String,
+    index: true // Pour les requêtes rapides
+  },
+  
   name: { type: String, required: true },
   avatar: { type: String },
   welcomeMessage: { type: String },
@@ -40,9 +49,15 @@ const ChatbotConfigSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index pour les requêtes fréquentes
+// 🔍 Index pour les requêtes fréquentes
 ChatbotConfigSchema.index({ userId: 1, isActive: 1 });
 ChatbotConfigSchema.index({ selectedAgent: 1 });
+ChatbotConfigSchema.index({ connectionId: 1, userId: 1 }); // 🆕 NOUVEAU INDEX
+
+// 🗑️ Middleware pour suppression en cascade
+ChatbotConfigSchema.pre('deleteOne', { document: true, query: false }, function() {
+  console.log(`🗑️ [CASCADE] ChatbotConfig ${this._id} is being deleted`);
+});
 
 export const ChatbotConfig = mongoose.models.ChatbotConfig || 
   mongoose.model('ChatbotConfig', ChatbotConfigSchema);
