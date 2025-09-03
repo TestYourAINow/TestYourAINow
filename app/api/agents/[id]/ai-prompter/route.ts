@@ -105,8 +105,7 @@ Votre objectif:
 → Garder le sens clair, la structure propre, et la grammaire correcte.
 → NE PAS perdre d'informations importantes sauf si l'utilisateur a demandé de les supprimer.
 → NE PAS sur-corriger ou inventer des choses qui n'ont pas été mentionnées.
-→ Toujours retourner la sortie sous une forme structurée (titres, listes à puces ou paragraphes courts). 
-→ Ne jamais produire un bloc de texte continu sans structure.
+→ NE PAS produire un bloc de texte continu sans structure.
 → Retourner votre résultat en JSON (pas de formatage markdown, pas de blocs \`\`\` blocks).
 
 Format de sortie attendu:
