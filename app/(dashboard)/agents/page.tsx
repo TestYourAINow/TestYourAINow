@@ -162,8 +162,8 @@ const EditFolderModal = ({
                   type="button"
                   onClick={() => setSelectedColor(color)}
                   className={`w-10 h-10 rounded-full transition-all duration-200 ${selectedColor === color
-                      ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900 scale-110 shadow-lg'
-                      : 'hover:scale-105 shadow-md'
+                    ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900 scale-110 shadow-lg'
+                    : 'hover:scale-105 shadow-md'
                     }`}
                   style={{ backgroundColor: color, boxShadow: selectedColor === color ? `0 0 20px ${color}40` : undefined }}
                 />
@@ -288,8 +288,8 @@ const DeleteFolderModal = ({
                 type="button"
                 onClick={() => setDeleteAgents(false)}
                 className={`w-full p-4 rounded-xl border transition-all text-left cursor-pointer ${!deleteAgents
-                    ? 'border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10'
-                    : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
+                  ? 'border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10'
+                  : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
                   }`}
               >
                 <div className="flex items-start gap-3">
@@ -314,8 +314,8 @@ const DeleteFolderModal = ({
                 type="button"
                 onClick={() => setDeleteAgents(true)}
                 className={`w-full p-4 rounded-xl border transition-all text-left cursor-pointer ${deleteAgents
-                    ? 'border-red-500/50 bg-red-500/10 shadow-lg shadow-red-500/10'
-                    : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
+                  ? 'border-red-500/50 bg-red-500/10 shadow-lg shadow-red-500/10'
+                  : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
                   }`}
               >
                 <div className="flex items-start gap-3">
@@ -371,8 +371,8 @@ const AgentStatus = ({ isDeployed }: { isDeployed?: boolean }) => {
 
   return (
     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${isActive
-        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-        : 'bg-gray-500/15 text-gray-400 border border-gray-500/30'
+      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+      : 'bg-gray-500/15 text-gray-400 border border-gray-500/30'
       }`}>
       <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-gray-400'}`} />
       {isActive ? 'Active' : 'Inactive'}
@@ -399,8 +399,10 @@ export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([])
   const [folders, setFolders] = useState<FolderType[]>([])
   const [filteredAgents, setFilteredAgents] = useState<Agent[]>([])
+  const [filteredFolders, setFilteredFolders] = useState<FolderType[]>([])
   const [loading, setLoading] = useState(true)
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null)
+
 
   const [folderToEdit, setFolderToEdit] = useState<FolderType | null>(null)
   const [showEditFolderModal, setShowEditFolderModal] = useState(false)
@@ -433,27 +435,33 @@ export default function AgentsPage() {
   }, [])
 
   // ✅ FILTRAGE - CORRIGÉ POUR UTILISER isDeployed
+  // ✅ FILTRAGE CORRECT - Remplace tout ton useEffect par ceci :
   useEffect(() => {
+    // Filtrage des agents
     let filtered = agents.filter(agent => {
-      // Filtre de recherche
       const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase());
-
-      // Filtre pour les agents sans dossier (page principale)
       const isNotInFolder = !agent.folderId ||
         agent.folderId === null ||
         agent.folderId === undefined ||
         agent.folderId === '';
-
       return matchesSearch && isNotInFolder;
     });
 
-    // 🆕 NOUVELLE LOGIQUE DE FILTRAGE - Basé sur isDeployed
+    // Filtrage des dossiers
+    let filteredFoldersArray = folders.filter(folder => {
+      const matchesSearch = folder.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        folder.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    });
+
+    // Filtre de type pour les agents
     if (filterType === "active") {
       filtered = filtered.filter(agent => Boolean(agent.isDeployed))
     } else if (filterType === "basic") {
       filtered = filtered.filter(agent => !agent.isDeployed)
     }
 
+    // Tri des agents
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "name":
@@ -468,8 +476,12 @@ export default function AgentsPage() {
       }
     })
 
+    // Tri des dossiers
+    filteredFoldersArray.sort((a, b) => a.name.localeCompare(b.name))
+
     setFilteredAgents(filtered)
-  }, [agents, searchQuery, filterType, sortBy])
+    setFilteredFolders(filteredFoldersArray)
+  }, [agents, folders, searchQuery, filterType, sortBy])
 
   const handleDeleteAgent = (id: string) => {
     setAgents((prev) => prev.filter((a) => a._id !== id))
@@ -586,301 +598,353 @@ export default function AgentsPage() {
   }
 
   return (
-      <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
-        {agentToDelete && (
-          <ModalDeleteAgent
-            agent={agentToDelete}
-            onClose={() => setAgentToDelete(null)}
-            onDelete={handleDeleteAgent}
-          />
-        )}
-
-        <CreateFolderModal
-          isOpen={showCreateFolderModal}
-          onClose={() => setShowCreateFolderModal(false)}
-          onCreate={handleCreateFolder}
+    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+      {agentToDelete && (
+        <ModalDeleteAgent
+          agent={agentToDelete}
+          onClose={() => setAgentToDelete(null)}
+          onDelete={handleDeleteAgent}
         />
+      )}
 
-        <EditFolderModal
-          folder={folderToEdit}
-          isOpen={showEditFolderModal}
-          onClose={() => {
-            setShowEditFolderModal(false)
-            setFolderToEdit(null)
-          }}
-          onUpdate={handleUpdateFolder}
-        />
+      <CreateFolderModal
+        isOpen={showCreateFolderModal}
+        onClose={() => setShowCreateFolderModal(false)}
+        onCreate={handleCreateFolder}
+      />
 
-        <DeleteFolderModal
-          folder={folderToEdit}
-          isOpen={showDeleteFolderModal}
-          onClose={() => {
-            setShowDeleteFolderModal(false)
-            setFolderToEdit(null)
-          }}
-          onDelete={handleDeleteFolderAction}
-        />
+      <EditFolderModal
+        folder={folderToEdit}
+        isOpen={showEditFolderModal}
+        onClose={() => {
+          setShowEditFolderModal(false)
+          setFolderToEdit(null)
+        }}
+        onUpdate={handleUpdateFolder}
+      />
 
-        {/* Enhanced Search and Filter Bar - INCHANGÉ */}
-        {!loading && (agents.length > 0 || folders.length > 0) && (
-          <FadeInSection>
-            <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 mb-8 shadow-2xl">
-              <div className="flex flex-col lg:flex-row gap-4">
-                {/* Enhanced Search */}
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={20} />
-                  <input
-                    type="text"
-                    placeholder="Search agents and folders..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors z-10"
-                    >
-                      ×
-                    </button>
-                  )}
+      <DeleteFolderModal
+        folder={folderToEdit}
+        isOpen={showDeleteFolderModal}
+        onClose={() => {
+          setShowDeleteFolderModal(false)
+          setFolderToEdit(null)
+        }}
+        onDelete={handleDeleteFolderAction}
+      />
+      {/* Hero Section avec Stats */}
+      <FadeInSection>
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+
+            {/* Left: Title & Live Stats */}
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-2 border-blue-500/40 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Bot className="text-blue-400" size={24} />
                 </div>
-
-                {/* Enhanced Filters + New Folder Button */}
-                <div className="flex gap-3 flex-wrap">
-                  <SearchAgentsFoldersDropdown
-                    value={filterType}
-                    onChange={(value) => setFilterType(value as typeof filterType)}
-                    options={[
-                      { value: "all", label: "All Status", icon: Circle },
-                      { value: "active", label: "Active Only", icon: Zap },
-                      { value: "basic", label: "Inactive Only", icon: Circle }
-                    ]}
-                    icon={Filter}
-                  />
-
-                  <SearchAgentsFoldersDropdown
-                    value={sortBy}
-                    onChange={(value) => setSortBy(value as typeof sortBy)}
-                    options={[
-                      { value: "date", label: "Recent Updates", icon: Clock },
-                      { value: "name", label: "Alphabetical", icon: Users },
-                      { value: "integrations", label: "By Integrations", icon: Zap }
-                    ]}
-                    icon={TrendingUp}
-                  />
-
-                  <button
-                    onClick={() => setShowCreateFolderModal(true)}
-                    className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 whitespace-nowrap shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
-                  >
-                    <FolderPlus size={16} />
-                    New Folder
-                  </button>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                    AI Agent Hub
+                  </h1>
+                  <p className="text-gray-400 text-lg">Manage your intelligent AI agents</p>
                 </div>
               </div>
 
-              {/* Active filters indicator */}
-              {(searchQuery || filterType !== "all") && (
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-700/50">
-                  <span className="text-sm text-gray-400 font-medium">Active filters:</span>
-                  {searchQuery && (
-                    <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-semibold border border-blue-500/30">
-                      Search: "{searchQuery}"
+              {/* Live Stats Inline */}
+              {!loading && (
+                <div className="flex items-center gap-6 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span className="text-emerald-400 font-semibold">
+                      {filteredAgents.filter(a => a.isDeployed).length} Active
                     </span>
-                  )}
-                  {filterType !== "all" && (
-                    <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-semibold border border-purple-500/30">
-                      Status: {filterType}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setFilterType("all");
-                    }}
-                    className="ml-auto text-xs text-gray-400 hover:text-white transition-colors font-medium"
-                  >
-                    Clear all
-                  </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Bot size={14} className="text-gray-400" />
+                    <span className="text-gray-400">{agents.length} Total Agents</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Folder size={14} className="text-blue-400" />
+                    <span className="text-blue-400">{folders.length} Folders</span>
+                  </div>
                 </div>
               )}
             </div>
-          </FadeInSection>
-        )}
 
-        {/* Enhanced Grid Layout */}
-        {loading ? (
-          <FadeInSection>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-              {/* Create Agent Card */}
-              <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-2xl shadow-2xl h-[280px] flex flex-col items-center justify-center group backdrop-blur-sm">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-2 border-blue-500/40 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
-                  <Plus size={28} className="text-blue-400" />
-                </div>
-                <p className="text-xl font-bold text-white mb-2">Create Agent</p>
-                <p className="text-sm text-gray-400">Start building your AI</p>
-              </div>
-
-              {/* Loading Skeletons */}
-              {[...Array(9)].map((_, i) => (
-                <AgentCardSkeleton key={i} />
-              ))}
-            </div>
-          </FadeInSection>
-        ) : (
-          <FadeInSection>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-
-              {/* Create Agent Card - Enhanced */}
+            {/* Right: Quick Actions - DESKTOP SEULEMENT */}
+            <div className="hidden lg:flex gap-3">
+              <button
+                onClick={() => setShowCreateFolderModal(true)}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
+              >
+                <FolderPlus size={18} />
+                New Folder
+              </button>
               <Link
                 href="/agents/new"
-                className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-2xl shadow-2xl h-[280px] flex flex-col items-center justify-center hover:border-blue-500/50 hover:shadow-3xl hover:shadow-blue-500/20 hover:scale-[1.02] transition-all duration-300 group cursor-pointer backdrop-blur-sm order-first"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 transform hover:scale-105"
               >
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5 transition-all duration-300 pointer-events-none"></div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-2 border-blue-500/40 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/20">
-                  <Plus size={28} className="text-blue-400 group-hover:text-cyan-300 transition-colors" />
-                </div>
-    <p className="text-xl font-bold text-white mb-2 group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-cyan-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300 pb-1">
-  Create Agent
-</p>
-<p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors pb-1">
-  Start building your AI
-</p>
+                <Plus size={18} />
+                New Agent
               </Link>
+            </div>
+          </div>
+        </div>
+      </FadeInSection>
 
-              {/* Folders - INCHANGÉ */}
-              {folders.map((folder) => (
-                <FolderCard
-                  key={folder._id}
-                  folder={folder}
-                  onEdit={() => handleEditFolder(folder)}
-                  onDelete={() => {
-                    setFolderToEdit(folder)
-                    setShowDeleteFolderModal(true)
-                  }}
+      {/* Search & Filter Bar - SIMPLIFIÉ */}
+      {!loading && (agents.length > 0 || folders.length > 0) && (
+        <FadeInSection>
+          <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-4 md:p-6 mb-8 shadow-xl">
+            <div className="flex flex-col gap-4">
+
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={20} />
+                <input
+                  type="text"
+                  placeholder="Search agents and folders..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium text-base backdrop-blur-sm"
                 />
-              ))}
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors z-10"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
 
-              {/* ✅ AGENTS - CORRIGÉ */}
-              {filteredAgents.map((agent) => (
-                <div
-                  key={agent._id}
-                  className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-6 h-[280px] hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer"
-                >
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none"></div>
+              {/* Filters - SEULEMENT 3 boutons comme Launch Agent */}
+              <div className="flex gap-2">
+                {[
+                  { key: "all", label: "All", icon: Circle },
+                  { key: "active", label: "Active", icon: Zap },
+                  { key: "basic", label: "Inactive", icon: Circle }
+                ].map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setFilterType(key as typeof filterType)}
+                    className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 min-h-[44px] ${filterType === key
+                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
+                        : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50 '
+                      }`}
+                  >
+                    <Icon size={16} />
+                    {label}
+                  </button>
+                ))}
+              </div>
 
-                  <div className="absolute top-4 right-4 z-10">
-                    <AgentActions
-                      agent={agent}
-                      folders={folders}
-                      onDelete={() => setAgentToDelete(agent)}
-                      onMoveToFolder={handleMoveAgent}
-                    />
+
+            </div>
+          </div>
+        </FadeInSection>
+      )}
+
+      {/* Boutons flottants sur mobile - 2 boutons */}
+      <div className="fixed bottom-6 right-6 lg:hidden z-50">
+        <div className="flex flex-col gap-3">
+          {/* New Agent - Plus haut */}
+          <Link
+            href="/agents/new"
+            className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-full shadow-2xl hover:shadow-purple-500/40 transition-all duration-300 transform hover:scale-110 flex items-center justify-center"
+          >
+            <Plus size={20} />
+          </Link>
+
+          {/* New Folder - Plus bas */}
+          <button
+            onClick={() => setShowCreateFolderModal(true)}
+            className="w-14 h-14 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-full shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 transform hover:scale-110 flex items-center justify-center"
+          >
+            <FolderPlus size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* Enhanced Grid Layout */}
+      {loading ? (
+        <FadeInSection>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {/* Loading Skeletons - SANS Create Agent Card */}
+            {[...Array(10)].map((_, i) => (
+              <AgentCardSkeleton key={i} />
+            ))}
+          </div>
+        </FadeInSection>
+      ) : agents.length === 0 && folders.length === 0 ? (
+        // Enhanced Empty State - Affiché seulement quand VRAIMENT vide
+        <FadeInSection>
+          <div className="text-center py-20">
+            <div className="relative inline-block mb-8">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full blur-3xl"></div>
+              <div className="relative w-24 h-24 rounded-full bg-gradient-to-r from-gray-800 to-gray-700 border-2 border-gray-600 flex items-center justify-center shadow-2xl">
+                <Bot className="w-12 h-12 text-gray-400" />
+              </div>
+            </div>
+            <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-4">
+              Ready to organize your AI workspace?
+            </h3>
+            <p className="text-gray-400 mb-8 max-w-md mx-auto text-lg leading-relaxed">
+              Create folders to organize your agents and start building intelligent AI assistants.
+            </p>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <button
+                onClick={() => setShowCreateFolderModal(true)}
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
+              >
+                <FolderPlus size={20} />
+                Create Folder
+              </button>
+              <Link
+                href="/agents/new"
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
+              >
+                <Plus size={20} />
+                Create Agent
+              </Link>
+            </div>
+          </div>
+        </FadeInSection>
+      ) : (
+        // Grille normale - SANS la carte Create Agent
+        <FadeInSection>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+
+            {/* Folders seulement */}
+            {filteredFolders.map((folder) => (
+              <FolderCard
+                key={folder._id}
+                folder={folder}
+                onEdit={() => handleEditFolder(folder)}
+                onDelete={() => {
+                  setFolderToEdit(folder)
+                  setShowDeleteFolderModal(true)
+                }}
+              />
+            ))}
+
+            {/* Agents seulement */}
+            {filteredAgents.map((agent) => (
+              <div
+                key={agent._id}
+                className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-6 h-[280px] hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer"
+              >
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none"></div>
+
+                <div className="absolute top-4 right-4 z-10">
+                  <AgentActions
+                    agent={agent}
+                    folders={folders}
+                    onDelete={() => setAgentToDelete(agent)}
+                    onMoveToFolder={handleMoveAgent}
+                  />
+                </div>
+
+                <Link href={`/agents/${agent._id}`} className="flex flex-col h-full">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="relative">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/20">
+                        <Bot className="w-7 h-7 text-blue-400" />
+                      </div>
+                      <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${Boolean(agent.isDeployed)
+                        ? 'bg-emerald-400 shadow-emerald-400/50'
+                        : 'bg-gray-500'
+                        } shadow-md`} />
+                    </div>
                   </div>
 
-                  <Link href={`/agents/${agent._id}`} className="flex flex-col h-full">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="relative">
-                        <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/20">
-                          <Bot className="w-7 h-7 text-blue-400" />
+                  <div className="flex-1 flex flex-col">
+                    <div className="mb-4">
+                      <h3 className="text-white font-bold text-lg mb-3 truncate group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+                        {agent.name || "Untitled Agent"}
+                      </h3>
+                      <AgentStatus isDeployed={agent.isDeployed} />
+                    </div>
+
+                    <div className="flex-1 mb-4">
+                      {agent.integrations && agent.integrations.length > 0 ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Zap size={14} className="text-gray-400" />
+                            <span className="text-xs text-gray-400 font-medium">
+                              {agent.integrations.length} integration{agent.integrations.length > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {agent.integrations.slice(0, 3).map((integration, idx) => (
+                              <div
+                                key={idx}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/60 border border-gray-600/50 rounded-lg text-[11px] text-gray-300 font-medium backdrop-blur-sm"
+                              >
+                                {getIntegrationIcon(integration.type)}
+                                <span className="truncate max-w-[60px]">
+                                  {integration.name}
+                                </span>
+                              </div>
+                            ))}
+                            {agent.integrations.length > 3 && (
+                              <div className="inline-flex items-center px-2.5 py-1.5 bg-gray-700/40 border border-gray-600/40 rounded-lg text-[11px] text-gray-400 font-medium">
+                                +{agent.integrations.length - 3}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        {/* ✅ STATUT VISUEL CORRIGÉ */}
-                        <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${Boolean(agent.isDeployed)
-                            ? 'bg-emerald-400 shadow-emerald-400/50'
-                            : 'bg-gray-500'
-                          } shadow-md`} />
-                      </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <Circle size={14} className="opacity-50" />
+                          <span className="text-xs font-medium">No integrations</span>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex-1 flex flex-col">
-                      <div className="mb-4">
-                        <h3 className="text-white font-bold text-lg mb-3 truncate group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
-                          {agent.name || "Untitled Agent"}
-                        </h3>
-                        {/* ✅ AGENT STATUS CORRIGÉ */}
-                        <AgentStatus isDeployed={agent.isDeployed} />
-                      </div>
-
-                      <div className="flex-1 mb-4">
-                        {agent.integrations && agent.integrations.length > 0 ? (
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <Zap size={14} className="text-gray-400" />
-                              <span className="text-xs text-gray-400 font-medium">
-                                {agent.integrations.length} integration{agent.integrations.length > 1 ? 's' : ''}
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {agent.integrations.slice(0, 3).map((integration, idx) => (
-                                <div
-                                  key={idx}
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/60 border border-gray-600/50 rounded-lg text-[11px] text-gray-300 font-medium backdrop-blur-sm"
-                                >
-                                  {getIntegrationIcon(integration.type)}
-                                  <span className="truncate max-w-[60px]">
-                                    {integration.name}
-                                  </span>
-                                </div>
-                              ))}
-                              {agent.integrations.length > 3 && (
-                                <div className="inline-flex items-center px-2.5 py-1.5 bg-gray-700/40 border border-gray-600/40 rounded-lg text-[11px] text-gray-400 font-medium">
-                                  +{agent.integrations.length - 3}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-gray-500">
-                            <Circle size={14} className="opacity-50" />
-                            <span className="text-xs font-medium">No integrations</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-auto">
-                        <Clock size={12} />
-                        <span>
-                          Updated {new Date(agent.updatedAt || agent.createdAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-auto">
+                      <Clock size={12} />
+                      <span>
+                        Updated {new Date(agent.updatedAt || agent.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
                     </div>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </FadeInSection>
-        )}
-
-        {/* Enhanced No Results State - INCHANGÉ */}
-        {!loading && (agents.length > 0 || folders.length > 0) && filteredAgents.length === 0 && folders.length === 0 && (
-          <FadeInSection>
-            <div className="text-center py-20">
-              <div className="w-20 h-20 rounded-2xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center mx-auto mb-6 shadow-xl">
-                <Search className="w-10 h-10 text-gray-400" />
+                  </div>
+                </Link>
               </div>
-              <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-3">
-                No items match your criteria
-              </h3>
-              <p className="text-gray-400 mb-6">
-                Try adjusting your search terms or filter settings
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setFilterType("all");
-                }}
-                className="text-blue-400 hover:text-blue-300 transition-colors font-semibold"
-              >
-                Clear all filters
-              </button>
-            </div>
-          </FadeInSection>
-        )}
-      </div>
+            ))}
+          </div>
+        </FadeInSection>
+      )}
+
+      {/* Enhanced No Results State - pour les recherches sans résultats */}
+      {!loading && (agents.length > 0 || folders.length > 0) && filteredAgents.length === 0 && filteredFolders.length === 0 && (<FadeInSection>
+        <div className="text-center py-20">
+          <div className="w-20 h-20 rounded-2xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <Search className="w-10 h-10 text-gray-400" />
+          </div>
+          <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-3">
+            No items match your criteria
+          </h3>
+          <p className="text-gray-400 mb-6">
+            Try adjusting your search terms or filter settings
+          </p>
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setFilterType("all");
+            }}
+            className="text-blue-400 hover:text-blue-300 transition-colors font-semibold"
+          >
+            Clear all filters
+          </button>
+        </div>
+      </FadeInSection>
+      )}
+    </div>
   )
 }

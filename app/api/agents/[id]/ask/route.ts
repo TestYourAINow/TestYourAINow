@@ -357,6 +357,203 @@ Respond warmly and professionally to confirm the creation. Include important det
   return null;
 }
 
+// FONCTION WEBHOOK CORRIGÉE avec gestion d'erreur JSON
+async function handleWebhookIntegration(
+  userMessage: string,
+  integrations: any[],
+  openai: any,
+  agentModel: string
+): Promise<string | null> {
+  const webhookIntegrations = integrations.filter(i => i.type === "webhook" && i.enabled !== false);
+  
+  if (webhookIntegrations.length === 0) return null;
+
+  console.log('Webhook integration detected...');
+
+  for (const integration of webhookIntegrations) {
+    if (!integration.url || !integration.fields) {
+      console.log(`Webhook ${integration.name} missing URL or fields`);
+      continue;
+    }
+
+    try {
+      // 1. Demander à l'IA si ce webhook doit être déclenché
+      const shouldTriggerRes = await openai.chat.completions.create({
+        model: agentModel,
+        temperature: 0,
+        messages: [
+          {
+            role: "system",
+            content: `You are analyzing if a webhook should be triggered.
+
+Webhook: ${integration.name}
+Description: ${integration.description}
+Required fields: ${integration.fields.map((f: any) => `${f.key} (${f.value})`).join(', ')}
+
+Reply ONLY with 'true' if the user message indicates this webhook should be triggered, 'false' otherwise.`
+          },
+          {
+            role: "user",
+            content: userMessage
+          }
+        ]
+      });
+
+      const shouldTrigger = shouldTriggerRes.choices[0]?.message?.content?.toLowerCase().trim() === 'true';
+      
+      if (!shouldTrigger) {
+        console.log(`Webhook ${integration.name} not triggered - no matching intent`);
+        continue;
+      }
+
+      console.log(`Webhook ${integration.name} should be triggered`);
+
+      // 2. Extraire les données nécessaires avec prompt plus strict
+      const extractRes = await openai.chat.completions.create({
+        model: agentModel,
+        temperature: 0,
+        messages: [
+          {
+            role: "system",
+            content: `You MUST respond with ONLY valid JSON. No explanations, no markdown, no extra text.
+
+Extract data for webhook: ${integration.name}
+
+Required fields:
+${integration.fields.map((f: any) => `- ${f.key}: ${f.value}`).join('\n')}
+
+Response format (copy exactly):
+{"hasAllData": true, "data": {"field1": "value1", "field2": "value2"}}
+
+If missing data:
+{"hasAllData": false, "missing": ["field1", "field2"]}`
+          },
+          {
+            role: "user",
+            content: userMessage
+          }
+        ]
+      });
+
+      const rawResponse = extractRes.choices[0]?.message?.content?.trim() || '';
+      console.log('Raw AI response:', rawResponse);
+
+      let extractedData;
+      try {
+        // Nettoyer la réponse au cas où il y aurait des backticks ou autre
+        const cleanResponse = rawResponse
+          .replace(/```json\n?/g, '')
+          .replace(/```\n?/g, '')
+          .replace(/^[^{]*({.*})[^}]*$/s, '$1');
+        
+        extractedData = JSON.parse(cleanResponse);
+      } catch (parseError) {
+        console.log('JSON parse failed:', parseError);
+        console.log('Attempting to extract with regex...');
+        
+        // Fallback: essayer d'extraire le JSON avec regex
+        const jsonMatch = rawResponse.match(/\{.*\}/s);
+        if (jsonMatch) {
+          try {
+            extractedData = JSON.parse(jsonMatch[0]);
+          } catch {
+            extractedData = { hasAllData: false, error: 'Failed to parse response' };
+          }
+        } else {
+          extractedData = { hasAllData: false, error: 'No JSON found in response' };
+        }
+      }
+      
+      if (!extractedData.hasAllData) {
+        console.log(`Missing data for webhook ${integration.name}`, extractedData);
+        
+        // Demander les données manquantes
+        const missingFieldsRes = await openai.chat.completions.create({
+          model: agentModel,
+          temperature: 0.3,
+          messages: [
+            {
+              role: "system",
+              content: `The user wants to use the "${integration.name}" feature but some required information is missing.
+
+Required information:
+${integration.fields.map((f: any) => `- ${f.key}: ${f.value}`).join('\n')}
+
+Ask the user politely to provide the missing information. Be specific about what you need and friendly.`
+            },
+            {
+              role: "user",
+              content: userMessage
+            }
+          ]
+        });
+
+        return missingFieldsRes.choices[0]?.message?.content || "I need more information to proceed with this request.";
+      }
+
+      // 3. Envoyer le webhook
+      console.log(`Sending webhook to ${integration.url}`, extractedData.data);
+      
+      const webhookRes = await fetch(integration.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'AI-Agent-Webhook/1.0'
+        },
+        body: JSON.stringify(extractedData.data)
+      });
+
+      const webhookSuccess = webhookRes.ok;
+      let webhookResponseText = '';
+      
+      try {
+        webhookResponseText = await webhookRes.text();
+      } catch {
+        webhookResponseText = 'No response body';
+      }
+
+      console.log(`Webhook response: ${webhookRes.status} - ${webhookResponseText}`);
+
+      // 4. Générer la réponse
+      const confirmationRes = await openai.chat.completions.create({
+        model: agentModel,
+        temperature: 0.3,
+        messages: [
+          {
+            role: "system",
+            content: `The webhook "${integration.name}" was ${webhookSuccess ? 'successfully' : 'unsuccessfully'} sent.
+
+Status: ${webhookRes.status}
+Data sent: ${JSON.stringify(extractedData.data, null, 2)}
+Response: ${webhookResponseText.slice(0, 200)}
+
+Generate a natural, friendly response to inform the user about the ${webhookSuccess ? 'successful submission' : 'issue with the submission'}. Be professional but warm.`
+          },
+          {
+            role: "user",
+            content: userMessage
+          }
+        ]
+      });
+
+      const response = confirmationRes.choices[0]?.message?.content;
+      
+      if (response) {
+        console.log(`Webhook ${integration.name} processed successfully`);
+        return response;
+      }
+
+    } catch (error) {
+      console.error(`Webhook error for ${integration.name}:`, error);
+      
+      // En cas d'erreur, retourner un message d'erreur générique
+      return `I encountered an error while processing your request with ${integration.name}. Please try again or contact support if the issue persists.`;
+    }
+  }
+
+  return null;
+}
+
 export async function POST(
   req: NextRequest,
   context: any
@@ -479,6 +676,21 @@ export async function POST(
       console.log('Calendly response generated');
       return NextResponse.json({ reply: calendlyResponse });
     }
+
+    // À INSÉRER dans la fonction POST après les autres intégrations
+
+// Vérifier les webhooks personnalisés
+const webhookResponse = await handleWebhookIntegration(
+  userMessage, 
+  agent.integrations || [], 
+  openai,
+  agentModel
+);
+
+if (webhookResponse) {
+  console.log('Webhook response generated');
+  return NextResponse.json({ reply: webhookResponse });
+}
 
     const knowledge = await AgentKnowledge.find({ agentId: id }).sort({ createdAt: -1 });
     
