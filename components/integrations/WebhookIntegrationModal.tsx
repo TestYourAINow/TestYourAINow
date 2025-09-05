@@ -369,15 +369,6 @@ export default function WebhookIntegrationModal({
                     </div>
                   </div>
 
-                  {field.key && (
-                    <div className="bg-gray-800/50 border border-gray-600/30 rounded-lg p-3">
-                      <div className="text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Preview JSON</div>
-                      <div className="text-xs font-mono text-emerald-400 bg-gray-900/50 px-2 py-1 rounded border border-gray-700/50">
-                        "{field.key.trim().replace(/\s+/g, "_")}": "test_value"
-                      </div>
-                    </div>
-                  )}
-
                   {fieldErrors[index] && (
                     <p className="text-red-400 text-xs mt-2 font-medium">{fieldErrors[index]}</p>
                   )}
