@@ -47,66 +47,66 @@ export async function POST(req: Request) {
     const safeName = name.trim();
 
     const prompt = `
-Tu es un expert en prompt engineering. Génère des instructions DÉTAILLÉES pour une intégration Calendly.
+You are a prompt engineering expert. Generate DETAILED instructions for a Calendly integration.
 
-Informations de l'intégration :
-- Nom: ${safeName}
+Integration information:
+- Name: ${safeName}
 - Description: ${description.trim()}
 
-Réponds UNIQUEMENT avec ce format markdown :
+Respond ONLY with this markdown format:
 
 \`\`\`markdown
 ### ${safeName} Integration
 
 ${description.trim()}
 
-#### Déclenchement automatique
-Tu dois proposer un rendez-vous Calendly quand l'utilisateur :
-- Demande un rendez-vous, RDV, meeting, réunion
-- Veut te rencontrer, planifier quelque chose
-- Demande tes disponibilités ou ton horaire
-- Utilise des mots comme "réserver", "booker", "scheduler"
-- Pose des questions sur ton calendrier
-- Exprime un intérêt pour tes services et semble prêt à passer à l'action
+#### Automatic trigger
+You must offer a Calendly meeting when the user:
+- Asks for an appointment or meeting
+- Wants to meet you or schedule something
+- Asks for your availability or schedule
+- Uses words like "book", "reserve", or "schedule"
+- Asks questions about your calendar
+- Expresses interest in your services and seems ready to take action
 
-#### Réponse type
-Quand tu détectes une demande de rendez-vous :
-1. Réponds de manière chaleureuse et personnalisée
-2. Explique brièvement le processus de réservation
-3. Propose le lien Calendly de manière claire et engageante
-4. Encourage l'action sans être pressant
-5. Assure-toi que le lien sera fonctionnel et accessible
+#### Standard reply
+When you detect a booking request:
+1. Reply warmly and personally
+2. Briefly explain the booking process
+3. Offer the Calendly link clearly and engagingly
+4. Encourage action without being pushy
+5. Make sure the link will be functional and accessible
 
-#### Exemple de réponse
-"Je serais ravi(e) de vous rencontrer ! 📅 Je peux vous aider à réserver un créneau qui vous convient parfaitement. Cliquez sur le lien ci-dessous pour voir mes disponibilités en temps réel et choisir le moment qui vous arrange le mieux. La réservation ne prend que quelques secondes !"
+#### Example reply
+"I'd be happy to meet with you! I can help you book a time that works perfectly for you. Click the link below to see my real-time availability and choose the moment that suits you best. Booking only takes a few seconds!"
 
-#### Informations importantes
-- L'intégration Calendly est active et fonctionnelle
-- Les liens de réservation sont générés automatiquement via l'API Calendly
-- Tu n'as pas besoin de demander l'email ou le nom (Calendly s'en occupe lors de la réservation)
-- Sois proactif : si quelqu'un semble intéressé par tes services, propose spontanément un rendez-vous
-- Le système détecte automatiquement les demandes de rendez-vous et génère des vrais liens Calendly
-- Chaque lien mène directement au calendrier de réservation de l'utilisateur
+#### Important information
+- The Calendly integration is active and functional
+- Booking links are automatically generated via the Calendly API
+- You don't need to ask for the email or name (Calendly collects this during booking)
+- Be proactive: if someone seems interested in your services, spontaneously offer a meeting
+- The system automatically detects booking requests and generates real Calendly links
+- Each link leads directly to the user's booking calendar
 
-#### Limitations et alternatives
-- Ne propose pas de dates/heures spécifiques (laisse Calendly gérer les créneaux disponibles)
-- Ne demande pas les détails de contact (Calendly collecte ces informations)
-- Si l'intégration ne fonctionne pas temporairement, explique poliment et propose une alternative de contact
-- Reste toujours positif et solution-oriented même en cas de problème technique
+#### Limitations and alternatives
+- Do not propose specific dates/times (let Calendly handle available slots)
+- Do not ask for contact details (Calendly collects this information)
+- If the integration temporarily doesn't work, explain politely and offer an alternative contact method
+- Always stay positive and solution-oriented even in case of technical issues
 
-#### Bonnes pratiques
-- Utilise un langage naturel et engageant
-- Évite le jargon technique
-- Personnalise tes réponses selon le contexte de la conversation
-- N'hésite pas à expliquer brièvement les avantages du rendez-vous
-- Maintiens un ton professionnel mais accessible
+#### Best practices
+- Use natural, engaging language
+- Avoid technical jargon
+- Personalize your responses based on the conversation context
+- Briefly explain the benefits of scheduling a meeting when relevant
+- Keep a professional yet approachable tone
 \`\`\`
 `;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        { role: "system", content: "Tu es un assistant expert en prompt engineering pour les intégrations Calendly." },
+        { role: "system", content: "You are an expert assistant in prompt engineering for Calendly integrations." },
         { role: "user", content: prompt },
       ],
       temperature: 0.5,
