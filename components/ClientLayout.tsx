@@ -4,19 +4,35 @@ import { ReactNode, useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import Sidebar from "@/components/Sidebar";
 import { useSidebar } from "@/context/SidebarContext";
-import { usePathname } from 'next/navigation';
-import { Menu } from "lucide-react";
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { Menu, MessageCircle, Settings, ArrowLeft, Globe } from "lucide-react";
+import Link from 'next/link';
 import MobileMenu from "@/components/MobileMenu";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
   const { collapsed } = useSidebar();
   const pathname = usePathname();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // 🔧 AJOUT état menu
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Détecter si on est sur une page widget
+  const isWidgetPage = pathname.includes('/website-widget');
+  
+  // Gérer l'onglet actif pour les pages widget
+  const activeTab = searchParams.get('tab') || 'configuration';
 
   // Scroll to top à chaque changement de page
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+
+  // Fonction pour changer d'onglet sur les pages widget
+  const setActiveTab = (tab: string) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('tab', tab);
+    router.push(`${pathname}?${newSearchParams.toString()}`);
+  };
 
   // Fonction pour obtenir le titre de la page
   const getPageTitle = () => {
@@ -30,7 +46,9 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname === '/agents/new') return 'Create Agent';
     if (pathname === '/create-connection') return 'Create Connection';
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/website-widget')) {
-      return 'Widget Configuration';
+      // Extraire le nom de la connection depuis l'URL ou utiliser un titre par défaut
+      const connectionId = pathname.split('/')[2];
+      return 'Website Widget';
     }
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/instagram-dms')) {
       return 'Chat History';
@@ -56,7 +74,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname === '/agents/new') return 'Build and customize your AI agent';
     if (pathname === '/create-connection') return 'Connect your AI agent';
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/website-widget')) {
-      return 'Customize & Deploy your Widget';
+      return 'Website Widget Configuration';
     }
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/instagram-dms')) {
       return 'View all conversations captured by your Instagram DMs agent';
@@ -97,7 +115,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
       {/* Sidebar - SEULEMENT SUR DESKTOP */}
       <Sidebar />
 
-      {/* 🔧 MAIN LAYOUT - CSS responsive pur (SANS JavaScript pour éviter l'hydration) */}
+      {/* MAIN LAYOUT - CSS responsive pur */}
       <div
         className={`
           transition-all duration-300 ease-out relative z-10
@@ -111,8 +129,26 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         {/* Enhanced TopBar */}
         <header className="h-16 bg-gray-900/80 backdrop-blur-xl border-b border-gray-700/50 flex items-center px-6 sticky top-0 z-40 shadow-lg">
           <div className="flex items-center gap-4 flex-1">
+            {/* Bouton Back pour page widget */}
+            {isWidgetPage && (
+              <Link 
+                href="/launch-agent" 
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mr-2"
+              >
+                <ArrowLeft size={16} />
+                <span className="hidden sm:inline text-sm">Back</span>
+              </Link>
+            )}
+
             {/* Enhanced Vertical Bar */}
             <div className="w-1 h-8 bg-gradient-to-b from-blue-400 via-cyan-400 to-blue-600 rounded-full shadow-lg shadow-blue-400/30"></div>
+
+            {/* Icon pour page widget */}
+            {isWidgetPage && (
+              <div className="w-12 h-12 bg-gray-800/50 border border-gray-700/50 rounded-xl flex items-center justify-center">
+                <Globe size={24} className="text-blue-400" />
+              </div>
+            )}
 
             {/* Enhanced Title Section */}
             <div className="flex-1">
@@ -125,14 +161,43 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          {/* 🔧 MENU HAMBURGER - FONCTIONNEL et responsive */}
+          {/* Section droite - Boutons widget OU menu hamburger */}
           <div className="flex items-center gap-6">
-            <button
-              onClick={() => setIsMobileMenuOpen(true)} // 🔧 AJOUT fonction
-              className="md:hidden w-10 h-10 flex items-center justify-center bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white rounded-xl transition-all duration-300 border border-gray-700/50 hover:border-blue-500/50 shadow-lg"
-            >
-              <Menu size={20} />
-            </button>
+            {isWidgetPage ? (
+              // Boutons Configuration/Conversations pour page widget
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setActiveTab('configuration')}
+                  className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
+                    activeTab === 'configuration' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                  }`}
+                >
+                  <Settings size={16} />
+                  <span className="hidden sm:inline">Configuration</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('conversations')}
+                  className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
+                    activeTab === 'conversations' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                  }`}
+                >
+                  <MessageCircle size={16} />
+                  <span className="hidden sm:inline">Conversations</span>
+                </button>
+              </div>
+            ) : (
+              // Menu hamburger pour autres pages
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="md:hidden w-10 h-10 flex items-center justify-center bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white rounded-xl transition-all duration-300 border border-gray-700/50 hover:border-blue-500/50 shadow-lg"
+              >
+                <Menu size={20} />
+              </button>
+            )}
           </div>
         </header>
 
@@ -165,7 +230,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      {/* 🔧 MOBILE MENU COMPONENT */}
+      {/* MOBILE MENU COMPONENT */}
       <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}

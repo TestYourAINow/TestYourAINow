@@ -59,7 +59,7 @@ export default function FileUploadIntegrationModal({
 
       const validFiles = acceptedFiles.filter((file) => {
         if (isFileForbidden(file.name)) {
-          toast.error(`Fichier interdit : ${file.name}`);
+          toast.error(`Forbidden file : ${file.name}`);
           return false;
         }
         return true;
@@ -106,19 +106,19 @@ export default function FileUploadIntegrationModal({
       });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || "Suppression échouée");
+        toast.error(data.error || "Deletion failed");
         return;
       }
       if (onRefresh) onRefresh();
     }
 
     setFiles((prev) => prev.filter((_, i) => i !== index));
-    toast.success("Fichier supprimé.");
+    toast.success("File deleted");
   };
 
   const handleUpload = async () => {
     if (!name.trim()) {
-      toast.error("Nom d'intégration requis.");
+      toast.error("Integration name required.");
       return;
     }
 
@@ -144,7 +144,7 @@ export default function FileUploadIntegrationModal({
         const data = await res.json();
         
         if (!res.ok) {
-          throw new Error(data.error || "Échec de l'upload");
+          throw new Error(data.error || "Upload failed");
         }
 
         if (data.warning) {
@@ -158,19 +158,19 @@ export default function FileUploadIntegrationModal({
       }
 
       if (successCount > 0 && !hasWarnings) {
-        toast.success(`✅ ${successCount} fichier(s) uploadé(s) et prêt(s) pour l'IA !`);
+        toast.success(`✅ ${successCount} File(s) uploaded and ready for the AI!`);
       } else if (successCount > 0 && hasWarnings) {
-        toast.success(`✅ ${successCount} fichier(s) uploadé(s) avec succès !`);
-        toast.info("ℹ️ Certains fichiers ne pourront pas être lus par l'IA (voir warnings ci-dessus)");
+        toast.success(`✅ ${successCount} File(s) successfully uploaded!`);
+        toast.info("ℹ️ Some files may not be readable by the AI (see warnings above)");
       } else if (hasWarnings && successCount === 0) {
-        toast.warning("⚠️ Tous les fichiers ont été uploadés mais l'IA ne pourra pas les lire");
+        toast.warning("⚠️ All files have been uploaded, but the AI will not be able to read them.");
       }
 
       if (onRefresh) onRefresh();
       onClose();
     } catch (err) {
       console.error("Upload error:", err);
-      toast.error("Erreur lors de l'upload.");
+      toast.error("Error during upload.");
     } finally {
       setIsUploading(false);
     }
