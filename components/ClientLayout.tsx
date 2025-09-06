@@ -125,7 +125,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         `}
       >
         {/* Enhanced TopBar */}
-        <header className="h-16 bg-gray-900/80 backdrop-blur-xl border-b border-gray-700/50 flex items-center px-6 sticky top-0 z-40 shadow-lg">
+        <header className="h-16 bg-gray-900/80 backdrop-blur-xl border-b border-gray-700/50 flex items-center px-6 sticky top-0 shadow-lg">
           <div className="flex items-center gap-4 flex-1">
             {/* Bouton Back pour page widget */}
             {isWidgetPage && (
@@ -162,7 +162,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
                 {/* Bouton Preview - SEULEMENT MOBILE */}
                 <button 
                   onClick={() => setActiveTab('preview')}
-                  className={`md:hidden px-3 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
+                  className={`lg:hidden px-3 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
                     activeTab === 'preview' 
                       ? 'bg-blue-600 text-white' 
                       : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
