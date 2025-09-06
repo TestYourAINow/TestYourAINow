@@ -5,7 +5,7 @@ import { Toaster } from "sonner";
 import Sidebar from "@/components/Sidebar";
 import { useSidebar } from "@/context/SidebarContext";
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
-import { Menu, MessageCircle, Settings, ArrowLeft, Globe } from "lucide-react";
+import { Menu, MessageCircle, Settings, ArrowLeft, Globe, Monitor } from "lucide-react";
 import Link from 'next/link';
 import MobileMenu from "@/components/MobileMenu";
 
@@ -46,9 +46,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname === '/agents/new') return 'Create Agent';
     if (pathname === '/create-connection') return 'Create Connection';
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/website-widget')) {
-      // Extraire le nom de la connection depuis l'URL ou utiliser un titre par défaut
-      const connectionId = pathname.split('/')[2];
-      return 'Website Widget';
+      return 'Widget Config';
     }
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/instagram-dms')) {
       return 'Chat History';
@@ -74,7 +72,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname === '/agents/new') return 'Build and customize your AI agent';
     if (pathname === '/create-connection') return 'Connect your AI agent';
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/website-widget')) {
-      return 'Website Widget Configuration';
+      return 'Customize your chat widget';
     }
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/instagram-dms')) {
       return 'View all conversations captured by your Instagram DMs agent';
@@ -143,19 +141,14 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
             {/* Enhanced Vertical Bar */}
             <div className="w-1 h-8 bg-gradient-to-b from-blue-400 via-cyan-400 to-blue-600 rounded-full shadow-lg shadow-blue-400/30"></div>
 
-            {/* Icon pour page widget */}
-            {isWidgetPage && (
-              <div className="w-12 h-12 bg-gray-800/50 border border-gray-700/50 rounded-xl flex items-center justify-center">
-                <Globe size={24} className="text-blue-400" />
-              </div>
-            )}
+
 
             {/* Enhanced Title Section */}
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-white mb-0.5 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+              <h1 className="lg:text-2xl text-xl font-bold text-white mb-0.5 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent hidden sm:block">
                 {getPageTitle()}
               </h1>
-              <p className="text-sm text-gray-400 font-medium">
+              <p className="lg:text-sm text-xs text-gray-400 font-medium hidden sm:block">
                 {getPageDescription()}
               </p>
             </div>
@@ -164,29 +157,43 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
           {/* Section droite - Boutons widget OU menu hamburger */}
           <div className="flex items-center gap-6">
             {isWidgetPage ? (
-              // Boutons Configuration/Conversations pour page widget
+              // Boutons pour page widget - Desktop ET Mobile
               <div className="flex gap-2">
+                {/* Bouton Preview - SEULEMENT MOBILE */}
+                <button 
+                  onClick={() => setActiveTab('preview')}
+                  className={`md:hidden px-3 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
+                    activeTab === 'preview' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                  }`}
+                >
+                  <Monitor size={16} />
+                  <span className="hidden sm:inline">Preview</span>
+                </button>
+                
                 <button 
                   onClick={() => setActiveTab('configuration')}
-                  className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
+                  className={`px-3 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
                     activeTab === 'configuration' 
                       ? 'bg-blue-600 text-white' 
                       : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
                   }`}
                 >
                   <Settings size={16} />
-                  <span className="hidden sm:inline">Configuration</span>
+                  <span className="hidden sm:inline">Config</span>
                 </button>
+                
                 <button 
                   onClick={() => setActiveTab('conversations')}
-                  className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
+                  className={`px-3 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
                     activeTab === 'conversations' 
                       ? 'bg-blue-600 text-white' 
                       : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
                   }`}
                 >
                   <MessageCircle size={16} />
-                  <span className="hidden sm:inline">Conversations</span>
+                  <span className="hidden sm:inline">Chat</span>
                 </button>
               </div>
             ) : (

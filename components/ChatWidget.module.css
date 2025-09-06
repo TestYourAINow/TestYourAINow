@@ -513,6 +513,25 @@
   }
 }
 
+.chatWidget.preview .chatWindow {
+  max-height: calc(100vh - 104px) !important;
+  height: min(var(--widget-height, 600px), calc(100vh - 104px)) !important;
+}
+
+@media screen and (max-width: 1024px) {
+  .chatWidget.preview .chatWindow {
+    /* En mobile, commencer SOUS le header (64px) et utiliser le reste */
+     
+    height: calc(100vh - 64px) !important;
+    max-height: calc(100vh - 64px) !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    border-radius: 0 !important;
+  }
+}
+
 @keyframes bounceIn {
   0% { opacity: 0; transform: scale(0.3); }
   50% { opacity: 1; transform: scale(1.03); }
