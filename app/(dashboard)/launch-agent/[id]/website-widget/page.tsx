@@ -485,7 +485,7 @@ const ChatbotBuilder: React.FC = () => {
   const selectedAgentName = agents.find(a => a._id === selectedAgent)?.name;
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 bg-grid-pattern">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 bg-grid-pattern">
 
       {/* LAYOUT PRINCIPAL - Hauteurs responsives */}
       <div className="flex lg:h-full h-full lg:flex-row flex-col">
