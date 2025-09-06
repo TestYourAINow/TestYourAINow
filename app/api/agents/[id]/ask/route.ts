@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { AgentKnowledge } from "@/models/AgentKnowledge";
 import { Demo } from "@/models/Demo";
+import { Conversation } from "@/models/Conversation"; // 🆕 AJOUT POUR WIDGET
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createAgentOpenAI, createAgentOpenAIForWebhook } from "@/lib/openai";
@@ -43,6 +44,99 @@ function getLocalizedDateTime(timezone: string): string {
   } catch (error) {
     console.warn('Invalid timezone:', timezone, 'Using UTC');
     return `${now.toISOString().replace('T', ' ').replace('Z', '')} (UTC)`;
+  }
+}
+
+// 🆕 NOUVELLE FONCTION POUR STOCKER LES CONVERSATIONS WIDGET
+async function storeWidgetConversation(
+  conversationId: string,
+  connectionId: string, // = widgetId
+  userId: string,        // = sessionId
+  userMessage: string,
+  aiResponse: string,
+  agent: any
+): Promise<void> {
+  try {
+    console.log(`💾 [WIDGET] Storing conversation: ${conversationId}`);
+    
+    await connectToDatabase();
+    
+    const now = new Date();
+    const timestamp = now.getTime();
+    
+    // Chercher si la conversation existe déjà
+    let conversation = await Conversation.findOne({
+      conversationId: conversationId,
+      isDeleted: false
+    });
+    
+    if (conversation) {
+      // Conversation existante - ajouter les nouveaux messages
+      console.log(`📝 [WIDGET] Adding messages to existing conversation`);
+      
+      conversation.messages.push(
+        {
+          role: 'user',
+          content: userMessage,
+          timestamp: timestamp - 1000, // User message légèrement avant
+          isFiltered: false
+        },
+        {
+          role: 'assistant', 
+          content: aiResponse,
+          timestamp: timestamp,
+          isFiltered: false
+        }
+      );
+      
+      // Mettre à jour les timestamps
+      conversation.lastMessageAt = now;
+      conversation.lastUserMessageAt = new Date(timestamp - 1000);
+      conversation.lastAssistantMessageAt = now;
+      
+      await conversation.save();
+      
+    } else {
+      // Nouvelle conversation
+      console.log(`🆕 [WIDGET] Creating new conversation`);
+      
+      conversation = new Conversation({
+        conversationId: conversationId,
+        connectionId: connectionId,
+        userId: userId,
+        webhookId: connectionId, // Pour compatibilité, on utilise le même ID
+        platform: 'website-widget',
+        agentId: agent._id.toString(),
+        agentName: agent.name,
+        messages: [
+          {
+            role: 'user',
+            content: userMessage,
+            timestamp: timestamp - 1000,
+            isFiltered: false
+          },
+          {
+            role: 'assistant',
+            content: aiResponse, 
+            timestamp: timestamp,
+            isFiltered: false
+          }
+        ],
+        firstMessageAt: new Date(timestamp - 1000),
+        lastMessageAt: now,
+        lastUserMessageAt: new Date(timestamp - 1000),
+        lastAssistantMessageAt: now,
+        isDeleted: false
+      });
+      
+      await conversation.save();
+    }
+    
+    console.log(`✅ [WIDGET] Conversation stored successfully: ${conversationId}`);
+    
+  } catch (error) {
+    console.error('❌ [WIDGET] Error storing conversation:', error);
+    // Ne pas faire échouer la requête si le stockage rate
   }
 }
 
@@ -567,7 +661,7 @@ export async function POST(
     const publicKind = req.headers.get('x-public-kind');
     const demoId = req.headers.get('x-demo-id');
     const demoToken = req.headers.get('x-demo-token');
-    const widgetId = req.headers.get('x-widget-id');
+    const widgetId = req.headers.get('x-widget-id'); // 🆕 NOUVEAU
     const widgetToken = req.headers.get('x-widget-token');
     
     let isPublicOK = false;
@@ -601,6 +695,7 @@ export async function POST(
     const previousMessages: ChatMessage[] = body.previousMessages || [];
     const welcomeMessage: string | null = body.welcomeMessage || null;
     const userTimezone: string = body.timezone || 'UTC';
+    const sessionId: string = body.sessionId || null; // 🆕 NOUVEAU - sessionId du widget
 
     if (!userMessage || typeof userMessage !== "string") {
       return NextResponse.json({ error: "Message is required." }, { status: 400 });
@@ -677,20 +772,18 @@ export async function POST(
       return NextResponse.json({ reply: calendlyResponse });
     }
 
-    // À INSÉRER dans la fonction POST après les autres intégrations
+    // Vérifier les webhooks personnalisés
+    const webhookResponse = await handleWebhookIntegration(
+      userMessage, 
+      agent.integrations || [], 
+      openai,
+      agentModel
+    );
 
-// Vérifier les webhooks personnalisés
-const webhookResponse = await handleWebhookIntegration(
-  userMessage, 
-  agent.integrations || [], 
-  openai,
-  agentModel
-);
-
-if (webhookResponse) {
-  console.log('Webhook response generated');
-  return NextResponse.json({ reply: webhookResponse });
-}
+    if (webhookResponse) {
+      console.log('Webhook response generated');
+      return NextResponse.json({ reply: webhookResponse });
+    }
 
     const knowledge = await AgentKnowledge.find({ agentId: id }).sort({ createdAt: -1 });
     
@@ -776,6 +869,25 @@ if (webhookResponse) {
     });
 
     const reply = completion.choices[0]?.message?.content || "I couldn't provide a response.";
+
+    // 🆕 STOCKAGE MONGODB POUR LES WIDGETS
+    if (publicKind === 'widget' && widgetId && sessionId) {
+      console.log(`💾 [WIDGET] Storing conversation for widget: ${widgetId}, session: ${sessionId}`);
+      
+      // Format conversationId: widgetId_sessionId
+      const conversationId = `${widgetId}_${sessionId}`;
+      
+      // Stocker dans MongoDB (ne pas faire échouer la requête si ça rate)
+      await storeWidgetConversation(
+        conversationId,
+        widgetId,      // connectionId = widgetId
+        sessionId,     // userId = sessionId  
+        userMessage,
+        reply,
+        agent
+      );
+    }
+
     return NextResponse.json({ reply });
     
   } catch (error: any) {

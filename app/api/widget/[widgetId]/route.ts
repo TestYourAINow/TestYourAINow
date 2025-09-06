@@ -638,9 +638,37 @@ html, body {
     let isTyping = false;
     let messages = [];
     let isMobile = false;
+    let currentSessionId = null; // 🆕 NOUVEAU - sessionId persistant
     
     // Configuration
     const config = ${JSON.stringify(config)};
+    
+    // 🆕 NOUVELLE FONCTION - Génération/récupération sessionId
+    function generateSessionId() {
+      const storageKey = 'widget_session_' + config._id;
+      
+      // Essayer de récupérer depuis localStorage
+      let sessionId = localStorage.getItem(storageKey);
+      
+      if (!sessionId) {
+        // Générer un nouveau sessionId
+        const timestamp = Date.now();
+        const randomString = Math.random().toString(36).substr(2, 9);
+        sessionId = 'session_' + timestamp + '_' + randomString;
+        
+        // Sauvegarder dans localStorage
+        try {
+          localStorage.setItem(storageKey, sessionId);
+          console.log('🆕 [WIDGET] New sessionId generated:', sessionId);
+        } catch (error) {
+          console.warn('⚠️ [WIDGET] Cannot save sessionId to localStorage');
+        }
+      } else {
+        console.log('✅ [WIDGET] Existing sessionId loaded:', sessionId);
+      }
+      
+      return sessionId;
+    }
     
     // 🎯 DÉTECTION MOBILE AMÉLIORÉE
     function detectMobile() {
@@ -649,7 +677,7 @@ html, body {
              window.innerWidth <= 768;
     }
     
-    // 💾 PERSISTANCE - Code existant
+    // 💾 PERSISTANCE - Code existant modifié pour inclure sessionId
     const STORAGE_KEY = 'chatbot_conversation_' + config._id;
     
     function saveConversation() {
@@ -657,7 +685,8 @@ html, body {
         const conversationData = {
           messages: messages,
           timestamp: Date.now(),
-          isOpen: isOpen
+          isOpen: isOpen,
+          sessionId: currentSessionId // 🆕 INCLURE sessionId
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationData));
       } catch (error) {
@@ -674,6 +703,12 @@ html, body {
           const maxAge = 60 * 60 * 1000; // 1 heure
           if (Date.now() - data.timestamp < maxAge) {
             messages = data.messages || [];
+            
+            // 🆕 Récupérer sessionId sauvegardé si disponible
+            if (data.sessionId) {
+              currentSessionId = data.sessionId;
+              console.log('📋 [WIDGET] SessionId loaded from conversation:', currentSessionId);
+            }
             
             if (messages.length > 0) {
               messagesContainer.innerHTML = '';
@@ -773,22 +808,22 @@ html, body {
       }
     });
     
-input?.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    // Sur mobile : Entrée = toujours saut de ligne
-    if (isMobile) {
-      // Ne rien faire, laisser le comportement par défaut (saut de ligne)
-      return;
-    }
-    
-    // Sur desktop : Entrée seule = envoyer, Shift+Entrée = saut de ligne
-    if (!e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-    // Si Shift+Entrée, ne rien faire = saut de ligne par défaut
-  }
-});
+    input?.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        // Sur mobile : Entrée = toujours saut de ligne
+        if (isMobile) {
+          // Ne rien faire, laisser le comportement par défaut (saut de ligne)
+          return;
+        }
+        
+        // Sur desktop : Entrée seule = envoyer, Shift+Entrée = saut de ligne
+        if (!e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+        // Si Shift+Entrée, ne rien faire = saut de ligne par défaut
+      }
+    });
     
     // MOBILE: Gestion du resize pour clavier virtuel
     if (isMobile) {
@@ -894,6 +929,10 @@ input?.addEventListener('keydown', function(e) {
       messages = [];
       localStorage.removeItem(STORAGE_KEY);
       
+      // 🆕 NOUVEAU - Générer un nouveau sessionId lors du reset
+      currentSessionId = generateSessionId();
+      console.log('🔄 [WIDGET] Chat reset, new sessionId:', currentSessionId);
+      
       if (config.showWelcomeMessage && config.welcomeMessage) {
         addMessage(config.welcomeMessage, true);
       }
@@ -902,6 +941,11 @@ input?.addEventListener('keydown', function(e) {
     async function sendMessage() {
       const text = input?.value?.trim();
       if (!text) return;
+      
+      // 🆕 S'assurer qu'on a un sessionId avant d'envoyer
+      if (!currentSessionId) {
+        currentSessionId = generateSessionId();
+      }
       
       addMessage(text, false);
       input.value = '';
@@ -916,7 +960,7 @@ input?.addEventListener('keydown', function(e) {
       showTyping();
       
       try {
-        const response = await fetch('/api/agents/' + config.selectedAgent + '/ask', {
+        const response = await fetch('https://testyourainow.com/api/agents/' + config.selectedAgent + '/ask', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -926,6 +970,7 @@ input?.addEventListener('keydown', function(e) {
           },
           body: JSON.stringify({
             message: text,
+            sessionId: currentSessionId, // 🆕 PASSER LE sessionId
             previousMessages: messages.map(m => ({ 
               role: m.isBot ? 'assistant' : 'user', 
               content: m.text 
@@ -1016,23 +1061,31 @@ input?.addEventListener('keydown', function(e) {
       }
     });
     
+    // 🆕 INITIALISATION - Générer sessionId au chargement
     window.addEventListener('DOMContentLoaded', function() {
       isMobile = detectMobile();
+      
+      // Générer/récupérer sessionId
+      currentSessionId = generateSessionId();
+      
+      // Charger conversation existante
       const loaded = loadConversation();
       
       if (isMobile && input) {
         input.style.fontSize = '16px';
         input.style.minHeight = '44px';
       }
+      
+      console.log('🎯 [WIDGET] Initialized with sessionId:', currentSessionId);
     });
     
     if (config.showPopup && config.popupMessage && popup) {
-  setTimeout(() => {
-    if (!isOpen) { // Retiré la condition mobile qui masquait le popup
-      popup.classList.remove('hidden');
+      setTimeout(() => {
+        if (!isOpen) { // Retiré la condition mobile qui masquait le popup
+          popup.classList.remove('hidden');
+        }
+      }, (config.popupDelay || 3) * 1000);
     }
-  }, (config.popupDelay || 3) * 1000);
-}
     
     parent.postMessage({ 
       type: 'WIDGET_READY', 
@@ -1043,7 +1096,7 @@ input?.addEventListener('keydown', function(e) {
       } 
     }, '*');
     
-    console.log('Widget chargé avec succès - Mobile:', isMobile);
+    console.log('Widget chargé avec succès - Mobile:', isMobile, '- SessionId:', currentSessionId);
   </script>
 </body>
 </html>`;

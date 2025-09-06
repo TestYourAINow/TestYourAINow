@@ -59,9 +59,9 @@ export async function GET(req: NextRequest, context: any) {
       isActive: connection.isActive
     });
 
-    // ✅ Vérifier que c'est une connection avec webhook (Instagram/Facebook)
-    if (!connection.webhookId) {
-      console.log(`⚠️ [MONGODB] No webhookId for this connection type: ${connection.integrationType}`);
+    // 🆕 MODIFICATION - Vérifier support conversations (webhook OU website-widget)
+    if (!connection.webhookId && connection.integrationType !== 'website-widget') {
+      console.log(`⚠️ [MONGODB] No conversation support for connection type: ${connection.integrationType}`);
       return NextResponse.json({ 
         conversations: [],
         message: 'This connection type does not support conversation history'
