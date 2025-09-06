@@ -145,10 +145,10 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
 
             {/* Enhanced Title Section */}
             <div className="flex-1">
-              <h1 className="lg:text-2xl text-xl font-bold text-white mb-0.5 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent hidden sm:block">
+              <h1 className="lg:text-2xl text-xl font-bold text-white mb-0.5 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
                 {getPageTitle()}
               </h1>
-              <p className="lg:text-sm text-xs text-gray-400 font-medium hidden sm:block">
+              <p className="lg:text-sm text-xs text-gray-400 font-medium">
                 {getPageDescription()}
               </p>
             </div>
