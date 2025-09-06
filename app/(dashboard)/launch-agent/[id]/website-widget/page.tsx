@@ -485,15 +485,15 @@ const ChatbotBuilder: React.FC = () => {
   const selectedAgentName = agents.find(a => a._id === selectedAgent)?.name;
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 bg-grid-pattern">
+    <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 bg-grid-pattern">
 
       {/* LAYOUT PRINCIPAL - Hauteurs responsives */}
       <div className="flex lg:h-full h-full lg:flex-row flex-col">
 
         {/* Section Preview - NOUVELLE LOGIQUE */}
         <div className={`flex-1 bg-gray-900/95 backdrop-blur-xl ${
-          activeTab === 'preview' ? 'block' : 'hidden lg:block'
-        } relative bg-grid-pattern ${activeTab === 'preview' ? 'h-full' : ''}`}>
+          activeTab === 'preview' ? 'block h-full' : 'hidden lg:block'
+        } relative bg-grid-pattern`}>
           
           {/* Agent Status et Widget Name - REPOSITIONNÉ À GAUCHE */}
           <div className={`absolute top-4 left-4 z-10 ${
