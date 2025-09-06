@@ -230,7 +230,7 @@ export async function POST(req: NextRequest, context: any) {
   }
 }
 
-// 🗑️ DELETE - Supprimer une conversation (soft delete)
+// 🗑️ DELETE - Supprimer une conversation (soft delete) - VERSION CORRIGÉE TypeScript
 export async function DELETE(req: NextRequest, context: any) {
   try {
     const params = await context.params;
@@ -238,7 +238,9 @@ export async function DELETE(req: NextRequest, context: any) {
     const body = await req.json();
     const { conversationId } = body;
 
-    console.log(`🗑️ [MONGODB] Deleting conversation: ${conversationId}`);
+    console.log(`🗑️ [MONGODB] DELETE Request Details:`);
+    console.log(`   - connectionId: ${connectionId}`);
+    console.log(`   - conversationId: ${conversationId}`);
 
     // 🔐 Authentification
     const session = await getServerSession(authOptions);
@@ -255,10 +257,64 @@ export async function DELETE(req: NextRequest, context: any) {
     });
 
     if (!connection) {
+      console.log(`❌ [MONGODB] Connection not found for user: ${session.user.id}`);
       return NextResponse.json({ error: 'Connection not found' }, { status: 404 });
     }
 
-    // 🗑️ Soft delete de la conversation
+    console.log(`✅ [MONGODB] Connection verified: ${connection.name} (${connection.integrationType})`);
+
+    // 🔍 D'ABORD - Chercher la conversation pour debug
+    const conversationBeforeDelete = await Conversation.findOne({
+      conversationId: conversationId,
+      connectionId: connectionId,
+      isDeleted: false
+    }).lean();
+
+    if (!conversationBeforeDelete) {
+      console.log(`❌ [MONGODB] Conversation NOT FOUND before delete:`);
+      console.log(`   - Searching for conversationId: ${conversationId}`);
+      console.log(`   - Searching for connectionId: ${connectionId}`);
+      console.log(`   - Searching for isDeleted: false`);
+      
+      // 🔍 DIAGNOSTIC - Chercher toutes les conversations pour ce connectionId
+      const allConversationsForConnection = await Conversation.find({
+        connectionId: connectionId
+      }).lean();
+      
+      console.log(`🔍 [DIAGNOSTIC] Found ${allConversationsForConnection.length} total conversations for connectionId ${connectionId}:`);
+      if (Array.isArray(allConversationsForConnection)) {
+        allConversationsForConnection.forEach((conv: any, index: number) => {
+          console.log(`   ${index + 1}. conversationId: ${conv.conversationId}, isDeleted: ${conv.isDeleted}`);
+        });
+      }
+      
+      // 🔍 DIAGNOSTIC - Chercher par conversationId seul
+      const conversationByIdOnly = await Conversation.find({
+        conversationId: conversationId
+      }).lean();
+      
+      console.log(`🔍 [DIAGNOSTIC] Found ${conversationByIdOnly.length} conversations with conversationId ${conversationId}:`);
+      if (Array.isArray(conversationByIdOnly)) {
+        conversationByIdOnly.forEach((conv: any, index: number) => {
+          console.log(`   ${index + 1}. connectionId: ${conv.connectionId}, isDeleted: ${conv.isDeleted}`);
+        });
+      }
+      
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+    }
+
+    const conv = conversationBeforeDelete as any;
+    console.log(`✅ [MONGODB] Conversation found before delete:`);
+    console.log(`   - _id: ${conv._id}`);
+    console.log(`   - conversationId: ${conv.conversationId}`);
+    console.log(`   - connectionId: ${conv.connectionId}`);
+    console.log(`   - userId: ${conv.userId}`);
+    console.log(`   - isDeleted: ${conv.isDeleted}`);
+    console.log(`   - messages count: ${conv.messages?.length || 0}`);
+
+    // 🗑️ Soft delete de la conversation avec plus de logs
+    console.log(`🗑️ [MONGODB] Executing soft delete...`);
+    
     const deletedConversation = await Conversation.findOneAndUpdate(
       {
         conversationId: conversationId,
@@ -269,24 +325,66 @@ export async function DELETE(req: NextRequest, context: any) {
         isDeleted: true,
         deletedAt: new Date()
       },
-      { new: true }
+      { 
+        new: true,  // Retourner le document après mise à jour
+        lean: true  // Optimisation
+      }
     );
 
     if (!deletedConversation) {
-      console.log(`❌ [MONGODB] Conversation not found for deletion: ${conversationId}`);
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      console.log(`❌ [MONGODB] findOneAndUpdate returned null - conversation not updated`);
+      console.log(`🔍 [MONGODB] This suggests the conversation was not found during update`);
+      
+      // 🔍 Double vérification - la conversation existe-t-elle encore ?
+      const stillExists = await Conversation.findOne({
+        conversationId: conversationId,
+        connectionId: connectionId
+      }).lean();
+      
+      if (stillExists) {
+        const existsConv = stillExists as any;
+        console.log(`⚠️ [MONGODB] Conversation still exists but isDeleted: ${existsConv.isDeleted}`);
+        
+        // Si elle existe mais est déjà supprimée
+        if (existsConv.isDeleted) {
+          console.log(`✅ [MONGODB] Conversation was already deleted`);
+          return NextResponse.json({
+            success: true,
+            message: 'Conversation was already deleted',
+            conversationId: conversationId
+          });
+        }
+      }
+      
+      return NextResponse.json({ error: 'Failed to delete conversation' }, { status: 500 });
     }
 
-    console.log(`✅ [MONGODB] Conversation soft deleted: ${conversationId}`);
+    const delConv = deletedConversation as any;
+    console.log(`✅ [MONGODB] Conversation soft deleted successfully:`);
+    console.log(`   - _id: ${delConv._id}`);
+    console.log(`   - conversationId: ${delConv.conversationId}`);
+    console.log(`   - isDeleted: ${delConv.isDeleted}`);
+    console.log(`   - deletedAt: ${delConv.deletedAt}`);
+
+    // 🔍 VÉRIFICATION FINALE - Confirmer que la conversation n'apparaît plus dans la liste
+    const remainingConversations = await Conversation.find({
+      connectionId: connectionId,
+      isDeleted: false
+    }).lean();
+
+    console.log(`🔍 [MONGODB] After deletion, ${remainingConversations.length} conversations remain for connectionId ${connectionId}`);
 
     return NextResponse.json({
       success: true,
       message: 'Conversation deleted successfully',
-      conversationId: conversationId
+      conversationId: conversationId,
+      deletedAt: delConv.deletedAt,
+      remainingCount: remainingConversations.length
     });
 
   } catch (error: any) {
     console.error('❌ [MONGODB] Error deleting conversation:', error);
+    console.error('❌ [MONGODB] Error stack:', error.stack);
     return NextResponse.json({ 
       error: 'Failed to delete conversation',
       details: error?.message || 'Unknown error'

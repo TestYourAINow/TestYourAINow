@@ -191,8 +191,6 @@ const ChatbotBuilder: React.FC = () => {
         setIsLoading(true);
         const res = await fetch(`/api/connections/${connectionId}`);
         const data = await res.json();
-         console.log('🔍 DEBUG - Connection data:', data.connection);
-    console.log('🔍 DEBUG - ConnectionId actuel:', connectionId);
         if (data?.connection) {
           setConnection(data.connection);
         }
@@ -296,34 +294,72 @@ const ChatbotBuilder: React.FC = () => {
     }
   };
 
-  // FONCTION POUR SUPPRIMER UNE CONVERSATION
-  const deleteConversation = async (conversationId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
-      return;
-    }
+// 🗑️ FONCTION POUR SUPPRIMER UNE CONVERSATION - VERSION AMÉLIORÉE
+const deleteConversation = async (conversationId: string) => {
+  console.log(`🗑️ [FRONTEND] Delete conversation request: ${conversationId}`);
+  
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
+    return;
+  }
 
-    try {
-      const res = await fetch(`/api/connections/${connectionId}/conversations`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId })
+  try {
+    console.log(`🗑️ [FRONTEND] Sending DELETE request to /api/connections/${connectionId}/conversations`);
+    console.log(`🗑️ [FRONTEND] Payload:`, { conversationId });
+
+    const res = await fetch(`/api/connections/${connectionId}/conversations`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversationId })
+    });
+
+    console.log(`🗑️ [FRONTEND] DELETE response status: ${res.status} ${res.statusText}`);
+
+    const responseData = await res.json();
+    console.log(`🗑️ [FRONTEND] DELETE response data:`, responseData);
+
+    if (res.ok && responseData.success) {
+      console.log(`✅ [FRONTEND] Delete successful, updating UI...`);
+      
+      // Retirer immédiatement de la liste (optimistic update)
+      setConversations(prev => {
+        const filtered = prev.filter(conv => conv.conversationId !== conversationId);
+        console.log(`🔄 [FRONTEND] Conversations list updated: ${prev.length} -> ${filtered.length}`);
+        return filtered;
       });
-
-      if (res.ok) {
-        // Retirer de la liste
-        setConversations(prev => prev.filter(conv => conv.conversationId !== conversationId));
-        
-        // Si c'était la conversation sélectionnée, revenir à la liste
-        if (selectedConversation?.conversationId === conversationId) {
-          setSelectedConversation(null);
-        }
-        
-        console.log(`✅ Conversation deleted: ${conversationId}`);
+      
+      // Si c'était la conversation sélectionnée, revenir à la liste
+      if (selectedConversation?.conversationId === conversationId) {
+        console.log(`🔄 [FRONTEND] Clearing selected conversation`);
+        setSelectedConversation(null);
       }
-    } catch (error) {
-      console.error('Error deleting conversation:', error);
+      
+      // 🔄 DÉLAI POUR LAISSER MONGODB SE SYNCHRONISER
+      console.log(`🔄 [FRONTEND] Waiting 500ms before refreshing list...`);
+      setTimeout(() => {
+        console.log(`🔄 [FRONTEND] Refreshing conversations list from server...`);
+        fetchConversations();
+      }, 500);
+      
+      console.log(`✅ [FRONTEND] Conversation deleted: ${conversationId}`);
+      
+    } else {
+      console.error(`❌ [FRONTEND] Delete failed:`, responseData);
+      
+      // Afficher l'erreur à l'utilisateur
+      alert(`Erreur lors de la suppression: ${responseData.error || 'Erreur inconnue'}`);
+      
+      // Rafraîchir la liste en cas d'erreur pour resynchroniser
+      fetchConversations();
     }
-  };
+    
+  } catch (error) {
+    console.error('❌ [FRONTEND] Error deleting conversation:', error);
+    alert('Erreur réseau lors de la suppression. Veuillez réessayer.');
+    
+    // Rafraîchir la liste en cas d'erreur réseau
+    fetchConversations();
+  }
+};
 
   // CHARGER PLUS DE MESSAGES (scroll infini)
   const loadMoreMessages = () => {
