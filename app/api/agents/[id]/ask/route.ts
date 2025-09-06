@@ -871,24 +871,42 @@ export async function POST(
     const reply = completion.choices[0]?.message?.content || "I couldn't provide a response.";
 
     // 🆕 STOCKAGE MONGODB POUR LES WIDGETS
-    if (publicKind === 'widget' && widgetId && sessionId) {
-      console.log(`💾 [WIDGET] Storing conversation for widget: ${widgetId}, session: ${sessionId}`);
-      
-      // Format conversationId: widgetId_sessionId
-      const conversationId = `${widgetId}_${sessionId}`;
-      
-      // Stocker dans MongoDB (ne pas faire échouer la requête si ça rate)
-      await storeWidgetConversation(
-        conversationId,
-        widgetId,      // connectionId = widgetId
-        sessionId,     // userId = sessionId  
-        userMessage,
-        reply,
-        agent
-      );
+   if (publicKind === 'widget' && widgetId && sessionId) {
+  console.log(`💾 [WIDGET] Storing conversation for widget: ${widgetId}, session: ${sessionId}`);
+  
+  try {
+    // 🎯 ÉTAPE 1: Récupérer le vrai connectionId depuis ChatbotConfig
+    const { ChatbotConfig } = await import('@/models/ChatbotConfig');
+    const chatbotConfig = await ChatbotConfig.findById(widgetId).lean() as any;
+    
+    if (!chatbotConfig?.connectionId) {
+      console.log(`⚠️ [WIDGET] No connectionId found for widget: ${widgetId}`);
+      return NextResponse.json({ reply });
     }
+    
+    const realConnectionId = String(chatbotConfig.connectionId);
+    console.log(`🔗 [WIDGET] Using real connectionId: ${realConnectionId}`);
+    
+    // Format conversationId: widgetId_sessionId (garde le même format)
+    const conversationId = `${widgetId}_${sessionId}`;
+    
+    // 🎯 ÉTAPE 2: Stocker avec le vrai connectionId
+    await storeWidgetConversation(
+      conversationId,
+      realConnectionId,  // 🆕 UTILISER LE VRAI connectionId
+      sessionId,         // userId = sessionId  
+      userMessage,
+      reply,
+      agent
+    );
+    
+    console.log(`✅ [WIDGET] Conversation stored successfully: ${conversationId} -> ${realConnectionId}`);
+  } catch (error) {
+    console.error(`❌ [WIDGET] Storage error:`, error);
+  }
+}
 
-    return NextResponse.json({ reply });
+return NextResponse.json({ reply });
     
   } catch (error: any) {
     console.error("Agent ask error:", error);
