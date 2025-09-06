@@ -147,6 +147,7 @@ const ChatbotBuilder: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [savedWidgetId, setSavedWidgetId] = useState<string | null>(null);
+  const [realConnectionId, setRealConnectionId] = useState<string | null>(null);
 
   // NOUVEAUX ÉTATS POUR CONVERSATIONS (MongoDB)
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
@@ -185,32 +186,25 @@ const ChatbotBuilder: React.FC = () => {
     _id: savedWidgetId || connectionId || 'preview'
   };
 
-  useEffect(() => {
-    const fetchConnection = async () => {
-      try {
-        setIsLoading(true);
-        const res = await fetch(`/api/connections/${connectionId}`);
-        const data = await res.json();
-        if (data?.connection) {
-          setConnection(data.connection);
-        }
-      } catch (err) {
-        console.error('Connection loading error:', err);
-        setError('Error loading connection');
-      } finally {
-        setIsLoading(false);
+useEffect(() => {
+  const fetchConnection = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`/api/connections/${connectionId}`);
+      const data = await res.json();
+      if (data?.connection) {
+        setConnection(data.connection);
+        setRealConnectionId(data.connection._id); // 🆕 LIGNE AJOUTÉE
       }
-    };
-    if (connectionId) fetchConnection();
-  }, [connectionId]);
-
-  useEffect(() => {
-    if (connection) {
-      setName(connection.name || '');
-      setSelectedAgent(connection.aiBuildId || '');
-      setSettings(connection.settings || {});
+    } catch (err) {
+      console.error('Connection loading error:', err);
+      setError('Error loading connection');
+    } finally {
+      setIsLoading(false);
     }
-  }, [connection]);
+  };
+  if (connectionId) fetchConnection();
+}, [connectionId]);
 
   useEffect(() => {
     const fetchAgents = async () => {
@@ -227,17 +221,19 @@ const ChatbotBuilder: React.FC = () => {
   }, []);
 
   // CHARGER LES CONVERSATIONS QUAND ON CHANGE D'ONGLET
-  useEffect(() => {
-    if (activeTab === 'conversations' && connection) {
-      fetchConversations();
-    }
-  }, [activeTab, connection]);
+ useEffect(() => {
+  if (activeTab === 'conversations' && connection && realConnectionId) { // 🔧 MODIFIÉ
+    fetchConversations();
+  }
+}, [activeTab, connection, realConnectionId]); // 🔧 MODIFIÉ
 
   // FONCTION POUR CHARGER LES CONVERSATIONS (MongoDB)
   const fetchConversations = async () => {
-    setConversationsLoading(true);
-    try {
-      const res = await fetch(`/api/connections/${connectionId}/conversations`);
+  if (!realConnectionId) return; // 🆕 LIGNE AJOUTÉE
+  
+  setConversationsLoading(true);
+  try {
+    const res = await fetch(`/api/connections/${realConnectionId}/conversations`); // 🔧 MODIFIÉ
       const data = await res.json();
       
       if (data.success) {
@@ -252,15 +248,17 @@ const ChatbotBuilder: React.FC = () => {
   };
 
   // FONCTION POUR CHARGER UNE CONVERSATION DÉTAILLÉE
-  const fetchConversationDetails = async (conversationId: string, loadMore = false, lastTimestamp?: number) => {
-    if (!loadMore) {
-      setConversationDetailsLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
+ const fetchConversationDetails = async (conversationId: string, loadMore = false, lastTimestamp?: number) => {
+  if (!realConnectionId) return; // 🆕 LIGNE AJOUTÉE
+  
+  if (!loadMore) {
+    setConversationDetailsLoading(true);
+  } else {
+    setLoadingMore(true);
+  }
 
-    try {
-      const res = await fetch(`/api/connections/${connectionId}/conversations`, {
+  try {
+    const res = await fetch(`/api/connections/${realConnectionId}/conversations`, { // 🔧 MODIFIÉ
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -295,13 +293,15 @@ const ChatbotBuilder: React.FC = () => {
   };
 
   // FONCTION POUR SUPPRIMER UNE CONVERSATION
-  const deleteConversation = async (conversationId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
-      return;
-    }
+const deleteConversation = async (conversationId: string) => {
+  if (!realConnectionId) return; // 🆕 LIGNE AJOUTÉE
+  
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
+    return;
+  }
 
-    try {
-      const res = await fetch(`/api/connections/${connectionId}/conversations`, {
+  try {
+    const res = await fetch(`/api/connections/${realConnectionId}/conversations`, { // 🔧 MODIFIÉ
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversationId })
