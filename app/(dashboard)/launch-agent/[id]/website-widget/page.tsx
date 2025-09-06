@@ -492,8 +492,8 @@ const ChatbotBuilder: React.FC = () => {
 
         {/* Section Preview - NOUVELLE LOGIQUE */}
         <div className={`flex-1 bg-gray-900/95 backdrop-blur-xl ${
-          activeTab === 'preview' ? 'block h-full' : 'hidden lg:block'
-        } relative bg-grid-pattern`}>
+          activeTab === 'preview' ? 'block' : 'hidden lg:block'
+        } relative bg-grid-pattern overflow-hidden`}>
           
           {/* Agent Status et Widget Name - REPOSITIONNÉ À GAUCHE */}
           <div className={`absolute top-4 left-4 z-10 ${
