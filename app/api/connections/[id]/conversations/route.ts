@@ -230,7 +230,7 @@ export async function POST(req: NextRequest, context: any) {
   }
 }
 
-// 🗑️ DELETE - Supprimer une conversation (soft delete) - VERSION CORRIGÉE TypeScript
+// 🗑️ DELETE - HARD DELETE (suppression réelle) - VERSION CORRIGÉE
 export async function DELETE(req: NextRequest, context: any) {
   try {
     const params = await context.params;
@@ -238,7 +238,7 @@ export async function DELETE(req: NextRequest, context: any) {
     const body = await req.json();
     const { conversationId } = body;
 
-    console.log(`🗑️ [MONGODB] DELETE Request Details:`);
+    console.log(`🗑️ [MONGODB] HARD DELETE Request Details:`);
     console.log(`   - connectionId: ${connectionId}`);
     console.log(`   - conversationId: ${conversationId}`);
 
@@ -288,52 +288,30 @@ export async function DELETE(req: NextRequest, context: any) {
         });
       }
       
-      // 🔍 DIAGNOSTIC - Chercher par conversationId seul
-      const conversationByIdOnly = await Conversation.find({
-        conversationId: conversationId
-      }).lean();
-      
-      console.log(`🔍 [DIAGNOSTIC] Found ${conversationByIdOnly.length} conversations with conversationId ${conversationId}:`);
-      if (Array.isArray(conversationByIdOnly)) {
-        conversationByIdOnly.forEach((conv: any, index: number) => {
-          console.log(`   ${index + 1}. connectionId: ${conv.connectionId}, isDeleted: ${conv.isDeleted}`);
-        });
-      }
-      
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
     const conv = conversationBeforeDelete as any;
-    console.log(`✅ [MONGODB] Conversation found before delete:`);
+    console.log(`✅ [MONGODB] Conversation found before HARD delete:`);
     console.log(`   - _id: ${conv._id}`);
     console.log(`   - conversationId: ${conv.conversationId}`);
     console.log(`   - connectionId: ${conv.connectionId}`);
     console.log(`   - userId: ${conv.userId}`);
-    console.log(`   - isDeleted: ${conv.isDeleted}`);
     console.log(`   - messages count: ${conv.messages?.length || 0}`);
 
-    // 🗑️ Soft delete de la conversation avec plus de logs
-    console.log(`🗑️ [MONGODB] Executing soft delete...`);
+    // 🗑️ HARD DELETE de la conversation (suppression réelle)
+    console.log(`🗑️ [MONGODB] Executing HARD DELETE (real deletion)...`);
     
-    const deletedConversation = await Conversation.findOneAndUpdate(
-      {
-        conversationId: conversationId,
-        connectionId: connectionId,
-        isDeleted: false
-      },
-      {
-        isDeleted: true,
-        deletedAt: new Date()
-      },
-      { 
-        new: true,  // Retourner le document après mise à jour
-        lean: true  // Optimisation
-      }
-    );
+    const deleteResult = await Conversation.deleteOne({
+      conversationId: conversationId,
+      connectionId: connectionId,
+      isDeleted: false
+    });
 
-    if (!deletedConversation) {
-      console.log(`❌ [MONGODB] findOneAndUpdate returned null - conversation not updated`);
-      console.log(`🔍 [MONGODB] This suggests the conversation was not found during update`);
+    console.log(`🗑️ [MONGODB] Delete result:`, deleteResult);
+
+    if (deleteResult.deletedCount === 0) {
+      console.log(`❌ [MONGODB] No conversation was deleted - deletedCount: 0`);
       
       // 🔍 Double vérification - la conversation existe-t-elle encore ?
       const stillExists = await Conversation.findOne({
@@ -343,30 +321,31 @@ export async function DELETE(req: NextRequest, context: any) {
       
       if (stillExists) {
         const existsConv = stillExists as any;
-        console.log(`⚠️ [MONGODB] Conversation still exists but isDeleted: ${existsConv.isDeleted}`);
-        
-        // Si elle existe mais est déjà supprimée
-        if (existsConv.isDeleted) {
-          console.log(`✅ [MONGODB] Conversation was already deleted`);
-          return NextResponse.json({
-            success: true,
-            message: 'Conversation was already deleted',
-            conversationId: conversationId
-          });
-        }
+        console.log(`⚠️ [MONGODB] Conversation still exists with isDeleted: ${existsConv.isDeleted}`);
+      } else {
+        console.log(`🤔 [MONGODB] Conversation doesn't exist anymore - might have been deleted already`);
       }
       
       return NextResponse.json({ error: 'Failed to delete conversation' }, { status: 500 });
     }
 
-    const delConv = deletedConversation as any;
-    console.log(`✅ [MONGODB] Conversation soft deleted successfully:`);
-    console.log(`   - _id: ${delConv._id}`);
-    console.log(`   - conversationId: ${delConv.conversationId}`);
-    console.log(`   - isDeleted: ${delConv.isDeleted}`);
-    console.log(`   - deletedAt: ${delConv.deletedAt}`);
+    console.log(`✅ [MONGODB] Conversation HARD DELETED successfully:`);
+    console.log(`   - deletedCount: ${deleteResult.deletedCount}`);
+    console.log(`   - acknowledged: ${deleteResult.acknowledged}`);
 
-    // 🔍 VÉRIFICATION FINALE - Confirmer que la conversation n'apparaît plus dans la liste
+    // 🔍 VÉRIFICATION FINALE - Confirmer suppression totale
+    const stillExistsAfterDelete = await Conversation.findOne({
+      conversationId: conversationId,
+      connectionId: connectionId
+    }).lean();
+
+    if (stillExistsAfterDelete) {
+      console.log(`⚠️ [MONGODB] WARNING: Conversation still exists after hard delete!`);
+    } else {
+      console.log(`✅ [MONGODB] CONFIRMED: Conversation completely removed from database`);
+    }
+
+    // Compter les conversations restantes
     const remainingConversations = await Conversation.find({
       connectionId: connectionId,
       isDeleted: false
@@ -376,9 +355,9 @@ export async function DELETE(req: NextRequest, context: any) {
 
     return NextResponse.json({
       success: true,
-      message: 'Conversation deleted successfully',
+      message: 'Conversation permanently deleted',
       conversationId: conversationId,
-      deletedAt: delConv.deletedAt,
+      deletedCount: deleteResult.deletedCount,
       remainingCount: remainingConversations.length
     });
 
