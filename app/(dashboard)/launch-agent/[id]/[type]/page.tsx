@@ -118,7 +118,6 @@ export default function ConnectionDetailsPage() {
       const data = await res.json()
       console.log('API Response:', data)
 
-      // ✅ EXACT - RIEN CHANGÉ
       setConnection(data.connection)
 
     } catch (error) {
@@ -311,10 +310,10 @@ export default function ConnectionDetailsPage() {
     const now = new Date()
     const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
 
-    if (diffHours < 1) return 'Il y a quelques minutes'
-    if (diffHours < 24) return `Il y a ${diffHours}h`
-    if (diffHours < 48) return 'Hier'
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    if (diffHours < 1) return 'A few minutes ago'
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffHours < 48) return 'Yesterday'
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
   }
 
   // ✅ LOADING ET ERROR STATES - ARRIÈRE-PLAN ORIGINAL
@@ -339,13 +338,13 @@ export default function ConnectionDetailsPage() {
 
       {/* 🎨 HEADER - ARRIÈRE-PLAN ORIGINAL + DESIGN SYSTEM */}
       <div className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
-          <div className="flex items-center justify-between">
+        <div className="px-4 md:px-8 py-4">
+          <div className="flex items-center justify-between w-full">
             {/* Left - Back + Title */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-shrink-0">
               <Link href="/launch-agent" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                 <ArrowLeft size={16} />
-                <span className="hidden sm:inline">Back to Deployment Center</span>
+                <span className="hidden sm:inline">Back</span>
               </Link>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gray-800/50 border border-gray-700/50 rounded-xl flex items-center justify-center">
@@ -359,7 +358,7 @@ export default function ConnectionDetailsPage() {
             </div>
 
             {/* Right - Tabs */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-shrink-0">
               <button
                 onClick={() => setActiveTab('conversations')}
                 className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${activeTab === 'conversations'
@@ -368,7 +367,7 @@ export default function ConnectionDetailsPage() {
                   }`}
               >
                 <MessageCircle size={16} />
-                Conversations
+                <span className="hidden sm:inline">Conversations</span>
               </button>
               <button
                 onClick={() => setActiveTab('configuration')}
@@ -378,7 +377,7 @@ export default function ConnectionDetailsPage() {
                   }`}
               >
                 <Settings size={16} />
-                Configuration
+                <span className="hidden sm:inline">Configuration</span>
               </button>
             </div>
           </div>
@@ -513,7 +512,7 @@ export default function ConnectionDetailsPage() {
         </div>
       )}
 
-      {/* 💬 ONGLET CONVERSATIONS - STYLE MESSENGER ORIGINAL */}
+      {/* 💬 ONGLET CONVERSATIONS - NOUVELLE INTERFACE MOBILE OPTIMISÉE */}
       {activeTab === 'conversations' && (
         <div className="h-[calc(100vh-80px)]">
           {!connection.webhookId ? (
@@ -530,137 +529,32 @@ export default function ConnectionDetailsPage() {
               </div>
             </div>
           ) : (
-            /* LAYOUT MESSENGER - 2 COLONNES */
-            <div className="flex h-full">
-
-              {/* 📋 COLONNE GAUCHE - LISTE CONVERSATIONS (30%) */}
-              <div className="w-full md:w-96 border-r border-gray-800 bg-gray-950 flex flex-col">
-                {/* Header liste */}
-                <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-600/20 border border-blue-500/40 rounded-lg flex items-center justify-center">
-                      <MessageCircle className="text-blue-400" size={16} />
-                    </div>
-                    <div>
-                      <h2 className="font-bold text-white">Conversations</h2>
-                      <p className="text-gray-400 text-xs">
-                        {conversations.length} total
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={fetchConversations}
-                    disabled={conversationsLoading}
-                    className="w-8 h-8 bg-blue-600/20 hover:bg-blue-600/30 disabled:opacity-50 rounded-lg flex items-center justify-center text-blue-400 transition-all"
-                  >
-                    <RefreshCw size={14} className={conversationsLoading ? 'animate-spin' : ''} />
-                  </button>
-                </div>
-
-                {/* Liste scrollable */}
-                <div className="flex-1 overflow-y-auto">
-                  {conversationsLoading ? (
-                    <div className="p-8 text-center text-gray-400">
-                      <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                      Loading conversations...
-                    </div>
-                  ) : conversations.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <div className="w-12 h-12 bg-gray-800/50 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <MessageCircle className="w-6 h-6 text-gray-400" />
-                      </div>
-                      <h3 className="font-bold text-white mb-2">No conversations yet</h3>
-                      <p className="text-gray-400 text-sm">
-                        Conversations will appear here once users start chatting.
-                      </p>
-                    </div>
-                  ) : (
-                    conversations.map((conv) => (
-                      <div
-                        key={conv._id}
-                        onClick={() => fetchConversationDetails(conv.conversationId)}
-                        className={`p-4 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group ${selectedConversation?.conversationId === conv.conversationId
-                            ? 'bg-blue-900/20 border-blue-500/30'
-                            : ''
-                          }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-600/50 transition-all">
-                            <User className="text-gray-400 group-hover:text-gray-300" size={16} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <h4 className="font-medium text-white text-sm truncate">
-                                Customer #{conv.userId}
-                              </h4>
-                              <span className="text-xs text-gray-500">
-                                {formatTime(conv.lastMessageTime)}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-400 truncate">{conv.lastMessage}</p>
-                            <div className="flex items-center gap-1 mt-1">
-                              <span className="text-xs text-gray-500">
-                                {conv.messageCount}
-                              </span>
-                              <span className="text-xs text-gray-600">•</span>
-                              <span className="text-xs text-gray-500">{conv.platform}</span>
-                              {conv.isUser && (
-                                <>
-                                  <span className="text-xs text-gray-600">•</span>
-                                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          {/* Delete button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              initiateDelete(conv.conversationId)
-                            }}
-                            className="opacity-0 group-hover:opacity-100 w-6 h-6 bg-red-600/20 hover:bg-red-600/30 rounded flex items-center justify-center text-red-400 transition-all"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* 💬 COLONNE DROITE - CONVERSATION DÉTAILLÉE (70%) */}
-              <div className="flex-1 flex flex-col bg-gray-950">
+            <>
+              {/* Mobile: Navigation liste ↔ détail */}
+              <div className="lg:hidden h-full">
                 {selectedConversation ? (
-                  <>
-                    {/* Header conversation */}
-                    <div className="p-4 border-b border-gray-800 bg-gray-900/30 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center">
-                          <User className="text-gray-300" size={18} />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-white">Customer #{selectedConversation.userId}</h3>
-                          <p className="text-gray-400 text-sm">{selectedConversation.totalMessages} messages • {selectedConversation.platform}</p>
-                        </div>
+                  // Vue détail mobile avec bouton back
+                  <div className="flex flex-col h-full">
+                    <div className="p-3 border-b border-gray-800 flex items-center gap-3 bg-gray-900/30">
+                      <button
+                        onClick={() => setSelectedConversation(null)}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
+                      >
+                        <ArrowLeft size={16} />
+                      </button>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-white text-sm">Customer #{selectedConversation.userId}</h3>
+                        <p className="text-gray-400 text-xs">{selectedConversation.totalMessages} messages • {selectedConversation.platform}</p>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => fetchConversationDetails(selectedConversation.conversationId)}
-                          className="w-8 h-8 bg-blue-600/20 hover:bg-blue-600/30 rounded-lg flex items-center justify-center text-blue-400 transition-all"
-                        >
-                          <RefreshCw size={14} />
-                        </button>
-                        <button
-                          onClick={() => initiateDelete(selectedConversation.conversationId)}
-                          className="w-8 h-8 bg-red-600/20 hover:bg-red-600/30 rounded-lg flex items-center justify-center text-red-400 transition-all"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => initiateDelete(selectedConversation.conversationId)}
+                        className="w-8 h-8 bg-red-600/20 hover:bg-red-600/30 rounded-lg flex items-center justify-center text-red-400 transition-all"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
 
-                    {/* Messages avec scroll infini */}
+                    {/* Messages mobiles optimisés */}
                     <div className="flex-1 flex flex-col overflow-hidden">
                       {/* Bouton Load More en haut */}
                       {hasMoreMessages && (
@@ -676,7 +570,7 @@ export default function ConnectionDetailsPage() {
                       )}
 
                       {/* Messages */}
-                      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                      <div className="flex-1 overflow-y-auto p-3 space-y-3">
                         {conversationDetailsLoading ? (
                           <div className="text-center text-gray-400 py-8">
                             <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -688,7 +582,7 @@ export default function ConnectionDetailsPage() {
                               key={index}
                               className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
                             >
-                              <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${message.role === 'user'
+                              <div className={`max-w-xs px-3 py-2 rounded-xl ${message.role === 'user'
                                   ? 'bg-gray-800/50 text-white'
                                   : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
                                 }`}>
@@ -703,23 +597,283 @@ export default function ConnectionDetailsPage() {
                         <div ref={messagesEndRef} />
                       </div>
                     </div>
-                  </>
+                  </div>
                 ) : (
-                  /* État par défaut - Aucune conversation sélectionnée */
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <MessageCircle className="w-8 h-8 text-gray-400" />
+                  // Vue liste mobile
+                  <div className="h-full overflow-y-auto">
+                    {/* Header liste mobile */}
+                    <div className="p-3 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-blue-600/20 border border-blue-500/40 rounded-lg flex items-center justify-center">
+                          <MessageCircle className="text-blue-400" size={12} />
+                        </div>
+                        <div>
+                          <h2 className="font-bold text-white text-sm">Conversations</h2>
+                          <p className="text-gray-400 text-xs">
+                            {conversations.length} total
+                          </p>
+                        </div>
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-2">Select a conversation</h3>
-                      <p className="text-gray-400">
-                        Choose a conversation from the list to view the chat history.
-                      </p>
+                      <button
+                        onClick={fetchConversations}
+                        disabled={conversationsLoading}
+                        className="w-6 h-6 bg-blue-600/20 hover:bg-blue-600/30 disabled:opacity-50 rounded-lg flex items-center justify-center text-blue-400 transition-all"
+                      >
+                        <RefreshCw size={12} className={conversationsLoading ? 'animate-spin' : ''} />
+                      </button>
                     </div>
+
+                    {/* Liste conversations mobile */}
+                    {conversationsLoading ? (
+                      <div className="p-6 text-center text-gray-400">
+                        <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                        Loading conversations...
+                      </div>
+                    ) : conversations.length === 0 ? (
+                      <div className="p-6 text-center">
+                        <div className="w-12 h-12 bg-gray-800/50 rounded-xl flex items-center justify-center mx-auto mb-4">
+                          <MessageCircle className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <h3 className="font-bold text-white mb-2 text-sm">No conversations yet</h3>
+                        <p className="text-gray-400 text-xs">
+                          Conversations will appear here once users start chatting.
+                        </p>
+                      </div>
+                    ) : (
+                      conversations.map((conv) => (
+                        <div
+                          key={conv._id}
+                          onClick={() => fetchConversationDetails(conv.conversationId)}
+                          className="p-3 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-600/50 transition-all">
+                              <User className="text-gray-400 group-hover:text-gray-300" size={14} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="font-medium text-white text-xs truncate">
+                                  Customer #{conv.userId}
+                                </h4>
+                                <span className="text-xs text-gray-500">
+                                  {formatTime(conv.lastMessageTime)}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-400 truncate">{conv.lastMessage}</p>
+                              <div className="flex items-center gap-1 mt-1">
+                                <span className="text-xs text-gray-500">
+                                  {conv.messageCount} messages
+                                </span>
+                              </div>
+                            </div>
+                            {/* Delete button pour mobile */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                initiateDelete(conv.conversationId)
+                              }}
+                              className="w-6 h-6 bg-red-600/20 hover:bg-red-600/30 rounded flex items-center justify-center text-red-400 transition-all"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
-            </div>
+
+              {/* Desktop: Layout 2 colonnes existant */}
+              <div className="hidden lg:flex h-full">
+                {/* 📋 COLONNE GAUCHE - LISTE CONVERSATIONS (30%) */}
+                <div className="w-96 border-r border-gray-800 bg-gray-950 flex flex-col">
+                  {/* Header liste */}
+                  <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-600/20 border border-blue-500/40 rounded-lg flex items-center justify-center">
+                        <MessageCircle className="text-blue-400" size={16} />
+                      </div>
+                      <div>
+                        <h2 className="font-bold text-white">Conversations</h2>
+                        <p className="text-gray-400 text-xs">
+                          {conversations.length} total
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={fetchConversations}
+                      disabled={conversationsLoading}
+                      className="w-8 h-8 bg-blue-600/20 hover:bg-blue-600/30 disabled:opacity-50 rounded-lg flex items-center justify-center text-blue-400 transition-all"
+                    >
+                      <RefreshCw size={14} className={conversationsLoading ? 'animate-spin' : ''} />
+                    </button>
+                  </div>
+
+                  {/* Liste scrollable */}
+                  <div className="flex-1 overflow-y-auto">
+                    {conversationsLoading ? (
+                      <div className="p-8 text-center text-gray-400">
+                        <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                        Loading conversations...
+                      </div>
+                    ) : conversations.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <div className="w-12 h-12 bg-gray-800/50 rounded-xl flex items-center justify-center mx-auto mb-4">
+                          <MessageCircle className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <h3 className="font-bold text-white mb-2">No conversations yet</h3>
+                        <p className="text-gray-400 text-sm">
+                          Conversations will appear here once users start chatting.
+                        </p>
+                      </div>
+                    ) : (
+                      conversations.map((conv) => (
+                        <div
+                          key={conv._id}
+                          onClick={() => fetchConversationDetails(conv.conversationId)}
+                          className={`p-4 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group ${selectedConversation?.conversationId === conv.conversationId
+                              ? 'bg-blue-900/20 border-blue-500/30'
+                              : ''
+                            }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-600/50 transition-all">
+                              <User className="text-gray-400 group-hover:text-gray-300" size={16} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="font-medium text-white text-sm truncate">
+                                  Customer #{conv.userId}
+                                </h4>
+                                <span className="text-xs text-gray-500">
+                                  {formatTime(conv.lastMessageTime)}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-400 truncate">{conv.lastMessage}</p>
+                              <div className="flex items-center gap-1 mt-1">
+                                <span className="text-xs text-gray-500">
+                                  {conv.messageCount}
+                                </span>
+                                <span className="text-xs text-gray-600">•</span>
+                                <span className="text-xs text-gray-500">{conv.platform}</span>
+                                {conv.isUser && (
+                                  <>
+                                    <span className="text-xs text-gray-600">•</span>
+                                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            {/* Delete button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                initiateDelete(conv.conversationId)
+                              }}
+                              className="opacity-0 group-hover:opacity-100 w-6 h-6 bg-red-600/20 hover:bg-red-600/30 rounded flex items-center justify-center text-red-400 transition-all"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* 💬 COLONNE DROITE - CONVERSATION DÉTAILLÉE (70%) */}
+                <div className="flex-1 flex flex-col bg-gray-950">
+                  {selectedConversation ? (
+                    <>
+                      {/* Header conversation */}
+                      <div className="p-4 border-b border-gray-800 bg-gray-900/30 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center">
+                            <User className="text-gray-300" size={18} />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-white">Customer #{selectedConversation.userId}</h3>
+                            <p className="text-gray-400 text-sm">{selectedConversation.totalMessages} messages • {selectedConversation.platform}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => fetchConversationDetails(selectedConversation.conversationId)}
+                            className="w-8 h-8 bg-blue-600/20 hover:bg-blue-600/30 rounded-lg flex items-center justify-center text-blue-400 transition-all"
+                          >
+                            <RefreshCw size={14} />
+                          </button>
+                          <button
+                            onClick={() => initiateDelete(selectedConversation.conversationId)}
+                            className="w-8 h-8 bg-red-600/20 hover:bg-red-600/30 rounded-lg flex items-center justify-center text-red-400 transition-all"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Messages avec scroll infini */}
+                      <div className="flex-1 flex flex-col overflow-hidden">
+                        {/* Bouton Load More en haut */}
+                        {hasMoreMessages && (
+                          <div className="p-3 border-b border-gray-800/50">
+                            <button
+                              onClick={loadMoreMessages}
+                              disabled={loadingMore}
+                              className="w-full py-2 px-4 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 rounded-lg text-gray-300 transition-all text-sm"
+                            >
+                              {loadingMore ? 'Loading...' : 'Load older messages'}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Messages */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                          {conversationDetailsLoading ? (
+                            <div className="text-center text-gray-400 py-8">
+                              <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                              Loading messages...
+                            </div>
+                          ) : (
+                            selectedConversation.messages.map((message, index) => (
+                              <div
+                                key={index}
+                                className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
+                              >
+                                <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${message.role === 'user'
+                                    ? 'bg-gray-800/50 text-white'
+                                    : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
+                                  }`}>
+                                  <p className="text-sm">{message.content}</p>
+                                  <p className="text-xs mt-1 opacity-70">
+                                    {formatTime(message.timestamp)}
+                                  </p>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                          <div ref={messagesEndRef} />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* État par défaut - Aucune conversation sélectionnée */
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <MessageCircle className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-2">Select a conversation</h3>
+                        <p className="text-gray-400">
+                          Choose a conversation from the list to view the chat history.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
