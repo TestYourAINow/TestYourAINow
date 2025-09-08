@@ -149,6 +149,13 @@ html, body {
   animation: expandIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.chat-window.dark {
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
 .chat-header {
   height: 64px;
   padding: 10px 16px;
