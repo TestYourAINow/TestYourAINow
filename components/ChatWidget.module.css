@@ -100,7 +100,7 @@
 }
 
 .chatWindow.dark {
-  background: #1f2937;
+  background: #0f172a;
 }
 
 .chatHeader {
@@ -202,7 +202,7 @@
 }
 
 .chatMessages.dark {
-  background: #111827;
+  background: #020617;
 }
 
 .chatMessages::-webkit-scrollbar {
@@ -215,7 +215,7 @@
 }
 
 .chatMessages.dark::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, rgba(255,255,255,0.30), rgba(255,255,255,0.20));
+  background: linear-gradient(to bottom, rgba(100,116,139,0.4), rgba(100,116,139,0.2));
   border-radius: 8px;
 }
 
@@ -272,8 +272,8 @@
 }
 
 .chatMessages.dark .messageBubble.bot {
-  background: #374151;
-  color: white;
+  background: #1e293b;
+  color: #e2e8f0;
 }
 
 .messageTimestamp {
@@ -292,7 +292,7 @@
 }
 
 .chatMessages.dark .typingIndicator {
-  background: #374151;
+   background: #1e293b;
 }
 
 .typingDot {
@@ -307,7 +307,7 @@
 .typingDot:nth-child(3) { animation-delay: 0.4s; }
 
 .chatMessages.dark .typingDot {
-  background: #9ca3af;
+    background: #64748b;
 }
 
 .chatInputArea {
@@ -318,8 +318,8 @@
 }
 
 .chatInputArea.dark {
-  border-top: 1px solid rgba(75, 85, 99, 0.4);
-  background: #1f2937;
+ border-top: 1px solid rgba(51, 65, 85, 0.3);
+  background: #0f172a;
 }
 
 .chatInputContainer {
@@ -359,9 +359,9 @@
 }
 
 .chatInput.dark {
-  background: rgba(55, 65, 81, 0.9);
-  border-color: rgba(75, 85, 99, 0.8);
-  color: white;
+ background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(51, 65, 85, 0.6);
+  color: #e2e8f0;
 }
 
 .chatSendBtn {

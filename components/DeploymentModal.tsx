@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { X, Copy, Check, Code, ExternalLink, Rocket, Globe, HelpCircle, Zap, Shield } from 'lucide-react';
+import { X, Copy, Check, Code, ExternalLink, Rocket, Zap, Shield } from 'lucide-react';
 
 interface DeploymentModalProps {
   isOpen: boolean;
@@ -86,7 +86,7 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
                   Deploy Your AI Widget
                 </h2>
                 <p className="text-sm text-gray-400 mt-0.5">
-                  {widgetName} • ID: {widgetId.slice(-8)}...
+                  {widgetName}
                 </p>
               </div>
             </div>
@@ -156,55 +156,6 @@ export const DeploymentModal: React.FC<DeploymentModalProps> = ({
                     </>
                   )}
                 </button>
-              </div>
-            </div>
-
-            {/* 🌟 Features Grid */}
-            <div className="grid md:grid-cols-2 gap-4">
-              
-              {/* ✅ Compatibilité */}
-              <div className="bg-gray-800/40 border border-gray-700/30 rounded-xl p-4 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-3">
-                  <Globe className="text-cyan-400" size={18} />
-                  <h4 className="font-semibold text-cyan-200">Universal Compatibility</h4>
-                </div>
-                <ul className="text-sm text-gray-300 space-y-1">
-                  <li>✅ WordPress, Shopify, Webflow</li>
-                  <li>✅ React, Vue, Angular, Static sites</li>
-                  <li>✅ Any website with HTML</li>
-                </ul>
-              </div>
-
-              {/* 📱 Features */}
-              <div className="bg-gray-800/40 border border-gray-700/30 rounded-xl p-4 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-3">
-                  <Zap className="text-orange-400" size={18} />
-                  <h4 className="font-semibold text-orange-200">Smart Features</h4>
-                </div>
-                <ul className="text-sm text-gray-300 space-y-1">
-                  <li>📱 Fully responsive design</li>
-                  <li>🎨 Matches your configuration</li>
-                  <li>⚡ Loads in under 2 seconds</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* 🆘 Help Section */}
-            <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl p-5 backdrop-blur-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <HelpCircle className="text-orange-400" size={20} />
-                <h4 className="text-lg font-semibold text-orange-200">Need Help? We've Got You!</h4>
-              </div>
-              <div className="text-gray-300 text-sm leading-relaxed space-y-2">
-                <p>
-                  <strong className="text-white">Where to place it:</strong> Add the script tag before the closing &lt;/body&gt; tag of your website for optimal performance.
-                </p>
-                <p>
-                  <strong className="text-white">WordPress:</strong> Use a plugin like "Insert Headers and Footers" or add to your theme's footer.php
-                </p>
-                <p>
-                  <strong className="text-white">Shopify:</strong> Go to Online Store → Themes → Actions → Edit Code → theme.liquid
-                </p>
               </div>
             </div>
 
