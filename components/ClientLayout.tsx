@@ -181,7 +181,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
                   }`}
                 >
                   <Settings size={16} />
-                  <span className="hidden sm:inline">Config</span>
+                  <span className="hidden sm:inline">Configuration</span>
                 </button>
                 
                 <button 
@@ -193,7 +193,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
                   }`}
                 >
                   <MessageCircle size={16} />
-                  <span className="hidden sm:inline">Chat</span>
+                  <span className="hidden sm:inline">Conversations</span>
                 </button>
               </div>
             ) : (

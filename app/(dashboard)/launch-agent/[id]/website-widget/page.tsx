@@ -154,17 +154,34 @@ const ChatbotBuilder: React.FC = () => {
   const [conversationsLoading, setConversationsLoading] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<ConversationDetails | null>(null);
   const [conversationDetailsLoading, setConversationDetailsLoading] = useState(false);
-  
+
   // PAGINATION STATES
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(false)
-  
-  // 🆕 NOUVEAUX STATES POUR LE MODAL
-const [showDeleteModal, setShowDeleteModal] = useState(false);
-const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
-const [isDeleting, setIsDeleting] = useState(false);
 
-const messagesEndRef = useRef<HTMLDivElement>(null)
+  // 🆕 NOUVEAUX STATES POUR LE MODAL
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+// Ajouter cette fonction après tes imports et avant le composant ChatbotBuilder
+const getNumericId = (userId: string) => {
+  const hash = userId.split('_').pop() || '';
+  let numeric = '';
+  for (let i = 0; i < Math.min(hash.length, 6); i++) {
+    const char = hash[i];
+    if (/[0-9]/.test(char)) {
+      // Garder les chiffres comme chiffres
+      numeric += char;
+    } else if (/[a-zA-Z]/.test(char)) {
+      // Convertir les lettres : a=1, b=2, c=3, etc.
+      numeric += (char.toLowerCase().charCodeAt(0) - 96).toString().slice(-1);
+    }
+  }
+  return numeric.substring(0, 6);
+};
 
   // Configuration pour le ChatWidget
   const config: ChatbotConfig = {
@@ -246,7 +263,7 @@ const messagesEndRef = useRef<HTMLDivElement>(null)
     try {
       const res = await fetch(`/api/connections/${connectionId}/conversations`);
       const data = await res.json();
-      
+
       if (data.success) {
         setConversations(data.conversations || []);
         console.log(`✅ Loaded ${data.conversations?.length || 0} conversations from MongoDB`);
@@ -270,7 +287,7 @@ const messagesEndRef = useRef<HTMLDivElement>(null)
       const res = await fetch(`/api/connections/${connectionId}/conversations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           conversationId,
           limit: 50,
           loadMore,
@@ -278,7 +295,7 @@ const messagesEndRef = useRef<HTMLDivElement>(null)
         })
       });
       const data = await res.json();
-      
+
       if (data.success) {
         if (loadMore && selectedConversation) {
           // Ajouter les nouveaux messages au début
@@ -301,81 +318,81 @@ const messagesEndRef = useRef<HTMLDivElement>(null)
     }
   };
 
-// 🗑️ FONCTION POUR OUVRIR LE MODAL DE CONFIRMATION
-const initiateDelete = (conversationId: string) => {
-  setConversationToDelete(conversationId);
-  setShowDeleteModal(true);
-};
+  // 🗑️ FONCTION POUR OUVRIR LE MODAL DE CONFIRMATION
+  const initiateDelete = (conversationId: string) => {
+    setConversationToDelete(conversationId);
+    setShowDeleteModal(true);
+  };
 
-// 🗑️ FONCTION POUR FERMER LE MODAL
-const cancelDelete = () => {
-  if (!isDeleting) {
-    setShowDeleteModal(false);
-    setConversationToDelete(null);
-  }
-};
-
-// 🗑️ FONCTION POUR CONFIRMER LA SUPPRESSION
-const confirmDelete = async () => {
-  if (!conversationToDelete) return;
-
-  setIsDeleting(true);
-  console.log(`🗑️ [FRONTEND] Delete conversation request: ${conversationToDelete}`);
-
-  try {
-    console.log(`🗑️ [FRONTEND] Sending DELETE request to /api/connections/${connectionId}/conversations`);
-    console.log(`🗑️ [FRONTEND] Payload:`, { conversationId: conversationToDelete });
-
-    const res = await fetch(`/api/connections/${connectionId}/conversations`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ conversationId: conversationToDelete })
-    });
-
-    console.log(`🗑️ [FRONTEND] DELETE response status: ${res.status} ${res.statusText}`);
-
-    const responseData = await res.json();
-    console.log(`🗑️ [FRONTEND] DELETE response data:`, responseData);
-
-    if (res.ok && responseData.success) {
-      console.log(`✅ [FRONTEND] Delete successful, updating UI...`);
-      
-      setConversations(prev => {
-        const filtered = prev.filter(conv => conv.conversationId !== conversationToDelete);
-        console.log(`🔄 [FRONTEND] Conversations list updated: ${prev.length} -> ${filtered.length}`);
-        return filtered;
-      });
-      
-      if (selectedConversation?.conversationId === conversationToDelete) {
-        console.log(`🔄 [FRONTEND] Clearing selected conversation`);
-        setSelectedConversation(null);
-      }
-      
+  // 🗑️ FONCTION POUR FERMER LE MODAL
+  const cancelDelete = () => {
+    if (!isDeleting) {
       setShowDeleteModal(false);
       setConversationToDelete(null);
-      
-      console.log(`🔄 [FRONTEND] Waiting 500ms before refreshing list...`);
-      setTimeout(() => {
-        console.log(`🔄 [FRONTEND] Refreshing conversations list from server...`);
-        fetchConversations();
-      }, 500);
-      
-      console.log(`✅ [FRONTEND] Conversation deleted: ${conversationToDelete}`);
-      
-    } else {
-      console.error(`❌ [FRONTEND] Delete failed:`, responseData);
-      alert(`Error during deletion: ${responseData.error || 'Unknown error'}`);
-      fetchConversations();
     }
-    
-  } catch (error) {
-    console.error('❌ [FRONTEND] Error deleting conversation:', error);
-    alert('Network error during deletion. Please try again.');
-    fetchConversations();
-  } finally {
-    setIsDeleting(false);
-  }
-};
+  };
+
+  // 🗑️ FONCTION POUR CONFIRMER LA SUPPRESSION
+  const confirmDelete = async () => {
+    if (!conversationToDelete) return;
+
+    setIsDeleting(true);
+    console.log(`🗑️ [FRONTEND] Delete conversation request: ${conversationToDelete}`);
+
+    try {
+      console.log(`🗑️ [FRONTEND] Sending DELETE request to /api/connections/${connectionId}/conversations`);
+      console.log(`🗑️ [FRONTEND] Payload:`, { conversationId: conversationToDelete });
+
+      const res = await fetch(`/api/connections/${connectionId}/conversations`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId: conversationToDelete })
+      });
+
+      console.log(`🗑️ [FRONTEND] DELETE response status: ${res.status} ${res.statusText}`);
+
+      const responseData = await res.json();
+      console.log(`🗑️ [FRONTEND] DELETE response data:`, responseData);
+
+      if (res.ok && responseData.success) {
+        console.log(`✅ [FRONTEND] Delete successful, updating UI...`);
+
+        setConversations(prev => {
+          const filtered = prev.filter(conv => conv.conversationId !== conversationToDelete);
+          console.log(`🔄 [FRONTEND] Conversations list updated: ${prev.length} -> ${filtered.length}`);
+          return filtered;
+        });
+
+        if (selectedConversation?.conversationId === conversationToDelete) {
+          console.log(`🔄 [FRONTEND] Clearing selected conversation`);
+          setSelectedConversation(null);
+        }
+
+        setShowDeleteModal(false);
+        setConversationToDelete(null);
+
+        console.log(`🔄 [FRONTEND] Waiting 500ms before refreshing list...`);
+        setTimeout(() => {
+          console.log(`🔄 [FRONTEND] Refreshing conversations list from server...`);
+          fetchConversations();
+        }, 500);
+
+        console.log(`✅ [FRONTEND] Conversation deleted: ${conversationToDelete}`);
+
+      } else {
+        console.error(`❌ [FRONTEND] Delete failed:`, responseData);
+        alert(`Error during deletion: ${responseData.error || 'Unknown error'}`);
+        fetchConversations();
+      }
+
+    } catch (error) {
+      console.error('❌ [FRONTEND] Error deleting conversation:', error);
+      alert('Network error during deletion. Please try again.');
+      fetchConversations();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // CHARGER PLUS DE MESSAGES (scroll infini)
   const loadMoreMessages = () => {
@@ -390,11 +407,11 @@ const confirmDelete = async () => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffHours < 1) return 'Il y a quelques minutes';
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    if (diffHours < 48) return 'Hier';
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+  if (diffHours < 1) return 'A few minutes ago';
+if (diffHours < 24) return `${diffHours}h ago`;
+if (diffHours < 48) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   };
 
   const colorPresets = [
@@ -483,7 +500,7 @@ const confirmDelete = async () => {
         const chatbotResult = await chatbotConfigResponse.json();
         if (chatbotResult.success && chatbotResult.widgetId) {
           setSavedWidgetId(chatbotResult.widgetId);
-          
+
           // Informer l'utilisateur si c'est le même widget ou un nouveau
           if (chatbotResult.isNewWidget) {
             console.log('🆕 New widget created:', chatbotResult.widgetId);
@@ -545,14 +562,12 @@ const confirmDelete = async () => {
       <div className="flex lg:h-full h-full lg:flex-row flex-col">
 
         {/* Section Preview - NOUVELLE LOGIQUE */}
-        <div className={`flex-1 bg-gray-900/95 backdrop-blur-xl ${
-          activeTab === 'preview' ? 'block' : 'hidden lg:block'
-        } relative bg-grid-pattern ${activeTab === 'preview' ? 'h-full' : ''}`}>
-          
+        <div className={`flex-1 bg-gray-900/95 backdrop-blur-xl ${activeTab === 'preview' ? 'block' : 'hidden lg:block'
+          } relative bg-grid-pattern ${activeTab === 'preview' ? 'h-full' : ''}`}>
+
           {/* Agent Status et Widget Name - REPOSITIONNÉ À GAUCHE */}
-          <div className={`absolute top-4 left-4 z-10 ${
-            activeTab === 'conversations' ? 'hidden' : 'block'
-          }`}>
+          <div className={`absolute top-4 left-4 z-10 ${activeTab === 'conversations' ? 'hidden' : 'block'
+            }`}>
             <div className="text-left">
               <div className="text-xs text-gray-500 mb-1">Connected Agent</div>
               <div className="flex items-center gap-2 mb-3">
@@ -610,12 +625,12 @@ const confirmDelete = async () => {
               </div>
 
               {/* CHATBOT AVEC FIX DE HAUTEUR */}
-              <div style={{ 
-                position: 'absolute', 
-                top: '64px',  
-                left: 0, 
-                right: 0, 
-                bottom: 0 
+              <div style={{
+                position: 'absolute',
+                top: '64px',
+                left: 0,
+                right: 0,
+                bottom: 0
               }}>
                 <ChatWidget config={widgetConfig} isPreview={true} />
               </div>
@@ -624,9 +639,8 @@ const confirmDelete = async () => {
         </div>
 
         {/* Section Configuration */}
-        <div className={`lg:w-96 w-full ${
-          activeTab === 'configuration' ? 'flex flex-col h-full' : 'hidden'
-        } bg-gray-900/95 backdrop-blur-xl border-l border-gray-700/50 text-white`}>
+        <div className={`lg:w-96 w-full ${activeTab === 'configuration' ? 'flex flex-col h-full' : 'hidden'
+          } bg-gray-900/95 backdrop-blur-xl border-l border-gray-700/50 text-white`}>
 
           {/* Header Configuration Panel */}
           <div className="lg:p-6 p-3 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 flex-shrink-0">
@@ -659,6 +673,18 @@ const confirmDelete = async () => {
                     placeholder="My AI Assistant"
                     className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm"
                   />
+                  <div className="mt-6"></div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Chat Title</label>
+                    <input
+                      type="text"
+                      value={settings.chatTitle || ''}
+                      onChange={(e) => updateSettings('chatTitle', e.target.value)}
+                      placeholder="AI Assistant"
+                      className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm"
+                    />
+                  </div>
+
                 </div>
               </div>
             </CollapsibleSection>
@@ -669,6 +695,79 @@ const confirmDelete = async () => {
               defaultOpen={false}
             >
               <div className="lg:space-y-6 space-y-4">
+
+                {/* Primary Color */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 lg:mb-4 mb-3">
+                    Primary Color
+                  </label>
+                  <div className="grid lg:grid-cols-4 grid-cols-4 lg:gap-3 gap-2 lg:mb-4 mb-3">
+                    {colorPresets.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => updateSettings('primaryColor', color)}
+                        className={`w-full lg:h-12 h-10 rounded-xl border-2 transition-all hover:scale-105 relative ${(settings.primaryColor || '#3b82f6') === color
+                          ? 'border-white ring-2 ring-blue-500/50 shadow-lg'
+                          : 'border-gray-600/50 hover:border-gray-500/50'
+                          }`}
+                        style={{ backgroundColor: color }}
+                      >
+                        {(settings.primaryColor || '#3b82f6') === color && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-4 h-4 border-2 border-white rounded-full bg-white/20"></div>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center lg:gap-3 gap-2">
+                    <input
+                      type="color"
+                      value={settings.primaryColor || '#3b82f6'}
+                      onChange={(e) => updateSettings('primaryColor', e.target.value)}
+                      className="lg:w-12 lg:h-12 w-10 h-10 border border-gray-600/50 rounded-xl cursor-pointer bg-gray-800"
+                    />
+                    <input
+                      type="text"
+                      value={settings.primaryColor || '#3b82f6'}
+                      onChange={(e) => updateSettings('primaryColor', e.target.value)}
+                      className="flex-1 lg:px-4 lg:py-3.5 px-3 py-3 lg:text-sm text-xs bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
+                      placeholder="#3b82f6"
+                    />
+                  </div>
+                </div>
+
+
+                {/* Theme */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
+                    Interface Theme
+                  </label>
+                  <div className="flex items-center lg:space-x-3 space-x-2">
+                    <button
+                      onClick={() => updateSettings('theme', 'light')}
+                      className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${config.theme === 'light'
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
+                        : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
+                        }`}
+                    >
+                      <Sun className="lg:w-4 lg:h-4 w-3.5 h-3.5" />
+                      Light
+                    </button>
+                    <button
+                      onClick={() => updateSettings('theme', 'dark')}
+                      className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${config.theme === 'dark'
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
+                        : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
+                        }`}
+                    >
+                      <Moon className="lg:w-4 lg:h-4 w-3.5 h-3.5" />
+                      Dark
+                    </button>
+                  </div>
+                </div>
+
+
                 {/* Bot Avatar */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
@@ -760,75 +859,8 @@ const confirmDelete = async () => {
                   )}
                 </div>
 
-                {/* Theme */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
-                    Interface Theme
-                  </label>
-                  <div className="flex items-center lg:space-x-3 space-x-2">
-                    <button
-                      onClick={() => updateSettings('theme', 'light')}
-                      className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${config.theme === 'light'
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
-                        : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
-                        }`}
-                    >
-                      <Sun className="lg:w-4 lg:h-4 w-3.5 h-3.5" />
-                      Light
-                    </button>
-                    <button
-                      onClick={() => updateSettings('theme', 'dark')}
-                      className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${config.theme === 'dark'
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
-                        : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
-                        }`}
-                    >
-                      <Moon className="lg:w-4 lg:h-4 w-3.5 h-3.5" />
-                      Dark
-                    </button>
-                  </div>
-                </div>
 
-                {/* Primary Color */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 lg:mb-4 mb-3">
-                    Primary Color
-                  </label>
-                  <div className="grid lg:grid-cols-4 grid-cols-4 lg:gap-3 gap-2 lg:mb-4 mb-3">
-                    {colorPresets.map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => updateSettings('primaryColor', color)}
-                        className={`w-full lg:h-12 h-10 rounded-xl border-2 transition-all hover:scale-105 relative ${(settings.primaryColor || '#3b82f6') === color
-                          ? 'border-white ring-2 ring-blue-500/50 shadow-lg'
-                          : 'border-gray-600/50 hover:border-gray-500/50'
-                          }`}
-                        style={{ backgroundColor: color }}
-                      >
-                        {(settings.primaryColor || '#3b82f6') === color && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-4 h-4 border-2 border-white rounded-full bg-white/20"></div>
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex items-center lg:gap-3 gap-2">
-                    <input
-                      type="color"
-                      value={settings.primaryColor || '#3b82f6'}
-                      onChange={(e) => updateSettings('primaryColor', e.target.value)}
-                      className="lg:w-12 lg:h-12 w-10 h-10 border border-gray-600/50 rounded-xl cursor-pointer bg-gray-800"
-                    />
-                    <input
-                      type="text"
-                      value={settings.primaryColor || '#3b82f6'}
-                      onChange={(e) => updateSettings('primaryColor', e.target.value)}
-                      className="flex-1 lg:px-4 lg:py-3.5 px-3 py-3 lg:text-sm text-xs bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
-                      placeholder="#3b82f6"
-                    />
-                  </div>
-                </div>
+
               </div>
             </CollapsibleSection>
 
@@ -838,13 +870,22 @@ const confirmDelete = async () => {
               defaultOpen={false}
             >
               <div className="lg:space-y-4 space-y-3">
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Chat Title</label>
+                  <div className="flex items-center justify-between lg:mb-3 mb-2">
+                    <label className="text-sm font-medium text-gray-300">Show welcome message</label>
+                    <input
+                      type="checkbox"
+                      checked={settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true}
+                      onChange={(e) => updateSettings('showWelcomeMessage', e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                  </div>
                   <input
                     type="text"
-                    value={settings.chatTitle || ''}
-                    onChange={(e) => updateSettings('chatTitle', e.target.value)}
-                    placeholder="AI Assistant"
+                    value={settings.welcomeMessage || ''}
+                    onChange={(e) => updateSettings('welcomeMessage', e.target.value)}
+                    placeholder="Hello! How can I help you today?"
                     className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm"
                   />
                 </div>
@@ -871,53 +912,9 @@ const confirmDelete = async () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Widget Dimensions</label>
-                  <div className="grid grid-cols-2 lg:gap-4 gap-3">
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-2">Width (px)</label>
-                      <input
-                        type="number"
-                        value={settings.width || 380}
-                        onChange={(e) => updateSettings('width', parseInt(e.target.value) || 380)}
-                        min="300"
-                        max="600"
-                        className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium backdrop-blur-sm lg:text-base text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-2">Height (px)</label>
-                      <input
-                        type="number"
-                        value={settings.height || 600}
-                        onChange={(e) => updateSettings('height', parseInt(e.target.value) || 600)}
-                        min="400"
-                        max="800"
-                        className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium backdrop-blur-sm lg:text-base text-sm"
-                      />
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">Width: 300-600px • Height: 400-800px</p>
-                </div>
 
-                <div>
-                  <div className="flex items-center justify-between lg:mb-3 mb-2">
-                    <label className="text-sm font-medium text-gray-300">Show welcome message</label>
-                    <input
-                      type="checkbox"
-                      checked={settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true}
-                      onChange={(e) => updateSettings('showWelcomeMessage', e.target.checked)}
-                      className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    value={settings.welcomeMessage || ''}
-                    onChange={(e) => updateSettings('welcomeMessage', e.target.value)}
-                    placeholder="Hello! How can I help you today?"
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm"
-                  />
-                </div>
+
+
               </div>
             </CollapsibleSection>
 
@@ -955,10 +952,10 @@ const confirmDelete = async () => {
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                   <div className={`w-2 h-2 rounded-full ${(settings.popupMessage || '').length <= 40
-                      ? 'bg-green-400'
-                      : (settings.popupMessage || '').length <= 50
-                        ? 'bg-yellow-400'
-                        : 'bg-red-400'
+                    ? 'bg-green-400'
+                    : (settings.popupMessage || '').length <= 50
+                      ? 'bg-yellow-400'
+                      : 'bg-red-400'
                     }`} />
                   <span className="text-gray-400">
                     {(settings.popupMessage || '').length <= 40
@@ -1043,25 +1040,25 @@ const confirmDelete = async () => {
         {/* NOUVEAU: Onglet Conversations */}
         {activeTab === 'conversations' && (
           <div className="w-full">
-            
+
             {/* Mobile: Navigation liste ↔ détail */}
             <div className="lg:hidden h-full">
               {selectedConversation ? (
                 // Vue détail mobile avec bouton back
                 <div className="flex flex-col h-full">
                   <div className="p-3 border-b border-gray-800 flex items-center gap-3 bg-gray-900/30">
-                    <button 
+                    <button
                       onClick={() => setSelectedConversation(null)}
                       className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
                     >
                       <ArrowLeft size={16} />
                     </button>
                     <div className="flex-1">
-                      <h3 className="font-bold text-white text-sm">Customer #{selectedConversation.userId.split('_').pop()?.substring(0, 9)}</h3>
+                      <h3 className="font-bold text-white text-sm">Customer #{getNumericId(selectedConversation.userId)}</h3>
                       <p className="text-gray-400 text-xs">{selectedConversation.totalMessages} messages • {selectedConversation.platform}</p>
                     </div>
                   </div>
-                  
+
                   {/* Messages mobiles optimisés */}
                   <div className="flex-1 flex flex-col overflow-hidden">
                     {/* Bouton Load More en haut */}
@@ -1090,11 +1087,10 @@ const confirmDelete = async () => {
                             key={index}
                             className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
                           >
-                            <div className={`max-w-xs px-3 py-2 rounded-xl ${
-                              message.role === 'user'
-                                ? 'bg-gray-800/50 text-white'
-                                : 'bg-blue-600/20 text-blue-200'
-                            }`}>
+                            <div className={`max-w-xs px-3 py-2 rounded-xl ${message.role === 'user'
+                              ? 'bg-gray-800/50 text-white'
+                              : 'bg-blue-600/20 text-blue-200'
+                              }`}>
                               <p className="text-sm">{message.content}</p>
                               <p className="text-xs mt-1 opacity-70">
                                 {formatTime(message.timestamp)}
@@ -1162,7 +1158,7 @@ const confirmDelete = async () => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
                               <h4 className="font-medium text-white text-xs truncate">
-                                Customer #{conv.userId.split('_').pop()?.substring(0, 9)}
+                                Customer #{getNumericId(conv.userId)}
                               </h4>
                               <span className="text-xs text-gray-500">
                                 {formatTime(conv.lastMessageTime)}
@@ -1175,6 +1171,16 @@ const confirmDelete = async () => {
                               </span>
                             </div>
                           </div>
+                          {/* Delete button pour mobile */}
+<button
+  onClick={(e) => {
+    e.stopPropagation()
+    initiateDelete(conv.conversationId)
+  }}
+  className="w-6 h-6 bg-red-600/20 hover:bg-red-600/30 rounded flex items-center justify-center text-red-400 transition-all"
+>
+  <Trash2 size={12} />
+</button>
                         </div>
                       </div>
                     ))
@@ -1247,11 +1253,10 @@ const confirmDelete = async () => {
                           <div
                             key={conv._id}
                             onClick={() => fetchConversationDetails(conv.conversationId)}
-                            className={`p-4 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group ${
-                              selectedConversation?.conversationId === conv.conversationId 
-                                ? 'bg-blue-900/20 border-blue-500/30' 
-                                : ''
-                            }`}
+                            className={`p-4 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group ${selectedConversation?.conversationId === conv.conversationId
+                              ? 'bg-blue-900/20 border-blue-500/30'
+                              : ''
+                              }`}
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-600/50 transition-all">
@@ -1260,7 +1265,7 @@ const confirmDelete = async () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between mb-1">
                                   <h4 className="font-medium text-white text-sm truncate">
-                                    Customer #{conv.userId.split('_').pop()?.substring(0, 9)}
+                                    Customer #{getNumericId(conv.userId)}
                                   </h4>
                                   <span className="text-xs text-gray-500">
                                     {formatTime(conv.lastMessageTime)}
@@ -1309,7 +1314,7 @@ const confirmDelete = async () => {
                               <User className="text-gray-300" size={18} />
                             </div>
                             <div>
-                              <h3 className="font-bold text-white">Customer #{selectedConversation.userId.split('_').pop()?.substring(0, 9)}</h3>
+                              <h3 className="font-bold text-white">Customer #{getNumericId(selectedConversation.userId)}</h3>
                               <p className="text-gray-400 text-sm">{selectedConversation.totalMessages} messages • {selectedConversation.platform}</p>
                             </div>
                           </div>
@@ -1357,11 +1362,10 @@ const confirmDelete = async () => {
                                   key={index}
                                   className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
                                 >
-                                  <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${
-                                    message.role === 'user'
-                                      ? 'bg-gray-800/50 text-white'
-                                      : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
-                                  }`}>
+                                  <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${message.role === 'user'
+                                    ? 'bg-gray-800/50 text-white'
+                                    : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
+                                    }`}>
                                     <p className="text-sm">{message.content}</p>
                                     <p className="text-xs mt-1 opacity-70">
                                       {formatTime(message.timestamp)}
@@ -1403,7 +1407,7 @@ const confirmDelete = async () => {
         widgetName={name || 'AI Assistant'}
       />
 
-  {/* Delete Conversation Modal */}
+      {/* Delete Conversation Modal */}
       <DeleteConversationModal
         isOpen={showDeleteModal}
         onClose={cancelDelete}
