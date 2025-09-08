@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { DeploymentModal, DeployButton } from '@/components/DeploymentModal';
 import ChatWidget from '@/components/ChatWidget';
+import { DeleteConversationModal } from '@/components/DeleteConversationModal';
 
 // Types - LOGIQUE IDENTIQUE + NOUVEAUX TYPES CONVERSATIONS
 interface ChatbotConfig {
@@ -156,8 +157,14 @@ const ChatbotBuilder: React.FC = () => {
   
   // PAGINATION STATES
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMoreMessages, setHasMoreMessages] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false)
+  
+  // 🆕 NOUVEAUX STATES POUR LE MODAL
+const [showDeleteModal, setShowDeleteModal] = useState(false);
+const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+const [isDeleting, setIsDeleting] = useState(false);
+
+const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Configuration pour le ChatWidget
   const config: ChatbotConfig = {
@@ -294,22 +301,35 @@ const ChatbotBuilder: React.FC = () => {
     }
   };
 
-// 🗑️ FONCTION POUR SUPPRIMER UNE CONVERSATION - VERSION AMÉLIORÉE
-const deleteConversation = async (conversationId: string) => {
-  console.log(`🗑️ [FRONTEND] Delete conversation request: ${conversationId}`);
-  
-  if (!confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
-    return;
+// 🗑️ FONCTION POUR OUVRIR LE MODAL DE CONFIRMATION
+const initiateDelete = (conversationId: string) => {
+  setConversationToDelete(conversationId);
+  setShowDeleteModal(true);
+};
+
+// 🗑️ FONCTION POUR FERMER LE MODAL
+const cancelDelete = () => {
+  if (!isDeleting) {
+    setShowDeleteModal(false);
+    setConversationToDelete(null);
   }
+};
+
+// 🗑️ FONCTION POUR CONFIRMER LA SUPPRESSION
+const confirmDelete = async () => {
+  if (!conversationToDelete) return;
+
+  setIsDeleting(true);
+  console.log(`🗑️ [FRONTEND] Delete conversation request: ${conversationToDelete}`);
 
   try {
     console.log(`🗑️ [FRONTEND] Sending DELETE request to /api/connections/${connectionId}/conversations`);
-    console.log(`🗑️ [FRONTEND] Payload:`, { conversationId });
+    console.log(`🗑️ [FRONTEND] Payload:`, { conversationId: conversationToDelete });
 
     const res = await fetch(`/api/connections/${connectionId}/conversations`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ conversationId })
+      body: JSON.stringify({ conversationId: conversationToDelete })
     });
 
     console.log(`🗑️ [FRONTEND] DELETE response status: ${res.status} ${res.statusText}`);
@@ -320,44 +340,40 @@ const deleteConversation = async (conversationId: string) => {
     if (res.ok && responseData.success) {
       console.log(`✅ [FRONTEND] Delete successful, updating UI...`);
       
-      // Retirer immédiatement de la liste (optimistic update)
       setConversations(prev => {
-        const filtered = prev.filter(conv => conv.conversationId !== conversationId);
+        const filtered = prev.filter(conv => conv.conversationId !== conversationToDelete);
         console.log(`🔄 [FRONTEND] Conversations list updated: ${prev.length} -> ${filtered.length}`);
         return filtered;
       });
       
-      // Si c'était la conversation sélectionnée, revenir à la liste
-      if (selectedConversation?.conversationId === conversationId) {
+      if (selectedConversation?.conversationId === conversationToDelete) {
         console.log(`🔄 [FRONTEND] Clearing selected conversation`);
         setSelectedConversation(null);
       }
       
-      // 🔄 DÉLAI POUR LAISSER MONGODB SE SYNCHRONISER
+      setShowDeleteModal(false);
+      setConversationToDelete(null);
+      
       console.log(`🔄 [FRONTEND] Waiting 500ms before refreshing list...`);
       setTimeout(() => {
         console.log(`🔄 [FRONTEND] Refreshing conversations list from server...`);
         fetchConversations();
       }, 500);
       
-      console.log(`✅ [FRONTEND] Conversation deleted: ${conversationId}`);
+      console.log(`✅ [FRONTEND] Conversation deleted: ${conversationToDelete}`);
       
     } else {
       console.error(`❌ [FRONTEND] Delete failed:`, responseData);
-      
-      // Afficher l'erreur à l'utilisateur
-      alert(`Erreur lors de la suppression: ${responseData.error || 'Erreur inconnue'}`);
-      
-      // Rafraîchir la liste en cas d'erreur pour resynchroniser
+      alert(`Error during deletion: ${responseData.error || 'Unknown error'}`);
       fetchConversations();
     }
     
   } catch (error) {
     console.error('❌ [FRONTEND] Error deleting conversation:', error);
-    alert('Erreur réseau lors de la suppression. Veuillez réessayer.');
-    
-    // Rafraîchir la liste en cas d'erreur réseau
+    alert('Network error during deletion. Please try again.');
     fetchConversations();
+  } finally {
+    setIsDeleting(false);
   }
 };
 
@@ -1269,7 +1285,7 @@ const deleteConversation = async (conversationId: string) => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  deleteConversation(conv.conversationId)
+                                  initiateDelete(conv.conversationId)
                                 }}
                                 className="opacity-0 group-hover:opacity-100 w-6 h-6 bg-red-600/20 hover:bg-red-600/30 rounded flex items-center justify-center text-red-400 transition-all"
                               >
@@ -1305,7 +1321,7 @@ const deleteConversation = async (conversationId: string) => {
                               <RefreshCw size={14} />
                             </button>
                             <button
-                              onClick={() => deleteConversation(selectedConversation.conversationId)}
+                              onClick={() => initiateDelete(selectedConversation.conversationId)}
                               className="w-8 h-8 bg-red-600/20 hover:bg-red-600/30 rounded-lg flex items-center justify-center text-red-400 transition-all"
                             >
                               <Trash2 size={14} />
@@ -1386,6 +1402,17 @@ const deleteConversation = async (conversationId: string) => {
         widgetId={savedWidgetId || ''}
         widgetName={name || 'AI Assistant'}
       />
+
+  {/* Delete Conversation Modal */}
+      <DeleteConversationModal
+        isOpen={showDeleteModal}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        isDeleting={isDeleting}
+        title="Delete Conversation"
+        message="Are you sure you want to delete this conversation? This action cannot be undone and will permanently remove all messages from the database."
+      />
+
 
       <style jsx>{`
         .bg-grid {

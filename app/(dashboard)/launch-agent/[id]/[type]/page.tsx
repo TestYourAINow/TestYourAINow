@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Copy, Eye, EyeOff, CheckCircle, Play, Bot, Globe, MessageCircle, Clock, User, RefreshCw, Trash2, Settings, Facebook } from 'lucide-react'
+import { DeleteConversationModal } from '@/components/DeleteConversationModal';
 
 // Custom Instagram Icon with real colors
 const InstagramIcon = ({ size = 24, className = "" }) => (
@@ -78,18 +79,23 @@ export default function ConnectionDetailsPage() {
   const [showSecret, setShowSecret] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState(false)
   const [copiedSecret, setCopiedSecret] = useState(false)
-  
+
   // 🆕 NOUVEAUX STATES POUR CONVERSATIONS (MongoDB)
   const [activeTab, setActiveTab] = useState<'conversations' | 'configuration'>('conversations')
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [conversationsLoading, setConversationsLoading] = useState(false)
   const [selectedConversation, setSelectedConversation] = useState<ConversationDetails | null>(null)
   const [conversationDetailsLoading, setConversationDetailsLoading] = useState(false)
-  
+
   // 🆕 PAGINATION STATES
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMoreMessages, setHasMoreMessages] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // 🆕 NOUVEAUX STATES POUR LE MODAL
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // ✅ FONCTION EXISTANTE - RIEN CHANGÉ
   useEffect(() => {
@@ -111,10 +117,10 @@ export default function ConnectionDetailsPage() {
       const res = await fetch(`/api/connections/${connectionId}`)
       const data = await res.json()
       console.log('API Response:', data)
-      
+
       // ✅ EXACT - RIEN CHANGÉ
       setConnection(data.connection)
-      
+
     } catch (error) {
       console.error('Error fetching connection:', error)
     } finally {
@@ -128,7 +134,7 @@ export default function ConnectionDetailsPage() {
     try {
       const res = await fetch(`/api/connections/${connectionId}/conversations`)
       const data = await res.json()
-      
+
       if (data.success) {
         setConversations(data.conversations || [])
         console.log(`✅ Loaded ${data.conversations?.length || 0} conversations from MongoDB`)
@@ -152,7 +158,7 @@ export default function ConnectionDetailsPage() {
       const res = await fetch(`/api/connections/${connectionId}/conversations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           conversationId,
           limit: 50,
           loadMore,
@@ -160,7 +166,7 @@ export default function ConnectionDetailsPage() {
         })
       })
       const data = await res.json()
-      
+
       if (data.success) {
         if (loadMore && selectedConversation) {
           // Ajouter les nouveaux messages au début
@@ -183,34 +189,81 @@ export default function ConnectionDetailsPage() {
     }
   }
 
-  // 🆕 FONCTION POUR SUPPRIMER UNE CONVERSATION
-  const deleteConversation = async (conversationId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
-      return
+  // 🗑️ FONCTION POUR OUVRIR LE MODAL DE CONFIRMATION
+  const initiateDelete = (conversationId: string) => {
+    setConversationToDelete(conversationId);
+    setShowDeleteModal(true);
+  };
+
+  // 🗑️ FONCTION POUR FERMER LE MODAL
+  const cancelDelete = () => {
+    if (!isDeleting) {
+      setShowDeleteModal(false);
+      setConversationToDelete(null);
     }
+  };
+
+  // 🗑️ FONCTION POUR CONFIRMER LA SUPPRESSION
+  const confirmDelete = async () => {
+    if (!conversationToDelete) return;
+
+    setIsDeleting(true);
+    console.log(`🗑️ [FRONTEND] Delete conversation request: ${conversationToDelete}`);
 
     try {
+      console.log(`🗑️ [FRONTEND] Sending DELETE request to /api/connections/${connectionId}/conversations`);
+      console.log(`🗑️ [FRONTEND] Payload:`, { conversationId: conversationToDelete });
+
       const res = await fetch(`/api/connections/${connectionId}/conversations`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId })
-      })
+        body: JSON.stringify({ conversationId: conversationToDelete })
+      });
 
-      if (res.ok) {
-        // Retirer de la liste
-        setConversations(prev => prev.filter(conv => conv.conversationId !== conversationId))
-        
-        // Si c'était la conversation sélectionnée, revenir à la liste
-        if (selectedConversation?.conversationId === conversationId) {
-          setSelectedConversation(null)
+      console.log(`🗑️ [FRONTEND] DELETE response status: ${res.status} ${res.statusText}`);
+
+      const responseData = await res.json();
+      console.log(`🗑️ [FRONTEND] DELETE response data:`, responseData);
+
+      if (res.ok && responseData.success) {
+        console.log(`✅ [FRONTEND] Delete successful, updating UI...`);
+
+        setConversations(prev => {
+          const filtered = prev.filter(conv => conv.conversationId !== conversationToDelete);
+          console.log(`🔄 [FRONTEND] Conversations list updated: ${prev.length} -> ${filtered.length}`);
+          return filtered;
+        });
+
+        if (selectedConversation?.conversationId === conversationToDelete) {
+          console.log(`🔄 [FRONTEND] Clearing selected conversation`);
+          setSelectedConversation(null);
         }
-        
-        console.log(`✅ Conversation deleted: ${conversationId}`)
+
+        setShowDeleteModal(false);
+        setConversationToDelete(null);
+
+        console.log(`🔄 [FRONTEND] Waiting 500ms before refreshing list...`);
+        setTimeout(() => {
+          console.log(`🔄 [FRONTEND] Refreshing conversations list from server...`);
+          fetchConversations();
+        }, 500);
+
+        console.log(`✅ [FRONTEND] Conversation deleted: ${conversationToDelete}`);
+
+      } else {
+        console.error(`❌ [FRONTEND] Delete failed:`, responseData);
+        alert(`Error during deletion: ${responseData.error || 'Unknown error'}`);
+        fetchConversations();
       }
+
     } catch (error) {
-      console.error('Error deleting conversation:', error)
+      console.error('❌ [FRONTEND] Error deleting conversation:', error);
+      alert('Network error during deletion. Please try again.');
+      fetchConversations();
+    } finally {
+      setIsDeleting(false);
     }
-  }
+  };
 
   // 🆕 CHARGER PLUS DE MESSAGES (scroll infini)
   const loadMoreMessages = () => {
@@ -257,7 +310,7 @@ export default function ConnectionDetailsPage() {
     const date = new Date(timestamp)
     const now = new Date()
     const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
+
     if (diffHours < 1) return 'Il y a quelques minutes'
     if (diffHours < 24) return `Il y a ${diffHours}h`
     if (diffHours < 48) return 'Hier'
@@ -283,7 +336,7 @@ export default function ConnectionDetailsPage() {
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gray-950">
-      
+
       {/* 🎨 HEADER - ARRIÈRE-PLAN ORIGINAL + DESIGN SYSTEM */}
       <div className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
@@ -307,24 +360,22 @@ export default function ConnectionDetailsPage() {
 
             {/* Right - Tabs */}
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={() => setActiveTab('conversations')}
-                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
-                  activeTab === 'conversations' 
-                    ? 'bg-blue-600 text-white' 
+                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${activeTab === 'conversations'
+                    ? 'bg-blue-600 text-white'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-                }`}
+                  }`}
               >
                 <MessageCircle size={16} />
                 Conversations
               </button>
-              <button 
+              <button
                 onClick={() => setActiveTab('configuration')}
-                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
-                  activeTab === 'configuration' 
-                    ? 'bg-blue-600 text-white' 
+                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${activeTab === 'configuration'
+                    ? 'bg-blue-600 text-white'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-                }`}
+                  }`}
               >
                 <Settings size={16} />
                 Configuration
@@ -338,7 +389,7 @@ export default function ConnectionDetailsPage() {
       {activeTab === 'configuration' && (
         <div className="max-w-4xl mx-auto p-4 md:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
+
             {/* 🌐 WEBHOOK DETAILS */}
             <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
@@ -449,7 +500,7 @@ export default function ConnectionDetailsPage() {
                 <p className="text-gray-400 text-sm">
                   This connection was created on {connection.createdAt ? new Date(connection.createdAt).toLocaleDateString('en-US', {
                     year: 'numeric',
-                    month: 'long', 
+                    month: 'long',
                     day: 'numeric'
                   }) : 'Unknown date'}.
                 </p>
@@ -481,7 +532,7 @@ export default function ConnectionDetailsPage() {
           ) : (
             /* LAYOUT MESSENGER - 2 COLONNES */
             <div className="flex h-full">
-              
+
               {/* 📋 COLONNE GAUCHE - LISTE CONVERSATIONS (30%) */}
               <div className="w-full md:w-96 border-r border-gray-800 bg-gray-950 flex flex-col">
                 {/* Header liste */}
@@ -528,11 +579,10 @@ export default function ConnectionDetailsPage() {
                       <div
                         key={conv._id}
                         onClick={() => fetchConversationDetails(conv.conversationId)}
-                        className={`p-4 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group ${
-                          selectedConversation?.conversationId === conv.conversationId 
-                            ? 'bg-blue-900/20 border-blue-500/30' 
+                        className={`p-4 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group ${selectedConversation?.conversationId === conv.conversationId
+                            ? 'bg-blue-900/20 border-blue-500/30'
                             : ''
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center group-hover:bg-gray-600/50 transition-all">
@@ -566,7 +616,7 @@ export default function ConnectionDetailsPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              deleteConversation(conv.conversationId)
+                              initiateDelete(conv.conversationId)
                             }}
                             className="opacity-0 group-hover:opacity-100 w-6 h-6 bg-red-600/20 hover:bg-red-600/30 rounded flex items-center justify-center text-red-400 transition-all"
                           >
@@ -602,7 +652,7 @@ export default function ConnectionDetailsPage() {
                           <RefreshCw size={14} />
                         </button>
                         <button
-                          onClick={() => deleteConversation(selectedConversation.conversationId)}
+                          onClick={() => initiateDelete(selectedConversation.conversationId)}
                           className="w-8 h-8 bg-red-600/20 hover:bg-red-600/30 rounded-lg flex items-center justify-center text-red-400 transition-all"
                         >
                           <Trash2 size={14} />
@@ -638,11 +688,10 @@ export default function ConnectionDetailsPage() {
                               key={index}
                               className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
                             >
-                              <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${
-                                message.role === 'user'
+                              <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${message.role === 'user'
                                   ? 'bg-gray-800/50 text-white'
                                   : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
-                              }`}>
+                                }`}>
                                 <p className="text-sm">{message.content}</p>
                                 <p className="text-xs mt-1 opacity-70">
                                   {formatTime(message.timestamp)}
@@ -674,6 +723,17 @@ export default function ConnectionDetailsPage() {
           )}
         </div>
       )}
+
+      {/* Delete Conversation Modal */}
+      <DeleteConversationModal
+        isOpen={showDeleteModal}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        isDeleting={isDeleting}
+        title="Delete Conversation"
+        message="Are you sure you want to delete this conversation? This action cannot be undone and will permanently remove all messages from the database."
+      />
+
     </div>
   )
 }
