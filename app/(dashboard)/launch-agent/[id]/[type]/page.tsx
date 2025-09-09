@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Copy, Eye, EyeOff, CheckCircle, Play, Bot, Globe, MessageCircle, Clock, User, RefreshCw, Trash2, Settings, Facebook } from 'lucide-react'
+import { ArrowLeft, Copy, Eye, EyeOff, CheckCircle, Bot, Globe, MessageCircle, User, RefreshCw, Trash2, Settings, Facebook, Zap, Webhook, Calendar,File } from 'lucide-react'
 import { DeleteConversationModal } from '@/components/DeleteConversationModal';
+
+
 
 // Custom Instagram Icon with real colors
 const InstagramIcon = ({ size = 24, className = "" }) => (
@@ -22,7 +24,7 @@ const InstagramIcon = ({ size = 24, className = "" }) => (
   </svg>
 )
 
-// ✅ TYPES EXISTANTS - RIEN CHANGÉ
+// Types
 type Connection = {
   _id: string
   name: string
@@ -36,7 +38,6 @@ type Connection = {
   webhookId?: string
 }
 
-// 🆕 NOUVEAUX TYPES POUR MONGODB
 type ConversationSummary = {
   _id: string
   conversationId: string
@@ -73,53 +74,62 @@ export default function ConnectionDetailsPage() {
   const connectionId = params.id as string
   const integrationType = params.type as string
 
-  // ✅ STATES EXISTANTS - RIEN CHANGÉ
+  // Basic states
   const [connection, setConnection] = useState<Connection | null>(null)
   const [loading, setLoading] = useState(true)
   const [showSecret, setShowSecret] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState(false)
   const [copiedSecret, setCopiedSecret] = useState(false)
 
-  // 🆕 NOUVEAUX STATES POUR CONVERSATIONS (MongoDB)
+  // Agent details states
+  const [agentDetails, setAgentDetails] = useState<any>(null)
+  const [agentLoading, setAgentLoading] = useState(false)
+  const [userApiKeys, setUserApiKeys] = useState<any[]>([])
+
+  // Conversation states
   const [activeTab, setActiveTab] = useState<'conversations' | 'configuration'>('conversations')
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [conversationsLoading, setConversationsLoading] = useState(false)
   const [selectedConversation, setSelectedConversation] = useState<ConversationDetails | null>(null)
   const [conversationDetailsLoading, setConversationDetailsLoading] = useState(false)
 
-  // 🆕 PAGINATION STATES
+  // Pagination states
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMoreMessages, setHasMoreMessages] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // 🆕 NOUVEAUX STATES POUR LE MODAL
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // Modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  // ✅ FONCTION EXISTANTE - RIEN CHANGÉ
+  // Effects
   useEffect(() => {
     if (connectionId) {
       fetchConnection()
     }
   }, [connectionId])
 
-  // 🆕 CHARGER LES CONVERSATIONS QUAND ON CHANGE D'ONGLET
   useEffect(() => {
     if (activeTab === 'conversations' && connection?.webhookId) {
       fetchConversations()
     }
   }, [activeTab, connection])
 
-  // ✅ FONCTION EXISTANTE - RIEN CHANGÉ
+  useEffect(() => {
+    if (activeTab === 'configuration' && connection?.aiBuildId) {
+      fetchAgentDetails()
+      fetchUserApiKeys()
+    }
+  }, [activeTab, connection])
+
+  // Functions
   const fetchConnection = async () => {
     try {
       const res = await fetch(`/api/connections/${connectionId}`)
       const data = await res.json()
       console.log('API Response:', data)
-
       setConnection(data.connection)
-
     } catch (error) {
       console.error('Error fetching connection:', error)
     } finally {
@@ -127,7 +137,6 @@ export default function ConnectionDetailsPage() {
     }
   }
 
-  // 🆕 FONCTION POUR CHARGER LES CONVERSATIONS (MongoDB)
   const fetchConversations = async () => {
     setConversationsLoading(true)
     try {
@@ -145,7 +154,35 @@ export default function ConnectionDetailsPage() {
     }
   }
 
-  // 🆕 FONCTION POUR CHARGER UNE CONVERSATION DÉTAILLÉE
+  // Fetch agent details
+  const fetchAgentDetails = async () => {
+    setAgentLoading(true)
+    try {
+      const res = await fetch(`/api/agents/${connection?.aiBuildId}`)
+      const data = await res.json()
+      if (res.ok) {
+        setAgentDetails(data)
+      }
+    } catch (error) {
+      console.error('Error fetching agent details:', error)
+    } finally {
+      setAgentLoading(false)
+    }
+  }
+
+  // Fetch user API keys to get names
+  const fetchUserApiKeys = async () => {
+    try {
+      const res = await fetch('/api/user/api-key')
+      const data = await res.json()
+      if (res.ok) {
+        setUserApiKeys(data.apiKeys || [])
+      }
+    } catch (error) {
+      console.error('Error fetching user API keys:', error)
+    }
+  }
+
   const fetchConversationDetails = async (conversationId: string, loadMore = false, lastTimestamp?: number) => {
     if (!loadMore) {
       setConversationDetailsLoading(true)
@@ -168,13 +205,11 @@ export default function ConnectionDetailsPage() {
 
       if (data.success) {
         if (loadMore && selectedConversation) {
-          // Ajouter les nouveaux messages au début
           setSelectedConversation({
             ...selectedConversation,
             messages: [...data.conversation.messages, ...selectedConversation.messages]
           })
         } else {
-          // Premier chargement
           setSelectedConversation(data.conversation)
         }
         setHasMoreMessages(data.pagination.hasMore)
@@ -188,83 +223,79 @@ export default function ConnectionDetailsPage() {
     }
   }
 
-  // 🗑️ FONCTION POUR OUVRIR LE MODAL DE CONFIRMATION
   const initiateDelete = (conversationId: string) => {
-    setConversationToDelete(conversationId);
-    setShowDeleteModal(true);
-  };
+    setConversationToDelete(conversationId)
+    setShowDeleteModal(true)
+  }
 
-  // 🗑️ FONCTION POUR FERMER LE MODAL
   const cancelDelete = () => {
     if (!isDeleting) {
-      setShowDeleteModal(false);
-      setConversationToDelete(null);
+      setShowDeleteModal(false)
+      setConversationToDelete(null)
     }
-  };
+  }
 
-  // 🗑️ FONCTION POUR CONFIRMER LA SUPPRESSION
   const confirmDelete = async () => {
-    if (!conversationToDelete) return;
+    if (!conversationToDelete) return
 
-    setIsDeleting(true);
-    console.log(`🗑️ [FRONTEND] Delete conversation request: ${conversationToDelete}`);
+    setIsDeleting(true)
+    console.log(`🗑️ [FRONTEND] Delete conversation request: ${conversationToDelete}`)
 
     try {
-      console.log(`🗑️ [FRONTEND] Sending DELETE request to /api/connections/${connectionId}/conversations`);
-      console.log(`🗑️ [FRONTEND] Payload:`, { conversationId: conversationToDelete });
+      console.log(`🗑️ [FRONTEND] Sending DELETE request to /api/connections/${connectionId}/conversations`)
+      console.log(`🗑️ [FRONTEND] Payload:`, { conversationId: conversationToDelete })
 
       const res = await fetch(`/api/connections/${connectionId}/conversations`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversationId: conversationToDelete })
-      });
+      })
 
-      console.log(`🗑️ [FRONTEND] DELETE response status: ${res.status} ${res.statusText}`);
+      console.log(`🗑️ [FRONTEND] DELETE response status: ${res.status} ${res.statusText}`)
 
-      const responseData = await res.json();
-      console.log(`🗑️ [FRONTEND] DELETE response data:`, responseData);
+      const responseData = await res.json()
+      console.log(`🗑️ [FRONTEND] DELETE response data:`, responseData)
 
       if (res.ok && responseData.success) {
-        console.log(`✅ [FRONTEND] Delete successful, updating UI...`);
+        console.log(`✅ [FRONTEND] Delete successful, updating UI...`)
 
         setConversations(prev => {
-          const filtered = prev.filter(conv => conv.conversationId !== conversationToDelete);
-          console.log(`🔄 [FRONTEND] Conversations list updated: ${prev.length} -> ${filtered.length}`);
-          return filtered;
-        });
+          const filtered = prev.filter(conv => conv.conversationId !== conversationToDelete)
+          console.log(`🔄 [FRONTEND] Conversations list updated: ${prev.length} -> ${filtered.length}`)
+          return filtered
+        })
 
         if (selectedConversation?.conversationId === conversationToDelete) {
-          console.log(`🔄 [FRONTEND] Clearing selected conversation`);
-          setSelectedConversation(null);
+          console.log(`🔄 [FRONTEND] Clearing selected conversation`)
+          setSelectedConversation(null)
         }
 
-        setShowDeleteModal(false);
-        setConversationToDelete(null);
+        setShowDeleteModal(false)
+        setConversationToDelete(null)
 
-        console.log(`🔄 [FRONTEND] Waiting 500ms before refreshing list...`);
+        console.log(`🔄 [FRONTEND] Waiting 500ms before refreshing list...`)
         setTimeout(() => {
-          console.log(`🔄 [FRONTEND] Refreshing conversations list from server...`);
-          fetchConversations();
-        }, 500);
+          console.log(`🔄 [FRONTEND] Refreshing conversations list from server...`)
+          fetchConversations()
+        }, 500)
 
-        console.log(`✅ [FRONTEND] Conversation deleted: ${conversationToDelete}`);
+        console.log(`✅ [FRONTEND] Conversation deleted: ${conversationToDelete}`)
 
       } else {
-        console.error(`❌ [FRONTEND] Delete failed:`, responseData);
-        alert(`Error during deletion: ${responseData.error || 'Unknown error'}`);
-        fetchConversations();
+        console.error(`❌ [FRONTEND] Delete failed:`, responseData)
+        alert(`Error during deletion: ${responseData.error || 'Unknown error'}`)
+        fetchConversations()
       }
 
     } catch (error) {
-      console.error('❌ [FRONTEND] Error deleting conversation:', error);
-      alert('Network error during deletion. Please try again.');
-      fetchConversations();
+      console.error('❌ [FRONTEND] Error deleting conversation:', error)
+      alert('Network error during deletion. Please try again.')
+      fetchConversations()
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
-  // 🆕 CHARGER PLUS DE MESSAGES (scroll infini)
   const loadMoreMessages = () => {
     if (selectedConversation && hasMoreMessages && !loadingMore && selectedConversation.messages.length > 0) {
       const oldestMessage = selectedConversation.messages[0]
@@ -272,7 +303,6 @@ export default function ConnectionDetailsPage() {
     }
   }
 
-  // ✅ TOUTES LES FONCTIONS EXISTANTES - RIEN CHANGÉ
   const copyToClipboard = async (text: string, type: 'url' | 'secret') => {
     try {
       await navigator.clipboard.writeText(text)
@@ -296,15 +326,35 @@ export default function ConnectionDetailsPage() {
     }
   }
 
-  const getIntegrationIcon = (type: string) => {
-    switch (type) {
-      case 'instagram-dms': return <InstagramIcon size={24} />
-      case 'facebook-messenger': return <Facebook size={24} className="text-blue-400" />
-      default: return <Globe size={24} className="text-gray-400" />
-    }
+ const getIntegrationIcon = (type: string) => {
+  switch (type) {
+    case 'webhook':
+      return <Webhook size={12} className="text-blue-400" />
+    case 'calendly':
+      return <Calendar size={12} className="text-emerald-400" />
+    case 'files':
+      return <File size={12} className="text-purple-400" />
+    case 'instagram-dms':
+      return <InstagramIcon size={12} className="text-pink-400" />
+    case 'facebook-messenger':
+      return <Facebook size={12} className="text-blue-400" />
+    default:
+      return <Settings size={12} className="text-gray-400" />
   }
+}
 
-  // 🆕 FONCTION POUR FORMATER LE TEMPS
+// Fonction pour les icônes de plateforme (24px) - RENOMMÉE
+const getPlatformIcon = (type: string) => {
+  switch (type) {
+    case 'instagram-dms': 
+      return <InstagramIcon size={24} />
+    case 'facebook-messenger': 
+      return <Facebook size={24} className="text-blue-400" />
+    default: 
+      return <Globe size={24} className="text-gray-400" />
+  }
+}
+
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp)
     const now = new Date()
@@ -316,7 +366,22 @@ export default function ConnectionDetailsPage() {
     return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
   }
 
-  // ✅ LOADING ET ERROR STATES - ARRIÈRE-PLAN ORIGINAL
+  // Get API key name from the key string or ID
+  const getApiKeyName = (apiKeyString: string) => {
+    // Si c'est un ID MongoDB (24 caractères hexadécimaux), chercher par ID
+    if (apiKeyString.length === 24 && /^[0-9a-fA-F]{24}$/.test(apiKeyString)) {
+      const foundKey = userApiKeys.find(key => key.id === apiKeyString)
+      return foundKey ? foundKey.name : 'Unknown Key'
+    }
+    
+    // Sinon, essayer de matcher par les 4 derniers caractères (fallback)
+    const foundKey = userApiKeys.find(key => {
+      return key.maskedKey.includes(apiKeyString.slice(-4))
+    })
+    
+    return foundKey ? foundKey.name : 'Unknown Key'
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 p-4 flex items-center justify-center">
@@ -336,7 +401,7 @@ export default function ConnectionDetailsPage() {
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gray-950">
 
-      {/* 🎨 HEADER - ARRIÈRE-PLAN ORIGINAL + DESIGN SYSTEM */}
+      {/* Header */}
       <div className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="px-4 md:px-8 py-4">
           <div className="flex items-center justify-between w-full">
@@ -348,7 +413,7 @@ export default function ConnectionDetailsPage() {
               </Link>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gray-800/50 border border-gray-700/50 rounded-xl flex items-center justify-center">
-                  {getIntegrationIcon(integrationType)}
+                  {getPlatformIcon(integrationType)}
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">{connection.name}</h1>
@@ -384,12 +449,12 @@ export default function ConnectionDetailsPage() {
         </div>
       </div>
 
-      {/* ✅ ONGLET CONFIGURATION - DESIGN SYSTEM APPLIQUÉ */}
+      {/* Configuration Tab */}
       {activeTab === 'configuration' && (
-        <div className="max-w-4xl mx-auto p-4 md:p-8">
+        <div className="w-full p-4 md:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-            {/* 🌐 WEBHOOK DETAILS */}
+            {/* Webhook Details */}
             <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-cyan-600/20 border border-cyan-500/40 rounded-xl flex items-center justify-center">
@@ -454,14 +519,41 @@ export default function ConnectionDetailsPage() {
                 </div>
               </div>
 
-              {/* Setup Guide Button */}
-              <button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
-                <Play size={18} />
-                Show Setup Guide & Video
-              </button>
+              {/* ManyChat Setup */}
+              <div className="space-y-4">
+                <a
+                  href="https://manychat.com/free-trial"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <Zap size={18} />
+                  Get ManyChat Free Month
+                </a>
+
+                <div className="bg-gray-800/40 rounded-xl p-4 space-y-3">
+                  <h4 className="font-semibold text-white text-sm mb-3">Step-by-step:</h4>
+                  <div className="space-y-2 text-sm text-gray-300">
+                    <p><strong>1 -</strong> Create a ManyChat account for 1 month free by clicking above.</p>
+                    <p>
+                      <strong>2 - </strong>
+                      <a
+                        href="https://manychat.com/template/instagram-ai-agent"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-400 hover:text-cyan-300 underline font-medium"
+                      >
+                        Click this template
+                      </a>
+                      <span> to add it to your ManyChat account.</span>
+                    </p>
+                    <p><strong>3 -</strong> Connect your social accounts and get your first AI response.</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* 🤖 AI BUILD CONFIGURATION */}
+            {/* AI Build Configuration - READ ONLY WITH DETAILS */}
             <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-blue-600/20 border border-blue-500/40 rounded-xl flex items-center justify-center">
@@ -469,59 +561,122 @@ export default function ConnectionDetailsPage() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-white">AI Build Configuration</h2>
-                  <p className="text-gray-400 text-sm">Select and manage the AI build connected to this {integrationType.replace('-', ' ')} agent.</p>
+                  <p className="text-gray-400 text-sm">AI agent connected to this {integrationType.replace('-', ' ')} integration.</p>
                 </div>
               </div>
 
-              {/* Connected AI Build */}
-              <div className="mb-6">
-                <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                  Connected AI Build
-                </label>
-                <input
-                  type="text"
-                  value={connection.aiName || connection.aiBuildId}
-                  readOnly
-                  className="w-full px-4 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl"
-                />
-              </div>
+              {agentLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                </div>
+              ) : (
+                <>
+                  {/* Connected AI Build - Read Only Display */}
+                  <div className="mb-6">
+                    <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                      Connected AI Agent
+                    </label>
+                    <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-600/20 border border-blue-500/30 rounded-lg flex items-center justify-center">
+                          <Bot className="text-blue-400" size={18} />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-white">{agentDetails?.name || connection.aiName || 'AI Agent'}</h3>
+                          <p className="text-gray-400 text-sm">Agent ID: {connection.aiBuildId}</p>
+                        </div>
+                        <div className="flex items-center gap-1 px-2 py-1 bg-green-600/20 border border-green-500/30 rounded-full">
+                          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                          <span className="text-green-400 text-xs font-medium">Connected</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Manage AI Builds Button */}
-              <Link
-                href="/agents"
-                className="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center"
-              >
-                Manage AI Builds
-              </Link>
+                  {/* Technical Details */}
+                  {agentDetails && (
+                    <div className="mb-6">
+                      <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        Technical Configuration
+                      </label>
+                      <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-gray-400 text-sm">Model:</span>
+                            <p className="text-white font-medium">{agentDetails.openaiModel}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-400 text-sm">Temperature:</span>
+                            <p className="text-white font-medium">{agentDetails.temperature}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-400 text-sm">Top P:</span>
+                            <p className="text-white font-medium">{agentDetails.top_p}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-400 text-sm">API Key:</span>
+                            <p className="text-white font-medium">{getApiKeyName(agentDetails.apiKey)}</p>
+                          </div>
+                        </div>
+                        
+                        {agentDetails.integrations && agentDetails.integrations.length > 0 && (
+                          <div className="pt-2 border-t border-gray-700/50">
+                            <span className="text-gray-400 text-sm">Integrations:</span>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                            {agentDetails.integrations.map((integration: any, index: number) => (
+  <div
+    key={index}
+    className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-200 text-xs"
+  >
+    {getIntegrationIcon(integration.type)}
+    <span className="truncate max-w-[80px]">
+      {integration.name}
+    </span>
+  </div>
+))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-              {/* Connection Info */}
-              <div className="mt-8 p-4 bg-gray-800/40 rounded-xl">
-                <p className="text-gray-400 text-sm">
-                  This connection was created on {connection.createdAt ? new Date(connection.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  }) : 'Unknown date'}.
-                </p>
-                <p className="text-gray-400 text-sm mt-1">
-                  Agent Name: <span className="text-white">{connection.name}</span> (Connection Name: <span className="text-white">{connection.name}</span>)
-                </p>
-              </div>
+                  {/* Connection Info */}
+                  <div className="p-4 bg-gray-800/40 rounded-xl">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400 text-sm">Connection Status:</span>
+                        <span className="text-green-400 text-sm font-medium">Active</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400 text-sm">Created:</span>
+                        <span className="text-white text-sm">
+                          {connection.createdAt ? new Date(connection.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          }) : 'Unknown date'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400 text-sm">Platform:</span>
+                        <span className="text-white text-sm capitalize">{integrationType.replace('-', ' ')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* 💬 ONGLET CONVERSATIONS - NOUVELLE INTERFACE MOBILE OPTIMISÉE */}
+      {/* Conversations Tab */}
       {activeTab === 'conversations' && (
         <div className="h-[calc(100vh-80px)]">
           {!connection.webhookId ? (
-            /* Message pour connections sans webhook */
             <div className="h-full flex items-center justify-center p-8">
               <div className="text-center">
-                <div className="w-20 h-20 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <MessageCircle className="w-10 h-10 text-gray-400" />
-                </div>
                 <h3 className="text-xl font-bold text-white mb-2">Conversations not available</h3>
                 <p className="text-gray-400">
                   This connection type ({integrationType}) does not support conversation history.
@@ -533,7 +688,6 @@ export default function ConnectionDetailsPage() {
               {/* Mobile: Navigation liste ↔ détail */}
               <div className="lg:hidden h-full">
                 {selectedConversation ? (
-                  // Vue détail mobile avec bouton back
                   <div className="flex flex-col h-full">
                     <div className="p-3 border-b border-gray-800 flex items-center gap-3 bg-gray-900/30">
                       <button
@@ -554,9 +708,7 @@ export default function ConnectionDetailsPage() {
                       </button>
                     </div>
 
-                    {/* Messages mobiles optimisés */}
                     <div className="flex-1 flex flex-col overflow-hidden">
-                      {/* Bouton Load More en haut */}
                       {hasMoreMessages && (
                         <div className="p-3 border-b border-gray-800/50">
                           <button
@@ -569,7 +721,6 @@ export default function ConnectionDetailsPage() {
                         </div>
                       )}
 
-                      {/* Messages */}
                       <div className="flex-1 overflow-y-auto p-3 space-y-3">
                         {conversationDetailsLoading ? (
                           <div className="text-center text-gray-400 py-8">
@@ -599,9 +750,7 @@ export default function ConnectionDetailsPage() {
                     </div>
                   </div>
                 ) : (
-                  // Vue liste mobile
                   <div className="h-full overflow-y-auto">
-                    {/* Header liste mobile */}
                     <div className="p-3 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-blue-600/20 border border-blue-500/40 rounded-lg flex items-center justify-center">
@@ -623,7 +772,6 @@ export default function ConnectionDetailsPage() {
                       </button>
                     </div>
 
-                    {/* Liste conversations mobile */}
                     {conversationsLoading ? (
                       <div className="p-6 text-center text-gray-400">
                         <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -666,7 +814,6 @@ export default function ConnectionDetailsPage() {
                                 </span>
                               </div>
                             </div>
-                            {/* Delete button pour mobile */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -686,9 +833,8 @@ export default function ConnectionDetailsPage() {
 
               {/* Desktop: Layout 2 colonnes existant */}
               <div className="hidden lg:flex h-full">
-                {/* 📋 COLONNE GAUCHE - LISTE CONVERSATIONS (30%) */}
+                {/* Colonne gauche - Liste conversations */}
                 <div className="w-96 border-r border-gray-800 bg-gray-950 flex flex-col">
-                  {/* Header liste */}
                   <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-blue-600/20 border border-blue-500/40 rounded-lg flex items-center justify-center">
@@ -710,7 +856,6 @@ export default function ConnectionDetailsPage() {
                     </button>
                   </div>
 
-                  {/* Liste scrollable */}
                   <div className="flex-1 overflow-y-auto">
                     {conversationsLoading ? (
                       <div className="p-8 text-center text-gray-400">
@@ -765,7 +910,6 @@ export default function ConnectionDetailsPage() {
                                 )}
                               </div>
                             </div>
-                            {/* Delete button */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -782,11 +926,10 @@ export default function ConnectionDetailsPage() {
                   </div>
                 </div>
 
-                {/* 💬 COLONNE DROITE - CONVERSATION DÉTAILLÉE (70%) */}
+                {/* Colonne droite - Conversation détaillée */}
                 <div className="flex-1 flex flex-col bg-gray-950">
                   {selectedConversation ? (
                     <>
-                      {/* Header conversation */}
                       <div className="p-4 border-b border-gray-800 bg-gray-900/30 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gray-700/50 rounded-full flex items-center justify-center">
@@ -813,9 +956,7 @@ export default function ConnectionDetailsPage() {
                         </div>
                       </div>
 
-                      {/* Messages avec scroll infini */}
                       <div className="flex-1 flex flex-col overflow-hidden">
-                        {/* Bouton Load More en haut */}
                         {hasMoreMessages && (
                           <div className="p-3 border-b border-gray-800/50">
                             <button
@@ -828,7 +969,6 @@ export default function ConnectionDetailsPage() {
                           </div>
                         )}
 
-                        {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-3">
                           {conversationDetailsLoading ? (
                             <div className="text-center text-gray-400 py-8">
@@ -858,7 +998,6 @@ export default function ConnectionDetailsPage() {
                       </div>
                     </>
                   ) : (
-                    /* État par défaut - Aucune conversation sélectionnée */
                     <div className="flex-1 flex items-center justify-center">
                       <div className="text-center">
                         <div className="w-16 h-16 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -891,3 +1030,4 @@ export default function ConnectionDetailsPage() {
     </div>
   )
 }
+ 

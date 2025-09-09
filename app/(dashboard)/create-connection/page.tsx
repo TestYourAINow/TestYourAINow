@@ -303,7 +303,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         router.push('/launch-agent');
       } else {
         // Pour Instagram et Facebook, va vers la page de détails
-        router.push(`/launch-agent/${connectionId}/${integrationType}`);
+        router.push(`/launch-agent/${connectionId}/${integrationType}?tab=configuration`);
       }
     } else {
       // Fallback vers la page générale si pas d'ID

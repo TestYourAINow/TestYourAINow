@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
-import { AgentVersion } from "@/models/AgentVersion"; // 🆕
-import { AgentKnowledge } from "@/models/AgentKnowledge"; // 🆕
-import { ChatbotConfig } from "@/models/ChatbotConfig"; // 🆕
+import { AgentVersion } from "@/models/AgentVersion";
+import { AgentKnowledge } from "@/models/AgentKnowledge";
+import { ChatbotConfig } from "@/models/ChatbotConfig";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
@@ -24,7 +24,14 @@ export async function GET(req: NextRequest, context: any) {
   const agent = await Agent.findOne({ _id: params.id, userId: user.id });
   if (!agent) return NextResponse.json({ error: "Agent not found" }, { status: 404 });
 
-  return NextResponse.json({ name: agent.name });
+  return NextResponse.json({ 
+    name: agent.name,
+    openaiModel: agent.openaiModel,
+    temperature: agent.temperature,
+    top_p: agent.top_p,
+    apiKey: agent.apiKey,
+    integrations: agent.integrations || []
+  });
 }
 
 // PUT pour update un agent
@@ -48,7 +55,7 @@ export async function PUT(req: NextRequest, context: any) {
     temperature,
     top_p,
     integrations,
-    apiKey, // 🆕 AJOUTÉ pour apiKey
+    apiKey,
   } = await req.json();
 
   const updated = await Agent.findOneAndUpdate(
@@ -67,7 +74,7 @@ export async function PUT(req: NextRequest, context: any) {
       temperature,
       top_p,
       ...(integrations !== undefined && { integrations }),
-      ...(apiKey !== undefined && { apiKey }), // 🆕 AJOUTÉ
+      ...(apiKey !== undefined && { apiKey }),
       updatedAt: new Date(),
     },
     { new: true }
