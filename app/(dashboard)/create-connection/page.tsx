@@ -70,7 +70,8 @@ const integrations = [
     icon: WebsiteIcon,
     description: 'Embed AI chat on your website',
     color: 'from-cyan-500 to-blue-500',
-    popular: true
+    popular: true,
+    suggestedName: 'Website Assistant'
   },
   { 
     label: 'Facebook Messenger', 
@@ -78,7 +79,8 @@ const integrations = [
     icon: FacebookIcon,
     description: 'Connect to Facebook messages',
     color: 'from-blue-500 to-indigo-500',
-    popular: false
+    popular: false,
+    suggestedName: 'Facebook Support Bot'
   },
   { 
     label: 'Instagram DMs', 
@@ -86,7 +88,8 @@ const integrations = [
     icon: InstagramIcon,
     description: 'Handle Instagram direct messages',
     color: 'from-pink-500 to-purple-500',
-    popular: false
+    popular: false,
+    suggestedName: 'Instagram Chat Bot'
   },
   { 
     label: 'SMS Integration', 
@@ -94,7 +97,8 @@ const integrations = [
     icon: SMSIcon,
     description: 'Text message conversations',
     color: 'from-green-500 to-emerald-500',
-    popular: false
+    popular: false,
+    suggestedName: 'SMS Assistant'
   }
 ]
 
@@ -264,6 +268,8 @@ export default function CreateConnectionPage() {
       .catch((err) => console.error('Error loading agents:', err))
   }, [])
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !integration || !aiBuildId) return;
@@ -289,8 +295,8 @@ export default function CreateConnectionPage() {
     }
   }
 
-  const canProceedToStep2 = name.trim() !== '';
-  const canProceedToStep3 = canProceedToStep2 && integration !== '';
+  const canProceedToStep2 = integration !== '';
+  const canProceedToStep3 = canProceedToStep2 && name.trim() !== '';
   const canSubmit = canProceedToStep3 && aiBuildId !== '';
 
   return (
@@ -314,7 +320,7 @@ export default function CreateConnectionPage() {
               Create New Connection
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Connect your AI agent to any platform in just a few steps. Choose your platform, select your agent, and launch!
+              Connect your AI agent to any platform in just a few steps. Choose your platform, name it, and launch!
             </p>
           </div>
         </div>
@@ -332,8 +338,44 @@ export default function CreateConnectionPage() {
         <div className="max-w-4xl mx-auto">
           <form onSubmit={handleSubmit}>
             
-            {/* Step 1: Connection Name */}
+            {/* Step 1: Select Platform */}
             {currentStep === 1 && (
+              <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 shadow-2xl">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/40 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Layers className="text-purple-400" size={32} />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-2">Choose Your Platform</h2>
+                  <p className="text-gray-400">Select where you want to deploy your AI agent</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  {integrations.map((item) => (
+                    <PlatformCard
+                      key={item.value}
+                      integration={item}
+                      isSelected={integration === item.value}
+                      onSelect={() => setIntegration(item.value)}
+                    />
+                  ))}
+                </div>
+                
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => canProceedToStep2 && setCurrentStep(2)}
+                    disabled={!canProceedToStep2}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 transform hover:scale-105"
+                  >
+                    <span>Continue</span>
+                    <ArrowRight size={20} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Connection Name */}
+            {currentStep === 2 && (
               <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 shadow-2xl">
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/40 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -356,61 +398,25 @@ export default function CreateConnectionPage() {
                     required
                   />
                   
-                  <div className="mt-8 flex justify-center">
+                  <div className="mt-8 flex justify-center gap-4">
                     <button
                       type="button"
-                      onClick={() => canProceedToStep2 && setCurrentStep(2)}
-                      disabled={!canProceedToStep2}
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 transform hover:scale-105"
+                      onClick={() => setCurrentStep(1)}
+                      className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-all"
+                    >
+                      <ArrowLeft size={18} />
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => canProceedToStep3 && setCurrentStep(3)}
+                      disabled={!canProceedToStep3}
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 transform hover:scale-105"
                     >
                       <span>Continue</span>
-                      <ArrowRight size={20} />
+                      <ArrowRight size={18} />
                     </button>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Select Platform */}
-            {currentStep === 2 && (
-              <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 shadow-2xl">
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/40 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Layers className="text-purple-400" size={32} />
-                  </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Choose Your Platform</h2>
-                  <p className="text-gray-400">Select where you want to deploy your AI agent</p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  {integrations.map((item) => (
-                    <PlatformCard
-                      key={item.value}
-                      integration={item}
-                      isSelected={integration === item.value}
-                      onSelect={() => setIntegration(item.value)}
-                    />
-                  ))}
-                </div>
-                
-                <div className="flex justify-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(1)}
-                    className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-all"
-                  >
-                    <ArrowLeft size={18} />
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => canProceedToStep3 && setCurrentStep(3)}
-                    disabled={!canProceedToStep3}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 transform hover:scale-105"
-                  >
-                    <span>Continue</span>
-                    <ArrowRight size={18} />
-                  </button>
                 </div>
               </div>
             )}
@@ -481,8 +487,6 @@ export default function CreateConnectionPage() {
           </form>
         </div>
       </FadeInSection>
-
-
 
       {/* Custom CSS for shimmer animation */}
       <style jsx>{`
