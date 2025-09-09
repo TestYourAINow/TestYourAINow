@@ -270,30 +270,53 @@ export default function CreateConnectionPage() {
 
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name || !integration || !aiBuildId) return;
-    
-    setIsSubmitting(true);
-    
-    try {
-      const res = await fetch('/api/connections', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, integrationType: integration, aiBuildId }),
-      })
+  // Dans app/(dashboard)/create-connection/page.tsx
+// Remplace la fonction handleSubmit existante par celle-ci :
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Unknown error')
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  if (!name || !integration || !aiBuildId) return;
+  
+  setIsSubmitting(true);
+  
+  try {
+    const res = await fetch('/api/connections', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, integrationType: integration, aiBuildId }),
+    })
 
-      router.push('/launch-agent')
-    } catch (err) {
-      alert('Error creating connection.')
-      console.error(err)
-    } finally {
-      setIsSubmitting(false);
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Unknown error')
+
+    // 🎯 NOUVELLE REDIRECTION : Va directement vers la page de la connection créée
+    if (data.connection && data.connection._id) {
+      const connectionId = data.connection._id;
+      const integrationType = data.connection.integrationType;
+      
+      // Redirection selon le type de connection
+      if (integrationType === 'website-widget') {
+        // Pour le website widget, va vers la page de configuration
+        router.push(`/launch-agent/${connectionId}/website-widget?tab=configuration`);
+      } else if (integrationType === 'sms') {
+        // Pour SMS, retourne sur launch-agent (page pas encore créée)
+        router.push('/launch-agent');
+      } else {
+        // Pour Instagram et Facebook, va vers la page de détails
+        router.push(`/launch-agent/${connectionId}/${integrationType}`);
+      }
+    } else {
+      // Fallback vers la page générale si pas d'ID
+      router.push('/launch-agent');
     }
+    
+  } catch (err) {
+    alert('Error creating connection.')
+    console.error(err)
+  } finally {
+    setIsSubmitting(false);
   }
+}
 
   const canProceedToStep2 = integration !== '';
   const canProceedToStep3 = canProceedToStep2 && name.trim() !== '';
