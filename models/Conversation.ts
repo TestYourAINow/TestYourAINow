@@ -21,6 +21,16 @@ export interface ConversationDocument extends Document {
   agentId: string              // ID de l'agent utilisé
   agentName?: string           // Nom de l'agent (dénormalisé pour performance)
   
+  // 🆕 NOUVELLES DONNÉES UTILISATEUR (ajoutées)
+  userFirstName?: string       // Prénom de l'utilisateur
+  userLastName?: string        // Nom de famille de l'utilisateur  
+  userFullName?: string        // Nom complet (calculé automatiquement)
+  userProfilePic?: string      // URL de la photo de profil
+  userUsername?: string        // Username Instagram/Facebook
+  userGender?: string          // Genre (si disponible)
+  userLocale?: string          // Langue/région
+  userTimezone?: string        // Fuseau horaire
+  
   // 💬 Messages
   messages: ConversationMessage[]
   
@@ -103,6 +113,40 @@ const ConversationSchema = new Schema<ConversationDocument>({
     type: String
   },
   
+  // 🆕 NOUVEAUX CHAMPS UTILISATEUR (ajoutés à ton modèle)
+  userFirstName: {
+    type: String,
+    required: false  // Optionnel car ManyChat ne donne pas toujours ces infos
+  },
+  userLastName: {
+    type: String,
+    required: false
+  },
+  userFullName: {
+    type: String,
+    required: false  // Calculé automatiquement
+  },
+  userProfilePic: {
+    type: String,
+    required: false
+  },
+  userUsername: {
+    type: String,
+    required: false
+  },
+  userGender: {
+    type: String,
+    required: false
+  },
+  userLocale: {
+    type: String,
+    required: false
+  },
+  userTimezone: {
+    type: String,
+    required: false
+  },
+  
   // 💬 Messages
   messages: [ConversationMessageSchema],
   
@@ -179,6 +223,14 @@ ConversationSchema.pre('save', function(this: ConversationDocument, next) {
       this.lastMessageAt = new Date(Math.max(...this.messages.map((m: ConversationMessage) => m.timestamp)))
     }
   }
+  
+  // 🆕 CALCULER userFullName automatiquement
+  if (this.isModified('userFirstName') || this.isModified('userLastName')) {
+    const firstName = this.userFirstName || '';
+    const lastName = this.userLastName || '';
+    this.userFullName = `${firstName} ${lastName}`.trim() || undefined;
+  }
+  
   next()
 })
 
@@ -199,6 +251,27 @@ ConversationSchema.methods.softDelete = function(this: ConversationDocument) {
   this.isDeleted = true
   this.deletedAt = new Date()
   return this.save()
+}
+
+// 🆕 NOUVELLE MÉTHODE - Mettre à jour les données utilisateur
+ConversationSchema.methods.updateUserData = function(this: ConversationDocument, userData: {
+  firstName?: string,
+  lastName?: string,
+  profilePic?: string,
+  username?: string,
+  gender?: string,
+  locale?: string,
+  timezone?: string
+}) {
+  if (userData.firstName) this.userFirstName = userData.firstName;
+  if (userData.lastName) this.userLastName = userData.lastName;
+  if (userData.profilePic) this.userProfilePic = userData.profilePic;
+  if (userData.username) this.userUsername = userData.username;
+  if (userData.gender) this.userGender = userData.gender;
+  if (userData.locale) this.userLocale = userData.locale;
+  if (userData.timezone) this.userTimezone = userData.timezone;
+  
+  return this.save();
 }
 
 export const Conversation = models.Conversation || model<ConversationDocument>('Conversation', ConversationSchema)

@@ -5,11 +5,17 @@ import { Conversation } from '@/models/Conversation'; // 🆕 MONGODB
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 
-// 📊 Type pour une conversation résumée
+// 📊 Type pour une conversation résumée - MODIFIÉ
 type ConversationSummary = {
   _id: string;
   conversationId: string;
   userId: string;
+  // 🆕 NOUVELLES DONNÉES UTILISATEUR
+  userFirstName?: string;
+  userLastName?: string;
+  userFullName?: string;
+  userProfilePic?: string;
+  userUsername?: string;
   lastMessage: string;
   lastMessageTime: number;
   messageCount: number;
@@ -25,7 +31,7 @@ type ConversationMessage = {
   isFiltered?: boolean;
 };
 
-// 🔍 GET - Liste des conversations depuis MongoDB
+// 🔍 GET - Liste des conversations depuis MongoDB - MODIFIÉ
 export async function GET(req: NextRequest, context: any) {
   try {
     const params = await context.params;
@@ -78,7 +84,7 @@ export async function GET(req: NextRequest, context: any) {
 
     console.log(`📋 [MONGODB] Found ${conversations.length} conversations for connection ${connectionId}`);
 
-    // 📊 Transformer les données pour le frontend
+    // 📊 Transformer les données pour le frontend - MODIFIÉ
     const conversationSummaries: ConversationSummary[] = conversations.map((conv: any) => {
       // Dernier message (le plus récent)
       const lastMessage = conv.messages && conv.messages.length > 0 
@@ -89,6 +95,14 @@ export async function GET(req: NextRequest, context: any) {
         _id: conv._id.toString(),
         conversationId: conv.conversationId,
         userId: conv.userId,
+        
+        // 🆕 NOUVELLES DONNÉES UTILISATEUR
+        userFirstName: conv.userFirstName,
+        userLastName: conv.userLastName,
+        userFullName: conv.userFullName,
+        userProfilePic: conv.userProfilePic,
+        userUsername: conv.userUsername,
+        
         lastMessage: lastMessage 
           ? (lastMessage.content.length > 100 
              ? lastMessage.content.substring(0, 100) + '...' 
@@ -101,7 +115,7 @@ export async function GET(req: NextRequest, context: any) {
       };
     });
 
-    console.log(`✅ [MONGODB] Processed ${conversationSummaries.length} conversation summaries`);
+    console.log(`✅ [MONGODB] Processed ${conversationSummaries.length} conversation summaries with user data`);
 
     return NextResponse.json({
       success: true,
@@ -123,7 +137,7 @@ export async function GET(req: NextRequest, context: any) {
   }
 }
 
-// 📋 POST - Récupérer une conversation complète avec pagination
+// 📋 POST - Récupérer une conversation complète avec pagination - MODIFIÉ
 export async function POST(req: NextRequest, context: any) {
   try {
     const params = await context.params;
@@ -175,7 +189,7 @@ export async function POST(req: NextRequest, context: any) {
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
-    console.log(`✅ [MONGODB] Found conversation with ${conversation.messages?.length || 0} messages`);
+    console.log(`✅ [MONGODB] Found conversation with ${conversation.messages?.length || 0} messages for user: ${conversation.userFullName || 'Anonymous'}`);
 
     // 🔄 Pagination des messages
     let messages = conversation.messages || [];
@@ -195,7 +209,7 @@ export async function POST(req: NextRequest, context: any) {
     const hasMore = conversation.messages && conversation.messages.length > messages.length;
     const oldestMessageTimestamp = messages.length > 0 ? messages[0].timestamp : null;
 
-    console.log(`📄 [MONGODB] Returning ${messages.length} messages (hasMore: ${hasMore})`);
+    console.log(`📄 [MONGODB] Returning ${messages.length} messages (hasMore: ${hasMore}) for ${conversation.userFullName || 'Anonymous'}`);
 
     return NextResponse.json({
       success: true,
@@ -205,6 +219,17 @@ export async function POST(req: NextRequest, context: any) {
         userId: conversation.userId,
         platform: conversation.platform,
         agentName: conversation.agentName,
+        
+        // 🆕 NOUVELLES DONNÉES UTILISATEUR
+        userFirstName: conversation.userFirstName,
+        userLastName: conversation.userLastName,
+        userFullName: conversation.userFullName,
+        userProfilePic: conversation.userProfilePic,
+        userUsername: conversation.userUsername,
+        userGender: conversation.userGender,
+        userLocale: conversation.userLocale,
+        userTimezone: conversation.userTimezone,
+        
         messages: messages,
         messageCount: conversation.messageCount || 0,
         totalMessages: conversation.messages?.length || 0,
@@ -230,7 +255,7 @@ export async function POST(req: NextRequest, context: any) {
   }
 }
 
-// 🗑️ DELETE - HARD DELETE (suppression réelle) - VERSION CORRIGÉE
+// 🗑️ DELETE - HARD DELETE (suppression réelle) - INCHANGÉ
 export async function DELETE(req: NextRequest, context: any) {
   try {
     const params = await context.params;
@@ -297,6 +322,7 @@ export async function DELETE(req: NextRequest, context: any) {
     console.log(`   - conversationId: ${conv.conversationId}`);
     console.log(`   - connectionId: ${conv.connectionId}`);
     console.log(`   - userId: ${conv.userId}`);
+    console.log(`   - userFullName: ${conv.userFullName || 'Anonymous'}`);
     console.log(`   - messages count: ${conv.messages?.length || 0}`);
 
     // 🗑️ HARD DELETE de la conversation (suppression réelle)
