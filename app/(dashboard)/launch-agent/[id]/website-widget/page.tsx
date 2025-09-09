@@ -166,6 +166,25 @@ const ChatbotBuilder: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // 🆕 AJOUTER CES LIGNES
+const [isMobileView, setIsMobileView] = useState(false);
+
+useEffect(() => {
+  const detectMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
+           window.innerWidth <= 768;
+  };
+
+  const handleResize = () => {
+    setIsMobileView(detectMobile());
+  };
+
+  setIsMobileView(detectMobile());
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
 // Ajouter cette fonction après tes imports et avant le composant ChatbotBuilder
 const getNumericId = (userId: string) => {
   const hash = userId.split('_').pop() || '';
@@ -558,6 +577,11 @@ if (diffHours < 48) return 'Yesterday';
   return (
     <div className="h-[calc(100vh-64px)] overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 bg-grid-pattern">
 
+      {/* 🆕 AJOUTER CETTE LIGNE */}
+{isMobileView && activeTab === 'preview' && selectedAgent && (
+  <ChatWidget config={widgetConfig} isPreview={true} />
+)}
+
       {/* LAYOUT PRINCIPAL - Hauteurs responsives */}
       <div className="flex lg:h-full h-full lg:flex-row flex-col">
 
@@ -624,16 +648,17 @@ if (diffHours < 48) return 'Yesterday';
                 <span>Interactive Preview</span>
               </div>
 
-              {/* CHATBOT AVEC FIX DE HAUTEUR */}
-              <div style={{
-                position: 'absolute',
-                top: '64px',
-                left: 0,
-                right: 0,
-                bottom: 0
-              }}>
-                <ChatWidget config={widgetConfig} isPreview={true} />
-              </div>
+             {(!isMobileView || activeTab !== 'preview') && (
+  <div style={{
+    position: 'absolute',
+    top: '64px',
+    left: 0,
+    right: 0,
+    bottom: 0
+  }}>
+    <ChatWidget config={widgetConfig} isPreview={true} />
+  </div>
+)}
             </>
           )}
         </div>
