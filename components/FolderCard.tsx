@@ -22,14 +22,13 @@ interface FolderCardProps {
 export default function FolderCard({ folder, onEdit, onDelete }: FolderCardProps) {
   return (
     <Link href={`/folders/${folder._id}`}>
-      <div className="relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-600/50 rounded-2xl shadow-xl p-6 h-[280px] hover:border-gray-500/50 hover:shadow-2xl hover:shadow-gray-500/5 hover:scale-[1.02] transition-all duration-200 group cursor-pointer">
-        
+      <div className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-5 h-[260px] hover:border-gray-500/50 hover:shadow-2xl hover:shadow-gray-500/5 hover:scale-[1.02] transition-all duration-300 group cursor-pointer">
         {/* Glow effect subtil */}
-        <div 
+        <div
           className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-5 transition-all duration-200 pointer-events-none"
           style={{ backgroundColor: folder.color }}
         ></div>
-        
+
         {/* Actions */}
         <div className="absolute top-4 right-4 z-10">
           <FolderCardAction
@@ -44,20 +43,21 @@ export default function FolderCard({ folder, onEdit, onDelete }: FolderCardProps
           {/* Header avec icône folder */}
           <div className="flex items-start justify-between mb-4">
             <div className="relative">
-              <div 
-                className="w-14 h-14 rounded-xl flex items-center justify-center border group-hover:scale-110 transition-transform duration-200"
-                style={{ 
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center border-2 group-hover:scale-105 transition-transform duration-300 shadow-lg"
+                style={{
                   backgroundColor: folder.color + '20',
-                  borderColor: folder.color + '40'
+                  borderColor: folder.color + '30',
+                  boxShadow: `0 4px 12px ${folder.color}20`
                 }}
               >
-                <Folder className="w-7 h-7" style={{ color: folder.color }} />
+                <Folder className="w-6 h-6" style={{ color: folder.color }} />
               </div>
-              
+
               {/* Badge avec nombre d'agents */}
-              <div className="absolute -top-2 -right-2">
-                <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-gray-800"
+              <div className="absolute -top-1 -right-1">
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-gray-800 shadow-sm"
                   style={{ backgroundColor: folder.color }}
                 >
                   {folder.agentCount}
@@ -69,20 +69,20 @@ export default function FolderCard({ folder, onEdit, onDelete }: FolderCardProps
           {/* Info */}
           <div className="flex-1 flex flex-col">
             <div className="mb-4">
-              <h3 className="text-white font-semibold text-lg mb-2 truncate group-hover:text-white transition-colors">
+              <h3 className="text-white font-bold text-base mb-2 line-clamp-2 leading-tight group-hover:text-white transition-colors">
                 {folder.name}
               </h3>
-              
+
               {/* Description */}
-              <p className="text-gray-400 text-sm line-clamp-2 group-hover:text-gray-300 transition-colors">
+              <p className="text-gray-400 text-xs line-clamp-2 group-hover:text-gray-300 transition-colors leading-relaxed">
                 {folder.description || "No description provided"}
               </p>
             </div>
 
             {/* Stats */}
-            <div className="flex items-center gap-4 text-xs text-gray-500 mt-auto">
+            <div className="flex items-center gap-3 text-xs text-gray-500 mt-auto pt-2 border-t border-gray-700/30">
               <div className="flex items-center gap-1">
-                <div 
+                <div
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: folder.color }}
                 />

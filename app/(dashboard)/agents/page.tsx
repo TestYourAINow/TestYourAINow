@@ -730,8 +730,8 @@ export default function AgentsPage() {
                     key={key}
                     onClick={() => setFilterType(key as typeof filterType)}
                     className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 min-h-[44px] ${filterType === key
-                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
-                        : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50 '
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
+                      : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50 '
                       }`}
                   >
                     <Icon size={16} />
@@ -833,8 +833,7 @@ export default function AgentsPage() {
             {filteredAgents.map((agent) => (
               <div
                 key={agent._id}
-                className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-6 h-[280px] hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer"
-              >
+                className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-5 h-[260px] hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer flex flex-col"              >
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none"></div>
 
                 <div className="absolute top-4 right-4 z-10">
@@ -849,62 +848,61 @@ export default function AgentsPage() {
                 <Link href={`/agents/${agent._id}`} className="flex flex-col h-full">
                   <div className="flex items-start justify-between mb-4">
                     <div className="relative">
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/20">
-                        <Bot className="w-7 h-7 text-blue-400" />
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-blue-500/20">
+                        <Bot className="w-6 h-6 text-blue-400" />
                       </div>
-                      <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${Boolean(agent.isDeployed)
-                        ? 'bg-emerald-400 shadow-emerald-400/50'
+                      <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-gray-800 ${Boolean(agent.isDeployed)
+                        ? 'bg-emerald-400'
                         : 'bg-gray-500'
-                        } shadow-md`} />
+                        } shadow-sm`} />
                     </div>
                   </div>
 
                   <div className="flex-1 flex flex-col">
                     <div className="mb-4">
-                      <h3 className="text-white font-bold text-lg mb-3 truncate group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
-                        {agent.name || "Untitled Agent"}
+                      <h3 className="text-white font-bold text-base mb-2 line-clamp-2 leading-tight group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">                        {agent.name || "Untitled Agent"}
                       </h3>
                       <AgentStatus isDeployed={agent.isDeployed} />
                     </div>
 
-                    <div className="flex-1 mb-4">
+                    <div className="flex-1 min-h-0 mb-3">
                       {agent.integrations && agent.integrations.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <Zap size={14} className="text-gray-400" />
+                            <Zap size={12} className="text-gray-400" />
                             <span className="text-xs text-gray-400 font-medium">
                               {agent.integrations.length} integration{agent.integrations.length > 1 ? 's' : ''}
                             </span>
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            {agent.integrations.slice(0, 3).map((integration, idx) => (
+                          <div className="flex flex-wrap gap-1.5">
+                            {agent.integrations.slice(0, 2).map((integration, idx) => (
                               <div
                                 key={idx}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/60 border border-gray-600/50 rounded-lg text-[11px] text-gray-300 font-medium backdrop-blur-sm"
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-gray-800/60 border border-gray-600/50 rounded-md text-[10px] text-gray-300 font-medium backdrop-blur-sm"
                               >
                                 {getIntegrationIcon(integration.type)}
-                                <span className="truncate max-w-[60px]">
+                                <span className="truncate max-w-[50px]">
                                   {integration.name}
                                 </span>
                               </div>
                             ))}
-                            {agent.integrations.length > 3 && (
-                              <div className="inline-flex items-center px-2.5 py-1.5 bg-gray-700/40 border border-gray-600/40 rounded-lg text-[11px] text-gray-400 font-medium">
-                                +{agent.integrations.length - 3}
+                            {agent.integrations.length > 2 && (
+                              <div className="inline-flex items-center px-2 py-1 bg-gray-700/40 border border-gray-600/40 rounded-md text-[10px] text-gray-400 font-medium">
+                                +{agent.integrations.length - 2}
                               </div>
                             )}
                           </div>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 text-gray-500">
-                          <Circle size={14} className="opacity-50" />
+                          <Circle size={12} className="opacity-50" />
                           <span className="text-xs font-medium">No integrations</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-auto">
-                      <Clock size={12} />
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-auto pt-2 border-t border-gray-700/30">
+                      <Clock size={10} />
                       <span>
                         Updated {new Date(agent.updatedAt || agent.createdAt).toLocaleDateString('en-US', {
                           month: 'short',

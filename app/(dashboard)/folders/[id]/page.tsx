@@ -207,8 +207,8 @@ const EditFolderModal = ({
                   type="button"
                   onClick={() => setSelectedColor(colorOption.color)}
                   className={`group relative w-full h-12 rounded-xl transition-all duration-200 overflow-hidden ${selectedColor === colorOption.color
-                      ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900 scale-105'
-                      : 'hover:scale-105'
+                    ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900 scale-105'
+                    : 'hover:scale-105'
                     }`}
                   style={{ backgroundColor: colorOption.color }}
                   title={colorOption.name}
@@ -344,8 +344,8 @@ const DeleteFolderModal = ({
                 type="button"
                 onClick={() => setDeleteAgents(false)}
                 className={`w-full p-4 rounded-xl border transition-all text-left cursor-pointer ${!deleteAgents
-                    ? 'border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10'
-                    : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
+                  ? 'border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10'
+                  : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
                   }`}
               >
                 <div className="flex items-start gap-3">
@@ -370,8 +370,8 @@ const DeleteFolderModal = ({
                 type="button"
                 onClick={() => setDeleteAgents(true)}
                 className={`w-full p-4 rounded-xl border transition-all text-left cursor-pointer ${deleteAgents
-                    ? 'border-red-500/50 bg-red-500/10 shadow-lg shadow-red-500/10'
-                    : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
+                  ? 'border-red-500/50 bg-red-500/10 shadow-lg shadow-red-500/10'
+                  : 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
                   }`}
               >
                 <div className="flex items-start gap-3">
@@ -526,8 +526,8 @@ const AgentStatus = ({ integrations }: { integrations?: { name: string; type: st
 
   return (
     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border backdrop-blur-sm ${isActive
-        ? 'bg-green-500/10 text-green-400 border-green-500/20 shadow-lg shadow-green-500/10'
-        : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+      ? 'bg-green-500/10 text-green-400 border-green-500/20 shadow-lg shadow-green-500/10'
+      : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
       }`}>
       <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-400 shadow-lg shadow-green-400/50' : 'bg-gray-500'
         }`} />
@@ -670,69 +670,69 @@ export default function FolderDetailPage() {
   }
 
   if (loading) {
-  return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
-      
-      {/* Background Effects pendant loading */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-      </div>
+    return (
+      <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
 
-      <div className="relative z-10">
-        {/* Header Skeleton */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              {/* Back button skeleton */}
-              <div className="w-12 h-12 rounded-xl bg-gray-700/40 animate-pulse"></div>
-              
-              <div className="flex items-center gap-4">
-                {/* Folder icon skeleton */}
-                <div className="w-16 h-16 rounded-2xl bg-gray-700/40 animate-pulse"></div>
-                
-                <div>
-                  {/* Title skeleton */}
-                  <div className="h-10 bg-gray-700/40 rounded-lg w-64 mb-2 animate-pulse"></div>
-                  {/* Description skeleton */}
-                  <div className="h-5 bg-gray-700/40 rounded-lg w-96 animate-pulse"></div>
+        {/* Background Effects pendant loading */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
+
+        <div className="relative z-10">
+          {/* Header Skeleton */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                {/* Back button skeleton */}
+                <div className="w-12 h-12 rounded-xl bg-gray-700/40 animate-pulse"></div>
+
+                <div className="flex items-center gap-4">
+                  {/* Folder icon skeleton */}
+                  <div className="w-16 h-16 rounded-2xl bg-gray-700/40 animate-pulse"></div>
+
+                  <div>
+                    {/* Title skeleton */}
+                    <div className="h-10 bg-gray-700/40 rounded-lg w-64 mb-2 animate-pulse"></div>
+                    {/* Description skeleton */}
+                    <div className="h-5 bg-gray-700/40 rounded-lg w-96 animate-pulse"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Actions skeleton */}
-            <div className="flex gap-3">
-              <div className="h-12 bg-gray-700/40 rounded-xl w-32 animate-pulse"></div>
-              <div className="h-12 bg-gray-700/40 rounded-xl w-36 animate-pulse"></div>
+
+              {/* Actions skeleton */}
+              <div className="flex gap-3">
+                <div className="h-12 bg-gray-700/40 rounded-xl w-32 animate-pulse"></div>
+                <div className="h-12 bg-gray-700/40 rounded-xl w-36 animate-pulse"></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Search bar skeleton */}
-        <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-4 md:p-6 mb-8 shadow-xl">
-          <div className="h-14 bg-gray-700/40 rounded-xl animate-pulse"></div>
-        </div>
+          {/* Search bar skeleton */}
+          <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-4 md:p-6 mb-8 shadow-xl">
+            <div className="h-14 bg-gray-700/40 rounded-xl animate-pulse"></div>
+          </div>
 
-        {/* Grid skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-gradient-to-br from-gray-900/40 to-gray-800/20 backdrop-blur-sm border border-gray-700/30 rounded-2xl shadow-xl p-6 h-[300px] animate-pulse">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-14 h-14 rounded-xl bg-gray-700/40"></div>
-                <div className="w-6 h-6 rounded-lg bg-gray-700/40"></div>
+          {/* Grid skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-gradient-to-br from-gray-900/40 to-gray-800/20 backdrop-blur-sm border border-gray-700/30 rounded-2xl shadow-xl p-6 h-[300px] animate-pulse">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="w-14 h-14 rounded-xl bg-gray-700/40"></div>
+                  <div className="w-6 h-6 rounded-lg bg-gray-700/40"></div>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-6 bg-gray-700/40 rounded-lg w-3/4"></div>
+                  <div className="h-4 bg-gray-700/40 rounded-lg w-1/2"></div>
+                  <div className="h-3 bg-gray-700/40 rounded-lg w-2/3"></div>
+                </div>
               </div>
-              <div className="space-y-3">
-                <div className="h-6 bg-gray-700/40 rounded-lg w-3/4"></div>
-                <div className="h-4 bg-gray-700/40 rounded-lg w-1/2"></div>
-                <div className="h-3 bg-gray-700/40 rounded-lg w-2/3"></div>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
 
   if (!folder) {
     return (
@@ -884,7 +884,7 @@ export default function FolderDetailPage() {
             {filteredAgents.map((agent) => (
               <div
                 key={agent._id}
-                className="group relative bg-gradient-to-br from-gray-800/40 to-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-6 h-[300px] hover:border-blue-400/50 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 cursor-pointer overflow-hidden"
+                className="group relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-5 h-[260px] hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 cursor-pointer flex flex-col"
               >
                 {/* Background Gradient Overlay */}
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none"></div>
@@ -903,15 +903,15 @@ export default function FolderDetailPage() {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="relative">
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <Bot className="w-7 h-7 text-blue-400" />
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-blue-500/20">
+                        <Bot className="w-6 h-6 text-blue-400" />
                       </div>
                       {/* Status Indicator */}
                       <div className="absolute -top-1 -right-1">
-                        <div className={`w-5 h-5 rounded-full border-2 border-gray-800 ${agent.integrations && agent.integrations.length > 0
-                            ? 'bg-green-400 shadow-lg shadow-green-400/50'
-                            : 'bg-gray-500'
-                          }`} />
+                        <div className={`w-3 h-3 rounded-full border-2 border-gray-800 ${agent.integrations && agent.integrations.length > 0
+                          ? 'bg-emerald-400'
+                          : 'bg-gray-500'
+                          } shadow-sm`} />
                       </div>
                     </div>
                   </div>
@@ -921,65 +921,59 @@ export default function FolderDetailPage() {
 
                     {/* Name & Status */}
                     <div className="mb-4">
-                      <h3 className="text-white font-semibold text-lg mb-3 truncate group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">
+                      <h3 className="text-white font-bold text-base mb-2 line-clamp-2 leading-tight group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
                         {agent.name || "Untitled Agent"}
                       </h3>
                       <AgentStatus integrations={agent.integrations} />
                     </div>
 
                     {/* Integrations */}
-                    <div className="flex-1 mb-4">
+                    <div className="flex-1 min-h-0 mb-3">
                       {agent.integrations && agent.integrations.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <Zap size={14} className="text-gray-400" />
+                            <Zap size={12} className="text-gray-400" />
                             <span className="text-xs text-gray-400 font-medium">
                               {agent.integrations.length} integration{agent.integrations.length > 1 ? 's' : ''}
                             </span>
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            {agent.integrations.slice(0, 3).map((integration, idx) => (
+                          <div className="flex flex-wrap gap-1.5">
+                            {agent.integrations.slice(0, 2).map((integration, idx) => (
                               <div
                                 key={idx}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-xs text-gray-300 backdrop-blur-sm"
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-gray-800/60 border border-gray-600/50 rounded-md text-[10px] text-gray-300 font-medium backdrop-blur-sm"
                               >
                                 {getIntegrationIcon(integration.type)}
-                                <span className="truncate max-w-[70px] font-medium">
+                                <span className="truncate max-w-[50px]">
                                   {integration.name}
                                 </span>
                               </div>
                             ))}
-                            {agent.integrations.length > 3 && (
-                              <div className="inline-flex items-center px-3 py-1.5 bg-gray-700/30 border border-gray-600/30 rounded-lg text-xs text-gray-400">
-                                +{agent.integrations.length - 3} more
+                            {agent.integrations.length > 2 && (
+                              <div className="inline-flex items-center px-2 py-1 bg-gray-700/40 border border-gray-600/40 rounded-md text-[10px] text-gray-400 font-medium">
+                                +{agent.integrations.length - 2}
                               </div>
                             )}
                           </div>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 text-gray-500">
-                          <Circle size={14} className="opacity-50" />
+                          <Circle size={12} className="opacity-50" />
                           <span className="text-xs font-medium">No integrations</span>
                         </div>
                       )}
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-4 border-t border-gray-700/30">
-                      <div className="flex items-center gap-2">
-                        <Clock size={12} />
-                        <span>
-                          {new Date(agent.updatedAt || agent.createdAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          })}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                        <span>Ready</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-auto pt-2 border-t border-gray-700/30">
+                      <Clock size={10} />
+                      <span>
+                        Updated {new Date(agent.updatedAt || agent.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
                     </div>
                   </div>
                 </Link>
