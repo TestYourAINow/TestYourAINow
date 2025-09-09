@@ -25,16 +25,16 @@ function isPoliteOnly(content: string): boolean {
     // Allemand
     'hallo', 'danke', 'ok', 'tschüss'
   ];
-  
+
   const cleanContent = content.toLowerCase().trim();
-  
+
   // SEULEMENT si c'est EXACTEMENT un mot de politesse (pas de mots composés)
   return politeOnlyWords.includes(cleanContent);
 }
 
 // 🆕 NOUVELLE FONCTION - Stocker dans MongoDB (permanent)
 async function storeInMongoDB(
-  conversationId: string, 
+  conversationId: string,
   connectionId: string,
   webhookId: string,
   userId: string,
@@ -62,9 +62,9 @@ async function storeInMongoDB(
     };
 
     // Chercher si la conversation existe déjà
-    let conversation = await Conversation.findOne({ 
+    let conversation = await Conversation.findOne({
       conversationId,
-      isDeleted: false 
+      isDeleted: false
     });
 
     if (conversation) {
@@ -111,16 +111,16 @@ async function processWithAI(agent: any, userMessage: string, userId: string, co
       console.error(`❌ OpenAI setup failed: ${error}`);
       const errorMessage = "Désolé, problème technique.";
       await storeAIResponse(conversationId, errorMessage);
-      
+
       // 🆕 STOCKER L'ERREUR DANS MONGODB AUSSI
       await storeInMongoDB(
-        conversationId, 
-        connection._id.toString(), 
-        connection.webhookId, 
-        userId, 
-        userMessage, 
-        errorMessage, 
-        agent, 
+        conversationId,
+        connection._id.toString(),
+        connection.webhookId,
+        userId,
+        userMessage,
+        errorMessage,
+        agent,
         connection
       );
       return;
@@ -212,13 +212,13 @@ async function processWithAI(agent: any, userMessage: string, userId: string, co
 
     // 9. 🆕 STOCKER DANS MONGODB (permanent pour dashboard)
     await storeInMongoDB(
-      conversationId, 
-      connection._id.toString(), 
-      connection.webhookId, 
-      userId, 
-      userMessage, 
-      response, 
-      agent, 
+      conversationId,
+      connection._id.toString(),
+      connection.webhookId,
+      userId,
+      userMessage,
+      response,
+      agent,
       connection
     );
 
@@ -242,13 +242,13 @@ async function processWithAI(agent: any, userMessage: string, userId: string, co
 
     // 🆕 STOCKER L'ERREUR DANS MONGODB AUSSI
     await storeInMongoDB(
-      conversationId, 
-      connection._id.toString(), 
-      connection.webhookId, 
-      userId, 
-      userMessage, 
-      errorMessage, 
-      agent, 
+      conversationId,
+      connection._id.toString(),
+      connection.webhookId,
+      userId,
+      userMessage,
+      errorMessage,
+      agent,
       connection
     );
   }
@@ -270,6 +270,9 @@ export async function POST(req: NextRequest, context: any) {
     const data = JSON.parse(body);
 
     console.log(`📄 Webhook data:`, JSON.stringify(data, null, 2));
+    console.log(`📊 [TEST] Headers:`, Object.fromEntries(req.headers.entries()));
+    console.log(`📊 [TEST] URL:`, req.url);
+    console.log(`📊 [TEST] Method:`, req.method);
 
     // 2. Trouver la connection
     const connection = await Connection.findOne({ webhookId, isActive: true });

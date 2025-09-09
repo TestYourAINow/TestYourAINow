@@ -538,7 +538,7 @@ const getPlatformIcon = (type: string) => {
                     <p>
                       <strong>2 - </strong>
                       <a
-                        href="https://manychat.com/template/instagram-ai-agent"
+                        href="https://app.manychat.com/template/c4489cdba7c1cafc064f191d09d7e360dd319911"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-cyan-400 hover:text-cyan-300 underline font-medium"
