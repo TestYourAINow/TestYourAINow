@@ -142,6 +142,36 @@ const getUserDisplayName = (conv: ConversationSummary | ConversationDetails) => 
   return `Customer #${conv.userId}`
 }
 
+// 🆕 FONCTION - Sous-titre avec détails selon plateforme
+// 🆕 FONCTION - Sous-titre avec détails selon plateforme
+const getUserSubtitle = (conv: ConversationSummary | ConversationDetails) => {
+  const details = [];
+  
+  // Instagram : Montrer le nom réel sous le username
+  if (conv.platform === 'instagram-dms' && conv.userUsername) {
+    if (conv.userFullName) {
+      details.push(conv.userFullName);
+    } else if (conv.userFirstName && conv.userLastName) {
+      details.push(`${conv.userFirstName} ${conv.userLastName}`);
+    } else if (conv.userFirstName) {
+      details.push(conv.userFirstName);
+    }
+  }
+  
+  // Ajouter le nombre de messages (vérification plus simple)
+  const messageCount = (conv as any).messageCount || (conv as any).totalMessages || 0;
+  if (messageCount > 0) {
+    details.push(`${messageCount} messages`);
+  }
+  
+  // Ajouter la plateforme seulement si pas Instagram avec username
+  if (!(conv.platform === 'instagram-dms' && conv.userUsername)) {
+    details.push(conv.platform);
+  }
+  
+  return details.join(' • ');
+}
+
 export default function ConnectionDetailsPage() {
   const params = useParams()
   const connectionId = params.id as string
@@ -1056,13 +1086,7 @@ const getPlatformIcon = (type: string) => {
                           <div>
                             <h3 className="font-bold text-white">{getUserDisplayName(selectedConversation)}</h3>
                             <div className="flex items-center gap-2 text-gray-400 text-sm">
-                              <span>{selectedConversation.totalMessages} messages • {selectedConversation.platform}</span>
-                              {selectedConversation.userUsername && (
-                                <span>• @{selectedConversation.userUsername}</span>
-                              )}
-                              {selectedConversation.userLocale && (
-                                <span>• {selectedConversation.userLocale}</span>
-                              )}
+                              <span>{getUserSubtitle(selectedConversation)}</span>
                             </div>
                           </div>
                         </div>
