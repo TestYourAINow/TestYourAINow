@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter, usePathname, useSearchParams } from 'next/navigation'
+
 import Link from 'next/link'
-import { ArrowLeft, Copy, Eye, EyeOff, CheckCircle, Bot, Globe, MessageCircle, User, RefreshCw, Trash2, Settings, Facebook, Zap, Webhook, Calendar,File } from 'lucide-react'
+import { ArrowLeft, Copy, Eye, EyeOff, CheckCircle, Bot, Globe, MessageCircle, User, RefreshCw, Trash2, Settings, Facebook, Zap, Webhook, Calendar, File } from 'lucide-react'
 import { DeleteConversationModal } from '@/components/DeleteConversationModal';
 
 // Custom Instagram Icon with real colors
@@ -83,21 +84,21 @@ type ConversationDetails = {
 }
 
 // 🆕 NOUVEAU COMPOSANT - Avatar utilisateur avec fallback
-const UserAvatar = ({ 
-  profilePic, 
-  firstName, 
-  lastName, 
-  username, 
-  size = 40 
-}: { 
+const UserAvatar = ({
+  profilePic,
+  firstName,
+  lastName,
+  username,
+  size = 40
+}: {
   profilePic?: string
   firstName?: string
   lastName?: string
   username?: string
-  size?: number 
+  size?: number
 }) => {
   const [imgError, setImgError] = useState(false)
-  
+
   // Générer initiales
   const getInitials = () => {
     if (firstName || lastName) {
@@ -124,7 +125,7 @@ const UserAvatar = ({
 
   // Fallback avec initiales
   return (
-    <div 
+    <div
       className="rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold"
       style={{ width: size, height: size, fontSize: size * 0.4 }}
     >
@@ -147,6 +148,11 @@ export default function ConnectionDetailsPage() {
   const connectionId = params.id as string
   const integrationType = params.type as string
 
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+
   // Basic states
   const [connection, setConnection] = useState<Connection | null>(null)
   const [loading, setLoading] = useState(true)
@@ -160,7 +166,13 @@ export default function ConnectionDetailsPage() {
   const [userApiKeys, setUserApiKeys] = useState<any[]>([])
 
   // Conversation states
-  const [activeTab, setActiveTab] = useState<'conversations' | 'configuration'>('conversations')
+  const initialTab = ((searchParams.get('tab') || '').toLowerCase() === 'configuration'
+    ? 'configuration'
+    : 'conversations') as 'conversations' | 'configuration'
+
+
+  const [activeTab, setActiveTab] = useState<'conversations' | 'configuration'>(initialTab)
+
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [conversationsLoading, setConversationsLoading] = useState(false)
   const [selectedConversation, setSelectedConversation] = useState<ConversationDetails | null>(null)
@@ -196,7 +208,24 @@ export default function ConnectionDetailsPage() {
     }
   }, [activeTab, connection])
 
+  useEffect(() => {
+    const q = (searchParams.get('tab') || '').toLowerCase()
+    const next = (q === 'configuration' ? 'configuration' : 'conversations') as
+      'conversations' | 'configuration'
+    setActiveTab(prev => (prev === next ? prev : next))
+  }, [searchParams])
+
+
+
   // Functions - INCHANGÉES
+  const switchTab = (tab: 'conversations' | 'configuration') => {
+    setActiveTab(tab)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', tab.toLowerCase()) // ← Cohérence
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }
+
+
   const fetchConnection = async () => {
     try {
       const res = await fetch(`/api/connections/${connectionId}`)
@@ -400,34 +429,34 @@ export default function ConnectionDetailsPage() {
     }
   }
 
- const getIntegrationIcon = (type: string) => {
-  switch (type) {
-    case 'webhook':
-      return <Webhook size={12} className="text-blue-400" />
-    case 'calendly':
-      return <Calendar size={12} className="text-emerald-400" />
-    case 'files':
-      return <File size={12} className="text-purple-400" />
-    case 'instagram-dms':
-      return <InstagramIcon size={12} className="text-pink-400" />
-    case 'facebook-messenger':
-      return <Facebook size={12} className="text-blue-400" />
-    default:
-      return <Settings size={12} className="text-gray-400" />
+  const getIntegrationIcon = (type: string) => {
+    switch (type) {
+      case 'webhook':
+        return <Webhook size={12} className="text-blue-400" />
+      case 'calendly':
+        return <Calendar size={12} className="text-emerald-400" />
+      case 'files':
+        return <File size={12} className="text-purple-400" />
+      case 'instagram-dms':
+        return <InstagramIcon size={12} className="text-pink-400" />
+      case 'facebook-messenger':
+        return <Facebook size={12} className="text-blue-400" />
+      default:
+        return <Settings size={12} className="text-gray-400" />
+    }
   }
-}
 
-// Fonction pour les icônes de plateforme (24px) - RENOMMÉE
-const getPlatformIcon = (type: string) => {
-  switch (type) {
-    case 'instagram-dms': 
-      return <InstagramIcon size={24} />
-    case 'facebook-messenger': 
-      return <Facebook size={24} className="text-blue-400" />
-    default: 
-      return <Globe size={24} className="text-gray-400" />
+  // Fonction pour les icônes de plateforme (24px) - RENOMMÉE
+  const getPlatformIcon = (type: string) => {
+    switch (type) {
+      case 'instagram-dms':
+        return <InstagramIcon size={24} />
+      case 'facebook-messenger':
+        return <Facebook size={24} className="text-blue-400" />
+      default:
+        return <Globe size={24} className="text-gray-400" />
+    }
   }
-}
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp)
@@ -447,12 +476,12 @@ const getPlatformIcon = (type: string) => {
       const foundKey = userApiKeys.find(key => key.id === apiKeyString)
       return foundKey ? foundKey.name : 'Unknown Key'
     }
-    
+
     // Sinon, essayer de matcher par les 4 derniers caractères (fallback)
     const foundKey = userApiKeys.find(key => {
       return key.maskedKey.includes(apiKeyString.slice(-4))
     })
-    
+
     return foundKey ? foundKey.name : 'Unknown Key'
   }
 
@@ -499,20 +528,22 @@ const getPlatformIcon = (type: string) => {
             {/* Right - Tabs */}
             <div className="flex gap-2 flex-shrink-0">
               <button
-                onClick={() => setActiveTab('conversations')}
+                onClick={() => switchTab('conversations')}
+
                 className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${activeTab === 'conversations'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
                   }`}
               >
                 <MessageCircle size={16} />
                 <span className="hidden sm:inline">Conversations</span>
               </button>
               <button
-                onClick={() => setActiveTab('configuration')}
+                onClick={() => switchTab('configuration')}
+
                 className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${activeTab === 'configuration'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
                   }`}
               >
                 <Settings size={16} />
@@ -692,22 +723,22 @@ const getPlatformIcon = (type: string) => {
                             <p className="text-white font-medium">{getApiKeyName(agentDetails.apiKey)}</p>
                           </div>
                         </div>
-                        
+
                         {agentDetails.integrations && agentDetails.integrations.length > 0 && (
                           <div className="pt-2 border-t border-gray-700/50">
                             <span className="text-gray-400 text-sm">Integrations:</span>
                             <div className="flex flex-wrap gap-2 mt-2">
-                            {agentDetails.integrations.map((integration: any, index: number) => (
-  <div
-    key={index}
-    className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-200 text-xs"
-  >
-    {getIntegrationIcon(integration.type)}
-    <span className="truncate max-w-[80px]">
-      {integration.name}
-    </span>
-  </div>
-))}
+                              {agentDetails.integrations.map((integration: any, index: number) => (
+                                <div
+                                  key={index}
+                                  className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-200 text-xs"
+                                >
+                                  {getIntegrationIcon(integration.type)}
+                                  <span className="truncate max-w-[80px]">
+                                    {integration.name}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         )}
@@ -772,7 +803,7 @@ const getPlatformIcon = (type: string) => {
                       </button>
                       <div className="flex items-center gap-3 flex-1">
                         {/* 🆕 AVATAR UTILISATEUR */}
-                        <UserAvatar 
+                        <UserAvatar
                           profilePic={selectedConversation.userProfilePic}
                           firstName={selectedConversation.userFirstName}
                           lastName={selectedConversation.userLastName}
@@ -825,8 +856,8 @@ const getPlatformIcon = (type: string) => {
                               className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
                             >
                               <div className={`max-w-xs px-3 py-2 rounded-xl ${message.role === 'user'
-                                  ? 'bg-gray-800/50 text-white'
-                                  : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
+                                ? 'bg-gray-800/50 text-white'
+                                : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
                                 }`}>
                                 <p className="text-sm">{message.content}</p>
                                 <p className="text-xs mt-1 opacity-70">
@@ -887,7 +918,7 @@ const getPlatformIcon = (type: string) => {
                         >
                           <div className="flex items-center gap-3">
                             {/* 🆕 AVATAR UTILISATEUR */}
-                            <UserAvatar 
+                            <UserAvatar
                               profilePic={conv.userProfilePic}
                               firstName={conv.userFirstName}
                               lastName={conv.userLastName}
@@ -980,13 +1011,13 @@ const getPlatformIcon = (type: string) => {
                           key={conv._id}
                           onClick={() => fetchConversationDetails(conv.conversationId)}
                           className={`p-4 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group ${selectedConversation?.conversationId === conv.conversationId
-                              ? 'bg-blue-900/20 border-blue-500/30'
-                              : ''
+                            ? 'bg-blue-900/20 border-blue-500/30'
+                            : ''
                             }`}
                         >
                           <div className="flex items-center gap-3">
                             {/* 🆕 AVATAR UTILISATEUR PLUS GRAND */}
-                            <UserAvatar 
+                            <UserAvatar
                               profilePic={conv.userProfilePic}
                               firstName={conv.userFirstName}
                               lastName={conv.userLastName}
@@ -1046,7 +1077,7 @@ const getPlatformIcon = (type: string) => {
                       <div className="p-4 border-b border-gray-800 bg-gray-900/30 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           {/* 🆕 AVATAR UTILISATEUR */}
-                          <UserAvatar 
+                          <UserAvatar
                             profilePic={selectedConversation.userProfilePic}
                             firstName={selectedConversation.userFirstName}
                             lastName={selectedConversation.userLastName}
@@ -1108,8 +1139,8 @@ const getPlatformIcon = (type: string) => {
                                 className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
                               >
                                 <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${message.role === 'user'
-                                    ? 'bg-gray-800/50 text-white'
-                                    : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
+                                  ? 'bg-gray-800/50 text-white'
+                                  : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
                                   }`}>
                                   <p className="text-sm">{message.content}</p>
                                   <p className="text-xs mt-1 opacity-70">
