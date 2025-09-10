@@ -57,7 +57,7 @@ function extractUserData(data: any): UserData {
   const firstName = data.first_name || data.firstName || '';
   const lastName = data.last_name || data.lastName || '';
   const profilePic = data.profile_pic || data.profilePic || data.avatar_url || '';
-  const username = data.username || data.user_name || '';
+  const username = data.instagram_username || data.ig_username || data.username || data.user_name || ''; // 🔧 CORRIGÉ
   
   // Métadonnées
   const gender = data.gender || '';

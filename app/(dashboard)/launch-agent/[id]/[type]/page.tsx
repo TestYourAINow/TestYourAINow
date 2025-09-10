@@ -40,6 +40,7 @@ type ConversationSummary = {
   _id: string
   conversationId: string
   userId: string
+  // 🆕 NOUVELLES DONNÉES UTILISATEUR
   userFirstName?: string
   userLastName?: string
   userFullName?: string
@@ -65,6 +66,7 @@ type ConversationDetails = {
   userId: string
   platform: string
   agentName?: string
+  // 🆕 NOUVELLES DONNÉES UTILISATEUR
   userFirstName?: string
   userLastName?: string
   userFullName?: string
@@ -80,7 +82,7 @@ type ConversationDetails = {
   lastMessageAt: string
 }
 
-// Avatar utilisateur avec fallback
+// 🆕 NOUVEAU COMPOSANT - Avatar utilisateur avec fallback
 const UserAvatar = ({ 
   profilePic, 
   firstName, 
@@ -96,6 +98,7 @@ const UserAvatar = ({
 }) => {
   const [imgError, setImgError] = useState(false)
   
+  // Générer initiales
   const getInitials = () => {
     if (firstName || lastName) {
       return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
@@ -119,6 +122,7 @@ const UserAvatar = ({
     )
   }
 
+  // Fallback avec initiales
   return (
     <div 
       className="rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold"
@@ -127,6 +131,15 @@ const UserAvatar = ({
       {getInitials()}
     </div>
   )
+}
+
+// 🆕 FONCTION - Afficher nom utilisateur avec fallback
+const getUserDisplayName = (conv: ConversationSummary | ConversationDetails) => {
+  if (conv.userFullName) return conv.userFullName
+  if (conv.userFirstName && conv.userLastName) return `${conv.userFirstName} ${conv.userLastName}`
+  if (conv.userFirstName) return conv.userFirstName
+  if (conv.userUsername) return `@${conv.userUsername}`
+  return `Customer #${conv.userId}`
 }
 
 export default function ConnectionDetailsPage() {
@@ -163,47 +176,7 @@ export default function ConnectionDetailsPage() {
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // FONCTIONS D'AFFICHAGE
-  const getUserDisplayName = (conv: ConversationSummary | ConversationDetails) => {
-    // Instagram : Priorité au username Instagram si disponible
-    if (conv.platform === 'instagram-dms' && conv.userUsername) {
-      return `@${conv.userUsername}`;
-    }
-    
-    // Facebook ou pas de username : Utiliser le nom complet
-    if (conv.userFullName) return conv.userFullName;
-    if (conv.userFirstName && conv.userLastName) return `${conv.userFirstName} ${conv.userLastName}`;
-    if (conv.userFirstName) return conv.userFirstName;
-    return `Customer #${conv.userId}`;
-  }
-
-  const getUserSubtitle = (conv: ConversationSummary | ConversationDetails) => {
-    const details = [];
-    
-    // Instagram : Si on affiche @username, montrer le nom réel en sous-titre
-    if (conv.platform === 'instagram-dms' && conv.userUsername) {
-      const realName = conv.userFullName || 
-                      (conv.userFirstName && conv.userLastName ? `${conv.userFirstName} ${conv.userLastName}` : null) ||
-                      conv.userFirstName;
-      if (realName) {
-        details.push(realName);
-      }
-    }
-    
-    // Ajouter le nombre de messages
-    if ('messageCount' in conv) {
-      details.push(`${conv.messageCount} messages`);
-    }
-    
-    // Platform en dernier seulement si pas d'autres infos importantes
-    if (details.length === 0 || conv.platform !== 'instagram-dms') {
-      details.push(conv.platform);
-    }
-    
-    return details.join(' • ');
-  }
-
-  // Effects
+  // Effects - INCHANGÉS
   useEffect(() => {
     if (connectionId) {
       fetchConnection()
@@ -223,7 +196,7 @@ export default function ConnectionDetailsPage() {
     }
   }, [activeTab, connection])
 
-  // Functions
+  // Functions - INCHANGÉES
   const fetchConnection = async () => {
     try {
       const res = await fetch(`/api/connections/${connectionId}`)
@@ -254,6 +227,7 @@ export default function ConnectionDetailsPage() {
     }
   }
 
+  // Fetch agent details - INCHANGÉE
   const fetchAgentDetails = async () => {
     setAgentLoading(true)
     try {
@@ -269,6 +243,7 @@ export default function ConnectionDetailsPage() {
     }
   }
 
+  // Fetch user API keys to get names - INCHANGÉE
   const fetchUserApiKeys = async () => {
     try {
       const res = await fetch('/api/user/api-key')
@@ -333,6 +308,7 @@ export default function ConnectionDetailsPage() {
     }
   }
 
+  // confirmDelete function - INCHANGÉE
   const confirmDelete = async () => {
     if (!conversationToDelete) return
 
@@ -441,6 +417,7 @@ export default function ConnectionDetailsPage() {
   }
 }
 
+// Fonction pour les icônes de plateforme (24px) - RENOMMÉE
 const getPlatformIcon = (type: string) => {
   switch (type) {
     case 'instagram-dms': 
@@ -463,12 +440,15 @@ const getPlatformIcon = (type: string) => {
     return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
   }
 
+  // Get API key name from the key string or ID - INCHANGÉE
   const getApiKeyName = (apiKeyString: string) => {
+    // Si c'est un ID MongoDB (24 caractères hexadécimaux), chercher par ID
     if (apiKeyString.length === 24 && /^[0-9a-fA-F]{24}$/.test(apiKeyString)) {
       const foundKey = userApiKeys.find(key => key.id === apiKeyString)
       return foundKey ? foundKey.name : 'Unknown Key'
     }
     
+    // Sinon, essayer de matcher par les 4 derniers caractères (fallback)
     const foundKey = userApiKeys.find(key => {
       return key.maskedKey.includes(apiKeyString.slice(-4))
     })
@@ -495,10 +475,11 @@ const getPlatformIcon = (type: string) => {
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gray-950">
 
-      {/* Header */}
+      {/* Header - INCHANGÉ */}
       <div className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="px-4 md:px-8 py-4">
           <div className="flex items-center justify-between w-full">
+            {/* Left - Back + Title */}
             <div className="flex items-center gap-4 flex-shrink-0">
               <Link href="/launch-agent" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                 <ArrowLeft size={16} />
@@ -515,6 +496,7 @@ const getPlatformIcon = (type: string) => {
               </div>
             </div>
 
+            {/* Right - Tabs */}
             <div className="flex gap-2 flex-shrink-0">
               <button
                 onClick={() => setActiveTab('conversations')}
@@ -541,7 +523,7 @@ const getPlatformIcon = (type: string) => {
         </div>
       </div>
 
-      {/* Configuration Tab */}
+      {/* Configuration Tab - INCHANGÉ */}
       {activeTab === 'configuration' && (
         <div className="w-full p-4 md:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -558,6 +540,7 @@ const getPlatformIcon = (type: string) => {
                 </div>
               </div>
 
+              {/* Webhook URL */}
               <div className="mb-6">
                 <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   Webhook URL
@@ -579,6 +562,7 @@ const getPlatformIcon = (type: string) => {
                 </div>
               </div>
 
+              {/* Webhook Secret */}
               <div className="mb-6">
                 <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   Webhook Secret
@@ -609,6 +593,7 @@ const getPlatformIcon = (type: string) => {
                 </div>
               </div>
 
+              {/* ManyChat Setup */}
               <div className="space-y-4">
                 <a
                   href="https://manychat.com/free-trial"
@@ -617,7 +602,7 @@ const getPlatformIcon = (type: string) => {
                   className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <Zap size={18} />
-                  Get ManyChat Free Month
+                  Get ManyChat For Free
                 </a>
 
                 <div className="bg-gray-800/40 rounded-xl p-4 space-y-3">
@@ -642,7 +627,7 @@ const getPlatformIcon = (type: string) => {
               </div>
             </div>
 
-            {/* AI Build Configuration */}
+            {/* AI Build Configuration - READ ONLY WITH DETAILS */}
             <div className="bg-gray-900/50 border border-gray-700/50 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-blue-600/20 border border-blue-500/40 rounded-xl flex items-center justify-center">
@@ -660,6 +645,7 @@ const getPlatformIcon = (type: string) => {
                 </div>
               ) : (
                 <>
+                  {/* Connected AI Build - Read Only Display */}
                   <div className="mb-6">
                     <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                       Connected AI Agent
@@ -681,6 +667,7 @@ const getPlatformIcon = (type: string) => {
                     </div>
                   </div>
 
+                  {/* Technical Details */}
                   {agentDetails && (
                     <div className="mb-6">
                       <label className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
@@ -710,17 +697,17 @@ const getPlatformIcon = (type: string) => {
                           <div className="pt-2 border-t border-gray-700/50">
                             <span className="text-gray-400 text-sm">Integrations:</span>
                             <div className="flex flex-wrap gap-2 mt-2">
-                              {agentDetails.integrations.map((integration: any, index: number) => (
-                                <div
-                                  key={index}
-                                  className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-200 text-xs"
-                                >
-                                  {getIntegrationIcon(integration.type)}
-                                  <span className="truncate max-w-[80px]">
-                                    {integration.name}
-                                  </span>
-                                </div>
-                              ))}
+                            {agentDetails.integrations.map((integration: any, index: number) => (
+  <div
+    key={index}
+    className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-200 text-xs"
+  >
+    {getIntegrationIcon(integration.type)}
+    <span className="truncate max-w-[80px]">
+      {integration.name}
+    </span>
+  </div>
+))}
                             </div>
                           </div>
                         )}
@@ -728,6 +715,7 @@ const getPlatformIcon = (type: string) => {
                     </div>
                   )}
 
+                  {/* Connection Info */}
                   <div className="p-4 bg-gray-800/40 rounded-xl">
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
@@ -757,7 +745,7 @@ const getPlatformIcon = (type: string) => {
         </div>
       )}
 
-      {/* Conversations Tab */}
+      {/* Conversations Tab - MODIFIÉ POUR AFFICHER NOMS + PHOTOS */}
       {activeTab === 'conversations' && (
         <div className="h-[calc(100vh-80px)]">
           {!connection.webhookId ? (
@@ -783,6 +771,7 @@ const getPlatformIcon = (type: string) => {
                         <ArrowLeft size={16} />
                       </button>
                       <div className="flex items-center gap-3 flex-1">
+                        {/* 🆕 AVATAR UTILISATEUR */}
                         <UserAvatar 
                           profilePic={selectedConversation.userProfilePic}
                           firstName={selectedConversation.userFirstName}
@@ -795,7 +784,10 @@ const getPlatformIcon = (type: string) => {
                             {getUserDisplayName(selectedConversation)}
                           </h3>
                           <p className="text-gray-400 text-xs">
-                            {getUserSubtitle(selectedConversation)}
+                            {selectedConversation.totalMessages} messages • {selectedConversation.platform}
+                            {selectedConversation.userUsername && (
+                              <span className="text-gray-500"> • @{selectedConversation.userUsername}</span>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -894,6 +886,7 @@ const getPlatformIcon = (type: string) => {
                           className="p-3 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group"
                         >
                           <div className="flex items-center gap-3">
+                            {/* 🆕 AVATAR UTILISATEUR */}
                             <UserAvatar 
                               profilePic={conv.userProfilePic}
                               firstName={conv.userFirstName}
@@ -913,8 +906,14 @@ const getPlatformIcon = (type: string) => {
                               <p className="text-xs text-gray-400 truncate">{conv.lastMessage}</p>
                               <div className="flex items-center gap-1 mt-1">
                                 <span className="text-xs text-gray-500">
-                                  {getUserSubtitle(conv)}
+                                  {conv.messageCount} messages
                                 </span>
+                                {conv.userUsername && (
+                                  <>
+                                    <span className="text-xs text-gray-600">•</span>
+                                    <span className="text-xs text-gray-500">@{conv.userUsername}</span>
+                                  </>
+                                )}
                               </div>
                             </div>
                             <button
@@ -934,8 +933,9 @@ const getPlatformIcon = (type: string) => {
                 )}
               </div>
 
-              {/* Desktop: Layout 2 colonnes */}
+              {/* Desktop: Layout 2 colonnes MODIFIÉ */}
               <div className="hidden lg:flex h-full">
+                {/* Colonne gauche - Liste conversations */}
                 <div className="w-96 border-r border-gray-800 bg-gray-950 flex flex-col">
                   <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
                     <div className="flex items-center gap-3">
@@ -985,6 +985,7 @@ const getPlatformIcon = (type: string) => {
                             }`}
                         >
                           <div className="flex items-center gap-3">
+                            {/* 🆕 AVATAR UTILISATEUR PLUS GRAND */}
                             <UserAvatar 
                               profilePic={conv.userProfilePic}
                               firstName={conv.userFirstName}
@@ -1004,8 +1005,16 @@ const getPlatformIcon = (type: string) => {
                               <p className="text-xs text-gray-400 truncate">{conv.lastMessage}</p>
                               <div className="flex items-center gap-1 mt-1">
                                 <span className="text-xs text-gray-500">
-                                  {getUserSubtitle(conv)}
+                                  {conv.messageCount}
                                 </span>
+                                <span className="text-xs text-gray-600">•</span>
+                                <span className="text-xs text-gray-500">{conv.platform}</span>
+                                {conv.userUsername && (
+                                  <>
+                                    <span className="text-xs text-gray-600">•</span>
+                                    <span className="text-xs text-gray-500">@{conv.userUsername}</span>
+                                  </>
+                                )}
                                 {conv.isUser && (
                                   <>
                                     <span className="text-xs text-gray-600">•</span>
@@ -1030,11 +1039,13 @@ const getPlatformIcon = (type: string) => {
                   </div>
                 </div>
 
+                {/* Colonne droite - Conversation détaillée */}
                 <div className="flex-1 flex flex-col bg-gray-950">
                   {selectedConversation ? (
                     <>
                       <div className="p-4 border-b border-gray-800 bg-gray-900/30 flex items-center justify-between">
                         <div className="flex items-center gap-3">
+                          {/* 🆕 AVATAR UTILISATEUR */}
                           <UserAvatar 
                             profilePic={selectedConversation.userProfilePic}
                             firstName={selectedConversation.userFirstName}
@@ -1045,7 +1056,13 @@ const getPlatformIcon = (type: string) => {
                           <div>
                             <h3 className="font-bold text-white">{getUserDisplayName(selectedConversation)}</h3>
                             <div className="flex items-center gap-2 text-gray-400 text-sm">
-                              <span>{getUserSubtitle(selectedConversation)}</span>
+                              <span>{selectedConversation.totalMessages} messages • {selectedConversation.platform}</span>
+                              {selectedConversation.userUsername && (
+                                <span>• @{selectedConversation.userUsername}</span>
+                              )}
+                              {selectedConversation.userLocale && (
+                                <span>• {selectedConversation.userLocale}</span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1126,6 +1143,7 @@ const getPlatformIcon = (type: string) => {
         </div>
       )}
 
+      {/* Delete Conversation Modal */}
       <DeleteConversationModal
         isOpen={showDeleteModal}
         onClose={cancelDelete}
