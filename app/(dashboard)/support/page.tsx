@@ -254,7 +254,7 @@ export default function SupportPage() {
             </div>
             
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2 pb-1">
                 Support Center
               </h1>
               <p className="text-gray-400 text-lg">

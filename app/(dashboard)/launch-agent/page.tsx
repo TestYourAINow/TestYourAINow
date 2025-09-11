@@ -457,7 +457,7 @@ export default function LaunchAgentPage() {
                   <Rocket className="text-emerald-400" size={24} />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent pb-1">
                     Deployment Center
                   </h1>
                   <p className="text-gray-400 text-lg">Manage your live AI deployments</p>

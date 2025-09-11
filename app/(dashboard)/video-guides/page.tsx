@@ -55,7 +55,7 @@ export default function VideoGuidesPage() {
               <Play className="text-white" size={28} />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2 pb-1">
                 Master AI Agent Creation
               </h1>
               <p className="text-gray-400 text-lg">Our comprehensive video library guides you through every step of building intelligent AI agents</p>

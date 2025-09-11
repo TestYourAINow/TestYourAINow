@@ -644,7 +644,7 @@ export default function AgentsPage() {
                   <Bot className="text-blue-400" size={24} />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent pb-1">
                     AI Agent Hub
                   </h1>
                   <p className="text-gray-400 text-lg">Manage your intelligent AI agents</p>
