@@ -2,6 +2,7 @@ import { connectToDatabase } from '@/lib/db'
 import { Connection } from '@/models/Connection'
 import { Agent } from '@/models/Agent'
 import { ChatbotConfig } from '@/models/ChatbotConfig' // 🆕 AJOUTÉ
+import { Conversation } from '@/models/Conversation'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/authOptions'
@@ -35,7 +36,7 @@ export async function GET(
     aiName = agent?.name || null;
   }
 
-  return NextResponse.json({ 
+  return NextResponse.json({
     connection: {
       ...connection.toObject(),
       aiName
@@ -90,11 +91,11 @@ export async function DELETE(req: NextRequest, context: any) {
     console.log(`🗑️ [DELETE CASCADE] Starting deletion of connection ${id}...`)
 
     // 1️⃣ Récupérer la connection pour avoir l'agentId
-    const connection = await Connection.findOne({ 
-      _id: id, 
-      userId: session.user.id 
+    const connection = await Connection.findOne({
+      _id: id,
+      userId: session.user.id
     })
-    
+
     if (!connection) {
       return NextResponse.json({ error: 'Connection not found' }, { status: 404 })
     }
@@ -102,11 +103,17 @@ export async function DELETE(req: NextRequest, context: any) {
     const agentId = connection.aiBuildId
 
     // 2️⃣ Supprimer TOUS les ChatbotConfigs liés à cette connection
-    const deletedConfigs = await ChatbotConfig.deleteMany({ 
+    const deletedConfigs = await ChatbotConfig.deleteMany({
       connectionId: id,
-      userId: session.user.id 
+      userId: session.user.id
     })
     console.log(`🗑️ [DELETE CASCADE] Deleted ${deletedConfigs.deletedCount} chatbot configs`)
+
+    // 2.5️⃣ Supprimer TOUTES les conversations liées à cette connection
+    const deletedConversations = await Conversation.deleteMany({
+      connectionId: id
+    })
+    console.log(`🗑️ [DELETE CASCADE] Deleted ${deletedConversations.deletedCount} conversations`)
 
     // 3️⃣ Vérifier si cet agent est encore utilisé ailleurs
     const otherConnections = await Connection.countDocuments({
@@ -133,15 +140,18 @@ export async function DELETE(req: NextRequest, context: any) {
     await Connection.deleteOne({ _id: id })
     console.log(`🗑️ [DELETE CASCADE] Deleted connection ${id}`)
 
+
+
     const summary = {
       connection: 1,
       chatbotConfigs: deletedConfigs.deletedCount,
+      conversations: deletedConversations.deletedCount,
       agentStillDeployed: otherConnections > 0 || otherConfigs > 0
     }
 
     console.log(`✅ [DELETE CASCADE] Complete! Summary:`, summary)
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       message: 'Connection and related data deleted successfully',
       deleted: summary
@@ -149,8 +159,8 @@ export async function DELETE(req: NextRequest, context: any) {
 
   } catch (error) {
     console.error('❌ [DELETE CASCADE] Error:', error)
-    return NextResponse.json({ 
-      error: 'Failed to delete connection and related data' 
+    return NextResponse.json({
+      error: 'Failed to delete connection and related data'
     }, { status: 500 })
   }
 }
