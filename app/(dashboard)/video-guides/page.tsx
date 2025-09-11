@@ -16,31 +16,31 @@ export default function VideoGuidesPage() {
       id: '1',
       title: 'Build Tutorial',
       description: 'Learn how to build and optimize your AI prompts',
-      loomEmbedId: 'https://www.loom.com/share/d1689bbcb31b4dd08f27a59f0956e29c?sid=290b51f1-a353-4af8-96c9-51c9c3bbd3c2'
+      loomEmbedId: 'd1689bbcb31b4dd08f27a59f0956e29c'
     },
     {
       id: '2',
       title: 'Demo Tutorial',
       description: 'Create interactive demos for your AI solutions',
-      loomEmbedId: 'https://www.loom.com/share/2ee9d7c9ed354965aacabe6139d10894?sid=31fbb4ad-f3e8-48ca-8e71-5ac72f122d7e'
+      loomEmbedId: '2ee9d7c9ed354965aacabe6139d10894'
     },
     {
       id: '3',
       title: 'Improve Tutorial',
       description: 'Enhance and refine your AI agents for better performance',
-      loomEmbedId: 'https://www.loom.com/share/22d1d7c134554cb1b4c0e982b8e151c9?sid=6a055464-0fa7-4995-b172-7a4767db112b'
+      loomEmbedId: '22d1d7c134554cb1b4c0e982b8e151c9'
     },
     {
       id: '4',
       title: 'Launch Tutorial',
       description: 'Deploy and manage your AI agents effectively',
-      loomEmbedId: 'https://www.loom.com/share/62c7532862b0449c9c2916bc4c3825ed?sid=ab24aa57-2ee6-40f9-bc61-51136c64fd2a'
+      loomEmbedId: '62c7532862b0449c9c2916bc4c3825ed'
     },
     {
       id: '5',
       title: 'Insta & Fb DMs Setup Guide',
       description: 'Connect your AI to Instagram & Facebook Direct Messages',
-      loomEmbedId: 'https://www.loom.com/share/62c7532862b0449c9c2916bc4c3825ed?sid=ab24aa57-2ee6-40f9-bc61-51136c64fd2a'
+      loomEmbedId: '62c7532862b0449c9c2916bc4c3825ed'
     }
   ];
 
