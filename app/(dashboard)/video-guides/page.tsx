@@ -56,9 +56,9 @@ export default function VideoGuidesPage() {
             </div>
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
-                Video Tutorials
+                Master AI Agent Creation
               </h1>
-              <p className="text-gray-400 text-lg">Learn how to create your own AI agent from A to Z</p>
+              <p className="text-gray-400 text-lg">Our comprehensive video library guides you through every step of building intelligent AI agents</p>
             </div>
           </div>
         </div>
