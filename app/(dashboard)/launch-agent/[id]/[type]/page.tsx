@@ -643,7 +643,7 @@ export default function ConnectionDetailsPage() {
                     <p>
                       <strong>2 - </strong>
                       <a
-                        href="https://app.manychat.com/template/b6b7ada6983f9ce2f2bb056491faf0bd90944714"
+                        href="https://app.manychat.com/template/ebb26603d17c0970ab0b0fb6917f07fe37c1f6dd"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-cyan-400 hover:text-cyan-300 underline font-medium"
