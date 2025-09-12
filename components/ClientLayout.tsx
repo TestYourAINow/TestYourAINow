@@ -45,6 +45,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname === '/support') return 'Support';
     if (pathname === '/agents/new') return 'Create Agent';
     if (pathname === '/create-connection') return 'Create Connection';
+      if (pathname === '/account-settings') return 'Account Settings';
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/website-widget')) {
       return 'Widget Config';
     }
@@ -71,6 +72,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname === '/support') return 'Get help and support';
     if (pathname === '/agents/new') return 'Build and customize your AI agent';
     if (pathname === '/create-connection') return 'Connect your AI agent';
+     if (pathname === '/account-settings') return 'Manage your account and preferences';
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/website-widget')) {
       return 'Customize your chat widget';
     }

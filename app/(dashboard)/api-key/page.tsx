@@ -261,11 +261,13 @@ export default function ApiKeyPage() {
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-gray-300 font-mono bg-gray-800/50 px-3 py-1 rounded-lg inline-block">{apiKey.maskedKey}</p>
-                            <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                            <div className="text-sm text-gray-300 font-mono bg-gray-800/50 px-3 py-1 rounded-lg inline-block">{apiKey.maskedKey}</div>
+                            <div className="text-xs text-gray-500 mt-2 flex items-center gap-1">
                               <div className="w-1 h-1 bg-gray-500 rounded-full" />
-                              Added {new Date(apiKey.createdAt).toLocaleDateString()}
-                            </p>
+                              <p suppressHydrationWarning>
+                                Added {new Date(apiKey.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
                         </div>
 
@@ -440,6 +442,8 @@ export default function ApiKeyPage() {
             </div>
 
             {/* NEW: How API Keys Work Explanation */}
+            {/* Description simple pour votre page API Key */}
+
             <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Info className="text-amber-400" size={20} />
@@ -449,7 +453,7 @@ export default function ApiKeyPage() {
               </div>
 
               <div className="space-y-4">
-                <p className="text-gray-300 text-sm mb-4">Different keys are used for different purposes:</p>
+                <p className="text-gray-300 text-sm mb-4">Simple and straightforward API key management:</p>
 
                 <div className="space-y-3">
                   {/* Default Key */}
@@ -461,23 +465,25 @@ export default function ApiKeyPage() {
                       <span className="text-amber-200 font-semibold">Default Key</span>
                     </div>
                     <p className="text-gray-300 text-sm leading-relaxed ml-11">
-                      Used for <strong>admin tasks</strong> like creating agents, generating prompts, FAQ creation, and development tools.
+                      Your <strong>default choice</strong> - automatically selected when creating new agents. You can always change it to any other key during agent creation.
                     </p>
                   </div>
 
-                  {/* Agent Keys */}
+                  {/* Other Keys */}
                   <div className="p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
                         <Bot size={16} className="text-blue-400" />
                       </div>
-                      <span className="text-blue-200 font-semibold">Agent Keys</span>
+                      <span className="text-blue-200 font-semibold">Project Keys</span>
                     </div>
                     <p className="text-gray-300 text-sm leading-relaxed ml-11">
-                      Each agent uses its <strong>specific key</strong> for client conversations, webhooks, and live interactions.
+                      Additional keys for <strong>specific projects or clients</strong>. Perfect for separating costs and organizing your work by project.
                     </p>
                   </div>
                 </div>
+
+
 
                 {/* Pro Tip */}
                 <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-4 mt-4 backdrop-blur-sm">
@@ -486,8 +492,27 @@ export default function ApiKeyPage() {
                     <span className="text-purple-200 text-sm font-semibold">Pro Tip</span>
                   </div>
                   <p className="text-purple-100/80 text-xs leading-relaxed">
-                    Use different agent keys for different clients to separate costs and track usage per project.
+                    Set your most-used key as default to save time. You can always change the default or use different keys for specific projects.
                   </p>
+                </div>
+              </div>
+
+              {/* How it works */}
+              <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-4 mt-4">
+                <div className="text-xs text-gray-400 mb-3 uppercase tracking-wide font-semibold">How it works:</div>
+                <div className="space-y-2 text-xs text-gray-300">
+                  <div className="flex items-start gap-2">
+                    <span className="text">1.</span>
+                    <span>When creating an agent, your <strong>default key</strong> is automatically selected</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text">2.</span>
+                    <span>You can choose a different key from the dropdown if needed</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text">3.</span>
+                    <span>Everything for that agent uses the selected key</span>
+                  </div>
                 </div>
               </div>
             </div>

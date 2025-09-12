@@ -47,7 +47,8 @@ export async function POST(req: NextRequest) {
 
     // Vérifie si email est déjà utilisé par un autre
     if (email && email !== currentUser.email) {
-      const existingEmail = await User.findOne({ email })
+      const normalizedEmail = email.toLowerCase().trim();
+      const existingEmail = await User.findOne({ email: normalizedEmail })
       if (existingEmail) {
         return NextResponse.json(
           { error: "Email is already in use", field: "email" },
@@ -69,9 +70,9 @@ export async function POST(req: NextRequest) {
 
     // 🏗️ Construire l'objet de mise à jour dynamiquement
     const updateData: any = {}
-    
+
     if (name) updateData.username = name
-    if (email) updateData.email = email
+    if (email) updateData.email = email.toLowerCase().trim()
     if (password) {
       const hashed = await bcrypt.hash(password, 10)
       updateData.password = hashed
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
     // 🔁 Si l'utilisateur a un compte Stripe, on met à jour son email/nom aussi
     if (currentUser.stripeCustomerId && (email || name)) {
       await stripe.customers.update(currentUser.stripeCustomerId, {
-        email: email || undefined,
+        email: email ? email.toLowerCase().trim() : undefined,
         name: name || undefined,
       })
     }

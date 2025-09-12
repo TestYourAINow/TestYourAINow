@@ -11,6 +11,7 @@ export async function GET(req: Request) {
   }
 
   await connectToDatabase();
-  const existing = await User.findOne({ email });
+  const normalizedEmail = email.toLowerCase().trim();
+  const existing = await User.findOne({ email: normalizedEmail });
   return NextResponse.json({ available: !existing });
 }

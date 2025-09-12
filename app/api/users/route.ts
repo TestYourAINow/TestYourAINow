@@ -54,7 +54,8 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
-    const existingEmail = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingEmail = await User.findOne({ email: normalizedEmail });
     if (existingEmail) {
       return NextResponse.json(
         { field: "email", error: "Email already registered" },
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
 
     // Crée l’utilisateur
     const newUser = await User.create({
-      email,
+      email: normalizedEmail, // ← email normalisé
       username,
       password: hashedPassword,
       isSubscribed: false,

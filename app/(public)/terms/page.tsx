@@ -1,8 +1,11 @@
 "use client";
 
 import { ArrowLeft, Shield, FileText } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function TermsPage() {
+  const router = useRouter();
+
   return (
     <main 
       className="min-h-screen text-white pt-20"
@@ -24,13 +27,13 @@ export default function TermsPage() {
       </div>
 
       <div className="relative max-w-4xl mx-auto px-6 sm:px-12 lg:px-20 py-12">
-        {/* Back Button */}
+        {/* Back Button - FIXED */}
         <button 
-          onClick={() => window.history.back()}
+          onClick={() => router.push('/')}
           className="group flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-300 mb-8"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
-          <span>Back</span>
+          <span>Back to Home</span>
         </button>
 
         {/* Header */}

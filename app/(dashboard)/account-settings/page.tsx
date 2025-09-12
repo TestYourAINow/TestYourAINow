@@ -478,7 +478,7 @@ export default function AccountSettingsPage() {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <User className="text-blue-400" size={16} />
-                          <span className="text-sm font-medium text-gray-400">Display Name</span>
+                          <span className="text-sm font-medium text-gray-400">Username</span>
                         </div>
                         <p className="text-xl font-semibold text-white">{session?.user?.name || name}</p>
                       </div>

@@ -34,7 +34,7 @@ export default function VideoGuidesPage() {
       id: '4',
       title: 'Launch Tutorial',
       description: 'Deploy and manage your AI agents effectively',
-      loomEmbedId: '62c7532862b0449c9c2916bc4c3825ed'
+      loomEmbedId: '29f8db2a271546eabca1408888c014bd'
     },
     {
       id: '5',
