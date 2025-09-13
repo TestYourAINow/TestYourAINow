@@ -1,3 +1,5 @@
+// app\(dashboard)\launch-agent\[id]\[type]\page.tsx
+
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -134,15 +136,6 @@ const UserAvatar = ({
   )
 }
 
-// 🆕 FONCTION - Afficher nom utilisateur avec fallback
-const getUserDisplayName = (conv: ConversationSummary | ConversationDetails) => {
-  if (conv.userFullName) return conv.userFullName
-  if (conv.userFirstName && conv.userLastName) return `${conv.userFirstName} ${conv.userLastName}`
-  if (conv.userFirstName) return conv.userFirstName
-  if (conv.userUsername) return `@${conv.userUsername}`
-  return `Customer #${conv.userId}`
-}
-
 export default function ConnectionDetailsPage() {
   const params = useParams()
   const connectionId = params.id as string
@@ -187,6 +180,42 @@ export default function ConnectionDetailsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // ✅ NOUVELLE VERSION AVEC LOGIQUE INTELLIGENTE
+const getUserDisplayName = (conv: ConversationSummary | ConversationDetails) => {
+  // Instagram : Priorité au username Instagram si disponible
+  if (conv.platform === 'instagram-dms' && conv.userUsername) {
+    return `@${conv.userUsername}`;
+  }
+  
+  // Facebook ou pas de username : Utiliser le nom complet
+  if (conv.userFullName) return conv.userFullName;
+  if (conv.userFirstName && conv.userLastName) return `${conv.userFirstName} ${conv.userLastName}`;
+  if (conv.userFirstName) return conv.userFirstName;
+  return `Customer #${conv.userId}`;
+}
+
+// ✅ FONCTION MANQUANTE - AJOUTER CETTE FONCTION
+const getUserSubtitle = (conv: ConversationSummary | ConversationDetails) => {
+  const details = [];
+  
+  // Instagram : Si on affiche @username en titre, montrer le nom réel en sous-titre
+  if (conv.platform === 'instagram-dms' && conv.userUsername) {
+    const realName = conv.userFullName || 
+                    (conv.userFirstName && conv.userLastName ? `${conv.userFirstName} ${conv.userLastName}` : null) ||
+                    conv.userFirstName;
+    if (realName) {
+      details.push(realName);
+    }
+  }
+  
+  // Ajouter le nombre de messages
+  if ('messageCount' in conv) {
+    details.push(`${conv.messageCount} messages`);
+  }
+  
+  return details.join(' • ');
+}
 
   // Effects - INCHANGÉS
   useEffect(() => {
@@ -627,7 +656,7 @@ export default function ConnectionDetailsPage() {
               {/* ManyChat Setup */}
               <div className="space-y-4">
                 <a
-                  href="https://manychat.com/free-trial"
+                  href="https://manychat.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -643,7 +672,7 @@ export default function ConnectionDetailsPage() {
                     <p>
                       <strong>2 - </strong>
                       <a
-                        href="https://app.manychat.com/template/ebb26603d17c0970ab0b0fb6917f07fe37c1f6dd"
+                        href="https://app.manychat.com/template/310e6be04bdf9e78dccab2974e68c73155e6c57f"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-cyan-400 hover:text-cyan-300 underline font-medium"

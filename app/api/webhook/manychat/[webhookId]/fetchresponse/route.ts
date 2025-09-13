@@ -1,3 +1,5 @@
+// app\api\webhook\manychat\[webhookId]\fetchresponse\route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getAIResponse, listPendingAIResponses } from '@/lib/redisCache'; // 🚀 Redis Pro
 

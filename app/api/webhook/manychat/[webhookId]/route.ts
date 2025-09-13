@@ -1,3 +1,5 @@
+// app\api\webhook\manychat\[webhookId]\route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { Connection } from '@/models/Connection';
@@ -39,9 +41,9 @@ function isPoliteOnly(content: string): boolean {
     // Allemand
     'hallo', 'danke', 'ok', 'tschüss'
   ];
-  
+
   const cleanContent = content.toLowerCase().trim();
-  
+
   // SEULEMENT si c'est EXACTEMENT un mot de politesse (pas de mots composés)
   return politeOnlyWords.includes(cleanContent);
 }
@@ -49,24 +51,24 @@ function isPoliteOnly(content: string): boolean {
 // 🆕 FONCTION AMÉLIORÉE - Extraire données utilisateur du webhook ManyChat
 function extractUserData(data: any): UserData {
   console.log(`🔍 [USER DATA] Extracting user data from webhook:`, JSON.stringify(data, null, 2));
-  
+
   // ID utilisateur (priorité dans l'ordre)
   const contactId = data.contactId || data.contact_id || data.user_id || data.subscriber_id || 'anonymous';
-  
+
   // Informations personnelles
   const firstName = data.first_name || data.firstName || '';
   const lastName = data.last_name || data.lastName || '';
   const profilePic = data.profile_pic || data.profilePic || data.avatar_url || '';
   const username = data.instagram_username || data.ig_username || data.username || data.user_name || ''; // 🔧 CORRIGÉ
-  
+
   // Métadonnées
   const gender = data.gender || '';
   const locale = data.locale || data.language || '';
   const timezone = data.timezone || data.tz || '';
-  
+
   // 🔄 Calculer le nom complet
   const fullName = `${firstName} ${lastName}`.trim() || undefined;
-  
+
   const userData: UserData = {
     contactId,
     userId: contactId,
@@ -79,20 +81,20 @@ function extractUserData(data: any): UserData {
     locale: locale || undefined,
     timezone: timezone || undefined
   };
-  
+
   console.log(`✅ [USER DATA] Extracted:`, {
     contactId: userData.contactId,
     name: userData.fullName || 'Anonymous',    // 🔄 CHANGÉ
     hasProfilePic: !!userData.profilePic,
     username: userData.username || 'N/A'
   });
-  
+
   return userData;
 }
 
 // 🆕 FONCTION AMÉLIORÉE - Stocker dans MongoDB avec données utilisateur
 async function storeInMongoDB(
-  conversationId: string, 
+  conversationId: string,
   connectionId: string,
   webhookId: string,
   userData: UserData, // 🆕 CHANGÉ de userId vers userData
@@ -120,15 +122,15 @@ async function storeInMongoDB(
     };
 
     // Chercher si la conversation existe déjà
-    let conversation = await Conversation.findOne({ 
+    let conversation = await Conversation.findOne({
       conversationId,
-      isDeleted: false 
+      isDeleted: false
     });
 
     if (conversation) {
       // 📝 Ajouter les nouveaux messages à la conversation existante
       conversation.messages.push(userMsg, assistantMsg);
-      
+
       // 🆕 METTRE À JOUR les infos utilisateur si elles ont changé/améliorées
       if (userData.firstName && userData.firstName !== conversation.userFirstName) {
         conversation.userFirstName = userData.firstName;
@@ -151,13 +153,13 @@ async function storeInMongoDB(
       if (userData.timezone && userData.timezone !== conversation.userTimezone) {
         conversation.userTimezone = userData.timezone;
       }
-      
+
       // Mettre à jour les timestamps
       conversation.lastMessageAt = new Date(assistantMsg.timestamp);
       conversation.lastUserMessageAt = new Date(userMsg.timestamp);
       conversation.lastAssistantMessageAt = new Date(assistantMsg.timestamp);
       conversation.messageCount = conversation.messages.length;
-      
+
       await conversation.save();
       console.log(`✅ [MONGODB] Updated existing conversation: ${conversationId} for ${conversation.userFullName || 'Anonymous'}`);
     } else {
@@ -170,7 +172,7 @@ async function storeInMongoDB(
         platform: connection.integrationType,
         agentId: agent._id,
         agentName: agent.name,
-        
+
         // 🆕 NOUVELLES DONNÉES UTILISATEUR
         userFirstName: userData.firstName,
         userLastName: userData.lastName,
@@ -179,7 +181,7 @@ async function storeInMongoDB(
         userGender: userData.gender,
         userLocale: userData.locale,
         userTimezone: userData.timezone,
-        
+
         messages: [userMsg, assistantMsg],
         messageCount: 2,
         firstMessageAt: new Date(userMsg.timestamp),
@@ -208,18 +210,18 @@ async function processWithAI(agent: any, userMessage: string, userData: UserData
     const { openai, error } = await createAgentOpenAIForWebhook(agent);
     if (!openai) {
       console.error(`❌ OpenAI setup failed: ${error}`);
-      const errorMessage = "Désolé, problème technique.";
+      const errorMessage = "Sorry, technical problem.";
       await storeAIResponse(conversationId, errorMessage);
-      
+
       // 🆕 STOCKER L'ERREUR DANS MONGODB AVEC DONNÉES UTILISATEUR
       await storeInMongoDB(
-        conversationId, 
-        connection._id.toString(), 
-        connection.webhookId, 
+        conversationId,
+        connection._id.toString(),
+        connection.webhookId,
         userData, // 🆕 CHANGÉ
-        userMessage, 
-        errorMessage, 
-        agent, 
+        userMessage,
+        errorMessage,
+        agent,
         connection
       );
       return;
@@ -304,7 +306,7 @@ async function processWithAI(agent: any, userMessage: string, userData: UserData
       messages,
     });
 
-    const response = completion.choices[0]?.message?.content || "Je n'ai pas pu répondre.";
+    const response = completion.choices[0]?.message?.content || "I couldn't respond.";
     console.log(`✅ OpenAI response received: ${response.substring(0, 100)}...`);
 
     // 7. 🧠 STOCKER DANS REDIS (pour mémoire OpenAI future)
@@ -326,13 +328,13 @@ async function processWithAI(agent: any, userMessage: string, userData: UserData
 
     // 10. 🆕 STOCKER DANS MONGODB avec toutes les données utilisateur
     await storeInMongoDB(
-      conversationId, 
-      connection._id.toString(), 
-      connection.webhookId, 
+      conversationId,
+      connection._id.toString(),
+      connection.webhookId,
       userData, // 🆕 CHANGÉ 
-      userMessage, 
-      response, 
-      agent, 
+      userMessage,
+      response,
+      agent,
       connection
     );
 
@@ -341,14 +343,14 @@ async function processWithAI(agent: any, userMessage: string, userData: UserData
   } catch (error: any) {
     console.error('❌ AI processing error:', error);
 
-    let errorMessage = "Désolé, je rencontre un problème technique. Réessayez dans quelques instants.";
+    let errorMessage = "Sorry, I'm experiencing a technical issue. Please try again in a moment.";
 
     if (error.status === 401) {
-      errorMessage = "Configuration incorrecte de l'API key. Contactez l'administrateur.";
+      errorMessage = "Incorrect API key configuration. Please contact administrator.";
     } else if (error.status === 429) {
-      errorMessage = "Trop de requêtes en cours. Réessayez dans quelques instants.";
+      errorMessage = "Too many requests in progress. Please try again in a moment.";
     } else if (error.status === 500) {
-      errorMessage = "Problème avec le service OpenAI. Réessayez plus tard.";
+      errorMessage = "Issue with OpenAI service. Please try again later.";
     }
 
     // Stocker le message d'erreur dans Redis
@@ -356,13 +358,13 @@ async function processWithAI(agent: any, userMessage: string, userData: UserData
 
     // 🆕 STOCKER L'ERREUR DANS MONGODB AVEC DONNÉES UTILISATEUR
     await storeInMongoDB(
-      conversationId, 
-      connection._id.toString(), 
-      connection.webhookId, 
+      conversationId,
+      connection._id.toString(),
+      connection.webhookId,
       userData, // 🆕 CHANGÉ
-      userMessage, 
-      errorMessage, 
-      agent, 
+      userMessage,
+      errorMessage,
+      agent,
       connection
     );
   }
@@ -389,7 +391,11 @@ export async function POST(req: NextRequest, context: any) {
     const connection = await Connection.findOne({ webhookId, isActive: true });
     if (!connection) {
       console.error(`❌ Connection not found for webhookId: ${webhookId}`);
-      return NextResponse.json({ error: 'Connection not found' }, { status: 404 });
+      return NextResponse.json({
+        text: "Configuration missing. Please contact administrator.",
+        success: false,
+        response: "Configuration missing. Please contact administrator."
+      }, { status: 404 });
     }
 
     console.log(`✅ Connection found: ${connection.name}`);
@@ -398,7 +404,11 @@ export async function POST(req: NextRequest, context: any) {
     const agent = await Agent.findById(connection.aiBuildId);
     if (!agent) {
       console.error(`❌ Agent not found for ID: ${connection.aiBuildId}`);
-      return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+      return NextResponse.json({
+        text: "Agent not found. Please contact administrator.",
+        success: false,
+        response: "Agent not found. Please contact administrator."
+      }, { status: 404 });
     }
 
     console.log(`✅ Agent found: ${agent.name}, API Key: ${agent.apiKey ? 'configured' : 'missing'}`);
@@ -412,7 +422,11 @@ export async function POST(req: NextRequest, context: any) {
 
     if (!userMessage) {
       console.error(`❌ No message content found in webhook data`);
-      return NextResponse.json({ error: 'No message content' }, { status: 400 });
+      return NextResponse.json({
+        text: "Empty message received.",
+        success: false,
+        response: "Empty message received."
+      }, { status: 400 });
     }
 
     // 5. 🆕 Traiter le message avec l'AI (avec données utilisateur)
@@ -427,7 +441,11 @@ export async function POST(req: NextRequest, context: any) {
 
   } catch (error) {
     console.error('❌ Webhook error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({
+      text: "An error occurred. Please try again later.",
+      success: false,
+      response: "An error occurred. Please try again later."
+    }, { status: 500 });
   }
 }
 

@@ -358,7 +358,7 @@ export default function Home() {
           <p className="text-gray-300 text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed px-4">
             Build and share your AI agents with a single link.{" "}
             <span className="text-blue-400 font-semibold">No coding.</span>{" "}
-            <span className="text-cyan-400 font-semibold">No setup.</span>{" "}
+            <span className="text-cyan-400 font-semibold">No hassle.</span>{" "}
             <span className="text-white font-semibold">Just results.</span>
           </p>
 
