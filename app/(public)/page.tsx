@@ -178,7 +178,7 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
 export default function Home() {
   const { data: session, status } = useSession();
   const isSubscribed = session?.user?.isSubscribed;
-  const redirectUrl = session ? "/agents" : "/signup";
+  const redirectUrl = session ? "/dashboard" : "/signup";
   
   // State pour la section pricing
   const [loading, setLoading] = useState(false);
@@ -240,10 +240,10 @@ export default function Home() {
   // Data pour toutes les features (y compris Prompt Builder)
   const allFeatures = [
     {
-      title: "You don't need to be a prompt expert",
-      subtitle: "🧠 AI-Powered Prompt Builder",
-      description: "Just write what you want your agent to do. Our AI builds a clean, structured, ready-to-run prompt for you. Whether you're a coach, freelancer or agency — save time, get clarity, and launch fast.",
-      image: "/prompt-builder.png",
+      title: "No Prompt Expertise Required",
+      subtitle: "AI-Powered Prompt Builder",
+      description: "Just say what your agent should do. Our AI turns it into a ready-to-run prompt for you — no guesswork, just clarity.",
+      image: "/prompt-builder.jpg",
       imageAlt: "AI Prompt Builder Preview",
       icon: <Sparkles className="w-6 h-6" />,
       badge: "AI BUILDER",
@@ -254,7 +254,7 @@ export default function Home() {
       title: "Turn a Demo into a Client",
       subtitle: "Create. Send. Close.",
       description: "In seconds, you show exactly what your AI agent can do. Your client sees results — not promises.",
-      image: "/demo-client.png",
+      image: "/demo-client.jpg",
       imageAlt: "Demo to Client Preview",
       icon: <Handshake className="w-6 h-6" />,
       badge: "DEMO",
@@ -265,7 +265,7 @@ export default function Home() {
       title: "Agent Lab",
       subtitle: "Where your agent becomes a pro",
       description: "You refine it, train it, connect integrations — and it comes back ready to close deals.",
-      image: "/agent-lab.png",
+      image: "/agent-lab.jpg",
       imageAlt: "Agent Lab Preview", 
       icon: <FlaskConical className="w-6 h-6" />,
       badge: "LAB",
@@ -276,7 +276,7 @@ export default function Home() {
       title: "Your AI Agent, Live in Minutes",
       subtitle: "From idea to action in under 15 minutes",
       description: "No code. No delays. You create it, improve it, deploy it — all on one platform.",
-      image: "/live-agent.png",
+      image: "/live-agent.jpg",
       imageAlt: "Live Agent Preview",
       icon: <Rocket className="w-6 h-6" />,
       badge: "DEPLOY",
@@ -289,7 +289,7 @@ export default function Home() {
   const ctaText = !session
     ? "Get 50% off"
     : isSubscribed
-    ? "Go to Agents"
+    ? "Go to Dashboard"
     : "Activate your access";
 
   const showLink = !session || isSubscribed;
@@ -297,7 +297,7 @@ export default function Home() {
   const ctaLink = !session
     ? "/signup?"
     : isSubscribed
-    ? "/agents"
+    ? "/dashboard"
     : "#";
 
   return (
@@ -372,7 +372,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
               
               <Wrench size={20} className="relative z-10 group-hover:rotate-12 transition-transform duration-300 sm:w-6 sm:h-6" /> 
-              <span className="relative z-10">{session ? "Go to Agents" : "Start Building"}</span>
+              <span className="relative z-10">{session ? "Go to Dashboard" : "Start Building"}</span>
               <ArrowRight size={20} className="relative z-10 group-hover:translate-x-1 transition-transform duration-300 sm:w-6 sm:h-6" />
             </Link>
 
@@ -399,15 +399,15 @@ export default function Home() {
           <div className="mt-12 sm:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-gray-400 text-sm px-4">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
-              <span>Everything You Need</span>
+              <span>Build Powerful AI Agents</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
-              <span>Ready in 15 Minutes</span>
+              <span>Launch in 15 Minutes</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
-              <span>50% Off First 3 Months</span>
+              <span>50% Off for Early Users</span>
             </div>
           </div>
         </div>
@@ -594,7 +594,7 @@ export default function Home() {
           </h2>
           
           <p className="text-lg sm:text-xl text-gray-300 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed px-4">
-            No setup. No code. Just results.
+            Simple to build. Powerful to run.
           </p>
           
           <Link
@@ -603,7 +603,7 @@ export default function Home() {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
             
-            <span className="relative z-10">{session ? "Go to Agents" : "Get Started"}</span>
+            <span className="relative z-10">{session ? "Go to Dashboard" : "Get Started"}</span>
             <ArrowRight size={20} className="relative z-10 group-hover:translate-x-1 transition-transform duration-300 sm:w-6 sm:h-6" />
           </Link>
         </div>

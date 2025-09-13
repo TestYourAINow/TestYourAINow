@@ -1,4 +1,4 @@
-// app/(dashboard)/dashboard/page.tsx - VERSION ENHANCED UNIFORME
+// app/(dashboard)/dashboard/page.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -309,72 +309,6 @@ export default function DashboardPage() {
                 <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                 <span className="text-sm font-medium hidden sm:inline">All Systems Operational</span>
                 <span className="text-sm font-medium sm:hidden">Online</span>
-              </div>
-            </div>
-          </div>
-          
-           {/* 📊 MÉTRIQUES PRINCIPALES - HOVER STYLE COMME AGENT STATUS/DEMO SHARES */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            
-            {/* Total Agents */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:bg-gray-700/40 hover:border-gray-500/60 transition-all duration-300 group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 group-hover:scale-110 transition-transform duration-300">
-                  <Bot className="text-blue-400" size={24} />
-                </div>
-                <div className="text-gray-400 text-sm font-medium">
-                  Total
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-bold text-white">{stats!.totalAgents}</p>
-                <p className="text-gray-400 text-sm">AI Agents</p>
-              </div>
-            </div>
-
-            {/* Active Agents */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:bg-gray-700/40 hover:border-gray-500/60 transition-all duration-300 group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
-                  <Zap className="text-emerald-400" size={24} />
-                </div>
-                <span className="text-emerald-400 text-sm font-medium">
-                  {stats!.totalAgents > 0 ? Math.round((stats!.activeAgents / stats!.totalAgents) * 100) : 0}%
-                </span>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-bold text-white">{stats!.activeAgents}</p>
-                <p className="text-gray-400 text-sm">Active Agents</p>
-              </div>
-            </div>
-
-            {/* Conversations */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:bg-gray-700/40 hover:border-gray-500/60 transition-all duration-300 group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center border border-pink-500/30 group-hover:scale-110 transition-transform duration-300">
-                  <MessageCircle className="text-pink-400" size={24} />
-                </div>
-                <div className="text-pink-400 text-sm font-medium">
-                  {stats!.totalConversations > 0 ? 'Active' : 'None'}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-bold text-white">{stats!.totalConversations}</p>
-                <p className="text-gray-400 text-sm">AI Conversations</p>
-              </div>
-            </div>
-
-            {/* Deployments */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:bg-gray-700/40 hover:border-gray-500/60 transition-all duration-300 group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center border border-purple-500/30 group-hover:scale-110 transition-transform duration-300">
-                  <Rocket className="text-purple-400" size={24} />
-                </div>
-                <span className="text-emerald-400 text-sm font-medium">{stats!.activeDeployments} live</span>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-bold text-white">{stats!.totalDeployments}</p>
-                <p className="text-gray-400 text-sm">Deployments</p>
               </div>
             </div>
           </div>

@@ -205,7 +205,7 @@ export default function Header() {
                     <div className="p-1.5 sm:p-2 bg-gray-800/50 rounded-lg text-blue-400 group-hover:text-cyan-400 transition-colors">
                       <Grid2X2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
-                    <span className="font-medium text-sm sm:text-base">Dashboard</span>
+                    <span className="font-medium text-sm sm:text-base">My Agents</span>
                   </Link>
                   
                   <Link
