@@ -1,7 +1,7 @@
-// app/(dashboard)/dashboard/page.tsx
+// app/(dashboard)/dashboard/page.tsx - VERSION PROPRE avec Analytics
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -10,11 +10,15 @@ import {
   MessageCircle, Globe, CheckCircle, AlertTriangle,
   Plus, Settings, Star, Gauge, Key, FlaskConical,
   RefreshCw, Folder, GitBranch, Share2, BarChart3,
-  ArrowUp, ArrowDown, Minus, Sparkles, Workflow, Hand
+  ArrowUp, ArrowDown, Minus, Sparkles, Workflow, Hand,
+  Filter, PieChart as PieIcon
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-// 🎨 Composants d'icônes avec gradients premium
+// 🆕 Import des types analytics
+import type { AnalyticsData } from '@/types/analytics';
+
+// 🎨 Composants d'icônes (inchangés)
 const InstagramIcon = ({ size = 24, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
     <defs>
@@ -66,7 +70,7 @@ const WebsiteIcon = ({ size = 24, className = "" }) => (
   </svg>
 )
 
-// 📊 TYPES
+// 📊 Types pour le dashboard existant
 interface DashboardStats {
   totalAgents: number;
   activeAgents: number;
@@ -82,7 +86,6 @@ interface DashboardStats {
     active: number;
     inactive: number;
   };
-  // 🆕 NOUVEAU - Platform breakdown dynamique
   platformBreakdown?: {
     'website-widget': { total: number; active: number; };
     'instagram-dms': { total: number; active: number; };
@@ -92,7 +95,6 @@ interface DashboardStats {
   lastUpdated: string;
 }
 
-// 🎨 Couleurs pour les graphiques
 const CHART_COLORS = {
   primary: '#3b82f6',
   secondary: '#06b6d4',  
@@ -102,13 +104,31 @@ const CHART_COLORS = {
 };
 
 export default function DashboardPage() {
+  // États existants du dashboard
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
-  // 🔄 CHARGEMENT DES DONNÉES
+  // 🆕 États pour analytics avec types corrects
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('last-7-days');
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
+  const [selectedConnection, setSelectedConnection] = useState<string>('all');
+
+  // Périodes disponibles
+  const periods = [
+    { value: 'today', label: 'Today' },
+    { value: 'yesterday', label: 'Yesterday' },
+    { value: 'this-week', label: 'This Week' },
+    { value: 'last-week', label: 'Last Week' },
+    { value: 'last-7-days', label: 'Last 7 Days' },
+    { value: 'last-30-days', label: 'Last 30 Days' }
+  ] as const;
+
+  // Fonction pour charger les stats du dashboard (existante)
   const fetchDashboardStats = async (isRefresh = false) => {
     try {
       if (isRefresh) {
@@ -144,12 +164,53 @@ export default function DashboardPage() {
     }
   };
 
-  // 🚀 INITIAL LOAD
+  // 🆕 Fonction pour charger les analytics
+  const fetchAnalyticsData = async (period: string) => {
+    setAnalyticsLoading(true);
+    try {
+      console.log(`📊 [DASHBOARD] Fetching analytics for period: ${period}`);
+      
+      const response = await fetch(`/api/analytics/conversations?period=${period}`, {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-cache'
+      });
+
+      if (!response.ok) {
+        console.error(`Analytics API error: ${response.status}`);
+        return;
+      }
+
+      const result: AnalyticsData = await response.json();
+      
+      if (result.success) {
+        setAnalyticsData(result);
+        // Reset des filtres secondaires
+        setSelectedPlatform('all');
+        setSelectedConnection('all');
+        console.log('✅ [DASHBOARD] Analytics loaded:', result.summary);
+      }
+    } catch (err) {
+      console.error('Analytics fetch error (non-blocking):', err);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  // Chargements initiaux
   useEffect(() => {
     fetchDashboardStats();
+    fetchAnalyticsData(selectedPeriod);
   }, []);
 
-  // 🔄 AUTO-REFRESH
+  // Recharger analytics quand période change
+  useEffect(() => {
+    if (selectedPeriod) {
+      fetchAnalyticsData(selectedPeriod);
+    }
+  }, [selectedPeriod]);
+
+  // Auto-refresh existant
   useEffect(() => {
     const interval = setInterval(() => {
       fetchDashboardStats(true);
@@ -158,7 +219,49 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // 🚀 QUICK ACTIONS
+  // 🆕 Connections disponibles selon la plateforme (effet domino)
+  const availableConnections = useMemo(() => {
+    if (!analyticsData || selectedPlatform === 'all') {
+      const allConnections = new Map<string, number>();
+      analyticsData?.availableFilters.platforms.forEach(platform => {
+        platform.connections.forEach(conn => {
+          const key = `${conn.value}:${conn.label}`;
+          allConnections.set(key, (allConnections.get(key) || 0) + conn.count);
+        });
+      });
+
+      return Array.from(allConnections.entries()).map(([key, count]) => {
+        const [value, label] = key.split(':');
+        return { value, label, count };
+      });
+    }
+
+    const platform = analyticsData.availableFilters.platforms.find(p => p.value === selectedPlatform);
+    return platform?.connections || [];
+  }, [analyticsData, selectedPlatform]);
+
+  // 🆕 Données analytics filtrées
+  const filteredAnalytics = useMemo((): AnalyticsData | null => {
+    if (!analyticsData) return null;
+
+    let platformBreakdown = analyticsData.chartData.platformBreakdown;
+    
+    if (selectedPlatform !== 'all') {
+      platformBreakdown = platformBreakdown.filter(item => {
+        return item.platform.toLowerCase().replace(' ', '-') === selectedPlatform;
+      });
+    }
+
+    return {
+      ...analyticsData,
+      chartData: {
+        ...analyticsData.chartData,
+        platformBreakdown
+      }
+    };
+  }, [analyticsData, selectedPlatform, selectedConnection]);
+
+  // Quick actions existantes
   const quickActions = [
     {
       title: 'Create Agent',
@@ -192,59 +295,58 @@ export default function DashboardPage() {
     }
   ];
 
-  // 🔄 LOADING STATE
+  // Loading state
   if (loading) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
-          <div className="space-y-8 px-4 md:px-8">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-700/40 rounded w-1/3 mb-6"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-gray-800/50 rounded-2xl p-6 h-32">
-                    <div className="h-4 bg-gray-700/40 rounded w-2/3 mb-4"></div>
-                    <div className="h-8 bg-gray-700/40 rounded w-1/2"></div>
-                  </div>
-                ))}
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+        <div className="space-y-8 px-4 md:px-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-700/40 rounded w-1/3 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-gray-800/50 rounded-2xl p-6 h-32">
+                  <div className="h-4 bg-gray-700/40 rounded w-2/3 mb-4"></div>
+                  <div className="h-8 bg-gray-700/40 rounded w-1/2"></div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+      </div>
     );
   }
 
-  // ❌ ERROR STATE
+  // Error state
   if (error) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 text-center">
-              <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Failed to Load Dashboard</h3>
-              <p className="text-gray-400 mb-6">{error}</p>
-              <button
-                onClick={() => fetchDashboardStats()}
-                className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-semibold transition-all"
-              >
-                Try Again
-              </button>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 text-center">
+            <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Failed to Load Dashboard</h3>
+            <p className="text-gray-400 mb-6">{error}</p>
+            <button
+              onClick={() => fetchDashboardStats()}
+              className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-semibold transition-all"
+            >
+              Try Again
+            </button>
           </div>
         </div>
+      </div>
     );
   }
 
-  // 📊 Préparation données pour graphiques
+  if (!stats) return null;
+
+  // Données pour les graphiques existants
   const pieData = [
-    { name: 'Active', value: stats!.activeAgents, color: CHART_COLORS.success },
-    { name: 'Inactive', value: stats!.agentsByStatus.inactive, color: '#374151' }
+    { name: 'Active', value: stats.activeAgents, color: CHART_COLORS.success },
+    { name: 'Inactive', value: stats.agentsByStatus.inactive, color: '#374151' }
   ];
 
-  // ✅ Vraie progression des demos
-  const demoProgress = (stats!.totalDemos / 15) * 100;
- 
+  const demoProgress = (stats.totalDemos / 15) * 100;
 
-  // 🆕 VRAIES DONNÉES DYNAMIQUES pour Platform Breakdown
   const allPlatforms = [
     { 
       type: 'website-widget', 
@@ -280,74 +382,112 @@ export default function DashboardPage() {
     }
   ];
 
-  // ✅ MAIN DASHBOARD
   return (
-      <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
-        <div className="space-y-8 px-4 md:px-8">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+      <div className="space-y-8 px-4 md:px-8">
 
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+              Welcome back!<span className="text-white">👋</span>
+            </h1>
+            <p className="text-gray-400 text-lg">Here's what's happening with your AI agents today</p>
+          </div>
           
-          {/* 🎯 HEADER - STYLISÉ AVEC HOVER EFFECTS */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
-                Welcome back!<span className="text-white">👋</span>
-              </h1>
-              <p className="text-gray-400 text-lg">Here's what's happening with your AI agents today</p>
-            </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => fetchDashboardStats(true)}
+              disabled={refreshing}
+              className="flex items-center gap-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 hover:border-gray-600/50 text-gray-300 hover:text-white px-4 py-2 rounded-xl transition-all disabled:opacity-50 hover:scale-105 disabled:scale-100 backdrop-blur-sm"
+            >
+              <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
             
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => fetchDashboardStats(true)}
-                disabled={refreshing}
-                className="flex items-center gap-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 hover:border-gray-600/50 text-gray-300 hover:text-white px-4 py-2 rounded-xl transition-all disabled:opacity-50 hover:scale-105 disabled:scale-100 backdrop-blur-sm"
-              >
-                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
-              
-              <div className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-xl border border-emerald-500/30 backdrop-blur-sm hover:bg-emerald-500/30 hover:border-emerald-500/40 transition-all duration-300">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium hidden sm:inline">All Systems Operational</span>
-                <span className="text-sm font-medium sm:hidden">Online</span>
-              </div>
+            <div className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-xl border border-emerald-500/30 backdrop-blur-sm hover:bg-emerald-500/30 hover:border-emerald-500/40 transition-all duration-300">
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium hidden sm:inline">All Systems Operational</span>
+              <span className="text-sm font-medium sm:hidden">Online</span>
             </div>
           </div>
+        </div>
 
-          {/* 📈 GRAPHIQUES & MÉTRIQUES AVANCÉES */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-            
-            {/* 📊 GRAPHIQUE CONVERSATIONS - MOINS D'ESPACE EN BAS */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <BarChart3 className="text-blue-400" size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">Conversations This Week</h3>
-                    <p className="text-gray-400 text-sm">Daily activity overview</p>
-                  </div>
+        {/* Section Analytics + Métriques */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+          
+          {/* 📊 Graphique Analytics avec filtres */}
+          <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 group-hover:scale-110 transition-transform duration-300">
+                  <BarChart3 className="text-blue-400" size={20} />
                 </div>
-                <div className="flex items-center gap-1 text-emerald-400 text-sm font-medium">
-                  <ArrowUp size={14} />
-                  +{Math.floor(stats!.totalConversations * 0.15)}%
+                <div>
+                  <h3 className="text-lg font-bold text-white">Conversations Analytics</h3>
+                  <p className="text-gray-400 text-sm">
+                    {analyticsData ? analyticsData.period.label : 'Interactive analytics'}
+                  </p>
                 </div>
               </div>
-              
-              {/* GRAPHIQUE REMIS COMME AVANT - h-64 */}
-              <div className="h-64">
+
+              {/* Filtres avec effet domino */}
+              <div className="flex items-center gap-2">
+                {/* Période */}
+                <select
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                  className="bg-gray-700/50 border border-gray-600/50 text-white rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                  disabled={analyticsLoading}
+                >
+                  {periods.map(period => (
+                    <option key={period.value} value={period.value}>
+                      {period.label}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Plateforme */}
+                {analyticsData && (
+                  <select
+                    value={selectedPlatform}
+                    onChange={(e) => {
+                      setSelectedPlatform(e.target.value);
+                      setSelectedConnection('all');
+                    }}
+                    className="bg-gray-700/50 border border-gray-600/50 text-white rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="all">All Platforms</option>
+                    {analyticsData.availableFilters.platforms.map(platform => (
+                      <option key={platform.value} value={platform.value}>
+                        {platform.label} ({platform.count})
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {analyticsLoading && (
+                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                )}
+              </div>
+            </div>
+            
+            {/* Graphique */}
+            <div className="h-64">
+              {analyticsLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-gray-400 text-sm">Loading analytics...</div>
+                </div>
+              ) : filteredAnalytics?.chartData.dailyActivity ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={[
-                    { day: 'Mon', conversations: Math.floor(stats!.totalConversations * 0.12) },
-                    { day: 'Tue', conversations: Math.floor(stats!.totalConversations * 0.19) },
-                    { day: 'Wed', conversations: Math.floor(stats!.totalConversations * 0.08) },
-                    { day: 'Thu', conversations: Math.floor(stats!.totalConversations * 0.25) },
-                    { day: 'Fri', conversations: Math.floor(stats!.totalConversations * 0.18) },
-                    { day: 'Sat', conversations: Math.floor(stats!.totalConversations * 0.10) },
-                    { day: 'Sun', conversations: Math.floor(stats!.totalConversations * 0.08) },
-                  ]}>
+                  <BarChart data={filteredAnalytics.chartData.dailyActivity}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#9ca3af" 
+                      fontSize={12}
+                      tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    />
                     <YAxis stroke="#9ca3af" fontSize={12} />
                     <Tooltip 
                       contentStyle={{ 
@@ -359,9 +499,17 @@ export default function DashboardPage() {
                       }} 
                     />
                     <Bar 
-                      dataKey="conversations" 
+                      dataKey="messages" 
                       fill="url(#gradient)" 
                       radius={[4, 4, 0, 0]} 
+                      name="Messages"
+                      style={{ pointerEvents: 'none' }}
+                    />
+                    <Bar 
+                      dataKey="conversations" 
+                      fill="url(#gradient2)" 
+                      radius={[4, 4, 0, 0]} 
+                      name="Conversations"
                       style={{ pointerEvents: 'none' }}
                     />
                     <defs>
@@ -369,286 +517,349 @@ export default function DashboardPage() {
                         <stop offset="0%" stopColor={CHART_COLORS.primary} />
                         <stop offset="100%" stopColor={CHART_COLORS.secondary} />
                       </linearGradient>
+                      <linearGradient id="gradient2" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={CHART_COLORS.success} />
+                        <stop offset="100%" stopColor={CHART_COLORS.warning} />
+                      </linearGradient>
                     </defs>
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  No analytics data available
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Colonne de droite avec 3 métriques */}
-            <div className="space-y-6">
-              
-              {/* Agent Status */}
+          {/* Colonne droite avec métriques */}
+          <div className="space-y-6">
+            
+            {/* Analytics Summary */}
+            {analyticsData && (
               <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <Gauge className="text-emerald-400" size={20} />
+                  <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center border border-purple-500/30 group-hover:scale-110 transition-transform duration-300">
+                    <TrendingUp className="text-purple-400" size={20} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Agent Status</h3>
-                    <p className="text-gray-400 text-sm">Active vs Inactive</p>
+                    <h3 className="text-lg font-bold text-white">Analytics Summary</h3>
+                    <p className="text-gray-400 text-sm">{analyticsData.period.label}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="h-24 w-24">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={20}
-                          outerRadius={40}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {pieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  
-                  <div className="flex-1 space-y-2 ml-4">
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                      <span className="text-gray-300">Active ({stats!.activeAgents})</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-700/30 rounded-xl p-3">
+                    <div className="text-xs text-gray-400 mb-1">Conversations</div>
+                    <div className="text-xl font-bold text-white">
+                      {analyticsData.summary.totalConversations}
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="w-2 h-2 rounded-full bg-gray-600"></div>  
-                      <span className="text-gray-300">Inactive ({stats!.agentsByStatus.inactive})</span>
+                  </div>
+                  <div className="bg-gray-700/30 rounded-xl p-3">
+                    <div className="text-xs text-gray-400 mb-1">Messages</div>
+                    <div className="text-xl font-bold text-white">
+                      {analyticsData.summary.totalMessages}
+                    </div>
+                  </div>
+                  <div className="bg-gray-700/30 rounded-xl p-3">
+                    <div className="text-xs text-gray-400 mb-1">Avg/Conv</div>
+                    <div className="text-xl font-bold text-white">
+                      {analyticsData.summary.avgMessagesPerConversation}
+                    </div>
+                  </div>
+                  <div className="bg-gray-700/30 rounded-xl p-3">
+                    <div className="text-xs text-gray-400 mb-1">Platforms</div>
+                    <div className="text-xl font-bold text-white">
+                      {analyticsData.summary.uniquePlatforms}
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Demo Progress */}
-              <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-cyan-500/20 rounded-xl flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <Share2 className="text-cyan-400" size={20} />
+                {/* Mini graphique plateforme si filtré */}
+                {selectedPlatform !== 'all' && 
+                 filteredAnalytics?.chartData?.platformBreakdown && 
+                 filteredAnalytics.chartData.platformBreakdown.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-700/50">
+                    <div className="text-xs text-gray-400 mb-2">Platform Focus</div>
+                    {filteredAnalytics.chartData.platformBreakdown.map((platform, index) => (
+                      <div key={index} className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: platform.color }}
+                          ></div>
+                          <span className="text-gray-300 text-xs">{platform.platform}</span>
+                        </div>
+                        <span className="text-white font-semibold text-xs">{platform.conversations}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">Demo Shares</h3>
-                    <p className="text-gray-400 text-sm">Public demos created</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-white">{stats!.totalDemos}/15</span>
-                    <span className="text-cyan-400 text-sm font-medium">{Math.round(demoProgress)}%</span>
-                  </div>
-                  <div className="w-full bg-gray-700/50 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-cyan-600 to-cyan-400 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${demoProgress}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-gray-400">
-                    {15 - stats!.totalDemos} remaining
-                  </p>
-                </div>
+                )}
               </div>
- 
-            </div>
-          </div>
+            )}
 
-          {/* 🆕 PLATFORM BREAKDOWN - NOUVELLE SECTION */}
-          <div className="mb-8">
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6  ">
+            {/* Agent Status */}
+            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-600/20 to-blue-600/20 border border-cyan-500/40 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <TrendingUp className="text-cyan-400" size={18} />
+                <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
+                  <Gauge className="text-emerald-400" size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Platform Breakdown</h3>
-                  <p className="text-sm text-gray-400">Deployment distribution across platforms</p>
+                  <h3 className="text-lg font-bold text-white">Agent Status</h3>
+                  <p className="text-gray-400 text-sm">Active vs Inactive</p>
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {allPlatforms.map((platform, index) => {
-                  const IconComponent = platform.icon;
-                  const hasDeployments = platform.total > 0;
-                  
-                  return (
-                    <div 
-                      key={platform.type} 
-                      className="bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-xl p-4 hover:bg-gray-700/40 hover:border-gray-500/60 transition-all duration-300 group/platform"
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${platform.color}/20 border border-gray-600/50 flex items-center justify-center group-hover/platform:scale-110 transition-transform duration-300`}>
-                          <IconComponent size={20} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-white text-sm truncate">{platform.name}</h4>
-                          <p className="text-xs text-gray-400">
-                            {platform.total} deployment{platform.total !== 1 ? 's' : ''}
-                          </p>
-                        </div>
+              <div className="flex items-center justify-between">
+                <div className="h-24 w-24">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={20}
+                        outerRadius={40}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                <div className="flex-1 space-y-2 ml-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                    <span className="text-gray-300">Active ({stats.activeAgents})</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 rounded-full bg-gray-600"></div>  
+                    <span className="text-gray-300">Inactive ({stats.agentsByStatus.inactive})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Demo Progress */}
+            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-cyan-500/20 rounded-xl flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform duration-300">
+                  <Share2 className="text-cyan-400" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Demo Shares</h3>
+                  <p className="text-gray-400 text-sm">Public demos created</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-bold text-white">{stats.totalDemos}/15</span>
+                  <span className="text-cyan-400 text-sm font-medium">{Math.round(demoProgress)}%</span>
+                </div>
+                <div className="w-full bg-gray-700/50 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-cyan-600 to-cyan-400 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${demoProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-gray-400">
+                  {15 - stats.totalDemos} remaining
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Platform Breakdown */}
+        <div className="mb-8">
+          <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-600/20 to-blue-600/20 border border-cyan-500/40 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="text-cyan-400" size={18} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Platform Breakdown</h3>
+                <p className="text-sm text-gray-400">Deployment distribution across platforms</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {allPlatforms.map((platform, index) => {
+                const IconComponent = platform.icon;
+                const hasDeployments = platform.total > 0;
+                
+                return (
+                  <div 
+                    key={platform.type} 
+                    className="bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-xl p-4 hover:bg-gray-700/40 hover:border-gray-500/60 transition-all duration-300 group/platform"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${platform.color}/20 border border-gray-600/50 flex items-center justify-center group-hover/platform:scale-110 transition-transform duration-300`}>
+                        <IconComponent size={20} />
                       </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-emerald-400">{platform.active} active</span>
-                          <span className="text-gray-500">{platform.total - platform.active} inactive</span>
-                        </div>
-                        
-                        {/* Barre de progression - seulement si deployments */}
-                        {hasDeployments ? (
-                          <div className="w-full bg-gray-600/50 rounded-full h-1.5">
-                            <div 
-                              className={`bg-gradient-to-r ${platform.color} h-1.5 rounded-full transition-all duration-500`}
-                              style={{ width: `${(platform.active / platform.total) * 100}%` }}
-                            ></div>
-                          </div>
-                        ) : (
-                          <div className="w-full bg-gray-600/50 rounded-full h-1.5">
-                            {/* Pas de barre si 0 deployments */}
-                          </div>
-                        )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-white text-sm truncate">{platform.name}</h4>
+                        <p className="text-xs text-gray-400">
+                          {platform.total} deployment{platform.total !== 1 ? 's' : ''}
+                        </p>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-
-          {/* 📊 MÉTRIQUES SECONDAIRES - AVEC DÉFINITIONS */}
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-              <BarChart3 className="text-blue-400" size={24} />
-              Additional Metrics
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              
-              {/* Integrations */}
-              <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 hover:bg-gray-800/40 transition-all group">
-                <div className="flex items-center gap-3 mb-3">
-                  <Activity className="text-yellow-400 group-hover:scale-110 transition-transform" size={20} />
-                  <span className="text-sm font-medium text-gray-300">Integrations</span>
-                </div>
-                <p className="text-2xl font-bold text-white mb-2">{stats!.totalIntegrations}</p>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  Connected services like webhooks, Calendly, and file uploads across all agents
-                </p>
-              </div>
-
-              {/* API Keys - REMPLACE FOLDERS */}
-              <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 hover:bg-gray-800/40 transition-all group">
-                <div className="flex items-center gap-3 mb-3">
-                  <Key className="text-orange-400 group-hover:scale-110 transition-transform" size={20} />
-                  <span className="text-sm font-medium text-gray-300">API Keys</span>
-                </div>
-                <p className="text-2xl font-bold text-white mb-2">{stats!.totalApiKeys}</p>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  OpenAI API keys configured for your AI agents and integrations
-                </p>
-              </div>
-
-              {/* Versions */}
-              <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 hover:bg-gray-800/40 transition-all group">
-                <div className="flex items-center gap-3 mb-3">
-                  <GitBranch className="text-teal-400 group-hover:scale-110 transition-transform" size={20} />
-                  <span className="text-sm font-medium text-gray-300">Versions</span>
-                </div>
-                <p className="text-2xl font-bold text-white mb-2">{stats!.totalVersions}</p>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  Saved versions of agent configurations for backup and rollback purposes
-                </p>
-              </div>
-
-              {/* Success Rate */}
-              <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 hover:bg-gray-800/40 transition-all group">
-                <div className="flex items-center gap-3 mb-3">
-                  <TrendingUp className="text-green-400 group-hover:scale-110 transition-transform" size={20} />
-                  <span className="text-sm font-medium text-gray-300">Success Rate</span>
-                </div>
-                <p className="text-2xl font-bold text-white mb-2">
-                  {stats!.totalAgents > 0 ? Math.round((stats!.activeAgents / stats!.totalAgents) * 100) : 0}%
-                </p>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  Percentage of agents currently deployed and active in production
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* 🚀 QUICK ACTIONS - VERSION SUBTILE AVEC STYLE UNIFORME */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
-              <Sparkles className="text-blue-400" size={20} />
-              Quick Actions
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {quickActions.map((action, index) => (
-                <Link 
-                  key={index}
-                  href={action.href}
-                  className="group flex items-center gap-4 bg-gray-800/50 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/60 rounded-xl p-4 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl relative overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/0 to-transparent group-hover:via-white/5 transition-all duration-500"></div>
-                  
-                  <div className={`w-12 h-12 ${action.iconBg} border ${action.iconBorder} rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0 relative z-10`}>
-                    <span className={action.textColor}>
-                      {action.icon}
-                    </span>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-emerald-400">{platform.active} active</span>
+                        <span className="text-gray-500">{platform.total - platform.active} inactive</span>
+                      </div>
+                      
+                      {hasDeployments ? (
+                        <div className="w-full bg-gray-600/50 rounded-full h-1.5">
+                          <div 
+                            className={`bg-gradient-to-r ${platform.color} h-1.5 rounded-full transition-all duration-500`}
+                            style={{ width: `${(platform.active / platform.total) * 100}%` }}
+                          ></div>
+                        </div>
+                      ) : (
+                        <div className="w-full bg-gray-600/50 rounded-full h-1.5"></div>
+                      )}
+                    </div>
                   </div>
-                  
-                  <div className="flex-1 min-w-0 relative z-10">
-                    <h4 className="text-base font-semibold text-white mb-1 group-hover:text-white transition-colors">
-                      {action.title}
-                    </h4>
-                    <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors truncate">
-                      {action.description}
-                    </p>
-                  </div>
-                  
-                  <ArrowRight className="text-gray-500 group-hover:text-gray-300 group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 relative z-10" size={16} />
-                </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
-
-          {/* 🚀 GETTING STARTED (si aucun agent) - AVEC STYLE UNIFORME */}
-          {stats!.totalAgents === 0 && (
-            <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-2xl p-8 text-center hover:from-blue-500/15 hover:to-purple-500/15 transition-all duration-300 backdrop-blur-xl">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl hover:scale-110 transition-transform duration-300">
-                <Bot className="w-10 h-10 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
-                Welcome to TestYourAI! 🚀
-              </h3>
-              <p className="text-gray-400 mb-8 max-w-md mx-auto">
-                You're all set up! Create your first AI agent to start building intelligent assistants.
-              </p>
-              <div className="flex gap-4 justify-center flex-wrap">
-                <Link
-                  href="/agents/new"
-                  className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  <Bot size={20} />
-                  Create Your First Agent
-                </Link>
-                <Link
-                  href="/agent-lab"
-                  className="inline-flex items-center gap-3 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 hover:border-gray-600/50 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 backdrop-blur-xl"
-                >
-                  <Brain size={20} />
-                  Explore Agent Lab
-                </Link>
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Reste des sections du dashboard existant */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <BarChart3 className="text-blue-400" size={24} />
+            Additional Metrics
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 hover:bg-gray-800/40 transition-all group">
+              <div className="flex items-center gap-3 mb-3">
+                <Activity className="text-yellow-400 group-hover:scale-110 transition-transform" size={20} />
+                <span className="text-sm font-medium text-gray-300">Integrations</span>
+              </div>
+              <p className="text-2xl font-bold text-white mb-2">{stats.totalIntegrations}</p>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Connected services like webhooks, Calendly, and file uploads across all agents
+              </p>
+            </div>
+
+            <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 hover:bg-gray-800/40 transition-all group">
+              <div className="flex items-center gap-3 mb-3">
+                <Key className="text-orange-400 group-hover:scale-110 transition-transform" size={20} />
+                <span className="text-sm font-medium text-gray-300">API Keys</span>
+              </div>
+              <p className="text-2xl font-bold text-white mb-2">{stats.totalApiKeys}</p>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                OpenAI API keys configured for your AI agents and integrations
+              </p>
+            </div>
+
+            <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 hover:bg-gray-800/40 transition-all group">
+              <div className="flex items-center gap-3 mb-3">
+                <GitBranch className="text-teal-400 group-hover:scale-110 transition-transform" size={20} />
+                <span className="text-sm font-medium text-gray-300">Versions</span>
+              </div>
+              <p className="text-2xl font-bold text-white mb-2">{stats.totalVersions}</p>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Saved versions of agent configurations for backup and rollback purposes
+              </p>
+            </div>
+
+            <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 hover:bg-gray-800/40 transition-all group">
+              <div className="flex items-center gap-3 mb-3">
+                <TrendingUp className="text-green-400 group-hover:scale-110 transition-transform" size={20} />
+                <span className="text-sm font-medium text-gray-300">Success Rate</span>
+              </div>
+              <p className="text-2xl font-bold text-white mb-2">
+                {stats.totalAgents > 0 ? Math.round((stats.activeAgents / stats.totalAgents) * 100) : 0}%
+              </p>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Percentage of agents currently deployed and active in production
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
+            <Sparkles className="text-blue-400" size={20} />
+            Quick Actions
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {quickActions.map((action, index) => (
+              <Link 
+                key={index}
+                href={action.href}
+                className="group flex items-center gap-4 bg-gray-800/50 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/60 rounded-xl p-4 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/0 to-transparent group-hover:via-white/5 transition-all duration-500"></div>
+                
+                <div className={`w-12 h-12 ${action.iconBg} border ${action.iconBorder} rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0 relative z-10`}>
+                  <span className={action.textColor}>
+                    {action.icon}
+                  </span>
+                </div>
+                
+                <div className="flex-1 min-w-0 relative z-10">
+                  <h4 className="text-base font-semibold text-white mb-1 group-hover:text-white transition-colors">
+                    {action.title}
+                  </h4>
+                  <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors truncate">
+                    {action.description}
+                  </p>
+                </div>
+                
+                <ArrowRight className="text-gray-500 group-hover:text-gray-300 group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 relative z-10" size={16} />
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Getting Started */}
+        {stats.totalAgents === 0 && (
+          <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-2xl p-8 text-center hover:from-blue-500/15 hover:to-purple-500/15 transition-all duration-300 backdrop-blur-xl">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl hover:scale-110 transition-transform duration-300">
+              <Bot className="w-10 h-10 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
+              Welcome to TestYourAI!
+            </h3>
+            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+              You're all set up! Create your first AI agent to start building intelligent assistants.
+            </p>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <Link
+                href="/agents/new"
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                <Bot size={20} />
+                Create Your First Agent
+              </Link>
+              <Link
+                href="/agent-lab"
+                className="inline-flex items-center gap-3 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 hover:border-gray-600/50 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 backdrop-blur-xl"
+              >
+                <Brain size={20} />
+                Explore Agent Lab
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
+    </div>
   );
 }

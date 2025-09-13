@@ -1,3 +1,5 @@
+  // app\(dashboard)\layout.tsx
+
 import { ReactNode } from "react"
 import { SidebarProvider } from "@/context/SidebarContext"
 import ClientLayout from "@/components/ClientLayout"
@@ -28,7 +30,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     <SidebarProvider>
       <ClientLayout>
         {children}
-        <Toaster richColors position="top-center" />
       </ClientLayout>
     </SidebarProvider>
   )
