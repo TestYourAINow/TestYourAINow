@@ -1,3 +1,4 @@
+// app/api/connections/list/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { Connection } from '@/models/Connection';
@@ -15,9 +16,11 @@ export async function GET(req: NextRequest) {
 
   const connections = await Connection.find({ userId: session.user.id }).lean();
   
+  // CORRECTION - Enrichir TOUTES les connexions avec le nom de l'agent
   const enrichedConnections = await Promise.all(
     connections.map(async (connection) => {
-      if (connection.integrationType === 'website-widget' && connection.aiBuildId) {
+      // Pour TOUS les types de connexion qui ont un aiBuildId
+      if (connection.aiBuildId) {
         try {
           const agent = await Agent.findOne({ 
             _id: connection.aiBuildId,
@@ -26,18 +29,24 @@ export async function GET(req: NextRequest) {
           
           return {
             ...connection,
-            agentName: (agent as any)?.name || 'Unknown Agent' // 🔧 CAST EN any
+            aiName: (agent as any)?.name || null, // Pour ton frontend
+            agentName: (agent as any)?.name || null // Compatibilité
           };
         } catch (error) {
           console.error('Error fetching agent name:', error);
           return {
             ...connection,
-            agentName: 'Unknown Agent'
+            aiName: null,
+            agentName: null
           };
         }
       }
       
-      return connection;
+      return {
+        ...connection,
+        aiName: null,
+        agentName: null
+      };
     })
   );
 

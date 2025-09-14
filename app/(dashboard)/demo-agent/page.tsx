@@ -182,10 +182,30 @@ export default function DemoAgentPage() {
   // Mobile responsive state
   const [mobileView, setMobileView] = useState<'preview' | 'config'>('preview');
 
+  // 🆕 AJOUTER CET ÉTAT - IDENTIQUE À LAUNCH-AGENT
+  const [isMobileView, setIsMobileView] = useState(false);
+
   // Color picker state
   const [customColor, setCustomColor] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  // 🆕 AJOUTER CET EFFET - IDENTIQUE À LAUNCH-AGENT
+  useEffect(() => {
+    const detectMobile = () => {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+             (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
+             window.innerWidth <= 768;
+    };
+
+    const handleResize = () => {
+      setIsMobileView(detectMobile());
+    };
+
+    setIsMobileView(detectMobile());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Load agents
   useEffect(() => {
@@ -320,6 +340,23 @@ export default function DemoAgentPage() {
   return (
     <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
 
+      {/* 🎯 CHAT MOBILE RENDU EN PREMIER - AVANT TOUT LE RESTE */}
+      {isMobileView && mobileView === 'preview' && config.agentId && (
+        <DemoAgentChatWidget
+          config={config}
+          isPreview={true}
+          isOpen={isOpen}
+          onToggle={toggleChat}
+          messages={messages}
+          onMessagesChange={setMessages}
+          inputValue={inputValue}
+          onInputChange={setInputValue}
+          isTyping={isTyping}
+          onTypingChange={setIsTyping}
+          showPopupBubble={showPopupBubble}
+        />
+      )}
+
       {/* Mobile Navigation Tabs - Sticky et fixed height */}
       <div className="lg:hidden bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 flex sticky top-0 z-50 h-12">
         <button
@@ -450,20 +487,22 @@ export default function DemoAgentPage() {
                 <span>Interactive Preview</span>
               </div>
 
-              {/* DemoAgentChatWidget */}
-              <DemoAgentChatWidget
-                config={config}
-                isPreview={true}
-                isOpen={isOpen}
-                onToggle={toggleChat}
-                messages={messages}
-                onMessagesChange={setMessages}
-                inputValue={inputValue}
-                onInputChange={setInputValue}
-                isTyping={isTyping}
-                onTypingChange={setIsTyping}
-                showPopupBubble={showPopupBubble}
-              />
+              {/* 🔄 CHAT NORMAL DANS LE CADRE - LOGIQUE EXACTE LAUNCH-AGENT */}
+              {(!isMobileView || mobileView !== 'preview') && (
+                <DemoAgentChatWidget
+                  config={config}
+                  isPreview={true}
+                  isOpen={isOpen}
+                  onToggle={toggleChat}
+                  messages={messages}
+                  onMessagesChange={setMessages}
+                  inputValue={inputValue}
+                  onInputChange={setInputValue}
+                  isTyping={isTyping}
+                  onTypingChange={setIsTyping}
+                  showPopupBubble={showPopupBubble}
+                />
+              )}
             </>
           )}
         </div>
@@ -701,7 +740,7 @@ export default function DemoAgentPage() {
               </div>
             </CollapsibleSection>
 
-            {/* Messages Section - CHAT TITLE ET SHOW WELCOME MESSAGE SUPPRIMÉS */}
+            {/* Messages Section */}
             <CollapsibleSection
               title="Messages"
               icon={<MessageCircle className="text-blue-400" size={20} />}
@@ -741,7 +780,7 @@ export default function DemoAgentPage() {
               </div>
             </CollapsibleSection>
 
-            {/* Client Message Section - SHOW WELCOME MESSAGE AJOUTÉ APRÈS DELAY */}
+            {/* Client Message Section */}
             <CollapsibleSection
               title="Client Message"
               icon={<Bot className="text-blue-400" size={20} />}
@@ -758,28 +797,24 @@ export default function DemoAgentPage() {
                   />
                 </div>
 
-                {/* 🎯 INPUT AVEC LIMITE 55 CARACTÈRES */}
                 <div className="relative">
                   <input
                     type="text"
                     value={config.popupMessage}
                     onChange={(e) => {
-                      // 🎯 BLOQUER À 55 CARACTÈRES MAX
                       if (e.target.value.length <= 55) {
                         updateConfig('popupMessage', e.target.value);
                       }
                     }}
                     placeholder="Hi! Need help?"
-                    maxLength={55} // HTML native
+                    maxLength={55}
                     className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
                   />
-                  {/* 🎯 COMPTEUR 55 CHARS */}
                   <div className="absolute right-3 bottom-2 text-xs text-gray-500 pointer-events-none">
                     {config.popupMessage.length}/55
                   </div>
                 </div>
 
-                {/* 🎯 INDICATEUR VISUEL EN ANGLAIS */}
                 <div className="flex items-center gap-2 text-xs">
                   <div className={`w-2 h-2 rounded-full ${config.popupMessage.length <= 40
                       ? 'bg-green-400'
@@ -809,7 +844,6 @@ export default function DemoAgentPage() {
                   />
                 </div>
 
-                {/* NOUVEAU: Show Welcome Message ajouté ici après Delay */}
                 <div>
                   <div className="flex items-center justify-between lg:mb-3 mb-2">
                     <label className="text-sm font-medium text-gray-300">Show Welcome Message</label>
@@ -824,7 +858,7 @@ export default function DemoAgentPage() {
               </div>
             </CollapsibleSection>
 
-            {/* Demo Settings Section - Mobile optimized */}
+            {/* Demo Settings Section */}
             <CollapsibleSection
               title="Demo Settings"
               icon={<Sparkles className="text-blue-400" size={20} />}
@@ -876,7 +910,7 @@ export default function DemoAgentPage() {
               </div>
             </CollapsibleSection>
 
-            {/* Create Demo Button - Mobile optimized */}
+            {/* Create Demo Button */}
             <div className="border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm overflow-hidden">
               <div className="lg:p-4 p-3">
                 <button
@@ -894,7 +928,7 @@ export default function DemoAgentPage() {
         </div>
       </div>
 
-      {/* Modal Your Demos - Mobile optimized */}
+      {/* Modal Your Demos */}
       {showDemosModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center lg:p-4 p-2 bg-black/50 backdrop-blur-sm">
           <div className="bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full lg:max-w-2xl max-w-full lg:max-h-[80vh] max-h-[90vh] overflow-hidden">

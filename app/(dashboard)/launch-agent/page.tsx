@@ -75,56 +75,8 @@ type Connection = {
   createdAt?: string
 }
 
-// Composant Status Toggle Premium avec animations
-const PremiumToggle = ({
-  isActive,
-  onToggle,
-  size = "normal"
-}: {
-  isActive: boolean;
-  onToggle: (e?: React.ChangeEvent<HTMLInputElement>) => void;
-  size?: "small" | "normal" | "large";
-}) => {
-  const sizeClasses = {
-    small: "w-10 h-5",
-    normal: "w-12 h-6",
-    large: "w-14 h-7"
-  };
-
-  const dotSizes = {
-    small: "w-3 h-3",
-    normal: "w-4 h-4",
-    large: "w-5 h-5"
-  };
-
-  return (
-    <label className="inline-flex items-center cursor-pointer group">
-      <input
-        type="checkbox"
-        className="sr-only"
-        checked={isActive}
-        onChange={(e) => {
-          e.stopPropagation();
-          onToggle(e);
-        }}
-      />
-      <div className={`${sizeClasses[size]} rounded-full relative transition-all duration-300 shadow-lg ${isActive
-          ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-emerald-500/30'
-          : 'bg-gradient-to-r from-gray-600 to-gray-500 shadow-gray-500/20'
-        } group-hover:scale-105`}>
-        <div className={`absolute top-0.5 ${dotSizes[size]} bg-white rounded-full transition-all duration-300 shadow-lg ${isActive ? 'right-0.5 shadow-emerald-200/50' : 'left-0.5 shadow-gray-200/30'
-          }`}>
-          {isActive && (
-            <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping"></div>
-          )}
-        </div>
-      </div>
-    </label>
-  );
-};
-
-// Deployment Card - Concept unique pour Launch Agent
-const DeploymentCard = ({
+// Deployment Card - VERSION CENTREE "PROFIL" avec changements demandés
+const CompactDeploymentCard = ({
   connection,
   onToggle,
   onDelete,
@@ -143,7 +95,7 @@ const DeploymentCard = ({
       case 'facebook-messenger': return <FacebookIcon size={20} />;
       case 'instagram-dms': return <InstagramIcon size={20} />;
       case 'sms': return <SMSIcon size={20} />;
-      default: return <Globe size={24} className="text-gray-400" />;
+      default: return <Globe size={20} className="text-gray-400" />;
     }
   };
 
@@ -158,32 +110,37 @@ const DeploymentCard = ({
     }
   };
 
-  const getStatusColor = (isActive: boolean) => {
-    return isActive
-      ? 'from-emerald-500/20 to-emerald-600/20 border-emerald-500/40'
-      : 'from-gray-500/20 to-gray-600/20 border-gray-500/40';
-  };
-
   return (
     <div className="relative group">
-      {/* Main Card */}
       <div className={`
-  relative p-5 rounded-2xl border backdrop-blur-sm transition-all duration-300 cursor-pointer flex flex-col h-[260px]
-  ${connection.isActive
-          ? 'bg-gradient-to-br from-emerald-900/40 to-blue-900/40 border-emerald-500/30 hover:border-emerald-400/50 hover:shadow-2xl hover:shadow-emerald-500/10'
-          : 'bg-gradient-to-br from-gray-900/60 to-gray-800/40 border-gray-700/50 hover:border-gray-600/60 hover:shadow-xl'
+        relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-5 h-[240px] transition-all duration-300 cursor-pointer flex flex-col
+        ${connection.isActive 
+          ? 'hover:border-emerald-500/30 hover:shadow-emerald-500/5' 
+          : 'hover:border-blue-500/40 hover:shadow-blue-500/10'
         }
-  hover:scale-[1.02] group
-`}>
+        hover:scale-[1.02] group
+      `}>
+        
+        {/* Subtle glow effect */}
+        <div className={`absolute inset-0 rounded-2xl transition-all duration-300 pointer-events-none ${
+          connection.isActive 
+            ? 'group-hover:bg-emerald-500/[0.02]' 
+            : 'group-hover:bg-blue-500/[0.02]'
+        }`}></div>
 
-        {/* Header avec Toggle et Actions */}
+        {/* Header avec pastille status et menu */}
         <div className="flex items-center justify-between mb-4">
-          <PremiumToggle
-            isActive={connection.isActive}
-            onToggle={() => onToggle()}
-            size="normal"
-          />
+          {/* Status indicator à gauche */}
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
+            connection.isActive
+              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+              : 'bg-gray-500/15 text-gray-400 border border-gray-500/30'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${connection.isActive ? 'bg-emerald-400 animate-pulse' : 'bg-gray-400'}`} />
+            {connection.isActive ? 'Live' : 'Offline'}
+          </div>
 
+          {/* Menu 3 points */}
           <div className="relative">
             <button
               onClick={(e) => {
@@ -236,79 +193,41 @@ const DeploymentCard = ({
           </div>
         </div>
 
-        {/* Connection Icon & Status */}
-        <div className="flex items-center gap-4 mb-4" onClick={onView}>
-          <div className="relative">
-            <div className={`
-  w-12 h-12 rounded-xl flex items-center justify-center border-2 transition-all duration-300
-  ${connection.isActive
-                ? 'bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border-emerald-500/40 shadow-lg shadow-emerald-500/20'
+        {/* Content principal cliquable - Layout centré comme un profil */}
+        <div onClick={onView} className="flex-1 flex flex-col items-center text-center justify-center">
+          {/* Icône centrée plus grande */}
+          <div className="relative mb-4">
+            <div className={`w-16 h-16 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${
+              connection.isActive
+                ? 'bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border-emerald-500/30 shadow-lg shadow-emerald-500/10'
                 : 'bg-gradient-to-br from-gray-700/50 to-gray-600/30 border-gray-600/50'
-              }
-`}>
+            }`}>
               {getIntegrationIcon(connection.integrationType)}
             </div>
 
-            {/* Live Indicator */}
-            {connection.isActive && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-gray-900">
-                <div className="w-1 h-1 bg-white rounded-full animate-pulse m-0.5"></div>
-              </div>
-            )}
+            {/* Status indicator sur l'icône plus gros */}
+            <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${
+              connection.isActive ? 'bg-emerald-400' : 'bg-gray-500'
+            } shadow-sm`} />
           </div>
 
-          <div className="flex-1">
-            <h3 className="text-base font-bold text-white mb-1 line-clamp-2 leading-tight">
-              {connection.name}
-            </h3>
-            <p className="text-sm text-gray-400 mb-2">
-              {getIntegrationDisplayName(connection.integrationType)}
-            </p>
-
-            {/* Status Badge */}
-            <div className={`
-              inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold
-              ${connection.isActive
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-              }
-            `}>
-              <div className={`w-2 h-2 rounded-full ${connection.isActive ? 'bg-emerald-400 animate-pulse' : 'bg-gray-400'
-                }`} />
-              {connection.isActive ? 'Live Deployment' : 'Inactive'}
-            </div>
-          </div>
-        </div>
-
-
-        {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-2 border-t border-gray-700/30">
-          <div className="flex items-center gap-1">
-            <Clock size={10} />
-            <span>
-              {new Date(connection.createdAt || Date.now()).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
-              })}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {(connection.aiName || connection.agentName) && (
-              <div className="flex items-center gap-1">
-                <Bot size={10} className="text-gray-400" />
+          {/* Titre centré - HOVER BLEU SEULEMENT */}
+          <h3 className="text-white font-bold text-base mb-3 line-clamp-2 leading-tight group-hover:text-blue-400 transition-all duration-300 max-w-full px-2">
+            {connection.name}
+          </h3>
+          
+          {/* Agent connecté - ICONE GRISE + "Connected:" GRIS + NOM BLANC GRAS */}
+          <div className="flex items-center gap-2 justify-center text-sm">
+            {(connection.aiName || connection.agentName) ? (
+              <>
+                <Bot size={12} className="text-gray-400" />
                 <span className="text-gray-400">Connected:</span>
-                <span className="text-white font-medium truncate max-w-[80px]">
-                  {connection.aiName || connection.agentName}
-                </span>
-              </div>
-            )}
-
-            {connection.isActive && (
-              <div className="flex items-center gap-1 text-emerald-400">
-                <Signal size={10} />
-                <span>Online</span>
-              </div>
+               <span className="text-blue-400 font-bold group-hover:text-white transition-colors">{connection.aiName || connection.agentName}</span>
+              </>
+            ) : (
+              <span className="text-gray-400">
+                {getIntegrationDisplayName(connection.integrationType)}
+              </span>
             )}
           </div>
         </div>
@@ -317,35 +236,28 @@ const DeploymentCard = ({
   );
 };
 
-// Quick Deploy Button - Unique pour cette page
-const QuickDeployButton = () => (
+// Quick Deploy Button
+const CompactQuickDeployButton = () => (
   <Link href="/create-connection">
-    <div className="group relative p-8 rounded-2xl border-2 border-dashed border-gray-600/50 hover:border-emerald-500/50 transition-all duration-300 cursor-pointer bg-gradient-to-br from-gray-900/30 to-gray-800/20 hover:from-emerald-900/20 hover:to-blue-900/20 backdrop-blur-sm min-h-[280px] flex flex-col items-center justify-center">
+    <div className="group relative p-6 rounded-2xl border-2 border-dashed border-gray-600/50 hover:border-emerald-500/40 transition-all duration-300 cursor-pointer bg-gradient-to-br from-gray-900/30 to-gray-800/20 hover:from-emerald-900/10 hover:to-blue-900/10 backdrop-blur-sm h-[240px] flex flex-col items-center justify-center text-center">
 
-      {/* Animated Background */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/0 to-blue-500/0 group-hover:from-emerald-500/5 group-hover:to-blue-500/5 transition-all duration-300"></div>
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/0 to-blue-500/0 group-hover:from-emerald-500/[0.02] group-hover:to-blue-500/[0.02] transition-all duration-300"></div>
 
-      {/* Launch Icon */}
-      <div className="relative mb-6">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-r from-emerald-600/20 to-blue-600/20 border-2 border-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-emerald-500/20">
-          <Rocket size={32} className="text-emerald-400 group-hover:text-emerald-300 transition-colors" />
+      <div className="relative mb-4">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-emerald-600/20 to-blue-600/20 border-2 border-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-emerald-500/10">
+          <Rocket size={24} className="text-emerald-400 group-hover:text-emerald-300 transition-colors" />
         </div>
-
-        {/* Pulse Effect */}
-        <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping opacity-0 group-hover:opacity-100 transition-opacity"></div>
       </div>
 
-      {/* Text */}
-      <h3 className="text-xl font-bold text-white mb-2 group-hover:bg-gradient-to-r group-hover:from-emerald-400 group-hover:to-blue-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">
+      <h3 className="text-lg font-bold text-white mb-2 group-hover:bg-gradient-to-r group-hover:from-emerald-400 group-hover:to-blue-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">
         Quick Deploy
       </h3>
-      <p className="text-gray-400 text-center leading-relaxed group-hover:text-gray-300 transition-colors">
-        Launch your AI to a new platform in minutes
+      <p className="text-gray-400 text-center leading-relaxed group-hover:text-gray-300 transition-colors text-sm px-4">
+        Launch your AI to a new platform
       </p>
 
-      {/* Action Indicator */}
-      <div className="mt-4 flex items-center gap-2 text-sm text-emerald-400 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-        <Plus size={16} />
+      <div className="mt-3 flex items-center gap-2 text-sm text-emerald-400 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+        <Plus size={14} />
         <span className="font-medium">Get Started</span>
       </div>
     </div>
@@ -386,7 +298,6 @@ export default function LaunchAgentPage() {
       })
   }, [])
 
-  // Filtrage
   useEffect(() => {
     let filtered = connections.filter(conn =>
       conn.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -445,12 +356,10 @@ export default function LaunchAgentPage() {
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
 
-      {/* Hero Section avec Stats en Live */}
       <FadeInSection>
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
 
-            {/* Left: Title & Live Stats */}
             <div className="flex-1">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-600/20 to-blue-600/20 border-2 border-emerald-500/40 flex items-center justify-center shadow-lg shadow-emerald-500/20">
@@ -464,7 +373,6 @@ export default function LaunchAgentPage() {
                 </div>
               </div>
 
-              {/* Live Stats Inline */}
               {!loading && (
                 <div className="flex items-center gap-6 text-sm">
                   <div className="flex items-center gap-2">
@@ -485,7 +393,6 @@ export default function LaunchAgentPage() {
               )}
             </div>
 
-            {/* Right: Quick Actions */}
             <div className="flex gap-3">
               <Link
                 href="/create-connection"
@@ -499,12 +406,10 @@ export default function LaunchAgentPage() {
         </div>
       </FadeInSection>
 
-      {/* Search & Filter Bar - Simplifié */}
       {!loading && connections.length > 0 && (
         <FadeInSection>
           <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-4 mb-8 shadow-xl">
             <div className="flex flex-col sm:flex-row gap-4">
-              {/* Search */}
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
@@ -516,7 +421,6 @@ export default function LaunchAgentPage() {
                 />
               </div>
 
-              {/* Status Filter */}
               <div className="flex gap-2">
                 {[
                   { key: "all", label: "All", icon: Circle },
@@ -526,10 +430,11 @@ export default function LaunchAgentPage() {
                   <button
                     key={key}
                     onClick={() => setStatusFilter(key as typeof statusFilter)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${statusFilter === key
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
+                      statusFilter === key
                         ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
                         : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
-                      }`}
+                    }`}
                   >
                     <Icon size={14} />
                     {label}
@@ -541,31 +446,20 @@ export default function LaunchAgentPage() {
         </FadeInSection>
       )}
 
-      {/* Loading State */}
       {loading && (
         <FadeInSection>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <QuickDeployButton />
-            {[...Array(5)].map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            <CompactQuickDeployButton />
+            {[...Array(9)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="bg-gradient-to-br from-gray-900/40 to-gray-800/20 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 h-[280px]">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="w-12 h-6 bg-gray-700/40 rounded-full"></div>
+                <div className="bg-gradient-to-br from-gray-900/40 to-gray-800/20 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-5 h-[240px] flex flex-col items-center">
+                  <div className="flex justify-between items-center w-full mb-4">
+                    <div className="w-16 h-6 bg-gray-700/40 rounded-full"></div>
                     <div className="w-6 h-6 bg-gray-700/40 rounded-lg"></div>
                   </div>
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-16 h-16 bg-gray-700/40 rounded-2xl"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-700/40 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-700/40 rounded w-1/2"></div>
-                      <div className="h-6 bg-gray-700/40 rounded-full w-20"></div>
-                    </div>
-                  </div>
-                  <div className="h-16 bg-gray-700/20 rounded-xl mb-4"></div>
-                  <div className="flex justify-between">
-                    <div className="h-3 bg-gray-700/40 rounded w-16"></div>
-                    <div className="h-3 bg-gray-700/40 rounded w-12"></div>
-                  </div>
+                  <div className="w-16 h-16 bg-gray-700/40 rounded-xl mb-4"></div>
+                  <div className="h-4 bg-gray-700/40 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-700/40 rounded w-1/2"></div>
                 </div>
               </div>
             ))}
@@ -573,17 +467,12 @@ export default function LaunchAgentPage() {
         </FadeInSection>
       )}
 
-      {/* Main Grid - Deployments */}
       {!loading && (
         <FadeInSection>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-            {/* Quick Deploy toujours en premier */}
-            <QuickDeployButton />
-
-            {/* Deployment Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            <CompactQuickDeployButton />
             {filteredConnections.map((connection) => (
-              <DeploymentCard
+              <CompactDeploymentCard
                 key={connection._id}
                 connection={connection}
                 onToggle={() => handleToggleStatus(connection._id)}
@@ -595,206 +484,6 @@ export default function LaunchAgentPage() {
         </FadeInSection>
       )}
 
-      {/* Deployment Analytics - Section unique */}
-      {!loading && connections.length > 0 && (
-        <FadeInSection>
-          <div className="mt-16">
-            {/* Title */}
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent mb-2">
-                Deployment Analytics
-              </h2>
-              <p className="text-gray-400">Real-time insights into your AI deployments</p>
-            </div>
-
-            {/* Performance Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-              {/* Deployment Health */}
-              <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/20 backdrop-blur-sm border border-emerald-500/30 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center">
-                    <Activity className="text-emerald-400" size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-emerald-200">Health Status</h3>
-                    <p className="text-xs text-emerald-300/70">System performance</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-emerald-300">Active Deployments</span>
-                    <span className="text-lg font-bold text-white">{activeConnections}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-emerald-300">Success Rate</span>
-                    <span className="text-lg font-bold text-emerald-400">
-                      {totalConnections > 0 ? Math.round((activeConnections / totalConnections) * 100) : 0}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-emerald-900/30 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${totalConnections > 0 ? (activeConnections / totalConnections) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Platform Coverage */}
-              <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 backdrop-blur-sm border border-blue-500/30 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center">
-                    <Globe className="text-blue-400" size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-blue-200">Platform Reach</h3>
-                    <p className="text-xs text-blue-300/70">Channel coverage</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-blue-300">Total Platforms</span>
-                    <span className="text-lg font-bold text-white">
-                      {[...new Set(connections.map(c => c.integrationType))].length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-blue-300">Live Channels</span>
-                    <span className="text-lg font-bold text-blue-400">
-                      {[...new Set(connections.filter(c => c.isActive).map(c => c.integrationType))].length}
-                    </span>
-                  </div>
-                  <div className="flex gap-1">
-                    {[...new Set(connections.map(c => c.integrationType))].slice(0, 4).map((type, i) => (
-                      <div key={i} className="flex-1 h-2 bg-blue-500/20 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"></div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-sm border border-purple-500/30 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/40 flex items-center justify-center">
-                    <Clock className="text-purple-400" size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-purple-200">Activity</h3>
-                    <p className="text-xs text-purple-300/70">Recent changes</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-purple-300">Last Deploy</span>
-                    <span className="text-sm font-medium text-white">
-                      {connections.length > 0
-                        ? new Date(Math.max(...connections.map(c => new Date(c.createdAt || 0).getTime()))).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                        : 'Never'
-                      }
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-purple-300">Total Deployments</span>
-                    <span className="text-lg font-bold text-purple-400">{totalConnections}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                    <span className="text-purple-300">System operational</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Platform Breakdown */}
-            {[...new Set(connections.map(c => c.integrationType))].length > 0 && (
-              <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-600/20 to-blue-600/20 border border-cyan-500/40 flex items-center justify-center">
-                    <TrendingUp className="text-cyan-400" size={18} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">Platform Breakdown</h3>
-                    <p className="text-sm text-gray-400">Deployment distribution across platforms</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[...new Set(connections.map(c => c.integrationType))].map(type => {
-                    const typeConnections = connections.filter(c => c.integrationType === type);
-                    const activeCount = typeConnections.filter(c => c.isActive).length;
-                    const totalCount = typeConnections.length;
-
-                    const getTypeColor = (type: string) => {
-                      switch (type) {
-                        case 'website-widget': return 'from-cyan-500 to-blue-500';
-                        case 'facebook-messenger': return 'from-blue-500 to-indigo-500';
-                        case 'instagram-dms': return 'from-pink-500 to-purple-500';
-                        case 'sms': return 'from-green-500 to-emerald-500';
-                        default: return 'from-gray-500 to-gray-600';
-                      }
-                    };
-
-                    const getTypeIcon = (type: string) => {
-                      switch (type) {
-                        case 'website-widget': return <WebsiteIcon size={16} />;
-                        case 'facebook-messenger': return <FacebookIcon size={16} />;
-                        case 'instagram-dms': return <InstagramIcon size={16} />;
-                        case 'sms': return <SMSIcon size={16} />;
-                        default: return <Globe size={16} className="text-gray-400" />;
-                      }
-                    };
-
-                    const getTypeName = (type: string) => {
-                      switch (type) {
-                        case 'website-widget': return 'Website Widget';
-                        case 'facebook-messenger': return 'Facebook Messenger';
-                        case 'instagram-dms': return 'Instagram DMs';
-                        case 'sms': return 'SMS';
-                        default: return type;
-                      }
-                    };
-
-                    return (
-                      <div key={type} className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 hover:border-gray-600/60 transition-all">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${getTypeColor(type)}/20 border border-gray-600/50 flex items-center justify-center`}>
-                            {getTypeIcon(type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-white text-sm truncate">{getTypeName(type)}</h4>
-                            <p className="text-xs text-gray-400">{totalCount} deployment{totalCount !== 1 ? 's' : ''}</p>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-emerald-400">{activeCount} active</span>
-                            <span className="text-gray-500">{totalCount - activeCount} inactive</span>
-                          </div>
-                          <div className="w-full bg-gray-700/50 rounded-full h-1.5">
-                            <div
-                              className={`bg-gradient-to-r ${getTypeColor(type)} h-1.5 rounded-full transition-all duration-500`}
-                              style={{ width: `${totalCount > 0 ? (activeCount / totalCount) * 100 : 0}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </FadeInSection>
-      )}
-
-      {/* Empty State */}
       {!loading && connections.length === 0 && (
         <FadeInSection>
           <div className="text-center py-20">
@@ -821,7 +510,6 @@ export default function LaunchAgentPage() {
         </FadeInSection>
       )}
 
-      {/* No Results State */}
       {!loading && connections.length > 0 && filteredConnections.length === 0 && (
         <FadeInSection>
           <div className="text-center py-20">
@@ -847,7 +535,6 @@ export default function LaunchAgentPage() {
         </FadeInSection>
       )}
 
-      {/* Delete Modal */}
       <DeleteConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={closeDeleteModal}

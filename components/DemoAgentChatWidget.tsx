@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import styles from './ChatWidget.module.css'; // ✅ RÉUTILISE le même CSS !
+import styles from './ChatWidget.module.css';
 
 // ✨ TYPES - Adaptés pour la demo page
 interface DemoConfig {
@@ -30,7 +30,6 @@ interface Message {
 interface DemoPageChatWidgetProps {
   config: DemoConfig;
   isPreview?: boolean;
-  // ✅ PROPS contrôlés depuis la page parent
   isOpen: boolean;
   onToggle: () => void;
   messages: Message[];
@@ -42,10 +41,9 @@ interface DemoPageChatWidgetProps {
   showPopupBubble: boolean;
 }
 
-// 🎯 COMPOSANT PRINCIPAL - Identique à route.ts mais adapté pour Demo
 export default function DemoPageChatWidget({ 
   config, 
-  isPreview = true, // Demo = toujours preview 
+  isPreview = true,
   isOpen,
   onToggle,
   messages,
@@ -57,19 +55,21 @@ export default function DemoPageChatWidget({
   showPopupBubble
 }: DemoPageChatWidgetProps) {
   
-  // ========== ÉTATS LOCAUX (Identiques à route.ts) ==========
+  // ========== ÉTATS LOCAUX ==========
   const [isMobile, setIsMobile] = useState(false);
+  // 🆕 AJOUTER CET ÉTAT - IDENTIQUE À LAUNCH-AGENT
+  const [isMobileView, setIsMobileView] = useState(false);
 
-  // ========== REFS (IDENTIQUES) ==========
+  // ========== REFS ==========
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // ========== COMPUTED (IDENTIQUES) ==========
+  // ========== COMPUTED ==========
   const isDark = config.theme === 'dark';
   const primaryColor = config.primaryColor || '#3b82f6';
 
-  // ========== DÉTECTION MOBILE (Identique à route.ts) ==========
+  // ========== DÉTECTION MOBILE ==========
   const detectMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
@@ -81,6 +81,23 @@ export default function DemoPageChatWidget({
   // 🏁 Initialisation mobile
   useEffect(() => {
     setIsMobile(detectMobile());
+  }, []);
+
+  // 🆕 AJOUTER CET EFFET - IDENTIQUE À LAUNCH-AGENT
+  useEffect(() => {
+    const detectMobile = () => {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+             (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
+             window.innerWidth <= 768;
+    };
+
+    const handleResize = () => {
+      setIsMobileView(detectMobile());
+    };
+
+    setIsMobileView(detectMobile());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // 🔄 Auto-scroll des messages
@@ -107,7 +124,7 @@ export default function DemoPageChatWidget({
     }
   }, [isOpen, isMobile]);
 
-  // 📏 Auto-resize textarea (Identique à route.ts)
+  // 📏 Auto-resize textarea
   useEffect(() => {
     const textarea = inputRef.current;
     if (textarea) {
@@ -118,7 +135,7 @@ export default function DemoPageChatWidget({
     }
   }, [inputValue]);
 
-  // 📱 Gestion resize et orientation (Identique à route.ts)
+  // 📱 Gestion resize et orientation
   useEffect(() => {
     const handleResize = () => {
       const wasMobile = isMobile;
@@ -153,7 +170,7 @@ export default function DemoPageChatWidget({
     };
   }, [isMobile, isOpen]);
 
-  // 📱 Gestion du clavier virtuel mobile (Identique à route.ts)
+  // 📱 Gestion du clavier virtuel mobile
   useEffect(() => {
     if (!isMobile) return;
 
@@ -183,12 +200,11 @@ export default function DemoPageChatWidget({
 
   // ========== FONCTIONS ==========
 
-  // 📨 Envoyer un message - ADAPTÉE pour DemoConfig
+  // 📨 Envoyer un message
   const sendMessage = async () => {
     const trimmed = inputValue.trim();
-    if (!trimmed || !config.agentId) return; // ← agentId au lieu de selectedAgent
+    if (!trimmed || !config.agentId) return;
 
-    // Message utilisateur
     const userMessage: Message = {
       id: crypto.randomUUID(),
       text: trimmed,
@@ -197,25 +213,21 @@ export default function DemoPageChatWidget({
     };
 
     const updatedMessages = [...messages, userMessage];
-    onMessagesChange(updatedMessages); // ← Notifier le parent
-    onInputChange(''); // ← Reset input via parent
+    onMessagesChange(updatedMessages);
+    onInputChange('');
     
-    // Reset textarea height
     if (inputRef.current) {
       inputRef.current.style.height = isMobile ? '44px' : '32px';
     }
 
-    // Blur et refocus sur mobile
     if (isMobile && inputRef.current) {
       inputRef.current.blur();
       setTimeout(() => inputRef.current?.focus(), 100);
     }
     
-    // Animation typing
     setTimeout(() => onTypingChange(true), 200);
 
     try {
-      // 🎯 API CALL - Identique à route.ts mais avec agentId
       const history = updatedMessages
         .filter(msg => msg.id !== 'welcome')
         .map(msg => ({
@@ -249,14 +261,13 @@ export default function DemoPageChatWidget({
           isBot: true,
           timestamp: new Date()
         };
-        onMessagesChange([...updatedMessages, botMessage]); // ← Notifier le parent
+        onMessagesChange([...updatedMessages, botMessage]);
         onTypingChange(false);
       }, 800);
       
     } catch (error) {
       console.error('Erreur envoi message:', error);
       
-      // Fallback responses comme dans ton demo original
       const responses = [
         "Thanks for your message! I'm here to help you.",
         "That's an interesting question. Let me think about that...",
@@ -280,7 +291,7 @@ export default function DemoPageChatWidget({
     }
   };
 
-  // 🔄 Nouvelle conversation - ADAPTÉE
+  // 🔄 Nouvelle conversation
   const resetChat = () => {
     const welcomeMessages = config.showWelcomeMessage && config.welcomeMessage
       ? [{
@@ -291,28 +302,24 @@ export default function DemoPageChatWidget({
         }]
       : [];
     
-    onMessagesChange(welcomeMessages); // ← Notifier le parent
+    onMessagesChange(welcomeMessages);
   };
 
-  // 🎹 Gestion Enter dans l'input (Identique à route.ts)
+  // 🎹 Gestion Enter dans l'input
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      // Sur mobile : Entrée = toujours saut de ligne
       if (isMobile) {
-        // Ne rien faire, laisser le comportement par défaut (saut de ligne)
         return;
       }
       
-      // Sur desktop : Entrée seule = envoyer, Shift+Entrée = saut de ligne
       if (!e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
-      // Si Shift+Entrée, ne rien faire = saut de ligne par défaut
     }
   };
 
-  // 🎯 Focus mobile optimisé (Identique à route.ts)
+  // 🎯 Focus mobile optimisé
   const handleInputFocus = () => {
     if (isMobile) {
       setTimeout(() => {
@@ -324,7 +331,7 @@ export default function DemoPageChatWidget({
     }
   };
 
-  // ========== STYLES (Identiques à route.ts) ==========
+  // ========== STYLES ==========
   const getWidgetClasses = () => {
     let classes = styles.chatWidget;
     if (isPreview) classes += ` ${styles.preview}`;
@@ -344,7 +351,7 @@ export default function DemoPageChatWidget({
 
   const getWindowStyles = () => {
     return {
-      width: '380px',  // ← Dimensions fixes comme dans ton demo
+      width: '380px',
       height: '600px',
     };
   };
@@ -354,7 +361,7 @@ export default function DemoPageChatWidget({
     return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+';
   };
 
-  // ========== RENDER (Identique structure, styles route.ts) ==========
+  // ========== RENDER ==========
   return (
     <div 
       className={getWidgetClasses()}
@@ -375,7 +382,6 @@ export default function DemoPageChatWidget({
           onClick={onToggle}
           aria-label="Ouvrir le chat"
         >
-          {/* SVG exact de route.ts */}
           <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
             <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
           </svg>
@@ -420,7 +426,6 @@ export default function DemoPageChatWidget({
                 title="Nouvelle conversation"
                 aria-label="Nouvelle conversation"
               >
-                {/* SVG exact de route.ts */}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="1 4 1 10 7 10"></polyline>
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
@@ -432,7 +437,6 @@ export default function DemoPageChatWidget({
                 title="Fermer"
                 aria-label="Fermer le chat"
               >
-                {/* SVG exact de route.ts */}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -533,7 +537,6 @@ export default function DemoPageChatWidget({
                   height: isMobile ? '44px' : '40px'
                 }}
               >
-                {/* SVG exact de route.ts */}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M2.01 21L23 12 2.01 3 2 10L17 12 2 14Z"/>
                 </svg>
