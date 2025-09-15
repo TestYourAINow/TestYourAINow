@@ -22,7 +22,7 @@ type Agent = {
   updatedAt?: string
   integrations?: { name: string; type: string }[]
   folderId?: string | null
-  isDeployed?: boolean // 🆕 NOUVEAU CHAMP
+  isDeployed?: boolean
 }
 
 type FolderType = {
@@ -34,7 +34,35 @@ type FolderType = {
   updatedAt: string
 }
 
-// Modal Edit Folder - INCHANGÉ
+// Quick Create Agent Button
+const QuickCreateAgentButton = () => (
+  <Link href="/agents/new">
+    <div className="group relative p-6 rounded-2xl border-2 border-dashed border-gray-600/50 hover:border-blue-500/40 transition-all duration-300 cursor-pointer bg-gradient-to-br from-gray-900/30 to-gray-800/20 hover:from-blue-900/10 hover:to-purple-900/10 backdrop-blur-sm h-[260px] flex flex-col items-center justify-center text-center">
+
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/[0.02] group-hover:to-purple-500/[0.02] transition-all duration-300"></div>
+
+      <div className="relative mb-4">
+        <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-2 border-blue-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/10">
+          <Bot size={24} className="text-blue-400 group-hover:text-blue-300 transition-colors" />
+        </div>
+      </div>
+
+      <h3 className="text-lg font-bold text-white mb-2 group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">
+        Create Agent
+      </h3>
+      <p className="text-gray-400 text-center leading-relaxed group-hover:text-gray-300 transition-colors text-sm px-4">
+        Build your first intelligent AI assistant
+      </p>
+
+      <div className="mt-3 flex items-center gap-2 text-sm text-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+        <Plus size={14} />
+        <span className="font-medium">Get Started</span>
+      </div>
+    </div>
+  </Link>
+);
+
+// Modal Edit Folder
 const EditFolderModal = ({
   folder,
   isOpen,
@@ -52,14 +80,7 @@ const EditFolderModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const FOLDER_COLORS = [
-    '#3B82F6', // Blue
-    '#10B981', // Green 
-    '#8B5CF6', // Purple
-    '#F97316', // Orange
-    '#EC4899', // Pink
-    '#6366F1', // Indigo
-    '#EF4444', // Red
-    '#06B6D4', // Cyan
+    '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#6366F1', '#EF4444', '#06B6D4',
   ]
 
   useEffect(() => {
@@ -72,11 +93,8 @@ const EditFolderModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!name.trim()) return
-
     setIsSubmitting(true)
-
     try {
       await onUpdate({
         name: name.trim(),
@@ -202,7 +220,7 @@ const EditFolderModal = ({
   )
 }
 
-// Modal Delete Folder - INCHANGÉ
+// Modal Delete Folder
 const DeleteFolderModal = ({
   folder,
   isOpen,
@@ -234,8 +252,6 @@ const DeleteFolderModal = ({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-md mx-auto">
-
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center shadow-lg">
@@ -248,7 +264,6 @@ const DeleteFolderModal = ({
               <p className="text-sm text-gray-400 mt-0.5">This action cannot be undone</p>
             </div>
           </div>
-
           <button
             onClick={onClose}
             className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-200 group"
@@ -257,10 +272,7 @@ const DeleteFolderModal = ({
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-6">
-
-          {/* Warning Message */}
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
@@ -278,12 +290,9 @@ const DeleteFolderModal = ({
             </div>
           </div>
 
-          {/* Options for agents */}
           {folder.agentCount > 0 && (
             <div className="space-y-4 mb-6">
               <p className="text-white font-medium">What should happen to the agents?</p>
-
-              {/* Option 1 - Move to root */}
               <button
                 type="button"
                 onClick={() => setDeleteAgents(false)}
@@ -309,7 +318,6 @@ const DeleteFolderModal = ({
                 </div>
               </button>
 
-              {/* Option 2 - Delete all agents */}
               <button
                 type="button"
                 onClick={() => setDeleteAgents(true)}
@@ -337,7 +345,6 @@ const DeleteFolderModal = ({
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex gap-3 pt-6 border-t border-gray-700/50">
             <button
               onClick={onClose}
@@ -363,10 +370,8 @@ const DeleteFolderModal = ({
   )
 }
 
-// ✅ AGENT STATUS - CORRIGÉ POUR UTILISER isDeployed
+// Agent Status
 const AgentStatus = ({ isDeployed }: { isDeployed?: boolean }) => {
-  console.log('🔍 Agent isDeployed:', isDeployed);
-  // 🆕 NOUVELLE LOGIQUE - Basé sur déploiement, pas intégrations
   const isActive = isDeployed || false;
 
   return (
@@ -380,7 +385,7 @@ const AgentStatus = ({ isDeployed }: { isDeployed?: boolean }) => {
   );
 };
 
-// Skeleton card - INCHANGÉ
+// Skeleton card
 const AgentCardSkeleton = () => (
   <div className="bg-gradient-to-br from-gray-900/40 to-gray-800/20 backdrop-blur-sm border border-gray-700/30 rounded-2xl shadow-xl p-6 h-[280px] animate-pulse">
     <div className="flex justify-between items-start mb-6">
@@ -403,7 +408,6 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true)
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null)
 
-
   const [folderToEdit, setFolderToEdit] = useState<FolderType | null>(null)
   const [showEditFolderModal, setShowEditFolderModal] = useState(false)
   const [showDeleteFolderModal, setShowDeleteFolderModal] = useState(false)
@@ -413,7 +417,7 @@ export default function AgentsPage() {
   const [sortBy, setSortBy] = useState<"name" | "date" | "integrations">("date")
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false)
 
-  // Fetch data - INCHANGÉ
+  // Fetch data
   useEffect(() => {
     const start = Date.now()
 
@@ -434,10 +438,8 @@ export default function AgentsPage() {
       })
   }, [])
 
-  // ✅ FILTRAGE - CORRIGÉ POUR UTILISER isDeployed
-  // ✅ FILTRAGE CORRECT - Remplace tout ton useEffect par ceci :
+  // Filtering
   useEffect(() => {
-    // Filtrage des agents
     let filtered = agents.filter(agent => {
       const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase());
       const isNotInFolder = !agent.folderId ||
@@ -447,21 +449,18 @@ export default function AgentsPage() {
       return matchesSearch && isNotInFolder;
     });
 
-    // Filtrage des dossiers
     let filteredFoldersArray = folders.filter(folder => {
       const matchesSearch = folder.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         folder.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesSearch;
     });
 
-    // Filtre de type pour les agents
     if (filterType === "active") {
       filtered = filtered.filter(agent => Boolean(agent.isDeployed))
     } else if (filterType === "basic") {
       filtered = filtered.filter(agent => !agent.isDeployed)
     }
 
-    // Tri des agents
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "name":
@@ -476,7 +475,6 @@ export default function AgentsPage() {
       }
     })
 
-    // Tri des dossiers
     filteredFoldersArray.sort((a, b) => a.name.localeCompare(b.name))
 
     setFilteredAgents(filtered)
@@ -565,14 +563,12 @@ export default function AgentsPage() {
       })
 
       if (response.ok) {
-        // Mettre à jour l'état local immédiatement
         setAgents(prev => prev.map(agent =>
           agent._id === agentId
             ? { ...agent, folderId: folderId }
             : agent
         ));
 
-        // Rafraîchir les dossiers pour le count
         const foldersResponse = await fetch("/api/folders", { credentials: "include" })
         if (foldersResponse.ok) {
           const data = await foldersResponse.json()
@@ -599,6 +595,8 @@ export default function AgentsPage() {
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
+      
+      {/* Modals */}
       {agentToDelete && (
         <ModalDeleteAgent
           agent={agentToDelete}
@@ -632,12 +630,13 @@ export default function AgentsPage() {
         }}
         onDelete={handleDeleteFolderAction}
       />
-      {/* Hero Section avec Stats */}
+
+      {/* Hero Section */}
       <FadeInSection>
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-
-            {/* Left: Title & Live Stats */}
+            
+            {/* Left: Title & Stats */}
             <div className="flex-1">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-2 border-blue-500/40 flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -651,7 +650,7 @@ export default function AgentsPage() {
                 </div>
               </div>
 
-              {/* Live Stats Inline */}
+              {/* Live Stats */}
               {!loading && (
                 <div className="flex items-center gap-6 text-sm">
                   <div className="flex items-center gap-2">
@@ -672,15 +671,20 @@ export default function AgentsPage() {
               )}
             </div>
 
-            {/* Right: Quick Actions - DESKTOP SEULEMENT */}
+            {/* Right: Action Buttons - NEW AGENT TOUJOURS VISIBLE */}
             <div className="hidden lg:flex gap-3">
-              <button
-                onClick={() => setShowCreateFolderModal(true)}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
-              >
-                <FolderPlus size={18} />
-                New Folder
-              </button>
+              {/* New Folder - Seulement si agents > 0 */}
+              {agents.length > 0 && (
+                <button
+                  onClick={() => setShowCreateFolderModal(true)}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
+                >
+                  <FolderPlus size={18} />
+                  New Folder
+                </button>
+              )}
+              
+              {/* New Agent - TOUJOURS VISIBLE */}
               <Link
                 href="/agents/new"
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 transform hover:scale-105"
@@ -693,13 +697,11 @@ export default function AgentsPage() {
         </div>
       </FadeInSection>
 
-      {/* Search & Filter Bar - SIMPLIFIÉ */}
+      {/* Search & Filter Bar */}
       {!loading && (agents.length > 0 || folders.length > 0) && (
         <FadeInSection>
           <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-4 md:p-6 mb-8 shadow-xl">
             <div className="flex flex-col gap-4">
-
-              {/* Search */}
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={20} />
                 <input
@@ -719,7 +721,6 @@ export default function AgentsPage() {
                 )}
               </div>
 
-              {/* Filters - SEULEMENT 3 boutons comme Launch Agent */}
               <div className="flex gap-2">
                 {[
                   { key: "all", label: "All", icon: Circle },
@@ -739,47 +740,51 @@ export default function AgentsPage() {
                   </button>
                 ))}
               </div>
-
-
             </div>
           </div>
         </FadeInSection>
       )}
 
-      {/* Boutons flottants sur mobile - 2 boutons */}
-      <div className="fixed bottom-6 right-6 lg:hidden z-50">
-        <div className="flex flex-col gap-3">
-          {/* New Agent - Plus haut */}
-          <Link
-            href="/agents/new"
-            className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-full shadow-2xl hover:shadow-purple-500/40 transition-all duration-300 transform hover:scale-110 flex items-center justify-center"
-          >
-            <Plus size={20} />
-          </Link>
+      {/* Mobile Floating Buttons - SEULEMENT SI IL Y A DES AGENTS */}
+      {agents.length > 0 && (
+        <div className="fixed bottom-6 right-6 lg:hidden z-50">
+          <div className="flex flex-col gap-3">
+            {/* New Agent - Visible seulement si agents > 0 */}
+            <Link
+              href="/agents/new"
+              className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-full shadow-2xl hover:shadow-purple-500/40 transition-all duration-300 transform hover:scale-110 flex items-center justify-center"
+            >
+              <Plus size={20} />
+            </Link>
 
-          {/* New Folder - Plus bas */}
-          <button
-            onClick={() => setShowCreateFolderModal(true)}
-            className="w-14 h-14 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-full shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 transform hover:scale-110 flex items-center justify-center"
-          >
-            <FolderPlus size={20} />
-          </button>
+            {/* New Folder - Visible seulement si agents > 0 */}
+            <button
+              onClick={() => setShowCreateFolderModal(true)}
+              className="w-14 h-14 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-full shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 transform hover:scale-110 flex items-center justify-center"
+            >
+              <FolderPlus size={20} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Enhanced Grid Layout */}
+      {/* Main Content */}
       {loading ? (
         <FadeInSection>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-            {/* Loading Skeletons - SANS Create Agent Card */}
-            {[...Array(10)].map((_, i) => (
+            <QuickCreateAgentButton />
+            {[...Array(9)].map((_, i) => (
               <AgentCardSkeleton key={i} />
             ))}
           </div>
         </FadeInSection>
       ) : agents.length === 0 && folders.length === 0 ? (
-        // Enhanced Empty State - Affiché seulement quand VRAIMENT vide
+        // Empty State avec Quick Create visible
         <FadeInSection>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 mb-12">
+            <QuickCreateAgentButton />
+          </div>
+          
           <div className="text-center py-20">
             <div className="relative inline-block mb-8">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full blur-3xl"></div>
@@ -788,19 +793,12 @@ export default function AgentsPage() {
               </div>
             </div>
             <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-4">
-              Ready to organize your AI workspace?
+              Ready to build your first AI agent?
             </h3>
             <p className="text-gray-400 mb-8 max-w-md mx-auto text-lg leading-relaxed">
-              Create folders to organize your agents and start building intelligent AI assistants.
+              Start building intelligent AI assistants to automate your workflows.
             </p>
-            <div className="flex gap-4 justify-center flex-wrap">
-              <button
-                onClick={() => setShowCreateFolderModal(true)}
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
-              >
-                <FolderPlus size={20} />
-                Create Folder
-              </button>
+            <div className="flex justify-center">
               <Link
                 href="/agents/new"
                 className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
@@ -812,11 +810,11 @@ export default function AgentsPage() {
           </div>
         </FadeInSection>
       ) : (
-        // Grille normale - SANS la carte Create Agent
+        // Grid with content - PAS DE QUICKCREATE si agents > 0
         <FadeInSection>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
 
-            {/* Folders seulement */}
+            {/* Folders */}
             {filteredFolders.map((folder) => (
               <FolderCard
                 key={folder._id}
@@ -829,11 +827,12 @@ export default function AgentsPage() {
               />
             ))}
 
-            {/* Agents seulement */}
+            {/* Agents */}
             {filteredAgents.map((agent) => (
               <div
                 key={agent._id}
-                className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-5 h-[260px] hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer flex flex-col"              >
+                className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-5 h-[260px] hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer flex flex-col"
+              >
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none"></div>
 
                 <div className="absolute top-4 right-4 z-10">
@@ -860,7 +859,8 @@ export default function AgentsPage() {
 
                   <div className="flex-1 flex flex-col">
                     <div className="mb-4">
-                      <h3 className="text-white font-bold text-base mb-2 line-clamp-2 leading-tight group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">                        {agent.name || "Untitled Agent"}
+                      <h3 className="text-white font-bold text-base mb-2 line-clamp-2 leading-tight group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+                        {agent.name || "Untitled Agent"}
                       </h3>
                       <AgentStatus isDeployed={agent.isDeployed} />
                     </div>
@@ -919,29 +919,30 @@ export default function AgentsPage() {
         </FadeInSection>
       )}
 
-      {/* Enhanced No Results State - pour les recherches sans résultats */}
-      {!loading && (agents.length > 0 || folders.length > 0) && filteredAgents.length === 0 && filteredFolders.length === 0 && (<FadeInSection>
-        <div className="text-center py-20">
-          <div className="w-20 h-20 rounded-2xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <Search className="w-10 h-10 text-gray-400" />
+      {/* No Results State */}
+      {!loading && (agents.length > 0 || folders.length > 0) && filteredAgents.length === 0 && filteredFolders.length === 0 && (
+        <FadeInSection>
+          <div className="text-center py-20">
+            <div className="w-20 h-20 rounded-2xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center mx-auto mb-6 shadow-xl">
+              <Search className="w-10 h-10 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-3">
+              No items match your criteria
+            </h3>
+            <p className="text-gray-400 mb-6">
+              Try adjusting your search terms or filter settings
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setFilterType("all");
+              }}
+              className="text-blue-400 hover:text-blue-300 transition-colors font-semibold"
+            >
+              Clear all filters
+            </button>
           </div>
-          <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-3">
-            No items match your criteria
-          </h3>
-          <p className="text-gray-400 mb-6">
-            Try adjusting your search terms or filter settings
-          </p>
-          <button
-            onClick={() => {
-              setSearchQuery("");
-              setFilterType("all");
-            }}
-            className="text-blue-400 hover:text-blue-300 transition-colors font-semibold"
-          >
-            Clear all filters
-          </button>
-        </div>
-      </FadeInSection>
+        </FadeInSection>
       )}
     </div>
   )
