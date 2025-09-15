@@ -1,3 +1,5 @@
+  // models\Connection.ts
+
 import mongoose, { Schema, model, models } from 'mongoose'
 
 const ConnectionSchema = new Schema({
@@ -8,7 +10,10 @@ const ConnectionSchema = new Schema({
   isActive: { type: Boolean, default: true },
   settings: { type: Schema.Types.Mixed, default: {} },
   
-  // 🆕 NOUVEAUX CHAMPS WEBHOOK (optionnels pour ne pas casser l'existant)
+  // 🆕 NOUVEAU CHAMP FOLDER (optionnel pour ne pas casser l'existant)
+  folderId: { type: String }, // ID du DeploymentFolder
+  
+  // Champs webhook existants (optionnels pour ne pas casser l'existant)
   webhookId: { type: String }, // ex: "ST7MI2XLQWAv-NGAjrpIhw"
   webhookSecret: { type: String }, // ex: "abc123secret456"
   webhookUrl: { type: String }, // ex: "https://ton-site.vercel.app/api/webhook/manychat/ST7..."

@@ -18,12 +18,14 @@ interface FolderCardActionProps {
   folder: FolderType;
   onEdit: () => void;
   onDelete: () => void;
+  folderType?: 'agent' | 'deployment';
 }
 
 export default function FolderCardAction({ 
   folder, 
   onEdit,
-  onDelete
+  onDelete,
+  folderType = 'agent'
 }: FolderCardActionProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
@@ -35,20 +37,39 @@ export default function FolderCardAction({
     setMounted(true);
   }, []);
 
-  // Calculer position du dropdown
+  // Calculer position du dropdown avec portal
   useEffect(() => {
     const updatePosition = () => {
       if (showDropdown && buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
-        setDropdownPosition({
-          top: rect.bottom + 4,
-          left: rect.right - 140 // Align à droite du bouton
-        });
+        
+        // Calculer position optimale (éviter débordement)
+        const dropdownWidth = 140;
+        const dropdownHeight = 120; // Estimation
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        let left = rect.right - dropdownWidth; // Align à droite par défaut
+        let top = rect.bottom + 4;
+        
+        // Ajuster si débordement à droite
+        if (left < 8) {
+          left = rect.left; // Align à gauche si pas d'espace à droite
+        }
+        
+        // Ajuster si débordement en bas
+        if (top + dropdownHeight > viewportHeight - 8) {
+          top = rect.top - dropdownHeight - 4; // Placer au-dessus
+        }
+        
+        setDropdownPosition({ top, left });
       }
     };
 
     if (showDropdown) {
       updatePosition();
+      
+      // Réévaluer la position au scroll et resize
       window.addEventListener('scroll', updatePosition, true);
       window.addEventListener('resize', updatePosition);
       
@@ -87,6 +108,14 @@ export default function FolderCardAction({
     }
   }, [showDropdown]);
 
+  // URL basée sur le type de folder
+  const getFolderUrl = () => {
+    if (folderType === 'deployment') {
+      return `/launch-agent/folders/${folder._id}`;
+    }
+    return `/folders/${folder._id}`;
+  };
+
   return (
     <>
       <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -104,11 +133,11 @@ export default function FolderCardAction({
         </button>
       </div>
 
-      {/* Portal Dropdown */}
+      {/* Portal Dropdown - Même système que ConnectionActions */}
       {mounted && showDropdown && createPortal(
         <div 
           data-folder-dropdown="main"
-          className="fixed bg-gray-900/95 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-2xl z-[99999] min-w-[140px] py-2 animate-fade-in"
+          className="fixed bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-[99999] min-w-[140px] py-2 animate-fade-in"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -116,7 +145,7 @@ export default function FolderCardAction({
           onClick={(e) => e.stopPropagation()}
         >
           <Link 
-            href={`/folders/${folder._id}`} 
+            href={getFolderUrl()} 
             className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors font-medium"
             onClick={() => setShowDropdown(false)}
           >
