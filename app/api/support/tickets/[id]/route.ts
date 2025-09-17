@@ -89,7 +89,7 @@ export async function GET(
 // PUT - Mettre à jour le statut du ticket
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // 🔧 CORRECTION: Promise<{ id: string }>
 ) {
   try {
     await connectToDatabase();
@@ -100,7 +100,7 @@ export async function PUT(
     }
 
     const { status, priority } = await request.json();
-    const ticketId = params.id;
+    const { id: ticketId } = await params; // 🔧 CORRECTION: await params
 
     // 🔧 VÉRIFIER QUE L'ID EST VALIDE
     if (!mongoose.Types.ObjectId.isValid(ticketId)) {

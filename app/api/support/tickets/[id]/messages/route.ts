@@ -70,7 +70,7 @@ export async function GET(
 // POST - Ajouter un message à un ticket
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // 🔧 CORRECTION: Promise<{ id: string }>
 ) {
   try {
     await connectToDatabase();
@@ -81,7 +81,7 @@ export async function POST(
     }
 
     const { message, attachments } = await request.json();
-    const ticketId = params.id;
+    const { id: ticketId } = await params; // 🔧 CORRECTION: await params
 
     if (!message || message.trim() === '') {
       return NextResponse.json(
