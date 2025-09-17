@@ -6,7 +6,7 @@ import User from "@/models/User"
 import { headers } from "next/headers"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2023-10-16' as any,
+  apiVersion: '2025-04-30.basil',
 })
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -25,7 +25,6 @@ export async function POST(req: NextRequest) {
   try {
     // Vérification de la signature Stripe
     event = stripe.webhooks.constructEvent(body, signature, endpointSecret)
-    console.log('✅ Webhook vérifié:', event.type)
   } catch (err: any) {
     console.error('❌ Erreur de signature webhook:', err.message)
     return new Response('Signature invalide', { status: 400 })
@@ -37,7 +36,6 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        console.log('💳 Session checkout complétée:', session.id)
 
         // Récupérer l'email du client
         let email = session.customer_email

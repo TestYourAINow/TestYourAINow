@@ -22,10 +22,10 @@ export async function POST() {
   if (!customer) {
     return NextResponse.json({ error: "Client introuvable sur Stripe" }, { status: 404 })
   }
-
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: customer.id,
-    return_url: "http://localhost:3000/agents", // change plus tard en prod
+    return_url: `${baseUrl}/agents`,
   })
 
   return NextResponse.json({ url: portalSession.url })

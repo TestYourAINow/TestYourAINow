@@ -1,13 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { 
   MessageCircle, Search, Mail, Phone, Clock, CheckCircle, 
   AlertTriangle, Info, HelpCircle, Send, Paperclip, Star,
   Zap, Shield, Bot, Code, Globe, Book, ChevronDown, ChevronRight,
   ExternalLink, Copy, Users, Award, Crown, Sparkles,
-  Calendar, Archive, PlusCircle, BarChart3, Camera
+  Calendar, Archive, PlusCircle, BarChart3, Camera, User, Image, X
 } from 'lucide-react';
+import { useSupport } from '@/hooks/useSupport';
+import { toast } from 'sonner';
 
 // Types
 interface FAQItem {
@@ -15,17 +19,6 @@ interface FAQItem {
   question: string;
   answer: string;
   category: string;
-}
-
-interface SupportTicket {
-  id: string;
-  title: string;
-  status: 'open' | 'pending' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  category: string;
-  created: string;
-  lastUpdate: string;
-  messages: number;
 }
 
 interface Category {
@@ -37,22 +30,36 @@ interface Category {
   articleCount: number;
 }
 
+interface AttachmentType {
+  type: string;
+  url: string;
+  filename: string;
+  size: number;
+  path: string;
+}
 export default function SupportPage() {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { tickets, loading, error, createTicket, uploadScreenshot } = useSupport();
+
   const [activeTab, setActiveTab] = useState('help-center');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [ticketSearchQuery, setTicketSearchQuery] = useState('');
   const [ticketStatusFilter, setTicketStatusFilter] = useState('all');
-  const [contactForm, setContactForm] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    category: '',
-    priority: '',
-    message: '',
-    attachments: []
-  });
+  const [contactForm, setContactForm] = useState<{
+  subject: string;
+  category: string;
+  message: string;
+  attachments: AttachmentType[];
+}>({
+  subject: '',
+  category: '',
+  message: '',
+  attachments: []
+});
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
 
   // Catégories basées sur le vrai FAQ
   const categories: Category[] = [
@@ -174,40 +181,6 @@ export default function SupportPage() {
     }
   ];
 
-  // Mock data pour les tickets
-  const supportTickets: SupportTicket[] = [
-    {
-      id: 'TICK-001',
-      title: 'API Integration Issue with Webhooks',
-      status: 'open',
-      priority: 'high',
-      category: 'integrations',
-      created: '2024-01-15',
-      lastUpdate: '2024-01-16',
-      messages: 3
-    },
-    {
-      id: 'TICK-002',
-      title: 'Billing Question about Enterprise Plan',
-      status: 'pending',
-      priority: 'medium',
-      category: 'billing',
-      created: '2024-01-14',
-      lastUpdate: '2024-01-15',
-      messages: 2
-    },
-    {
-      id: 'TICK-003',
-      title: 'Agent Not Responding Correctly',
-      status: 'resolved',
-      priority: 'medium',
-      category: 'ai-agents',
-      created: '2024-01-12',
-      lastUpdate: '2024-01-13',
-      messages: 5
-    }
-  ];
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open': return 'text-blue-300 bg-blue-500/20 border border-blue-500/40 backdrop-blur-sm';
@@ -218,7 +191,8 @@ export default function SupportPage() {
     }
   };
 
-  const filteredTickets = supportTickets.filter(ticket => {
+  // Filtrer les tickets avec les vraies données
+  const filteredTickets = tickets.filter(ticket => {
     const matchesStatus = ticketStatusFilter === 'all' || ticket.status === ticketStatusFilter;
     const matchesSearch = ticket.title.toLowerCase().includes(ticketSearchQuery.toLowerCase()) ||
                          ticket.id.toLowerCase().includes(ticketSearchQuery.toLowerCase());
@@ -232,11 +206,77 @@ export default function SupportPage() {
     return matchesCategory && matchesSearch;
   });
 
-  const handleContactSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Logique d'envoi du formulaire ici
-    console.log('Contact form submitted:', contactForm);
-  };
+  // Fonction pour naviguer vers la conversation
+ const handleTicketClick = (ticketId: string) => {
+  console.log('🎯 Clicking on ticket ID:', ticketId);
+  console.log('🎯 Ticket ID type:', typeof ticketId);
+  console.log('🎯 Navigating to:', `/support/${ticketId}`);
+  router.push(`/support/${ticketId}`);
+};
+
+  // Upload d'attachments
+  const handleFileUpload = async (file: File) => {
+  if (uploadingAttachment) return;
+  
+  setUploadingAttachment(true);
+  
+  try {
+    // Pour les attachments dans le formulaire, on upload avec un ID temporaire
+    const tempTicketId = 'temp-' + Date.now();
+    const attachment = await uploadScreenshot(file, tempTicketId);
+    
+    setContactForm(prev => ({
+      ...prev,
+      attachments: [...prev.attachments, {
+        type: attachment.type,
+        url: attachment.url,
+        filename: attachment.filename,
+        size: attachment.size,
+        path: attachment.path
+      }]
+    }));
+    
+    toast.success('Fichier ajouté');
+  } catch (error) {
+    toast.error('Erreur lors du téléchargement');
+  } finally {
+    setUploadingAttachment(false);
+  }
+};
+
+  // Submit du formulaire de contact
+  const handleContactSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  try {
+    // Utiliser les données de session automatiquement
+    const formDataWithUser = {
+      name: session?.user?.name || 'User', // Enlever username
+      email: session?.user?.email || '',
+      subject: contactForm.subject,
+      category: contactForm.category,
+      priority: 'medium', // Ajouter priority manquant
+      message: contactForm.message,
+      attachments: contactForm.attachments
+    };
+    
+    const result = await createTicket(formDataWithUser);
+    toast.success(`Ticket ${result.ticketId} créé avec succès !`);
+    
+    // Reset form
+    setContactForm({
+      subject: '',
+      category: '',
+      message: '',
+      attachments: []
+    });
+    
+    // Changer vers l'onglet tickets
+    setActiveTab('tickets');
+  } catch (error) {
+    toast.error('Erreur lors de la création du ticket');
+  }
+};
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
@@ -424,96 +464,135 @@ export default function SupportPage() {
                 </div>
 
                 <form onSubmit={handleContactSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
-                      <input
-                        type="text"
-                        value={contactForm.name}
-                        onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
-                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                      <input
-                        type="email"
-                        value={contactForm.email}
-                        onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm"
-                        required
-                      />
+                  {/* Affichage des infos user (lecture seule) */}
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                    <h3 className="text-sm font-semibold text-blue-300 mb-2">Informations du compte</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2 text-gray-300">
+  <User size={14} className="text-blue-400" />
+  <span>{session?.user?.name || 'Utilisateur'}</span> {/* Enlever username */}
+</div>
+                      <div className="flex items-center gap-2 text-gray-300">
+                        <Mail size={14} className="text-blue-400" />
+                        <span>{session?.user?.email}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                      <select
-                        value={contactForm.category}
-                        onChange={(e) => setContactForm({...contactForm, category: e.target.value})}
-                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 transition-all backdrop-blur-sm"
-                        required
-                      >
-                        <option value="">Select a category</option>
-                        <option value="technical">Technical Issue</option>
-                        <option value="billing">Billing Question</option>
-                        <option value="feature">Feature Request</option>
-                        <option value="general">General Inquiry</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">User ID</label>
-                      <input
-                        type="text"
-                        value={contactForm.priority}
-                        onChange={(e) => setContactForm({...contactForm, priority: e.target.value})}
-                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm"
-                        placeholder="Your user ID (optional)"
-                      />
-                    </div>
-                  </div>
-
+                  {/* Catégorie */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Catégorie *</label>
+                    <select
+                      value={contactForm.category}
+                      onChange={(e) => setContactForm({...contactForm, category: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 transition-all backdrop-blur-sm"
+                      required
+                    >
+                      <option value="">Sélectionner une catégorie</option>
+                      <option value="technical">Problème technique</option>
+                      <option value="billing">Question de facturation</option>
+                      <option value="feature">Demande de fonctionnalité</option>
+                      <option value="agent">Problème avec un agent</option>
+                      <option value="account">Problème de compte</option>
+                      <option value="general">Question générale</option>
+                    </select>
+                  </div>
+
+                  {/* Sujet */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Sujet *</label>
                     <input
                       type="text"
                       value={contactForm.subject}
                       onChange={(e) => setContactForm({...contactForm, subject: e.target.value})}
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm"
-                      placeholder="Brief description of your issue"
+                      placeholder="Décrivez brièvement votre problème"
                       required
                     />
                   </div>
 
+                  {/* Message */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Message *</label>
                     <textarea
                       value={contactForm.message}
                       onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
                       rows={6}
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm resize-none"
-                      placeholder="Please provide detailed information about your issue..."
+                      placeholder="Décrivez votre problème en détail..."
                       required
                     />
                   </div>
 
+                  {/* Attachments */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Attachments</label>
-                    <div className="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-blue-500/50 transition-all cursor-pointer">
-                      <Paperclip className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                      <p className="text-gray-400 text-sm">Drop files here or click to upload</p>
-                      <p className="text-gray-500 text-xs mt-1">Max 10MB per file</p>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Captures d'écran (optionnel)</label>
+                    <div>
+                      <input
+                        type="file"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) {
+                            handleFileUpload(e.target.files[0]);
+                          }
+                        }}
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        id="file-upload"
+                      />
+                      <label
+                        htmlFor="file-upload"
+                        className="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-blue-500/50 transition-all cursor-pointer block"
+                      >
+                        {uploadingAttachment ? (
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        ) : (
+                          <Paperclip className="w-8 h-8 text-gray-500 mx-auto mb-2" />
+                        )}
+                        <p className="text-gray-400 text-sm">
+                          {uploadingAttachment ? 'Téléchargement...' : 'Cliquez pour ajouter une image'}
+                        </p>
+                        <p className="text-gray-500 text-xs mt-1">JPEG, PNG, WebP - Max 5MB</p>
+                      </label>
                     </div>
+
+                    {/* Preview des attachments */}
+                    {contactForm.attachments.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        <p className="text-sm text-gray-300">Fichiers attachés :</p>
+                        {contactForm.attachments.map((attachment, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <Image size={16} className="text-blue-400" />
+                              <span className="text-sm text-gray-300">{attachment.filename}</span>
+                              <span className="text-xs text-gray-500">
+                                ({Math.round(attachment.size / 1024)} KB)
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setContactForm(prev => ({
+                                  ...prev,
+                                  attachments: prev.attachments.filter((_, i) => i !== index)
+                                }));
+                              }}
+                              className="text-red-400 hover:text-red-300 transition-colors"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105 flex items-center justify-center gap-3"
+                    disabled={!contactForm.subject || !contactForm.category || !contactForm.message}
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105 flex items-center justify-center gap-3 disabled:transform-none disabled:shadow-none"
                   >
                     <Send size={20} />
-                    Create Your Ticket
+                    Créer le ticket
                   </button>
                 </form>
               </div>
@@ -609,7 +688,10 @@ export default function SupportPage() {
                     <Archive className="text-blue-400" size={24} />
                     <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">Support Tickets</h2>
                   </div>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all">
+                  <button 
+                    onClick={() => setActiveTab('contact')}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all"
+                  >
                     <PlusCircle size={16} />
                     New Ticket
                   </button>
@@ -649,6 +731,7 @@ export default function SupportPage() {
                   {filteredTickets.map((ticket) => (
                     <div
                       key={ticket.id}
+                      onClick={() => handleTicketClick(ticket.id)}
                       className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group hover:border-blue-500/30"
                     >
                       <div className="flex items-start justify-between mb-3">
@@ -671,11 +754,11 @@ export default function SupportPage() {
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-1">
                             <Calendar size={12} />
-                            <span>Created {ticket.created}</span>
+                            <span>Créé le {ticket.created}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock size={12} />
-                            <span>Updated {ticket.lastUpdate}</span>
+                            <span>Mis à jour le {ticket.lastUpdate}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
@@ -693,16 +776,26 @@ export default function SupportPage() {
                       <Archive className="w-10 h-10 text-gray-500" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-3">
-                      {supportTickets.length === 0 ? 'No support tickets' : 'No tickets found'}
+                      {tickets.length === 0 ? 'Aucun ticket de support' : 'Aucun ticket trouvé'}
                     </h3>
                     <p className="text-gray-400 max-w-md mx-auto mb-6">
-                      {supportTickets.length === 0 
-                        ? "You haven't created any support tickets yet. Need help? Create your first ticket."
-                        : "Try adjusting your search or filter criteria to find what you're looking for."
+                      {tickets.length === 0 
+                        ? "Vous n'avez pas encore créé de tickets de support. Besoin d'aide ? Créez votre premier ticket."
+                        : "Essayez d'ajuster vos critères de recherche ou de filtre pour trouver ce que vous cherchez."
                       }
                     </p>
-                    <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all">
-                      {supportTickets.length === 0 ? 'Create First Ticket' : 'Clear Filters'}
+                    <button 
+                      onClick={() => {
+                        if (tickets.length === 0) {
+                          setActiveTab('contact');
+                        } else {
+                          setTicketSearchQuery('');
+                          setTicketStatusFilter('all');
+                        }
+                      }}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all"
+                    >
+                      {tickets.length === 0 ? 'Créer le premier ticket' : 'Effacer les filtres'}
                     </button>
                   </div>
                 )}
@@ -720,16 +813,22 @@ export default function SupportPage() {
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-300 font-medium">Open Tickets</span>
-                    <span className="text-blue-400 font-bold">1</span>
+                    <span className="text-gray-300 font-medium">Tickets ouverts</span>
+                    <span className="text-blue-400 font-bold">
+                      {tickets.filter(t => t.status === 'open').length}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-300 font-medium">Pending Response</span>
-                    <span className="text-yellow-400 font-bold">1</span>
+                    <span className="text-gray-300 font-medium">En attente de réponse</span>
+                    <span className="text-yellow-400 font-bold">
+                      {tickets.filter(t => t.status === 'pending').length}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-300 font-medium">Resolved</span>
-                    <span className="text-emerald-400 font-bold">1</span>
+                    <span className="text-gray-300 font-medium">Résolus</span>
+                    <span className="text-emerald-400 font-bold">
+                      {tickets.filter(t => t.status === 'resolved').length}
+                    </span>
                   </div>
                 </div>
               </div>

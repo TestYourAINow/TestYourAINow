@@ -1,3 +1,4 @@
+// middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
@@ -19,6 +20,16 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
+  // 🛡️ NOUVEAU: Protection routes admin support
+  if (pathname.startsWith('/admin/support')) {
+    const adminEmails = ['team@testyourainow.com', 'sango_ks@hotmail.com'];
+    const userEmail = token.email;
+    
+    if (!userEmail || !adminEmails.includes(userEmail)) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+  }
+
   // 🔓 Bypass permanent pour ton compte
   const isSango = token.email === "sango_ks@hotmail.com";
 
@@ -33,4 +44,3 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
-

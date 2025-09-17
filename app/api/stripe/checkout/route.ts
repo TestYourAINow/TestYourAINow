@@ -1,3 +1,4 @@
+// app\api\stripe\checkout\route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getServerSession } from "next-auth";
@@ -6,7 +7,7 @@ import { connectToDatabase } from "@/lib/db";
 import User from "@/models/User";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2023-10-16' as any,
+  apiVersion: '2025-04-30.basil',
 })
 
 export async function POST() {
@@ -38,7 +39,7 @@ export async function POST() {
       user.stripeCustomerId = stripeCustomerId;
       await user.save();
     }
-
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
@@ -51,8 +52,8 @@ export async function POST() {
       allow_promotion_codes: true,
       automatic_tax: { enabled: true },
       billing_address_collection: 'required',
-      success_url: "http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: "http://localhost:3000/cancel",
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/cancel`,
       customer: stripeCustomerId,
       customer_update: {
         address: "auto",
