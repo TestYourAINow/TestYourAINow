@@ -1,12 +1,11 @@
-// models/SupportTicket.ts
+// models/SupportTicket.ts (UPDATED - Sans Priority)
 import mongoose, { Schema, Document, models, model } from "mongoose";
 
 export interface SupportTicketDocument extends Document {
   userId: mongoose.Types.ObjectId;
   title: string;
   category: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'open' | 'pending' | 'resolved' | 'closed';
+  status: 'pending' | 'open' | 'closed'; // 🔧 Seulement 3 statuts
   createdAt: Date;
   updatedAt: Date;
 }
@@ -16,15 +15,10 @@ const SupportTicketSchema = new Schema<SupportTicketDocument>(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     title: { type: String, required: true },
     category: { type: String, required: true },
-    priority: { 
-      type: String, 
-      enum: ['low', 'medium', 'high', 'urgent'],
-      default: 'medium'
-    },
     status: { 
       type: String, 
-      enum: ['open', 'pending', 'resolved', 'closed'],
-      default: 'open'
+      enum: ['pending', 'open', 'closed'], // 🔧 Supprimé 'resolved'
+      default: 'pending' // 🔧 Changé de 'open' à 'pending'
     },
   },
   { timestamps: true }

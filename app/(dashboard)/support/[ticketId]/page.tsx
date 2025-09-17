@@ -1,4 +1,4 @@
-// app/(dashboard)/support/[ticketId]/page.tsx
+// app/(dashboard)/support/[ticketId]/page.tsx (UPDATED - Sans Polling + Logique)
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { 
   ArrowLeft, Send, Paperclip, Image, X, Clock, User, 
   Headphones, CheckCircle, AlertCircle, MessageCircle, 
-  Upload, Trash2, Eye
+  Upload, Trash2, Eye, RefreshCw
 } from 'lucide-react';
 import { useSupport } from '@/hooks/useSupport';
 import { toast } from 'sonner';
@@ -31,7 +31,6 @@ interface TicketDetails {
   id: string;
   title: string;
   status: string;
-  priority: string;
   category: string;
   created: string;
   updated: string;
@@ -46,7 +45,7 @@ export default function TicketConversationPage() {
   const params = useParams();
   const ticketId = params.ticketId as string;
   
-  const { fetchTicketDetails, addMessage, uploadScreenshot, deleteScreenshot, updateTicketStatus } = useSupport();
+  const { fetchTicketDetails, addMessage, uploadScreenshot, deleteScreenshot } = useSupport();
   
   const [ticket, setTicket] = useState<TicketDetails | null>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
@@ -55,9 +54,18 @@ export default function TicketConversationPage() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // 🔧 NOUVEAU: Pour refresh manuel
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 🔧 FONCTION DE REFRESH MANUEL (remplace le polling)
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadTicketData();
+    setRefreshing(false);
+    toast.success('Conversation mise à jour');
+  };
 
   // Charger les détails du ticket et messages
   const loadTicketData = async () => {
@@ -75,15 +83,10 @@ export default function TicketConversationPage() {
     setLoading(false);
   };
 
-  // Polling pour les nouveaux messages (toutes les 30 secondes)
+  // 🔧 SUPPRIMÉ: Le polling automatique
   useEffect(() => {
     loadTicketData();
-    
-    const interval = setInterval(() => {
-      loadTicketData();
-    }, 30000);
-
-    return () => clearInterval(interval);
+    // Plus d'interval ici !
   }, [ticketId]);
 
   // Scroll automatique vers le bas
@@ -91,9 +94,38 @@ export default function TicketConversationPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // 🔧 NOUVELLE LOGIQUE: Vérifier si l'user peut écrire
+  const canUserWrite = () => {
+    if (!ticket) return false;
+    
+    // User ne peut pas écrire si ticket est pending ou closed
+    if (ticket.status === 'pending') return false;
+    if (ticket.status === 'closed') return false;
+    
+    // User peut écrire seulement si ticket est open
+    return ticket.status === 'open';
+  };
+
+  // Message d'état pour l'user
+  const getStatusMessage = () => {
+    if (!ticket) return '';
+    
+    switch (ticket.status) {
+      case 'pending':
+        return '⏳ Votre ticket est en attente de réponse de notre équipe support. Vous pourrez répondre une fois qu\'un agent aura pris en charge votre demande.';
+      case 'closed':
+        return '🔒 Cette conversation a été fermée par notre équipe support. Si vous avez encore des questions, créez un nouveau ticket.';
+      case 'open':
+        return '✅ Vous pouvez maintenant échanger avec notre équipe support.';
+      default:
+        return '';
+    }
+  };
+
   // Envoyer un message
   const handleSendMessage = async () => {
     if (!newMessage.trim() && attachments.length === 0) return;
+    if (!canUserWrite()) return;
 
     setSending(true);
     
@@ -106,8 +138,15 @@ export default function TicketConversationPage() {
         setAttachments([]);
         toast.success('Message envoyé');
       }
-    } catch (error) {
-      toast.error('Erreur lors de l\'envoi du message');
+    } catch (error: any) {
+      // 🔧 GESTION D'ERREURS SPÉCIFIQUES
+      if (error.message.includes('pending') || error.message.includes('closed')) {
+        toast.error('Impossible de répondre dans l\'état actuel du ticket');
+        // Recharger les données pour mettre à jour le statut
+        await loadTicketData();
+      } else {
+        toast.error('Erreur lors de l\'envoi du message');
+      }
     } finally {
       setSending(false);
     }
@@ -115,6 +154,11 @@ export default function TicketConversationPage() {
 
   // Upload de fichier
   const handleFileUpload = async (file: File) => {
+    if (!canUserWrite()) {
+      toast.error('Impossible d\'ajouter des fichiers dans l\'état actuel du ticket');
+      return;
+    }
+    
     setUploading(true);
     
     try {
@@ -141,20 +185,10 @@ export default function TicketConversationPage() {
     }
   };
 
-  // Changer le statut du ticket
-  const handleStatusChange = async (newStatus: string) => {
-    const success = await updateTicketStatus(ticketId, newStatus);
-    if (success) {
-      setTicket(prev => prev ? { ...prev, status: newStatus } : null);
-      toast.success('Statut mis à jour');
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'pending': return 'text-orange-300 bg-orange-500/20 border border-orange-500/40';
       case 'open': return 'text-blue-300 bg-blue-500/20 border border-blue-500/40';
-      case 'pending': return 'text-yellow-300 bg-yellow-500/20 border border-yellow-500/40';
-      case 'resolved': return 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40';
       case 'closed': return 'text-gray-300 bg-gray-500/20 border border-gray-500/40';
       default: return 'text-gray-300 bg-gray-500/20 border border-gray-500/40';
     }
@@ -231,19 +265,30 @@ export default function TicketConversationPage() {
                   {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
                 </span>
                 
-                {ticket.status !== 'closed' && ticket.status !== 'resolved' && (
-                  <select
-                    value={ticket.status}
-                    onChange={(e) => handleStatusChange(e.target.value)}
-                    className="bg-gray-800 border border-gray-700 text-white text-xs rounded-lg px-2 py-1"
-                  >
-                    <option value="open">Ouvert</option>
-                    <option value="pending">En attente</option>
-                    <option value="resolved">Résolu</option>
-                  </select>
-                )}
+                {/* 🔧 BOUTON REFRESH MANUEL (remplace le polling) */}
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="p-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 text-gray-400 hover:text-white rounded-lg transition-all disabled:opacity-50"
+                  title="Actualiser la conversation"
+                >
+                  <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={16} />
+                </button>
               </div>
             </div>
+
+            {/* 🔧 MESSAGE D'ÉTAT POUR L'USER */}
+            {getStatusMessage() && (
+              <div className={`p-4 rounded-xl border text-sm ${
+                ticket.status === 'pending' 
+                  ? 'bg-orange-500/10 border-orange-500/20 text-orange-300'
+                  : ticket.status === 'closed'
+                  ? 'bg-gray-500/10 border-gray-500/20 text-gray-300'
+                  : 'bg-blue-500/10 border-blue-500/20 text-blue-300'
+              }`}>
+                {getStatusMessage()}
+              </div>
+            )}
           </div>
         </div>
 
@@ -279,15 +324,22 @@ export default function TicketConversationPage() {
                       {message.attachments.map((attachment, idx) => (
                         <div key={idx} className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
                           <Image size={16} />
-                          <a 
-                            href={attachment.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm hover:underline flex-1"
-                          >
-                            {attachment.filename}
-                          </a>
-                          <Eye size={14} className="opacity-60" />
+                          {/* 🔧 IMAGES NON-CLIQUABLES SI TICKET CLOSED */}
+                          {ticket.status === 'closed' ? (
+                            <span className="text-sm text-gray-400 flex-1 opacity-60">
+                              {attachment.filename} (Archivé)
+                            </span>
+                          ) : (
+                            <a 
+                              href={attachment.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm hover:underline flex-1"
+                            >
+                              {attachment.filename}
+                            </a>
+                          )}
+                          {ticket.status !== 'closed' && <Eye size={14} className="opacity-60" />}
                         </div>
                       ))}
                     </div>
@@ -299,8 +351,8 @@ export default function TicketConversationPage() {
           </div>
         </div>
 
-        {/* Zone de réponse */}
-        {ticket.status !== 'closed' && (
+        {/* 🔧 Zone de réponse - CONDITIONNELLE */}
+        {canUserWrite() ? (
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
             <div className="space-y-4">
               {/* Attachments preview */}
@@ -374,6 +426,40 @@ export default function TicketConversationPage() {
               <div className="text-xs text-gray-400">
                 Appuyez sur Ctrl+Enter pour envoyer rapidement
               </div>
+            </div>
+          </div>
+        ) : (
+          /* 🔧 MESSAGE QUAND USER NE PEUT PAS ÉCRIRE */
+          <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
+            <div className="text-center py-8">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+                ticket.status === 'pending' 
+                  ? 'bg-orange-500/20 text-orange-400'
+                  : 'bg-gray-500/20 text-gray-400'
+              }`}>
+                {ticket.status === 'pending' ? (
+                  <Clock size={24} />
+                ) : (
+                  <CheckCircle size={24} />
+                )}
+              </div>
+              
+              <h3 className="text-lg font-semibold text-white mb-2">
+                {ticket.status === 'pending' ? 'En attente de réponse' : 'Conversation fermée'}
+              </h3>
+              
+              <p className="text-gray-400 text-sm max-w-md mx-auto mb-6">
+                {getStatusMessage()}
+              </p>
+
+              {ticket.status === 'closed' && (
+                <button 
+                  onClick={() => router.push('/support?tab=contact')}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all"
+                >
+                  Créer un nouveau ticket
+                </button>
+              )}
             </div>
           </div>
         )}

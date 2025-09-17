@@ -1,4 +1,4 @@
-// app/admin/support/[ticketId]/page.tsx
+// app/(dashboard)/admin/support/[ticketId]/page.tsx (UPDATED - Sans Priority)
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { 
   ArrowLeft, Send, User, Headphones, Clock, Mail,
-  AlertCircle, CheckCircle, Edit, Shield, Image, Eye
+  AlertCircle, CheckCircle, Edit, Shield, Image, Eye, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -30,7 +30,6 @@ interface AdminTicketDetails {
   id: string;
   title: string;
   status: string;
-  priority: string;
   category: string;
   created: string;
   updated: string;
@@ -52,6 +51,7 @@ export default function AdminTicketConversationPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // 🔧 NOUVEAU: Refresh manuel
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -68,6 +68,14 @@ export default function AdminTicketConversationPage() {
 
     loadTicketData();
   }, [session, ticketId]);
+
+  // 🔧 FONCTION DE REFRESH MANUEL (remplace le polling)
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadTicketData();
+    setRefreshing(false);
+    toast.success('Conversation mise à jour');
+  };
 
   // Charger les données du ticket
   const loadTicketData = async () => {
@@ -91,11 +99,7 @@ export default function AdminTicketConversationPage() {
     }
   };
 
-  // Polling toutes les 30s
-  useEffect(() => {
-    const interval = setInterval(loadTicketData, 30000);
-    return () => clearInterval(interval);
-  }, [ticketId]);
+  // 🔧 SUPPRIMÉ: Polling automatique
 
   // Scroll automatique
   useEffect(() => {
@@ -129,21 +133,21 @@ export default function AdminTicketConversationPage() {
     }
   };
 
-  // Changer statut/priorité
-  const updateTicketInfo = async (updates: { status?: string; priority?: string }) => {
+  // 🔧 CHANGER STATUT SEULEMENT (plus de priority)
+  const updateTicketStatus = async (newStatus: string) => {
     setUpdating(true);
     
     try {
       const response = await fetch(`/api/support/tickets/${ticketId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
+        body: JSON.stringify({ status: newStatus })
       });
 
       if (!response.ok) throw new Error('Erreur de mise à jour');
       
-      setTicket(prev => prev ? { ...prev, ...updates } : null);
-      toast.success('Ticket mis à jour');
+      setTicket(prev => prev ? { ...prev, status: newStatus } : null);
+      toast.success('Statut mis à jour');
     } catch (error) {
       toast.error('Erreur de mise à jour');
     } finally {
@@ -153,9 +157,8 @@ export default function AdminTicketConversationPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'text-red-300 bg-red-500/20 border border-red-500/40';
-      case 'pending': return 'text-yellow-300 bg-yellow-500/20 border border-yellow-500/40';
-      case 'resolved': return 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40';
+      case 'pending': return 'text-orange-300 bg-orange-500/20 border border-orange-500/40';
+      case 'open': return 'text-blue-300 bg-blue-500/20 border border-blue-500/40';
       case 'closed': return 'text-gray-300 bg-gray-500/20 border border-gray-500/40';
       default: return 'text-gray-300 bg-gray-500/20 border border-gray-500/40';
     }
@@ -257,36 +260,32 @@ export default function AdminTicketConversationPage() {
                 </div>
               </div>
               
+              {/* 🔧 CONTRÔLES SIMPLIFIÉS: Seulement statut + refresh */}
               <div className="flex flex-col gap-3 min-w-48">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-400">Statut:</span>
                   <select
                     value={ticket.status}
-                    onChange={(e) => updateTicketInfo({ status: e.target.value })}
+                    onChange={(e) => updateTicketStatus(e.target.value)}
                     disabled={updating}
                     className={`text-xs font-semibold rounded-full px-3 py-1 border ${getStatusColor(ticket.status)} bg-transparent outline-none`}
                   >
-                    <option value="open" className="bg-gray-800 text-white">Ouvert</option>
                     <option value="pending" className="bg-gray-800 text-white">En attente</option>
-                    <option value="resolved" className="bg-gray-800 text-white">Résolu</option>
+                    <option value="open" className="bg-gray-800 text-white">Ouvert</option>
                     <option value="closed" className="bg-gray-800 text-white">Fermé</option>
                   </select>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-400">Priorité:</span>
-                  <select
-                    value={ticket.priority}
-                    onChange={(e) => updateTicketInfo({ priority: e.target.value })}
-                    disabled={updating}
-                    className="text-xs font-semibold rounded px-2 py-1 bg-gray-800 text-white border border-gray-700 outline-none"
-                  >
-                    <option value="low">Faible</option>
-                    <option value="medium">Moyenne</option>
-                    <option value="high">Élevée</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                </div>
+                {/* 🔧 BOUTON REFRESH MANUEL */}
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="flex items-center justify-center gap-2 p-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 text-gray-400 hover:text-white rounded-lg transition-all disabled:opacity-50"
+                  title="Actualiser la conversation"
+                >
+                  <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={14} />
+                  <span className="text-xs">Actualiser</span>
+                </button>
               </div>
             </div>
           </div>
@@ -407,38 +406,38 @@ export default function AdminTicketConversationPage() {
           </div>
         )}
 
-        {/* Actions rapides admin */}
+        {/* 🔧 ACTIONS SIMPLIFIÉES: Seulement changement de statut */}
         <div className="mt-6 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-4">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold text-gray-300">Actions rapides:</h4>
             <div className="flex gap-2">
+              {ticket.status === 'pending' && (
+                <button
+                  onClick={() => updateTicketStatus('open')}
+                  disabled={updating}
+                  className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded hover:bg-blue-500/30 transition-colors disabled:opacity-50"
+                >
+                  Ouvrir le ticket
+                </button>
+              )}
+              
               {ticket.status === 'open' && (
                 <button
-                  onClick={() => updateTicketInfo({ status: 'pending' })}
-                  disabled={updating}
-                  className="px-3 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded hover:bg-yellow-500/30 transition-colors disabled:opacity-50"
-                >
-                  Marquer en attente
-                </button>
-              )}
-              
-              {(ticket.status === 'open' || ticket.status === 'pending') && (
-                <button
-                  onClick={() => updateTicketInfo({ status: 'resolved' })}
-                  disabled={updating}
-                  className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
-                >
-                  Marquer comme résolu
-                </button>
-              )}
-              
-              {ticket.status === 'resolved' && (
-                <button
-                  onClick={() => updateTicketInfo({ status: 'closed' })}
+                  onClick={() => updateTicketStatus('closed')}
                   disabled={updating}
                   className="px-3 py-1 bg-gray-500/20 text-gray-300 text-xs rounded hover:bg-gray-500/30 transition-colors disabled:opacity-50"
                 >
                   Fermer le ticket
+                </button>
+              )}
+
+              {ticket.status === 'closed' && (
+                <button
+                  onClick={() => updateTicketStatus('open')}
+                  disabled={updating}
+                  className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded hover:bg-blue-500/30 transition-colors disabled:opacity-50"
+                >
+                  Rouvrir le ticket
                 </button>
               )}
             </div>

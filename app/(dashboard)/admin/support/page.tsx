@@ -1,4 +1,4 @@
-// app/admin/support/page.tsx
+// app/(dashboard)/admin/support/page.tsx (UPDATED - Sans Priority + Actions Rapides)
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,17 +6,16 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { 
   MessageCircle, Search, Clock, User, Mail, 
-  ChevronRight, Filter, BarChart3, AlertCircle,
-  CheckCircle, XCircle, Calendar, Archive, Shield,
-  Headphones, TrendingUp, Users
+  ChevronRight, BarChart3, AlertCircle,
+  CheckCircle, Calendar, Archive, Shield,
+  Headphones, Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AdminTicket {
   id: string;
   title: string;
-  status: 'open' | 'pending' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'open' | 'closed'; // 🔧 Seulement 3 statuts
   category: string;
   created: string;
   updated: string;
@@ -34,8 +33,7 @@ export default function AdminSupportPage() {
   const [tickets, setTickets] = useState<AdminTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('pending'); // 🔧 Défaut à pending
 
   // Vérifier les permissions admin
   useEffect(() => {
@@ -81,59 +79,28 @@ export default function AdminSupportPage() {
     router.push(`/admin/support/${ticketId}`);
   };
 
-  // Changer rapidement le statut
-  const quickStatusChange = async (ticketId: string, newStatus: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêcher la navigation
-    
-    try {
-      const response = await fetch(`/api/support/tickets/${ticketId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
+  // 🔧 SUPPRIMÉ: quickStatusChange (plus d'actions rapides)
 
-      if (!response.ok) throw new Error('Erreur de mise à jour');
-      
-      setTickets(prev => prev.map(ticket => 
-        ticket.id === ticketId ? { ...ticket, status: newStatus as any } : ticket
-      ));
-      
-      toast.success('Statut mis à jour');
-    } catch (error) {
-      toast.error('Erreur lors de la mise à jour');
-    }
-  };
-
-  // Filtrer les tickets
+  // 🔧 FILTRES SIMPLIFIÉS: Seulement 3 statuts
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          ticket.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          ticket.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
     
-    return matchesSearch && matchesStatus && matchesPriority;
+    return matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'text-red-300 bg-red-500/20 border border-red-500/40';
-      case 'pending': return 'text-yellow-300 bg-yellow-500/20 border border-yellow-500/40';
-      case 'resolved': return 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40';
+      case 'pending': return 'text-orange-300 bg-orange-500/20 border border-orange-500/40';
+      case 'open': return 'text-blue-300 bg-blue-500/20 border border-blue-500/40';
       case 'closed': return 'text-gray-300 bg-gray-500/20 border border-gray-500/40';
       default: return 'text-gray-300 bg-gray-500/20 border border-gray-500/40';
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'text-red-400';
-      case 'high': return 'text-orange-400';
-      case 'medium': return 'text-yellow-400';
-      case 'low': return 'text-green-400';
-      default: return 'text-gray-400';
-    }
-  };
+  // 🔧 SUPPRIMÉ: getPriorityColor (plus de priorité)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -145,13 +112,12 @@ export default function AdminSupportPage() {
     });
   };
 
-  // Statistiques
+  // 🔧 STATISTIQUES MISES À JOUR: 3 statuts seulement
   const stats = {
     total: tickets.length,
-    open: tickets.filter(t => t.status === 'open').length,
     pending: tickets.filter(t => t.status === 'pending').length,
-    resolved: tickets.filter(t => t.status === 'resolved').length,
-    urgent: tickets.filter(t => t.priority === 'urgent').length
+    open: tickets.filter(t => t.status === 'open').length,
+    closed: tickets.filter(t => t.status === 'closed').length
   };
 
   if (loading) {
@@ -192,8 +158,8 @@ export default function AdminSupportPage() {
           </div>
         </div>
 
-        {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        {/* 🔧 STATISTIQUES MISES À JOUR: 4 cartes pour 3 statuts + total */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
             <div className="flex items-center gap-3">
               <Archive className="text-blue-400" size={24} />
@@ -206,19 +172,9 @@ export default function AdminSupportPage() {
 
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
             <div className="flex items-center gap-3">
-              <AlertCircle className="text-red-400" size={24} />
+              <AlertCircle className="text-orange-400" size={24} />
               <div>
-                <p className="text-2xl font-bold text-red-400">{stats.open}</p>
-                <p className="text-gray-400 text-sm">Ouverts</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
-            <div className="flex items-center gap-3">
-              <Clock className="text-yellow-400" size={24} />
-              <div>
-                <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
+                <p className="text-2xl font-bold text-orange-400">{stats.pending}</p>
                 <p className="text-gray-400 text-sm">En Attente</p>
               </div>
             </div>
@@ -226,20 +182,20 @@ export default function AdminSupportPage() {
 
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
             <div className="flex items-center gap-3">
-              <CheckCircle className="text-emerald-400" size={24} />
+              <MessageCircle className="text-blue-400" size={24} />
               <div>
-                <p className="text-2xl font-bold text-emerald-400">{stats.resolved}</p>
-                <p className="text-gray-400 text-sm">Résolus</p>
+                <p className="text-2xl font-bold text-blue-400">{stats.open}</p>
+                <p className="text-gray-400 text-sm">Ouverts</p>
               </div>
             </div>
           </div>
 
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
             <div className="flex items-center gap-3">
-              <TrendingUp className="text-orange-400" size={24} />
+              <CheckCircle className="text-gray-400" size={24} />
               <div>
-                <p className="text-2xl font-bold text-orange-400">{stats.urgent}</p>
-                <p className="text-gray-400 text-sm">Urgents</p>
+                <p className="text-2xl font-bold text-gray-400">{stats.closed}</p>
+                <p className="text-gray-400 text-sm">Fermés</p>
               </div>
             </div>
           </div>
@@ -262,7 +218,7 @@ export default function AdminSupportPage() {
               </div>
             </div>
 
-            {/* Filtres */}
+            {/* 🔧 FILTRES SIMPLIFIÉS: Seulement statuts */}
             <div className="flex gap-3">
               <select
                 value={statusFilter}
@@ -270,22 +226,9 @@ export default function AdminSupportPage() {
                 className="px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60"
               >
                 <option value="all">Tous les statuts</option>
-                <option value="open">Ouverts</option>
                 <option value="pending">En attente</option>
-                <option value="resolved">Résolus</option>
+                <option value="open">Ouverts</option>
                 <option value="closed">Fermés</option>
-              </select>
-
-              <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-                className="px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60"
-              >
-                <option value="all">Toutes priorités</option>
-                <option value="urgent">Urgent</option>
-                <option value="high">Élevée</option>
-                <option value="medium">Moyenne</option>
-                <option value="low">Faible</option>
               </select>
             </div>
           </div>
@@ -313,9 +256,7 @@ export default function AdminSupportPage() {
                         {ticket.title}
                       </h3>
                       <span className="text-xs text-gray-400 font-mono">#{ticket.id}</span>
-                      <span className={`text-xs font-bold ${getPriorityColor(ticket.priority)}`}>
-                        {ticket.priority.toUpperCase()}
-                      </span>
+                      {/* 🔧 SUPPRIMÉ: Priority badge */}
                     </div>
                     
                     <div className="flex items-center gap-4 mb-3">
@@ -355,25 +296,7 @@ export default function AdminSupportPage() {
                     </div>
                   </div>
 
-                  {/* Actions rapides */}
-                  <div className="flex items-center gap-2">
-                    {ticket.status === 'open' && (
-                      <button
-                        onClick={(e) => quickStatusChange(ticket.id, 'pending', e)}
-                        className="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded hover:bg-yellow-500/30 transition-colors"
-                      >
-                        Marquer en attente
-                      </button>
-                    )}
-                    {(ticket.status === 'open' || ticket.status === 'pending') && (
-                      <button
-                        onClick={(e) => quickStatusChange(ticket.id, 'resolved', e)}
-                        className="px-2 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded hover:bg-emerald-500/30 transition-colors"
-                      >
-                        Résoudre
-                      </button>
-                    )}
-                  </div>
+                  {/* 🔧 SUPPRIMÉ: Actions rapides */}
                 </div>
               </div>
             ))}

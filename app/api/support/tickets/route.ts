@@ -1,4 +1,4 @@
-// app/api/support/tickets/route.ts
+// app/api/support/tickets/route.ts (UPDATED)
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -28,7 +28,6 @@ export async function GET() {
           id: ticket._id.toString(),
           title: ticket.title,
           status: ticket.status,
-          priority: ticket.priority,
           category: ticket.category,
           created: ticket.createdAt.toISOString().split('T')[0],
           lastUpdate: ticket.updatedAt.toISOString().split('T')[0],
@@ -59,6 +58,15 @@ export async function POST(request: Request) {
 
     const { name, email, subject, category, message, attachments } = await request.json();
 
+    // 🔧 VALIDATION des nouvelles catégories
+    const validCategories = ['technical', 'billing', 'general', 'account'];
+    if (!validCategories.includes(category)) {
+      return NextResponse.json(
+        { error: 'Invalid category' }, 
+        { status: 400 }
+      );
+    }
+
     // Validation
     if (!subject || !category || !message) {
       return NextResponse.json(
@@ -67,13 +75,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Créer le ticket
+    // 🔧 Créer le ticket avec status 'pending' par défaut
     const ticket = await SupportTicket.create({
       userId: session.user.id,
       title: subject,
       category,
-      priority: 'medium',
-      status: 'open'
+      status: 'pending' // 🔧 CHANGÉ: Nouveau ticket = pending
     });
 
     // Créer le message initial

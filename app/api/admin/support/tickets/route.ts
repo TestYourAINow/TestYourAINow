@@ -1,4 +1,4 @@
-// app/api/admin/support/tickets/route.ts
+// app/api/admin/support/tickets/route.ts (UPDATED - Sans Priority)
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -37,7 +37,6 @@ export async function GET() {
           id: ticket._id.toString(),
           title: ticket.title,
           status: ticket.status,
-          priority: ticket.priority,
           category: ticket.category,
           created: ticket.createdAt.toISOString(),
           updated: ticket.updatedAt.toISOString(),

@@ -1,4 +1,4 @@
-// app/api/support/tickets/[id]/route.ts (VERSION CORRIGÉE)
+// app/api/support/tickets/[id]/route.ts (UPDATED - Sans Priority)
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -6,7 +6,7 @@ import { connectToDatabase } from '@/lib/db';
 import { SupportTicket } from '@/models/SupportTicket';
 import { TicketMessage } from '@/models/TicketMessage';
 import User from '@/models/User';
-import mongoose from 'mongoose'; // 🔧 AJOUT CRUCIAL
+import mongoose from 'mongoose';
 
 export async function GET(
   request: Request,
@@ -22,7 +22,6 @@ export async function GET(
 
     const { id: ticketId } = await params;
 
-    // 🔧 VÉRIFIER QUE L'ID EST VALIDE
     if (!mongoose.Types.ObjectId.isValid(ticketId)) {
       return NextResponse.json({ error: 'Invalid ticket ID' }, { status: 400 });
     }
@@ -30,7 +29,6 @@ export async function GET(
     // Vérifier que le ticket appartient à l'utilisateur ou que c'est un admin
     const isAdmin = ['team@testyourainow.com', 'sango_ks@hotmail.com'].includes(session.user.email || '');
     
-    // 🔧 UTILISER new mongoose.Types.ObjectId()
     const ticketQuery = isAdmin 
       ? { _id: new mongoose.Types.ObjectId(ticketId) }
       : { _id: new mongoose.Types.ObjectId(ticketId), userId: session.user.id };
@@ -41,7 +39,6 @@ export async function GET(
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
     }
 
-    // 🔧 UTILISER ObjectId pour les messages aussi
     const messages = await TicketMessage.find({ ticketId: new mongoose.Types.ObjectId(ticketId) })
       .sort({ createdAt: 1 });
 
@@ -60,7 +57,6 @@ export async function GET(
         id: ticket._id.toString(),
         title: ticket.title,
         status: ticket.status,
-        priority: ticket.priority,
         category: ticket.category,
         created: ticket.createdAt.toISOString(),
         updated: ticket.updatedAt.toISOString(),
@@ -86,10 +82,10 @@ export async function GET(
   }
 }
 
-// PUT - Mettre à jour le statut du ticket
+// PUT - Mettre à jour le statut du ticket (ADMIN SEULEMENT)
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> } // 🔧 CORRECTION: Promise<{ id: string }>
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
@@ -99,28 +95,31 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { status, priority } = await request.json();
-    const { id: ticketId } = await params; // 🔧 CORRECTION: await params
+    const { status } = await request.json(); // 🔧 Supprimé priority
+    const { id: ticketId } = await params;
 
-    // 🔧 VÉRIFIER QUE L'ID EST VALIDE
     if (!mongoose.Types.ObjectId.isValid(ticketId)) {
       return NextResponse.json({ error: 'Invalid ticket ID' }, { status: 400 });
     }
 
-    // Vérifier les permissions (admin ou propriétaire)
+    // 🔧 SEULEMENT LES ADMINS peuvent changer le statut
     const isAdmin = ['team@testyourainow.com', 'sango_ks@hotmail.com'].includes(session.user.email || '');
     
-    // 🔧 UTILISER new mongoose.Types.ObjectId()
-    const ticketQuery = isAdmin 
-      ? { _id: new mongoose.Types.ObjectId(ticketId) }
-      : { _id: new mongoose.Types.ObjectId(ticketId), userId: session.user.id };
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
+    // 🔧 Valider les nouveaux statuts
+    const validStatuses = ['pending', 'open', 'closed'];
+    if (status && !validStatuses.includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    }
 
     const updateData: any = {};
     if (status) updateData.status = status;
-    if (priority) updateData.priority = priority;
 
-    const ticket = await SupportTicket.findOneAndUpdate(
-      ticketQuery,
+    const ticket = await SupportTicket.findByIdAndUpdate(
+      new mongoose.Types.ObjectId(ticketId),
       updateData,
       { new: true }
     );

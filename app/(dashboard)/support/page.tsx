@@ -1,3 +1,4 @@
+// app/(dashboard)/support/page.tsx (UPDATED)
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -37,6 +38,7 @@ interface AttachmentType {
   size: number;
   path: string;
 }
+
 export default function SupportPage() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -47,18 +49,18 @@ export default function SupportPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [ticketSearchQuery, setTicketSearchQuery] = useState('');
-  const [ticketStatusFilter, setTicketStatusFilter] = useState('all');
+  const [ticketStatusFilter, setTicketStatusFilter] = useState('pending'); // 🔧 Défaut à pending
   const [contactForm, setContactForm] = useState<{
-  subject: string;
-  category: string;
-  message: string;
-  attachments: AttachmentType[];
-}>({
-  subject: '',
-  category: '',
-  message: '',
-  attachments: []
-});
+    subject: string;
+    category: string;
+    message: string;
+    attachments: AttachmentType[];
+  }>({
+    subject: '',
+    category: '',
+    message: '',
+    attachments: []
+  });
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
 
   // Catégories basées sur le vrai FAQ
@@ -183,15 +185,14 @@ export default function SupportPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'pending': return 'text-orange-300 bg-orange-500/20 border border-orange-500/40 backdrop-blur-sm';
       case 'open': return 'text-blue-300 bg-blue-500/20 border border-blue-500/40 backdrop-blur-sm';
-      case 'pending': return 'text-yellow-300 bg-yellow-500/20 border border-yellow-500/40 backdrop-blur-sm';
-      case 'resolved': return 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 backdrop-blur-sm';
       case 'closed': return 'text-gray-300 bg-gray-500/20 border border-gray-500/40 backdrop-blur-sm';
       default: return 'text-gray-300 bg-gray-500/20 border border-gray-500/40 backdrop-blur-sm';
     }
   };
 
-  // Filtrer les tickets avec les vraies données
+  // 🔧 NOUVEAUX FILTRES: Seulement 3 statuts
   const filteredTickets = tickets.filter(ticket => {
     const matchesStatus = ticketStatusFilter === 'all' || ticket.status === ticketStatusFilter;
     const matchesSearch = ticket.title.toLowerCase().includes(ticketSearchQuery.toLowerCase()) ||
@@ -207,76 +208,71 @@ export default function SupportPage() {
   });
 
   // Fonction pour naviguer vers la conversation
- const handleTicketClick = (ticketId: string) => {
-  console.log('🎯 Clicking on ticket ID:', ticketId);
-  console.log('🎯 Ticket ID type:', typeof ticketId);
-  console.log('🎯 Navigating to:', `/support/${ticketId}`);
-  router.push(`/support/${ticketId}`);
-};
+  const handleTicketClick = (ticketId: string) => {
+    console.log('🎯 Clicking on ticket ID:', ticketId);
+    router.push(`/support/${ticketId}`);
+  };
 
   // Upload d'attachments
   const handleFileUpload = async (file: File) => {
-  if (uploadingAttachment) return;
-  
-  setUploadingAttachment(true);
-  
-  try {
-    // Pour les attachments dans le formulaire, on upload avec un ID temporaire
-    const tempTicketId = 'temp-' + Date.now();
-    const attachment = await uploadScreenshot(file, tempTicketId);
+    if (uploadingAttachment) return;
     
-    setContactForm(prev => ({
-      ...prev,
-      attachments: [...prev.attachments, {
-        type: attachment.type,
-        url: attachment.url,
-        filename: attachment.filename,
-        size: attachment.size,
-        path: attachment.path
-      }]
-    }));
+    setUploadingAttachment(true);
     
-    toast.success('Fichier ajouté');
-  } catch (error) {
-    toast.error('Erreur lors du téléchargement');
-  } finally {
-    setUploadingAttachment(false);
-  }
-};
+    try {
+      const tempTicketId = 'temp-' + Date.now();
+      const attachment = await uploadScreenshot(file, tempTicketId);
+      
+      setContactForm(prev => ({
+        ...prev,
+        attachments: [...prev.attachments, {
+          type: attachment.type,
+          url: attachment.url,
+          filename: attachment.filename,
+          size: attachment.size,
+          path: attachment.path
+        }]
+      }));
+      
+      toast.success('Fichier ajouté');
+    } catch (error) {
+      toast.error('Erreur lors du téléchargement');
+    } finally {
+      setUploadingAttachment(false);
+    }
+  };
 
   // Submit du formulaire de contact
   const handleContactSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  try {
-    // Utiliser les données de session automatiquement
-    const formDataWithUser = {
-      name: session?.user?.name || 'User', // Enlever username
-      email: session?.user?.email || '',
-      subject: contactForm.subject,
-      category: contactForm.category,
-      priority: 'medium', // Ajouter priority manquant
-      message: contactForm.message,
-      attachments: contactForm.attachments
-    };
+    e.preventDefault();
     
-    const result = await createTicket(formDataWithUser);
-    toast.success(`Ticket ${result.ticketId} créé avec succès !`);
-    
-    // Reset form
-    setContactForm({
-      subject: '',
-      category: '',
-      message: '',
-      attachments: []
-    });
-    
-    // Changer vers l'onglet tickets
-    setActiveTab('tickets');
-  } catch (error) {
-    toast.error('Erreur lors de la création du ticket');
-  }
-};
+    try {
+      const formDataWithUser = {
+        name: session?.user?.name || 'User',
+        email: session?.user?.email || '',
+        subject: contactForm.subject,
+        category: contactForm.category,
+        message: contactForm.message,
+        attachments: contactForm.attachments
+      };
+      
+      const result = await createTicket(formDataWithUser);
+      toast.success(`Ticket ${result.ticketId} créé avec succès !`);
+      
+      // Reset form
+      setContactForm({
+        subject: '',
+        category: '',
+        message: '',
+        attachments: []
+      });
+      
+      // Changer vers l'onglet tickets
+      setActiveTab('tickets');
+    } catch (error) {
+      toast.error('Erreur lors de la création du ticket');
+    }
+  };
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
@@ -333,7 +329,7 @@ export default function SupportPage() {
           </div>
         </div>
 
-        {/* Help Center Tab */}
+        {/* Help Center Tab - Inchangé */}
         {activeTab === 'help-center' && (
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
             {/* Categories Sidebar */}
@@ -469,9 +465,9 @@ export default function SupportPage() {
                     <h3 className="text-sm font-semibold text-blue-300 mb-2">Informations du compte</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                       <div className="flex items-center gap-2 text-gray-300">
-  <User size={14} className="text-blue-400" />
-  <span>{session?.user?.name || 'Utilisateur'}</span> {/* Enlever username */}
-</div>
+                        <User size={14} className="text-blue-400" />
+                        <span>{session?.user?.name || 'Utilisateur'}</span>
+                      </div>
                       <div className="flex items-center gap-2 text-gray-300">
                         <Mail size={14} className="text-blue-400" />
                         <span>{session?.user?.email}</span>
@@ -479,7 +475,7 @@ export default function SupportPage() {
                     </div>
                   </div>
 
-                  {/* Catégorie */}
+                  {/* 🔧 NOUVELLES CATÉGORIES: Seulement 4 options */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Catégorie *</label>
                     <select
@@ -491,10 +487,8 @@ export default function SupportPage() {
                       <option value="">Sélectionner une catégorie</option>
                       <option value="technical">Problème technique</option>
                       <option value="billing">Question de facturation</option>
-                      <option value="feature">Demande de fonctionnalité</option>
-                      <option value="agent">Problème avec un agent</option>
-                      <option value="account">Problème de compte</option>
                       <option value="general">Question générale</option>
+                      <option value="account">Problème de compte</option>
                     </select>
                   </div>
 
@@ -710,8 +704,9 @@ export default function SupportPage() {
                     />
                   </div>
                   
+                  {/* 🔧 NOUVEAUX FILTRES: Seulement 3 statuts */}
                   <div className="flex gap-2">
-                    {['all', 'open', 'pending', 'resolved', 'closed'].map((status) => (
+                    {['pending', 'open', 'closed'].map((status) => (
                       <button
                         key={status}
                         onClick={() => setTicketStatusFilter(status)}
@@ -790,7 +785,7 @@ export default function SupportPage() {
                           setActiveTab('contact');
                         } else {
                           setTicketSearchQuery('');
-                          setTicketStatusFilter('all');
+                          setTicketStatusFilter('pending');
                         }
                       }}
                       className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all"
@@ -802,9 +797,8 @@ export default function SupportPage() {
               </div>
             </div>
 
-            {/* Tickets Sidebar */}
+            {/* 🔧 STATISTIQUES MISES À JOUR: 3 statuts seulement */}
             <div className="space-y-6">
-              {/* Ticket Stats */}
               <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <BarChart3 className="text-blue-400" size={20} />
@@ -813,21 +807,21 @@ export default function SupportPage() {
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-300 font-medium">Tickets ouverts</span>
+                    <span className="text-gray-300 font-medium">En attente</span>
+                    <span className="text-orange-400 font-bold">
+                      {tickets.filter(t => t.status === 'pending').length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
+                    <span className="text-gray-300 font-medium">Ouverts</span>
                     <span className="text-blue-400 font-bold">
                       {tickets.filter(t => t.status === 'open').length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-300 font-medium">En attente de réponse</span>
-                    <span className="text-yellow-400 font-bold">
-                      {tickets.filter(t => t.status === 'pending').length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-300 font-medium">Résolus</span>
-                    <span className="text-emerald-400 font-bold">
-                      {tickets.filter(t => t.status === 'resolved').length}
+                    <span className="text-gray-300 font-medium">Fermés</span>
+                    <span className="text-gray-400 font-bold">
+                      {tickets.filter(t => t.status === 'closed').length}
                     </span>
                   </div>
                 </div>
