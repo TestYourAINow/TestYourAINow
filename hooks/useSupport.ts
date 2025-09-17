@@ -1,10 +1,11 @@
-// hooks/useSupport.ts (UPDATED - Sans Priority)
+// hooks/useSupport.ts
 import { useState, useEffect } from 'react';
 
 interface SupportTicket {
   id: string;
   title: string;
-  status: 'pending' | 'open' | 'closed'; // 🔧 Seulement 3 statuts
+  status: 'open' | 'pending' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   category: string;
   created: string;
   lastUpdate: string;
@@ -31,6 +32,7 @@ interface TicketDetails {
   id: string;
   title: string;
   status: string;
+  priority: string;
   category: string;
   created: string;
   updated: string;
@@ -45,6 +47,7 @@ interface ContactFormData {
   email: string;
   subject: string;
   category: string;
+  priority: string;
   message: string;
   attachments: {
     type: string;
@@ -115,7 +118,31 @@ export function useSupport() {
     }
   };
 
-  // 🔧 SUPPRIMÉ: updateTicketStatus (users ne peuvent plus changer statut)
+  // Mettre à jour le statut d'un ticket
+  const updateTicketStatus = async (ticketId: string, status: string, priority?: string) => {
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/support/tickets/${ticketId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status, priority }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error updating ticket');
+      }
+      
+      await fetchTickets();
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMessage);
+      return false;
+    }
+  };
 
   // Récupérer les détails d'un ticket avec ses messages
   const fetchTicketDetails = async (ticketId: string): Promise<{ ticket: TicketDetails; messages: TicketMessage[] } | null> => {
@@ -151,8 +178,7 @@ export function useSupport() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error sending message');
+        throw new Error('Error sending message');
       }
       
       const result = await response.json();
@@ -164,7 +190,7 @@ export function useSupport() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);
-      throw new Error(errorMessage);
+      return null;
     }
   };
 
@@ -235,6 +261,7 @@ export function useSupport() {
     loading,
     error,
     createTicket,
+    updateTicketStatus,
     fetchTicketDetails,
     addMessage,
     uploadScreenshot,

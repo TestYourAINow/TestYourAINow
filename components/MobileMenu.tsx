@@ -14,7 +14,8 @@ import {
   LogOut,
   BarChart3,
   X,
-  ChevronLeft
+  ChevronLeft,
+  Shield
 } from "lucide-react"
 import { useSession, signOut } from "next-auth/react"
 import { useState, useRef, useEffect } from "react"
@@ -166,6 +167,7 @@ const MobileMenuUserDropdown = () => {
 
 export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
 
   // 🔧 Empêcher le scroll du body quand le menu est ouvert
   useEffect(() => {
@@ -188,10 +190,20 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     { href: "/launch-agent", label: "Launch Agent", icon: <Rocket size={20} />, isActive: pathname === "/launch-agent" },
   ]
 
+  // ✅ SUPPORT ADMIN - Visible seulement pour les admins
+  const isAdmin = ['team@testyourainow.com', 'sango_ks@hotmail.com'].includes(session?.user?.email || '')
+
   const resourceItems = [
     { href: "/api-key", label: "API Key", icon: <Key size={20} />, isActive: pathname === "/api-key" },
     { href: "/video-guides", label: "Video Guides", icon: <PlayCircle size={20} />, isActive: pathname === "/video-guides" },
     { href: "/support", label: "Support", icon: <HelpCircle size={20} />, isActive: pathname === "/support" },
+    // ✅ SUPPORT ADMIN - Ajouté après Support normal
+    ...(isAdmin ? [{
+      href: "/admin/support", 
+      label: "Support Admin", 
+      icon: <Shield size={20} />, 
+      isActive: pathname.startsWith("/admin/support")
+    }] : [])
   ]
 
   if (!isOpen) return null

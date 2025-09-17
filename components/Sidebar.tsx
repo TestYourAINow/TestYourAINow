@@ -13,7 +13,8 @@ import {
   Settings,
   CreditCard,
   LogOut,
-  BarChart3
+  BarChart3,
+  Shield
 } from "lucide-react"
 import { useSidebar } from "@/context/SidebarContext"
 import { useSession, signOut } from "next-auth/react"
@@ -229,6 +230,7 @@ export default function Sidebar() {
   const pathname = usePathname()
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const buttonRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({})
+  const { data: session } = useSession()
 
   const setButtonRef = (key: string) => (ref: HTMLAnchorElement | null) => {
     buttonRefs.current[key] = ref
@@ -263,10 +265,20 @@ export default function Sidebar() {
     { href: "/launch-agent", label: "Launch Agent", icon: <Rocket size={20} />, isActive: pathname === "/launch-agent" },
   ]
 
+  // ✅ SUPPORT ADMIN - Visible seulement pour les admins
+  const isAdmin = ['team@testyourainow.com', 'sango_ks@hotmail.com'].includes(session?.user?.email || '')
+
   const resourceItems = [
     { href: "/api-key", label: "API Key", icon: <Key size={20} />, isActive: pathname === "/api-key" },
     { href: "/video-guides", label: "Video Guides", icon: <PlayCircle size={20} />, isActive: pathname === "/video-guides" },
     { href: "/support", label: "Support", icon: <HelpCircle size={20} />, isActive: pathname === "/support" },
+    // ✅ SUPPORT ADMIN - Ajouté après Support normal
+    ...(isAdmin ? [{
+      href: "/admin/support", 
+      label: "Support Admin", 
+      icon: <Shield size={20} />, 
+      isActive: pathname.startsWith("/admin/support")
+    }] : [])
   ]
 
   return (

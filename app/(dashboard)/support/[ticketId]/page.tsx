@@ -1,12 +1,12 @@
-// app/(dashboard)/support/[ticketId]/page.tsx (UPDATED - Sans Polling + Logique)
+// app/(dashboard)/support/[ticketId]/page.tsx (UPDATED - Sans Polling + Logique + Sans Attachments)
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { 
-  ArrowLeft, Send, Paperclip, Image, X, Clock, User, 
+  ArrowLeft, Send, X, Clock, User, 
   Headphones, CheckCircle, AlertCircle, MessageCircle, 
-  Upload, Trash2, Eye, RefreshCw
+  Eye, RefreshCw
 } from 'lucide-react';
 import { useSupport } from '@/hooks/useSupport';
 import { toast } from 'sonner';
@@ -50,14 +50,11 @@ export default function TicketConversationPage() {
   const [ticket, setTicket] = useState<TicketDetails | null>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [attachments, setAttachments] = useState<any[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [refreshing, setRefreshing] = useState(false); // 🔧 NOUVEAU: Pour refresh manuel
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 🔧 FONCTION DE REFRESH MANUEL (remplace le polling)
   const handleRefresh = async () => {
@@ -122,20 +119,19 @@ export default function TicketConversationPage() {
     }
   };
 
-  // Envoyer un message
+  // 🔧 MODIFIÉ: Envoyer un message (sans attachments)
   const handleSendMessage = async () => {
-    if (!newMessage.trim() && attachments.length === 0) return;
+    if (!newMessage.trim()) return;
     if (!canUserWrite()) return;
 
     setSending(true);
     
     try {
-      const message = await addMessage(ticketId, newMessage, attachments);
+      const message = await addMessage(ticketId, newMessage);
       
       if (message) {
         setMessages(prev => [...prev, message]);
         setNewMessage('');
-        setAttachments([]);
         toast.success('Message envoyé');
       }
     } catch (error: any) {
@@ -149,39 +145,6 @@ export default function TicketConversationPage() {
       }
     } finally {
       setSending(false);
-    }
-  };
-
-  // Upload de fichier
-  const handleFileUpload = async (file: File) => {
-    if (!canUserWrite()) {
-      toast.error('Impossible d\'ajouter des fichiers dans l\'état actuel du ticket');
-      return;
-    }
-    
-    setUploading(true);
-    
-    try {
-      const attachment = await uploadScreenshot(file, ticketId);
-      setAttachments(prev => [...prev, attachment]);
-      toast.success('Fichier téléchargé');
-    } catch (error) {
-      toast.error('Erreur lors du téléchargement');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  // Supprimer un attachment
-  const removeAttachment = async (index: number) => {
-    const attachment = attachments[index];
-    
-    try {
-      await deleteScreenshot(attachment.path);
-      setAttachments(prev => prev.filter((_, i) => i !== index));
-      toast.success('Fichier supprimé');
-    } catch (error) {
-      toast.error('Erreur lors de la suppression');
     }
   };
 
@@ -323,7 +286,7 @@ export default function TicketConversationPage() {
                     <div className="mt-3 space-y-2">
                       {message.attachments.map((attachment, idx) => (
                         <div key={idx} className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
-                          <Image size={16} />
+                          <Eye size={16} />
                           {/* 🔧 IMAGES NON-CLIQUABLES SI TICKET CLOSED */}
                           {ticket.status === 'closed' ? (
                             <span className="text-sm text-gray-400 flex-1 opacity-60">
@@ -351,28 +314,10 @@ export default function TicketConversationPage() {
           </div>
         </div>
 
-        {/* 🔧 Zone de réponse - CONDITIONNELLE */}
+        {/* 🔧 Zone de réponse - CONDITIONNELLE (SANS ATTACHMENTS) */}
         {canUserWrite() ? (
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
             <div className="space-y-4">
-              {/* Attachments preview */}
-              {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {attachments.map((attachment, index) => (
-                    <div key={index} className="relative bg-gray-800 rounded-lg p-2 flex items-center gap-2">
-                      <Image size={16} className="text-blue-400" />
-                      <span className="text-sm text-gray-300">{attachment.filename}</span>
-                      <button
-                        onClick={() => removeAttachment(index)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
               {/* Message input */}
               <div className="flex gap-3">
                 <div className="flex-1">
@@ -391,30 +336,9 @@ export default function TicketConversationPage() {
                 </div>
                 
                 <div className="flex flex-col gap-2">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        handleFileUpload(e.target.files[0]);
-                      }
-                    }}
-                    accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
-                  />
-                  
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="p-3 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 text-gray-400 hover:text-white rounded-xl transition-all disabled:opacity-50"
-                    title="Joindre une image"
-                  >
-                    {uploading ? <Upload className="animate-pulse" size={20} /> : <Paperclip size={20} />}
-                  </button>
-                  
                   <button
                     onClick={handleSendMessage}
-                    disabled={(!newMessage.trim() && attachments.length === 0) || sending}
+                    disabled={!newMessage.trim() || sending}
                     className="p-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Envoyer (Ctrl+Enter)"
                   >
