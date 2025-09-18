@@ -35,7 +35,6 @@ const DemoSchema = new Schema({
   
   // Dates
   createdAt: { type: Date, default: Date.now },
-  expiresAt: { type: Date, required: true }
 });
 
 // 🆕 Middleware pour générer automatiquement un token à la création - VERSION CORRIGÉE

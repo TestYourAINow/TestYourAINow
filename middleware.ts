@@ -7,7 +7,7 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
-  // ✅ Liste des pages publiques
+  // Public path list
   const publicPaths = ["/", "/login", "/signup", "/pricing", "/api"];
   const isPublic = publicPaths.some((path) => pathname.startsWith(path));
 
@@ -15,12 +15,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // ❌ Redirige vers login si non connecté
+  // Redirect to login if not authenticated
   if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // 🛡️ NOUVEAU: Protection routes admin support
+  // Admin support route protection
   if (pathname.startsWith('/admin/support')) {
     const adminEmails = ['team@testyourainow.com', 'sango_ks@hotmail.com'];
     const userEmail = token.email;
@@ -30,10 +30,10 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // 🔓 Bypass permanent pour ton compte
+  // Permanent bypass for your account
   const isSango = token.email === "sango_ks@hotmail.com";
 
-  // 🔒 Redirige vers /subscribe si non abonné (sauf toi)
+  // Redirect to /subscribe if not subscribed (except you)
   if (!token.isSubscribed && !isSango && pathname !== "/subscribe") {
     return NextResponse.redirect(new URL("/subscribe", req.url));
   }

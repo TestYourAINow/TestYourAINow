@@ -1,4 +1,3 @@
-// app/(dashboard)/support/page.tsx (UPDATED - Sans Help Center + Max 3 uploads)
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -25,9 +24,9 @@ export default function SupportPage() {
   const { data: session } = useSession();
   const { tickets, loading, error, createTicket, uploadScreenshot } = useSupport();
 
-  const [activeTab, setActiveTab] = useState('contact'); // 🔧 Défaut à contact (plus de help-center)
+  const [activeTab, setActiveTab] = useState('contact');
   const [ticketSearchQuery, setTicketSearchQuery] = useState('');
-  const [ticketStatusFilter, setTicketStatusFilter] = useState('all'); // 🔧 Défaut à 'all'
+  const [ticketStatusFilter, setTicketStatusFilter] = useState('all');
   const [contactForm, setContactForm] = useState<{
     subject: string;
     category: string;
@@ -61,13 +60,13 @@ export default function SupportPage() {
     router.push(`/support/${ticketId}`);
   };
 
-  // 🔧 UPLOAD AVEC LIMITE 3 FICHIERS MAX
+  // Upload with 3 file limit
   const handleFileUpload = async (file: File) => {
     if (uploadingAttachment) return;
     
-    // 🔧 VÉRIFICATION: Max 3 fichiers
+    // Check: Max 3 files
     if (contactForm.attachments.length >= 3) {
-      toast.error('Maximum 3 fichiers autorisés');
+      toast.error('Maximum 3 files allowed');
       return;
     }
     
@@ -88,9 +87,9 @@ export default function SupportPage() {
         }]
       }));
       
-      toast.success(`Fichier ajouté (${contactForm.attachments.length + 1}/3)`);
+      toast.success(`File added (${contactForm.attachments.length + 1}/3)`);
     } catch (error) {
-      toast.error('Erreur lors du téléchargement');
+      toast.error('Upload failed');
     } finally {
       setUploadingAttachment(false);
     }
@@ -105,13 +104,13 @@ export default function SupportPage() {
         email: session?.user?.email || '',
         subject: contactForm.subject,
         category: contactForm.category,
-        priority: '', // 🔧 FIX: Ajout priority manquante
+        priority: '',
         message: contactForm.message,
         attachments: contactForm.attachments
       };
       
       const result = await createTicket(formDataWithUser);
-      toast.success(`Ticket ${result.ticketId} créé avec succès !`);
+      toast.success(`Ticket ${result.ticketId} created successfully!`);
       
       setContactForm({
         subject: '',
@@ -122,7 +121,7 @@ export default function SupportPage() {
       
       setActiveTab('tickets');
     } catch (error) {
-      toast.error('Erreur lors de la création du ticket');
+      toast.error('Failed to create ticket');
     }
   };
 
@@ -152,7 +151,7 @@ export default function SupportPage() {
           </div>
         </div>
 
-        {/* 🔧 NAVIGATION SIMPLIFIÉE: 2 onglets seulement */}
+        {/* Navigation tabs */}
         <div className="mb-8">
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-2">
             <div className="flex gap-2">
@@ -192,13 +191,13 @@ export default function SupportPage() {
                 </div>
 
                 <form onSubmit={handleContactSubmit} className="space-y-6">
-                  {/* Affichage des infos user */}
+                  {/* Account information display */}
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                    <h3 className="text-sm font-semibold text-blue-300 mb-2">Informations du compte</h3>
+                    <h3 className="text-sm font-semibold text-blue-300 mb-2">Account Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                       <div className="flex items-center gap-2 text-gray-300">
                         <User size={14} className="text-blue-400" />
-                        <span>{session?.user?.name || 'Utilisateur'}</span>
+                        <span>{session?.user?.name || 'User'}</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-300">
                         <MessageCircle size={14} className="text-blue-400" />
@@ -207,32 +206,32 @@ export default function SupportPage() {
                     </div>
                   </div>
 
-                  {/* Catégorie */}
+                  {/* Category */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Catégorie *</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Category *</label>
                     <select
                       value={contactForm.category}
                       onChange={(e) => setContactForm({...contactForm, category: e.target.value})}
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 transition-all backdrop-blur-sm"
                       required
                     >
-                      <option value="">Sélectionner une catégorie</option>
-                      <option value="technical">Problème technique</option>
-                      <option value="billing">Question de facturation</option>
-                      <option value="general">Question générale</option>
-                      <option value="account">Problème de compte</option>
+                      <option value="">Select a category</option>
+                      <option value="technical">Technical Issue</option>
+                      <option value="billing">Billing Question</option>
+                      <option value="general">General Question</option>
+                      <option value="account">Account Issue</option>
                     </select>
                   </div>
 
-                  {/* Sujet */}
+                  {/* Subject */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Sujet *</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Subject *</label>
                     <input
                       type="text"
                       value={contactForm.subject}
                       onChange={(e) => setContactForm({...contactForm, subject: e.target.value})}
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm"
-                      placeholder="Décrivez brièvement votre problème"
+                      placeholder="Briefly describe your issue"
                       required
                     />
                   </div>
@@ -245,15 +244,15 @@ export default function SupportPage() {
                       onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
                       rows={6}
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm resize-none"
-                      placeholder="Décrivez votre problème en détail..."
+                      placeholder="Describe your issue in detail..."
                       required
                     />
                   </div>
 
-                  {/* 🔧 ATTACHMENTS AVEC LIMITE 3 */}
+                  {/* Attachments with 3 file limit */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Captures d'écran (optionnel) - Max 3 fichiers
+                      Screenshots (optional) - Max 3 files
                     </label>
                     <div>
                       <input
@@ -261,7 +260,7 @@ export default function SupportPage() {
                         onChange={(e) => {
                           if (e.target.files?.[0]) {
                             handleFileUpload(e.target.files[0]);
-                            e.target.value = ''; // Reset input
+                            e.target.value = '';
                           }
                         }}
                         accept="image/jpeg,image/png,image/webp"
@@ -284,20 +283,20 @@ export default function SupportPage() {
                         )}
                         <p className="text-gray-400 text-sm">
                           {uploadingAttachment 
-                            ? 'Téléchargement...' 
+                            ? 'Uploading...' 
                             : contactForm.attachments.length >= 3 
-                              ? 'Limite de 3 fichiers atteinte'
-                              : `Cliquez pour ajouter une image (${contactForm.attachments.length}/3)`
+                              ? '3 file limit reached'
+                              : `Click to add an image (${contactForm.attachments.length}/3)`
                           }
                         </p>
-                        <p className="text-gray-500 text-xs mt-1">JPEG, PNG, WebP - Max 5MB par fichier</p>
+                        <p className="text-gray-500 text-xs mt-1">JPEG, PNG, WebP - Max 5MB per file</p>
                       </label>
                     </div>
 
-                    {/* Preview des attachments */}
+                    {/* Attachment preview */}
                     {contactForm.attachments.length > 0 && (
                       <div className="mt-4 space-y-2">
-                        <p className="text-sm text-gray-300">Fichiers attachés ({contactForm.attachments.length}/3) :</p>
+                        <p className="text-sm text-gray-300">Attached files ({contactForm.attachments.length}/3):</p>
                         {contactForm.attachments.map((attachment, index) => (
                           <div key={index} className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg">
                             <div className="flex items-center gap-3">
@@ -314,7 +313,7 @@ export default function SupportPage() {
                                   ...prev,
                                   attachments: prev.attachments.filter((_, i) => i !== index)
                                 }));
-                                toast.success('Fichier supprimé');
+                                toast.success('File removed');
                               }}
                               className="text-red-400 hover:text-red-300 transition-colors"
                             >
@@ -332,7 +331,7 @@ export default function SupportPage() {
                     className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105 flex items-center justify-center gap-3 disabled:transform-none disabled:shadow-none"
                   >
                     <Send size={20} />
-                    Créer le ticket
+                    Create ticket
                   </button>
                 </form>
               </div>
@@ -424,7 +423,7 @@ export default function SupportPage() {
                             : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
                         }`}
                       >
-                        {status === 'all' ? 'Tous' : status.charAt(0).toUpperCase() + status.slice(1)}
+                        {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
                       </button>
                     ))}
                   </div>
@@ -457,11 +456,11 @@ export default function SupportPage() {
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-1">
                             <Calendar size={12} />
-                            <span>Créé le {ticket.created}</span>
+                            <span>Created {ticket.created}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock size={12} />
-                            <span>Mis à jour le {ticket.lastUpdate}</span>
+                            <span>Updated {ticket.lastUpdate}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
@@ -479,12 +478,12 @@ export default function SupportPage() {
                       <Archive className="w-10 h-10 text-gray-500" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-3">
-                      {tickets.length === 0 ? 'Aucun ticket de support' : 'Aucun ticket trouvé'}
+                      {tickets.length === 0 ? 'No support tickets' : 'No tickets found'}
                     </h3>
                     <p className="text-gray-400 max-w-md mx-auto mb-6">
                       {tickets.length === 0 
-                        ? "Vous n'avez pas encore créé de tickets de support. Besoin d'aide ? Créez votre premier ticket."
-                        : "Essayez d'ajuster vos critères de recherche ou de filtre pour trouver ce que vous cherchez."
+                        ? "You haven't created any support tickets yet. Need help? Create your first ticket."
+                        : "Try adjusting your search or filter criteria to find what you're looking for."
                       }
                     </p>
                     <button 
@@ -493,12 +492,12 @@ export default function SupportPage() {
                           setActiveTab('contact');
                         } else {
                           setTicketSearchQuery('');
-                          setTicketStatusFilter('all'); // 🔧 Reset à 'all'
+                          setTicketStatusFilter('all');
                         }
                       }}
                       className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all"
                     >
-                      {tickets.length === 0 ? 'Créer le premier ticket' : 'Effacer les filtres'}
+                      {tickets.length === 0 ? 'Create first ticket' : 'Clear filters'}
                     </button>
                   </div>
                 )}
@@ -514,19 +513,19 @@ export default function SupportPage() {
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-300 font-medium">En attente</span>
+                    <span className="text-gray-300 font-medium">Pending</span>
                     <span className="text-orange-400 font-bold">
                       {tickets.filter(t => t.status === 'pending').length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-300 font-medium">Ouverts</span>
+                    <span className="text-gray-300 font-medium">Open</span>
                     <span className="text-blue-400 font-bold">
                       {tickets.filter(t => t.status === 'open').length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
-                    <span className="text-gray-300 font-medium">Fermés</span>
+                    <span className="text-gray-300 font-medium">Closed</span>
                     <span className="text-gray-400 font-bold">
                       {tickets.filter(t => t.status === 'closed').length}
                     </span>

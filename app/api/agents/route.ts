@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ agents });
 }
 
-// POST - Create new agent - INCHANGÉ
+// POST - Create new agent - CORRIGÉ avec rawPrompt
 export async function POST(req: NextRequest) {
   await connectToDatabase();
 
@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       temperature = 0.3,
       top_p = 1,
       prompt = "",
+      rawPrompt = "", // 🆕 AJOUTÉ
     } = await req.json();
 
     const newAgent = await Agent.create({
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest) {
       temperature,
       top_p,
       prompt,
+      rawPrompt, // 🆕 AJOUTÉ
     });
 
     return NextResponse.json({ message: "Agent created", id: newAgent._id });

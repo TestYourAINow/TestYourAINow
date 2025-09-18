@@ -1,4 +1,4 @@
-// app/api/admin/support/tickets/route.ts (UPDATED - Sans Priority)
+// app/api/admin/support/tickets/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -7,7 +7,7 @@ import { SupportTicket } from '@/models/SupportTicket';
 import { TicketMessage } from '@/models/TicketMessage';
 import User from '@/models/User';
 
-// GET - Récupérer TOUS les tickets (admin seulement)
+// GET - Retrieve all tickets for admin view
 export async function GET() {
   try {
     await connectToDatabase();
@@ -17,17 +17,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Vérifier les permissions admin
+    // Verify admin permissions
     const adminEmails = ['team@testyourainow.com', 'sango_ks@hotmail.com'];
     if (!adminEmails.includes(session.user.email || '')) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    // Récupérer tous les tickets avec infos utilisateur
+    // Retrieve all tickets with user information
     const tickets = await SupportTicket.find({})
       .sort({ createdAt: -1 });
 
-    // Compter les messages pour chaque ticket et récupérer les infos user
+    // Count messages for each ticket and get user info
     const ticketsWithDetails = await Promise.all(
       tickets.map(async (ticket) => {
         const messageCount = await TicketMessage.countDocuments({ ticketId: ticket._id });

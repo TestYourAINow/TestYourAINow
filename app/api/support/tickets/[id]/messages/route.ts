@@ -1,4 +1,4 @@
-// app/api/support/tickets/[id]/messages/route.ts (UPDATED - Fix SenderType Bug)
+// app/api/support/tickets/[id]/messages/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -8,7 +8,7 @@ import { TicketMessage } from '@/models/TicketMessage';
 import User from '@/models/User';
 import mongoose from 'mongoose';
 
-// GET - Récupérer les messages d'un ticket
+// GET - Retrieve messages for a ticket
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> } 
@@ -27,7 +27,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid ticket ID' }, { status: 400 });
     }
 
-    // Vérifier que le ticket appartient à l'utilisateur ou que c'est un admin
+    // Verify ticket belongs to user or user is admin
     const isAdmin = ['team@testyourainow.com', 'sango_ks@hotmail.com'].includes(session.user.email || '');
     
     const ticketQuery = isAdmin 
@@ -64,7 +64,7 @@ export async function GET(
   }
 }
 
-// POST - Ajouter un message à un ticket
+// POST - Add message to a ticket
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -91,13 +91,9 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid ticket ID' }, { status: 400 });
     }
 
-    // 🔧 FIX BUG: Détection admin plus claire
+    // Clear admin detection logic
     const adminEmails = ['team@testyourainow.com', 'sango_ks@hotmail.com'];
     const isAdmin = adminEmails.includes(session.user.email || '');
-    
-    console.log('🐛 DEBUG - User email:', session.user.email);
-    console.log('🐛 DEBUG - Is admin:', isAdmin);
-    console.log('🐛 DEBUG - Admin emails:', adminEmails);
 
     const ticketQuery = isAdmin 
       ? { _id: new mongoose.Types.ObjectId(ticketId) }
@@ -109,7 +105,7 @@ export async function POST(
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
     }
 
-    // 🔧 NOUVELLE LOGIQUE: User ne peut pas écrire si status pending ou closed
+    // User cannot write if status is pending or closed
     if (!isAdmin) {
       if (ticket.status === 'pending') {
         return NextResponse.json({ 
@@ -124,18 +120,15 @@ export async function POST(
       }
     }
 
-    // 🔧 FIX: Déterminer le type de sender plus clairement
+    // Determine sender type clearly
     const senderType = isAdmin ? 'support' : 'user';
     let senderName;
     
     if (isAdmin) {
       senderName = 'Support Team';
     } else {
-      senderName = session.user.name || 'User'; // 🔧 FIX: Supprimé username qui n'existe pas
+      senderName = session.user.name || 'User';
     }
-
-    console.log('🐛 DEBUG - Sender type:', senderType);
-    console.log('🐛 DEBUG - Sender name:', senderName);
 
     const newMessage = await TicketMessage.create({
       ticketId: new mongoose.Types.ObjectId(ticketId),
@@ -146,17 +139,14 @@ export async function POST(
       attachments: attachments || []
     });
 
-    // 🔧 UPDATE: Nouvelle logique de statuts
+    // Status update logic
     const updateData: any = {};
     
     if (senderType === 'support') {
-      // Quand le support répond, le ticket devient "open" (user peut maintenant répondre)
+      // When support responds, ticket becomes "open" (user can now reply)
       if (ticket.status === 'pending') {
         updateData.status = 'open';
       }
-    } else {
-      // Quand l'user répond, ça reste "open" (pas de changement automatique)
-      // L'admin devra manuellement fermer quand c'est terminé
     }
 
     if (Object.keys(updateData).length > 0) {

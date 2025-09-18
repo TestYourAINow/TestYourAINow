@@ -1,11 +1,11 @@
-// models/SupportTicket.ts (UPDATED - Sans Priority)
+// models/SupportTicket.ts
 import mongoose, { Schema, Document, models, model } from "mongoose";
 
 export interface SupportTicketDocument extends Document {
   userId: mongoose.Types.ObjectId;
   title: string;
   category: string;
-  status: 'pending' | 'open' | 'closed'; // 🔧 Seulement 3 statuts
+  status: 'pending' | 'open' | 'closed';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,8 +17,8 @@ const SupportTicketSchema = new Schema<SupportTicketDocument>(
     category: { type: String, required: true },
     status: { 
       type: String, 
-      enum: ['pending', 'open', 'closed'], // 🔧 Supprimé 'resolved'
-      default: 'pending' // 🔧 Changé de 'open' à 'pending'
+      enum: ['pending', 'open', 'closed'],
+      default: 'pending'
     },
   },
   { timestamps: true }

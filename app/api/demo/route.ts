@@ -73,7 +73,6 @@ export async function POST(req: NextRequest) {
     
     // Dates
     createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // expire dans 7 jours
   });
 
   return NextResponse.json({ id: demo._id }, { status: 200 });

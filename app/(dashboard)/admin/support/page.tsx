@@ -1,4 +1,3 @@
-// app/(dashboard)/admin/support/page.tsx (UPDATED - Sans Priority + Actions Rapides)
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,7 +14,7 @@ import { toast } from 'sonner';
 interface AdminTicket {
   id: string;
   title: string;
-  status: 'pending' | 'open' | 'closed'; // 🔧 Seulement 3 statuts
+  status: 'pending' | 'open' | 'closed';
   category: string;
   created: string;
   updated: string;
@@ -33,9 +32,9 @@ export default function AdminSupportPage() {
   const [tickets, setTickets] = useState<AdminTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('pending'); // 🔧 Défaut à pending
+  const [statusFilter, setStatusFilter] = useState('pending');
 
-  // Vérifier les permissions admin
+  // Verify admin permissions
   useEffect(() => {
     if (status === 'loading') return;
     
@@ -47,14 +46,14 @@ export default function AdminSupportPage() {
     const adminEmails = ['team@testyourainow.com', 'sango_ks@hotmail.com'];
     if (!adminEmails.includes(session.user.email || '')) {
       router.push('/dashboard');
-      toast.error('Accès refusé - Droits administrateur requis');
+      toast.error('Access denied - Administrator privileges required');
       return;
     }
 
     fetchAllTickets();
   }, [session, status]);
 
-  // Récupérer tous les tickets (version admin)
+  // Fetch all tickets for admin view
   const fetchAllTickets = async () => {
     setLoading(true);
     
@@ -62,26 +61,24 @@ export default function AdminSupportPage() {
       const response = await fetch('/api/admin/support/tickets');
       
       if (!response.ok) {
-        throw new Error('Erreur lors du chargement des tickets');
+        throw new Error('Failed to load tickets');
       }
       
       const data = await response.json();
       setTickets(data.tickets || []);
     } catch (error) {
-      toast.error('Erreur lors du chargement des tickets');
+      toast.error('Failed to load tickets');
     } finally {
       setLoading(false);
     }
   };
 
-  // Naviguer vers la conversation admin
+  // Navigate to admin conversation view
   const handleTicketClick = (ticketId: string) => {
     router.push(`/admin/support/${ticketId}`);
   };
 
-  // 🔧 SUPPRIMÉ: quickStatusChange (plus d'actions rapides)
-
-  // 🔧 FILTRES SIMPLIFIÉS: Seulement 3 statuts
+  // Filter tickets by search and status
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          ticket.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -100,11 +97,9 @@ export default function AdminSupportPage() {
     }
   };
 
-  // 🔧 SUPPRIMÉ: getPriorityColor (plus de priorité)
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
+    return date.toLocaleDateString('en-US', { 
       day: '2-digit', 
       month: '2-digit',
       hour: '2-digit',
@@ -112,7 +107,7 @@ export default function AdminSupportPage() {
     });
   };
 
-  // 🔧 STATISTIQUES MISES À JOUR: 3 statuts seulement
+  // Calculate ticket statistics
   const stats = {
     total: tickets.length,
     pending: tickets.filter(t => t.status === 'pending').length,
@@ -135,7 +130,7 @@ export default function AdminSupportPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header Admin */}
+        {/* Admin Header */}
         <div className="mb-8">
           <div className="flex items-center gap-6">
             <div className="relative">
@@ -152,13 +147,13 @@ export default function AdminSupportPage() {
                 Support Admin Dashboard
               </h1>
               <p className="text-gray-400 text-lg">
-                Gérez tous les tickets de support des utilisateurs
+                Manage all user support tickets and conversations
               </p>
             </div>
           </div>
         </div>
 
-        {/* 🔧 STATISTIQUES MISES À JOUR: 4 cartes pour 3 statuts + total */}
+        {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
             <div className="flex items-center gap-3">
@@ -175,7 +170,7 @@ export default function AdminSupportPage() {
               <AlertCircle className="text-orange-400" size={24} />
               <div>
                 <p className="text-2xl font-bold text-orange-400">{stats.pending}</p>
-                <p className="text-gray-400 text-sm">En Attente</p>
+                <p className="text-gray-400 text-sm">Pending</p>
               </div>
             </div>
           </div>
@@ -185,7 +180,7 @@ export default function AdminSupportPage() {
               <MessageCircle className="text-blue-400" size={24} />
               <div>
                 <p className="text-2xl font-bold text-blue-400">{stats.open}</p>
-                <p className="text-gray-400 text-sm">Ouverts</p>
+                <p className="text-gray-400 text-sm">Open</p>
               </div>
             </div>
           </div>
@@ -195,22 +190,22 @@ export default function AdminSupportPage() {
               <CheckCircle className="text-gray-400" size={24} />
               <div>
                 <p className="text-2xl font-bold text-gray-400">{stats.closed}</p>
-                <p className="text-gray-400 text-sm">Fermés</p>
+                <p className="text-gray-400 text-sm">Closed</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Filtres et Recherche */}
+        {/* Filters and Search */}
         <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6 mb-8">
           <div className="flex flex-wrap gap-4">
-            {/* Recherche */}
+            {/* Search Input */}
             <div className="flex-1 min-w-64">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
-                  placeholder="Rechercher par titre, email, ou ID..."
+                  placeholder="Search by title, email, or ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400"
@@ -218,27 +213,27 @@ export default function AdminSupportPage() {
               </div>
             </div>
 
-            {/* 🔧 FILTRES SIMPLIFIÉS: Seulement statuts */}
+            {/* Status Filter */}
             <div className="flex gap-3">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60"
               >
-                <option value="all">Tous les statuts</option>
-                <option value="pending">En attente</option>
-                <option value="open">Ouverts</option>
-                <option value="closed">Fermés</option>
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
               </select>
             </div>
           </div>
         </div>
 
-        {/* Liste des Tickets */}
+        {/* Ticket List */}
         <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">
-              Tickets Support ({filteredTickets.length})
+              Support Tickets ({filteredTickets.length})
             </h2>
           </div>
 
@@ -256,7 +251,6 @@ export default function AdminSupportPage() {
                         {ticket.title}
                       </h3>
                       <span className="text-xs text-gray-400 font-mono">#{ticket.id}</span>
-                      {/* 🔧 SUPPRIMÉ: Priority badge */}
                     </div>
                     
                     <div className="flex items-center gap-4 mb-3">
@@ -284,19 +278,17 @@ export default function AdminSupportPage() {
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1">
                       <Calendar size={12} />
-                      <span>Créé le {formatDate(ticket.created)}</span>
+                      <span>Created {formatDate(ticket.created)}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock size={12} />
-                      <span>Mis à jour le {formatDate(ticket.updated)}</span>
+                      <span>Updated {formatDate(ticket.updated)}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <MessageCircle size={12} />
                       <span>{ticket.messages} messages</span>
                     </div>
                   </div>
-
-                  {/* 🔧 SUPPRIMÉ: Actions rapides */}
                 </div>
               </div>
             ))}
@@ -307,9 +299,9 @@ export default function AdminSupportPage() {
               <div className="w-20 h-20 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Archive className="w-10 h-10 text-gray-500" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Aucun ticket trouvé</h3>
+              <h3 className="text-xl font-bold text-white mb-3">No tickets found</h3>
               <p className="text-gray-400 max-w-md mx-auto">
-                Aucun ticket ne correspond à vos critères de recherche actuels.
+                No tickets match your current search and filter criteria.
               </p>
             </div>
           )}

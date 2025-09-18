@@ -22,13 +22,6 @@ export async function POST(
     const agent = await Agent.findOne({ _id: id, userId: session.user.id });
     if (!agent) return NextResponse.json({ error: "Agent not found" }, { status: 404 });
 
-    // 🔧 CHANGEMENT PRINCIPAL - Utiliser la clé spécifique de l'agent
-    const { openai, error } = await createAgentOpenAI(agent);
-    
-    if (!openai) {
-      return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
-    }
-
     const {
       openaiModel = "gpt-4o",
       temperature = 0.3,
@@ -42,7 +35,25 @@ export async function POST(
       language = "English",
       template = "",
       industry = "",
+      rawPrompt = "", // 🆕 NOUVEAU CHAMP AJOUTÉ
     } = agent;
+
+    // 🆕 LOGIQUE RAW PROMPT - UTILISER TEL QUEL
+    if (template === 'raw' && rawPrompt?.trim()) {
+      console.log('🎯 Raw prompt mode - using as-is');
+      
+      agent.finalPrompt = rawPrompt.trim();
+      await agent.save();
+      
+      return NextResponse.json({ prompt: rawPrompt.trim() });
+    }
+
+    // 🔧 CHANGEMENT PRINCIPAL - Utiliser la clé spécifique de l'agent
+    const { openai, error } = await createAgentOpenAI(agent);
+    
+    if (!openai) {
+      return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
+    }
 
     const isSupport =
       template?.toLowerCase().includes("support") || description?.toLowerCase().includes("support");

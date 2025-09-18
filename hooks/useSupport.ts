@@ -63,7 +63,7 @@ export function useSupport() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Récupérer les tickets de l'utilisateur
+  // Fetch user tickets
   const fetchTickets = async () => {
     setLoading(true);
     setError(null);
@@ -85,7 +85,7 @@ export function useSupport() {
     }
   };
 
-  // Créer un nouveau ticket
+  // Create new ticket
   const createTicket = async (formData: ContactFormData) => {
     setLoading(true);
     setError(null);
@@ -105,7 +105,7 @@ export function useSupport() {
 
       const result = await response.json();
       
-      // Rafraîchir la liste des tickets
+      // Refresh ticket list
       await fetchTickets();
       
       return result;
@@ -118,7 +118,7 @@ export function useSupport() {
     }
   };
 
-  // Mettre à jour le statut d'un ticket
+  // Update ticket status
   const updateTicketStatus = async (ticketId: string, status: string, priority?: string) => {
     setError(null);
     
@@ -144,7 +144,7 @@ export function useSupport() {
     }
   };
 
-  // Récupérer les détails d'un ticket avec ses messages
+  // Fetch ticket details with messages
   const fetchTicketDetails = async (ticketId: string): Promise<{ ticket: TicketDetails; messages: TicketMessage[] } | null> => {
     setError(null);
     
@@ -164,7 +164,7 @@ export function useSupport() {
     }
   };
 
-  // Ajouter un message à un ticket
+  // Add message to ticket
   const addMessage = async (ticketId: string, message: string, attachments: any[] = []): Promise<TicketMessage | null> => {
     setError(null);
     
@@ -183,7 +183,7 @@ export function useSupport() {
       
       const result = await response.json();
       
-      // Rafraîchir la liste des tickets pour mettre à jour le compteur
+      // Refresh ticket list to update counter
       await fetchTickets();
       
       return result.message;
@@ -194,7 +194,7 @@ export function useSupport() {
     }
   };
 
-  // Upload d'un screenshot
+  // Upload screenshot
   const uploadScreenshot = async (file: File, ticketId: string) => {
     setError(null);
     
@@ -227,7 +227,7 @@ export function useSupport() {
     }
   };
 
-  // Supprimer un screenshot
+  // Delete screenshot
   const deleteScreenshot = async (path: string) => {
     setError(null);
     

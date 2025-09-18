@@ -8,7 +8,7 @@ import TextareaAutosize from "react-textarea-autosize";
 import {
   Bot, Briefcase, Settings, User, Globe, MessageCircle,
   ChevronLeft, ChevronRight, CheckCircle, Key, Zap, Info, Upload, AlertCircle,
-  X, Plus, Clock, Star, TrendingUp, Shield
+  X, Plus, Clock, Star, TrendingUp, Shield, FileText
 } from "lucide-react";
 import { toast, Toaster } from "react-hot-toast";
 
@@ -26,7 +26,7 @@ interface FormData {
   name: string;
   industry: string;
   language: string;
-  template: "sales" | "support" | "blank" | "";
+  template: "sales" | "support" | "blank" | "raw" | "";
   openaiModel: string;
   apiKey: string;
   temperature: number;
@@ -36,6 +36,7 @@ interface FormData {
   tone: string;
   rules: string;
   companyInfo: string;
+  rawPrompt: string; // 🆕 NOUVEAU CHAMP
 }
 
 const defaultFormData: FormData = {
@@ -52,8 +53,8 @@ const defaultFormData: FormData = {
   tone: "",
   rules: "",
   companyInfo: "",
+  rawPrompt: "", // 🆕 NOUVEAU CHAMP
 };
-
 const templatePresets: Record<string, Partial<typeof defaultFormData>> = {
   support: {
     description: "Create an AI that should work as a support agent for a (INDUSTRY) Company. Friendly, engaging, with great support skills and empathy.",
@@ -75,7 +76,7 @@ const updateTemplateContent = (
   industry: string,
   language: string
 ): Partial<FormData> => {
-  if (!templateKey || templateKey === "blank" || !templatePresets[templateKey]) {
+  if (!templateKey || templateKey === "blank" || templateKey === "raw" || !templatePresets[templateKey]) {
     return {};
   }
 
@@ -143,16 +144,17 @@ const CharacterCounter = ({ content, maxLength = 1000 }: { content: string; maxL
     </div>
   );
 };
-
-
-
-
 // 🎨 NOUVEAU - Step Indicator Premium
-const StepIndicator = ({ currentStep }: { currentStep: Step }) => {
+const StepIndicator = ({ currentStep, formData }: { currentStep: Step; formData: FormData }) => {
   const steps = [
     { number: 1, title: "AI Type & Basics", icon: Bot, color: "from-blue-500 to-cyan-500" },
     { number: 2, title: "Model Settings", icon: Settings, color: "from-purple-500 to-pink-500" },
-    { number: 3, title: "Personality & Knowledge", icon: User, color: "from-green-500 to-emerald-500" },
+    { 
+      number: 3, 
+      title: formData.template === 'raw' ? "Raw Prompt" : "Personality & Knowledge", 
+      icon: formData.template === 'raw' ? FileText : User, 
+      color: "from-green-500 to-emerald-500" 
+    },
     { number: 4, title: "Final Review", icon: CheckCircle, color: "from-orange-500 to-red-500" },
   ];
 
@@ -255,7 +257,6 @@ export default function CreateAgentWizard() {
   const [faqGenerating, setFaqGenerating] = useState(false);
   const [originalCompanyText, setOriginalCompanyText] = useState("");
   const [isFaqGenerated, setIsFaqGenerated] = useState(false);
-
   const handleApiKeyAdded = async (newApiKeyData: { id: string; name: string; maskedKey: string; isDefault: boolean }) => {
     // Au lieu d'ajouter juste l'objet temporaire, on refetch toutes les API keys
     try {
@@ -333,7 +334,7 @@ export default function CreateAgentWizard() {
     setFormData(prev => {
       const newFormData = { ...prev, [field]: value };
 
-      if ((field === 'industry' || field === 'language') && prev.template && prev.template !== 'blank') {
+      if ((field === 'industry' || field === 'language') && prev.template && prev.template !== 'blank' && prev.template !== 'raw') {
         const templateUpdates = updateTemplateContent(
           { ...prev, [field]: value },
           prev.template,
@@ -352,7 +353,7 @@ export default function CreateAgentWizard() {
     setFormData(prev => {
       const baseData: FormData = { ...prev, template };
 
-      if (template && template !== "blank" && templatePresets[template]) {
+      if (template && template !== "blank" && template !== "raw" && templatePresets[template]) {
         const templateUpdates = updateTemplateContent(
           baseData,
           template,
@@ -360,7 +361,7 @@ export default function CreateAgentWizard() {
           prev.language
         );
         return { ...baseData, ...templateUpdates };
-      } else if (template === "blank") {
+      } else if (template === "blank" || template === "raw") {
         return {
           ...baseData,
           description: "",
@@ -377,11 +378,19 @@ export default function CreateAgentWizard() {
   const canProceedToNextStep = () => {
     switch (currentStep) {
       case 1:
-        return formData.name && formData.industry && formData.language && formData.template;
+        if (formData.template === 'raw') {
+          return formData.name && formData.template;
+        } else {
+          return formData.name && formData.industry && formData.language && formData.template;
+        }
       case 2:
         return formData.openaiModel;
       case 3:
-        return formData.description && formData.questions && formData.tone && formData.rules;
+        if (formData.template === 'raw') {
+          return formData.rawPrompt && formData.rawPrompt.trim().length > 50;
+        } else {
+          return formData.description && formData.questions && formData.tone && formData.rules;
+        }
       case 4:
         return true;
       default:
@@ -430,7 +439,6 @@ export default function CreateAgentWizard() {
       setLoading(false);
     }
   };
-
   return (
     <>
       <Toaster
@@ -487,7 +495,7 @@ export default function CreateAgentWizard() {
               </p>
             </div>
 
-            <StepIndicator currentStep={currentStep} />
+            <StepIndicator currentStep={currentStep} formData={formData} />
 
             {/* Main Card */}
             <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-3xl shadow-2xl p-8 text-white relative overflow-hidden">
@@ -509,7 +517,7 @@ export default function CreateAgentWizard() {
                     </div>
 
                     {/* Template Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                       {[
                         {
                           key: "sales",
@@ -540,6 +548,16 @@ export default function CreateAgentWizard() {
                           features: ["Full customization", "No presets", "Maximum flexibility"],
                           bgGradient: "from-purple-500/10 to-pink-500/10",
                           borderGradient: "from-purple-500/30 to-pink-500/30"
+                        },
+                        {
+                          key: "raw",
+                          title: "Raw Prompt",
+                          desc: "Ideal for using prompts from other AI platforms",
+                          icon: FileText,
+                          gradient: "from-indigo-500 to-purple-500",
+                          features: ["Direct import", "No AI processing", "Use as-is"],
+                          bgGradient: "from-indigo-500/10 to-purple-500/10",
+                          borderGradient: "from-indigo-500/30 to-purple-500/30"
                         }
                       ].map((template) => {
                         const Icon = template.icon;
@@ -581,8 +599,8 @@ export default function CreateAgentWizard() {
                       })}
                     </div>
 
-                    {/* Basic Info Form */}
-                    {formData.template && (
+                    {/* Basic Info Form - Conditionnel selon le template */}
+                    {formData.template && formData.template !== 'raw' && (
                       <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
                         <h3 className="text-xl font-semibold mb-6 text-white">Basic Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -615,6 +633,22 @@ export default function CreateAgentWizard() {
                               placeholder="e.g., English, French"
                             />
                           </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Nom seulement pour raw template */}
+                    {formData.template === 'raw' && (
+                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                        <h3 className="text-xl font-semibold mb-6 text-white">Basic Information</h3>
+                        <div className="max-w-md">
+                          <label className="block text-sm font-medium mb-3 text-gray-300">AI Name *</label>
+                          <input
+                            value={formData.name}
+                            onChange={(e) => updateFormData("name", e.target.value)}
+                            className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 rounded-xl focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 outline-none text-white placeholder-gray-400 font-medium backdrop-blur-sm transition-all"
+                            placeholder="e.g., Sarah Support Bot"
+                          />
                         </div>
                       </div>
                     )}
@@ -911,170 +945,218 @@ export default function CreateAgentWizard() {
                     })()}
                   </div>
                 )}
-
-                {/* STEP 3 - Personality & Knowledge */}
+                {/* STEP 3 - Personality & Knowledge OU Raw Prompt */}
                 {currentStep === 3 && (
                   <div className="space-y-8">
                     <div className="text-center mb-10">
-                      <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/30">
-                        <User className="w-10 h-10 text-white" />
+                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg ${
+                        formData.template === 'raw' 
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-indigo-500/30'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-green-500/30'
+                      }`}>
+                        {formData.template === 'raw' ? (
+                          <FileText className="w-10 h-10 text-white" />
+                        ) : (
+                          <User className="w-10 h-10 text-white" />
+                        )}
                       </div>
                       <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent pb-1">
-                        Personality & Knowledge
+                        {formData.template === 'raw' ? 'Raw Prompt' : 'Personality & Knowledge'}
                       </h2>
-                      <p className="text-gray-400 text-lg">Define how your AI should behave and what it knows</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Description */}
-                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
-                        <label className="block text-sm font-medium mb-3 text-gray-300">
-                          Description *
-                        </label>
-                        <TextareaAutosize
-                          value={formData.description}
-                          onChange={(e) => updateFormData("description", e.target.value)}
-                          minRows={4}
-                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
-                          placeholder="Define what your AI does, its role, and primary objective..."
-                        />
-                        <QualityIndicator content={formData.description} minLength={50} />
-                        <CharacterCounter content={formData.description} maxLength={500} />
-                      </div>
-
-                      {/* Questions */}
-                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
-                        <label className="block text-sm font-medium mb-3 text-gray-300">
-                          Questions to Ask *
-                        </label>
-                        <TextareaAutosize
-                          value={formData.questions}
-                          onChange={(e) => updateFormData("questions", e.target.value)}
-                          minRows={4}
-                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
-                          placeholder="Define the conversation flow and key questions..."
-                        />
-                        <QualityIndicator content={formData.questions} minLength={30} />
-                        <CharacterCounter content={formData.questions} maxLength={800} />
-                      </div>
-
-                      {/* Tone */}
-                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
-                        <label className="block text-sm font-medium mb-3 text-gray-300">
-                          Tone & Style *
-                        </label>
-                        <TextareaAutosize
-                          value={formData.tone}
-                          onChange={(e) => updateFormData("tone", e.target.value)}
-                          minRows={4}
-                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
-                          placeholder="Define the communication style, language, and personality..."
-                        />
-                        <QualityIndicator content={formData.tone} minLength={30} />
-                        <CharacterCounter content={formData.tone} maxLength={400} />
-                      </div>
-
-                      {/* Rules */}
-                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
-                        <label className="block text-sm font-medium mb-3 text-gray-300">
-                          Rules *
-                        </label>
-                        <TextareaAutosize
-                          value={formData.rules}
-                          onChange={(e) => updateFormData("rules", e.target.value)}
-                          minRows={4}
-                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
-                          placeholder="Set specific behavioral guidelines and constraints..."
-                        />
-                        <QualityIndicator content={formData.rules} minLength={50} />
-                        <CharacterCounter content={formData.rules} maxLength={600} />
-                      </div>
-                    </div>
-
-                    {/* Company Info */}
-                    <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 lg:col-span-2">
-                      <div className="flex justify-between items-start mb-4">
-                        <label className="block text-sm font-medium text-gray-300">
-                          Company Information (Optional)
-                        </label>
-                        <div className="flex gap-2">
-                          {/* 🔧 CORRECTION - Bouton corrigé pour utiliser showImportModal */}
-                          <button
-                            type="button"
-                            onClick={() => setShowImportModal(true)}
-                            className="text-xs bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
-                          >
-                            <Upload size={12} />
-                            Import Website
-                          </button>
-
-                          {!isFaqGenerated ? (
-                            <button
-                              type="button"
-                              onClick={handleGenerateFaq}
-                              disabled={faqGenerating || !formData.companyInfo.trim()}
-                              className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-purple-500/20 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
-                            >
-                              {faqGenerating ? (
-                                <>
-                                  <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
-                                  Converting...
-                                </>
-                              ) : (
-                                <>
-                                  <Zap size={12} />
-                                  Turn into FAQ
-                                </>
-                              )}
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={handleRevertFaq}
-                              className="text-xs bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-red-500/20 transform hover:scale-105"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M9 14L4 9l5-5" />
-                                <path d="M4 9h16" />
-                              </svg>
-                              Revert FAQ
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => updateFormData("companyInfo", "")}
-                            className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      </div>
-
-                      <TextareaAutosize
-                        value={formData.companyInfo}
-                        onChange={(e) => updateFormData("companyInfo", e.target.value)}
-                        minRows={6}
-                        className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
-                        placeholder="Add company information, services, pricing, policies, contact details..."
-                      />
-                      <QualityIndicator content={formData.companyInfo} minLength={100} />
-                      <CharacterCounter content={formData.companyInfo} maxLength={15000} />
-
-                      <p className="text-xs text-gray-400 mt-3">
-                        💡 The more detailed company information you provide, the better your AI will respond to customers.
+                      <p className="text-gray-400 text-lg">
+                        {formData.template === 'raw' 
+                          ? 'Paste your complete prompt exactly as you want it' 
+                          : 'Define how your AI should behave and what it knows'
+                        }
                       </p>
                     </div>
+
+                    {formData.template === 'raw' ? (
+                      // 🆕 Mode Raw Prompt
+                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <FileText className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-semibold text-white">Raw Prompt</h3>
+                            <p className="text-sm text-gray-400">Paste your complete prompt here</p>
+                          </div>
+                        </div>
+                        
+                        <TextareaAutosize
+                          value={formData.rawPrompt}
+                          onChange={(e) => updateFormData("rawPrompt", e.target.value)}
+                          minRows={20}
+                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-mono text-sm backdrop-blur-sm"
+                          placeholder="Paste your complete prompt here..."
+                        />
+                        
+                        <div className="flex justify-between items-center mt-3">
+                          <div className="text-xs text-gray-400 flex items-center gap-2">
+                            <FileText size={12} />
+                            This prompt will be used exactly as written, without AI modifications
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {formData.rawPrompt.length.toLocaleString()} characters
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Mode normal avec les champs structurés
+                      <div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* Description */}
+                          <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                            <label className="block text-sm font-medium mb-3 text-gray-300">
+                              Description *
+                            </label>
+                            <TextareaAutosize
+                              value={formData.description}
+                              onChange={(e) => updateFormData("description", e.target.value)}
+                              minRows={4}
+                              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                              placeholder="Define what your AI does, its role, and primary objective..."
+                            />
+                            <QualityIndicator content={formData.description} minLength={50} />
+                            <CharacterCounter content={formData.description} maxLength={500} />
+                          </div>
+
+                          {/* Questions */}
+                          <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                            <label className="block text-sm font-medium mb-3 text-gray-300">
+                              Questions to Ask *
+                            </label>
+                            <TextareaAutosize
+                              value={formData.questions}
+                              onChange={(e) => updateFormData("questions", e.target.value)}
+                              minRows={4}
+                              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                              placeholder="Define the conversation flow and key questions..."
+                            />
+                            <QualityIndicator content={formData.questions} minLength={30} />
+                            <CharacterCounter content={formData.questions} maxLength={800} />
+                          </div>
+
+                          {/* Tone */}
+                          <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                            <label className="block text-sm font-medium mb-3 text-gray-300">
+                              Tone & Style *
+                            </label>
+                            <TextareaAutosize
+                              value={formData.tone}
+                              onChange={(e) => updateFormData("tone", e.target.value)}
+                              minRows={4}
+                              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                              placeholder="Define the communication style, language, and personality..."
+                            />
+                            <QualityIndicator content={formData.tone} minLength={30} />
+                            <CharacterCounter content={formData.tone} maxLength={400} />
+                          </div>
+
+                          {/* Rules */}
+                          <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                            <label className="block text-sm font-medium mb-3 text-gray-300">
+                              Rules *
+                            </label>
+                            <TextareaAutosize
+                              value={formData.rules}
+                              onChange={(e) => updateFormData("rules", e.target.value)}
+                              minRows={4}
+                              className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                              placeholder="Set specific behavioral guidelines and constraints..."
+                            />
+                            <QualityIndicator content={formData.rules} minLength={50} />
+                            <CharacterCounter content={formData.rules} maxLength={600} />
+                          </div>
+                        </div>
+
+                        {/* Company Info */}
+                        <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 lg:col-span-2 mt-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <label className="block text-sm font-medium text-gray-300">
+                              Company Information (Optional)
+                            </label>
+                            <div className="flex gap-2">
+                              {/* 🔧 CORRECTION - Bouton corrigé pour utiliser showImportModal */}
+                              <button
+                                type="button"
+                                onClick={() => setShowImportModal(true)}
+                                className="text-xs bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
+                              >
+                                <Upload size={12} />
+                                Import Website
+                              </button>
+
+                              {!isFaqGenerated ? (
+                                <button
+                                  type="button"
+                                  onClick={handleGenerateFaq}
+                                  disabled={faqGenerating || !formData.companyInfo.trim()}
+                                  className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-purple-500/20 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                                >
+                                  {faqGenerating ? (
+                                    <>
+                                      <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                                      Converting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Zap size={12} />
+                                      Turn into FAQ
+                                    </>
+                                  )}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={handleRevertFaq}
+                                  className="text-xs bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-red-500/20 transform hover:scale-105"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M9 14L4 9l5-5" />
+                                    <path d="M4 9h16" />
+                                  </svg>
+                                  Revert FAQ
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => updateFormData("companyInfo", "")}
+                                className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                              >
+                                Clear
+                              </button>
+                            </div>
+                          </div>
+
+                          <TextareaAutosize
+                            value={formData.companyInfo}
+                            onChange={(e) => updateFormData("companyInfo", e.target.value)}
+                            minRows={6}
+                            className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                            placeholder="Add company information, services, pricing, policies, contact details..."
+                          />
+                          <QualityIndicator content={formData.companyInfo} minLength={100} />
+                          <CharacterCounter content={formData.companyInfo} maxLength={15000} />
+
+                          <p className="text-xs text-gray-400 mt-3">
+                            💡 The more detailed company information you provide, the better your AI will respond to customers.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1106,17 +1188,28 @@ export default function CreateAgentWizard() {
                             <span className="text-gray-400 text-sm">AI Name</span>
                             <span className="text-white font-medium">{formData.name}</span>
                           </div>
-                          <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
-                            <span className="text-gray-400 text-sm">Industry</span>
-                            <span className="text-white font-medium">{formData.industry}</span>
-                          </div>
+                          {formData.template !== 'raw' && (
+                            <>
+                              <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
+                                <span className="text-gray-400 text-sm">Industry</span>
+                                <span className="text-white font-medium">{formData.industry}</span>
+                              </div>
+                              <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
+                                <span className="text-gray-400 text-sm">Language</span>
+                                <span className="text-white font-medium">{formData.language}</span>
+                              </div>
+                            </>
+                          )}
                           <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
                             <span className="text-gray-400 text-sm">Template</span>
-                            <span className={`px-3 py-1 text-xs rounded-full text-white ${formData.template === 'sales' ? 'bg-orange-600' :
-                              formData.template === 'support' ? 'bg-blue-600' : 'bg-purple-600'
-                              }`}>
+                            <span className={`px-3 py-1 text-xs rounded-full text-white ${
+                              formData.template === 'sales' ? 'bg-orange-600' :
+                              formData.template === 'support' ? 'bg-blue-600' : 
+                              formData.template === 'raw' ? 'bg-indigo-600' : 'bg-purple-600'
+                            }`}>
                               {formData.template === 'sales' ? 'Sales AI' :
-                                formData.template === 'support' ? 'Support AI' : 'Custom'}
+                                formData.template === 'support' ? 'Support AI' : 
+                                formData.template === 'raw' ? 'Raw Prompt' : 'Custom'}
                             </span>
                           </div>
                           <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
@@ -1131,54 +1224,70 @@ export default function CreateAgentWizard() {
                         </div>
                       </div>
 
-                      {/* Requirements & Status */}
-                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-                            <CheckCircle className="w-6 h-6 text-white" />
-                          </div>
-                          <h3 className="text-xl font-semibold text-green-200">Requirements</h3>
-                        </div>
-
-                        <div className="space-y-3 mb-8">
-                          {[
-                            { label: "AI Name", check: !!formData.name },
-                            { label: "Industry", check: !!formData.industry },
-                            { label: "Language", check: !!formData.language },
-                            { label: "Template", check: !!formData.template },
-                            { label: "Model", check: !!formData.openaiModel },
-                            { label: "API Key", check: !!formData.apiKey },
-                            { label: "Description", check: !!formData.description },
-                            { label: "Conversation Flow", check: !!formData.questions },
-                            { label: "Tone & Style", check: !!formData.tone },
-                            { label: "Rules", check: !!formData.rules },
-                            { label: "Company Info", check: !!formData.companyInfo, optional: true }
-                          ].map((item, idx) => (
-                            <div key={idx} className="flex items-center gap-3 p-2 rounded-lg">
-                              {item.check ? (
-                                <CheckCircle className="w-5 h-5 text-green-400" />
-                              ) : (
-                                <div className={`w-5 h-5 rounded-full border-2 ${item.optional ? 'border-gray-500' : 'border-orange-400'}`} />
-                              )}
-                              <span className={`text-sm ${item.check ? 'text-white' : item.optional ? 'text-gray-400' : 'text-orange-400'}`}>
-                                {item.label}
-                                {item.optional && ' (Optional)'}
-                              </span>
+                      {/* Requirements & Status OU Raw Prompt Preview */}
+                      {formData.template === 'raw' ? (
+                        <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                              <FileText className="w-6 h-6 text-white" />
                             </div>
-                          ))}
-                        </div>
-
-                        {/* API Key Warning */}
-                        <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl p-4">
-                          <div className="flex items-center gap-3 text-yellow-400 mb-2">
-                            <Key className="w-5 h-5" />
-                            <span className="font-semibold">API Key Usage</span>
+                            <h3 className="text-xl font-semibold text-indigo-200">Raw Prompt Preview</h3>
                           </div>
-                          <p className="text-sm text-yellow-200">
-                            You're using your own OpenAI API key. Costs will be charged directly to your OpenAI account.
-                          </p>
+                          <div className="bg-gray-900/50 rounded-xl p-4 max-h-64 overflow-y-auto">
+                            <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono">
+                              {formData.rawPrompt || 'No raw prompt provided'}
+                            </pre>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                              <CheckCircle className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-green-200">Requirements</h3>
+                          </div>
+
+                          <div className="space-y-3 mb-8">
+                            {[
+                              { label: "AI Name", check: !!formData.name },
+                              { label: "Industry", check: !!formData.industry },
+                              { label: "Language", check: !!formData.language },
+                              { label: "Template", check: !!formData.template },
+                              { label: "Model", check: !!formData.openaiModel },
+                              { label: "API Key", check: !!formData.apiKey },
+                              { label: "Description", check: !!formData.description },
+                              { label: "Conversation Flow", check: !!formData.questions },
+                              { label: "Tone & Style", check: !!formData.tone },
+                              { label: "Rules", check: !!formData.rules },
+                              { label: "Company Info", check: !!formData.companyInfo, optional: true }
+                            ].map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-3 p-2 rounded-lg">
+                                {item.check ? (
+                                  <CheckCircle className="w-5 h-5 text-green-400" />
+                                ) : (
+                                  <div className={`w-5 h-5 rounded-full border-2 ${item.optional ? 'border-gray-500' : 'border-orange-400'}`} />
+                                )}
+                                <span className={`text-sm ${item.check ? 'text-white' : item.optional ? 'text-gray-400' : 'text-orange-400'}`}>
+                                  {item.label}
+                                  {item.optional && ' (Optional)'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* API Key Warning */}
+                          <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl p-4">
+                            <div className="flex items-center gap-3 text-yellow-400 mb-2">
+                              <Key className="w-5 h-5" />
+                              <span className="font-semibold">API Key Usage</span>
+                            </div>
+                            <p className="text-sm text-yellow-200">
+                              You're using your own OpenAI API key. Costs will be charged directly to your OpenAI account.
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Ready to Deploy */}

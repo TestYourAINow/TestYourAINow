@@ -1,4 +1,3 @@
-// app/(dashboard)/admin/support/[ticketId]/page.tsx (UPDATED - Sans Priority)
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -51,33 +50,33 @@ export default function AdminTicketConversationPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [refreshing, setRefreshing] = useState(false); // 🔧 NOUVEAU: Refresh manuel
+  const [refreshing, setRefreshing] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Vérifier permissions admin
+  // Admin permission check
   useEffect(() => {
     if (!session?.user) return;
     
     const adminEmails = ['team@testyourainow.com', 'sango_ks@hotmail.com'];
     if (!adminEmails.includes(session.user.email || '')) {
       router.push('/dashboard');
-      toast.error('Accès refusé');
+      toast.error('Access denied');
       return;
     }
 
     loadTicketData();
   }, [session, ticketId]);
 
-  // 🔧 FONCTION DE REFRESH MANUEL (remplace le polling)
+  // Manual refresh functionality
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadTicketData();
     setRefreshing(false);
-    toast.success('Conversation mise à jour');
+    toast.success('Conversation updated');
   };
 
-  // Charger les données du ticket
+  // Load ticket data
   const loadTicketData = async () => {
     setLoading(true);
     
@@ -85,28 +84,26 @@ export default function AdminTicketConversationPage() {
       const response = await fetch(`/api/support/tickets/${ticketId}`);
       
       if (!response.ok) {
-        throw new Error('Erreur lors du chargement');
+        throw new Error('Failed to load ticket');
       }
       
       const data = await response.json();
       setTicket(data.ticket);
       setMessages(data.messages);
     } catch (error) {
-      toast.error('Ticket non trouvé');
+      toast.error('Ticket not found');
       router.push('/admin/support');
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔧 SUPPRIMÉ: Polling automatique
-
-  // Scroll automatique
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Envoyer message admin
+  // Send admin message
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
@@ -119,21 +116,21 @@ export default function AdminTicketConversationPage() {
         body: JSON.stringify({ message: newMessage })
       });
 
-      if (!response.ok) throw new Error('Erreur envoi');
+      if (!response.ok) throw new Error('Failed to send message');
       
       const result = await response.json();
       setMessages(prev => [...prev, result.message]);
       setNewMessage('');
-      toast.success('Réponse envoyée');
+      toast.success('Response sent');
       
     } catch (error) {
-      toast.error('Erreur lors de l\'envoi');
+      toast.error('Failed to send message');
     } finally {
       setSending(false);
     }
   };
 
-  // 🔧 CHANGER STATUT SEULEMENT (plus de priority)
+  // Update ticket status
   const updateTicketStatus = async (newStatus: string) => {
     setUpdating(true);
     
@@ -144,12 +141,12 @@ export default function AdminTicketConversationPage() {
         body: JSON.stringify({ status: newStatus })
       });
 
-      if (!response.ok) throw new Error('Erreur de mise à jour');
+      if (!response.ok) throw new Error('Failed to update ticket');
       
       setTicket(prev => prev ? { ...prev, status: newStatus } : null);
-      toast.success('Statut mis à jour');
+      toast.success('Status updated');
     } catch (error) {
-      toast.error('Erreur de mise à jour');
+      toast.error('Failed to update status');
     } finally {
       setUpdating(false);
     }
@@ -166,7 +163,7 @@ export default function AdminTicketConversationPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
+    return date.toLocaleDateString('en-US', { 
       day: '2-digit', 
       month: '2-digit', 
       year: 'numeric',
@@ -193,12 +190,12 @@ export default function AdminTicketConversationPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
             <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Ticket non trouvé</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Ticket not found</h3>
             <button 
               onClick={() => router.push('/admin/support')}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold"
             >
-              Retour au dashboard
+              Back to dashboard
             </button>
           </div>
         </div>
@@ -209,14 +206,14 @@ export default function AdminTicketConversationPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
       <div className="max-w-4xl mx-auto p-4 md:p-8">
-        {/* Header Admin */}
+        {/* Admin Header */}
         <div className="mb-6">
           <button
             onClick={() => router.push('/admin/support')}
             className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
           >
             <ArrowLeft size={20} />
-            Retour au dashboard admin
+            Back to admin dashboard
           </button>
           
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
@@ -245,46 +242,46 @@ export default function AdminTicketConversationPage() {
                   
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-gray-400">
-                      <span className="font-semibold">Catégorie:</span>
+                      <span className="font-semibold">Category:</span>
                       <span>{ticket.category}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
                       <Clock size={16} />
-                      <span>Créé le {formatDate(ticket.created)}</span>
+                      <span>Created {formatDate(ticket.created)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
                       <Edit size={16} />
-                      <span>Mis à jour le {formatDate(ticket.updated)}</span>
+                      <span>Updated {formatDate(ticket.updated)}</span>
                     </div>
                   </div>
                 </div>
               </div>
               
-              {/* 🔧 CONTRÔLES SIMPLIFIÉS: Seulement statut + refresh */}
+              {/* Status controls and refresh */}
               <div className="flex flex-col gap-3 min-w-48">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-400">Statut:</span>
+                  <span className="text-sm text-gray-400">Status:</span>
                   <select
                     value={ticket.status}
                     onChange={(e) => updateTicketStatus(e.target.value)}
                     disabled={updating}
                     className={`text-xs font-semibold rounded-full px-3 py-1 border ${getStatusColor(ticket.status)} bg-transparent outline-none`}
                   >
-                    <option value="pending" className="bg-gray-800 text-white">En attente</option>
-                    <option value="open" className="bg-gray-800 text-white">Ouvert</option>
-                    <option value="closed" className="bg-gray-800 text-white">Fermé</option>
+                    <option value="pending" className="bg-gray-800 text-white">Pending</option>
+                    <option value="open" className="bg-gray-800 text-white">Open</option>
+                    <option value="closed" className="bg-gray-800 text-white">Closed</option>
                   </select>
                 </div>
                 
-                {/* 🔧 BOUTON REFRESH MANUEL */}
+                {/* Manual refresh button */}
                 <button
                   onClick={handleRefresh}
                   disabled={refreshing}
                   className="flex items-center justify-center gap-2 p-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 text-gray-400 hover:text-white rounded-lg transition-all disabled:opacity-50"
-                  title="Actualiser la conversation"
+                  title="Refresh conversation"
                 >
                   <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={14} />
-                  <span className="text-xs">Actualiser</span>
+                  <span className="text-xs">Refresh</span>
                 </button>
               </div>
             </div>
@@ -295,7 +292,7 @@ export default function AdminTicketConversationPage() {
         <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6 mb-6">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Headphones size={20} className="text-blue-400" />
-            Conversation Support
+            Support Conversation
           </h2>
           
           <div className="space-y-6 max-h-96 overflow-y-auto custom-scrollbar">
@@ -351,12 +348,12 @@ export default function AdminTicketConversationPage() {
           </div>
         </div>
 
-        {/* Zone de réponse Admin */}
+        {/* Admin response area */}
         {ticket.status !== 'closed' && (
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Shield size={20} className="text-red-400" />
-              Répondre en tant qu'admin
+              Reply as administrator
             </h3>
             
             <div className="space-y-4">
@@ -365,7 +362,7 @@ export default function AdminTicketConversationPage() {
                   <textarea
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Tapez votre réponse..."
+                    placeholder="Type your response..."
                     className="w-full p-4 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
                     rows={4}
                     onKeyDown={(e) => {
@@ -381,7 +378,7 @@ export default function AdminTicketConversationPage() {
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim() || sending}
                     className="p-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                    title="Envoyer réponse support (Ctrl+Enter)"
+                    title="Send support response (Ctrl+Enter)"
                   >
                     {sending ? (
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
@@ -394,22 +391,22 @@ export default function AdminTicketConversationPage() {
               
               <div className="flex items-center justify-between">
                 <div className="text-xs text-gray-400">
-                  Appuyez sur Ctrl+Enter pour envoyer rapidement
+                  Press Ctrl+Enter to send quickly
                 </div>
                 
                 <div className="flex items-center gap-2 text-xs">
                   <Shield size={12} className="text-red-400" />
-                  <span className="text-gray-400">Mode Administrateur</span>
+                  <span className="text-gray-400">Administrator Mode</span>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* 🔧 ACTIONS SIMPLIFIÉES: Seulement changement de statut */}
+        {/* Quick actions */}
         <div className="mt-6 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-gray-300">Actions rapides:</h4>
+            <h4 className="text-sm font-semibold text-gray-300">Quick actions:</h4>
             <div className="flex gap-2">
               {ticket.status === 'pending' && (
                 <button
@@ -417,7 +414,7 @@ export default function AdminTicketConversationPage() {
                   disabled={updating}
                   className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded hover:bg-blue-500/30 transition-colors disabled:opacity-50"
                 >
-                  Ouvrir le ticket
+                  Open ticket
                 </button>
               )}
               
@@ -427,7 +424,7 @@ export default function AdminTicketConversationPage() {
                   disabled={updating}
                   className="px-3 py-1 bg-gray-500/20 text-gray-300 text-xs rounded hover:bg-gray-500/30 transition-colors disabled:opacity-50"
                 >
-                  Fermer le ticket
+                  Close ticket
                 </button>
               )}
 
@@ -437,7 +434,7 @@ export default function AdminTicketConversationPage() {
                   disabled={updating}
                   className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded hover:bg-blue-500/30 transition-colors disabled:opacity-50"
                 >
-                  Rouvrir le ticket
+                  Reopen ticket
                 </button>
               )}
             </div>

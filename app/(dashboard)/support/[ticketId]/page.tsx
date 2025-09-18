@@ -1,4 +1,3 @@
-// app/(dashboard)/support/[ticketId]/page.tsx (UPDATED - Sans Polling + Logique + Sans Attachments)
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -52,19 +51,19 @@ export default function TicketConversationPage() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [refreshing, setRefreshing] = useState(false); // 🔧 NOUVEAU: Pour refresh manuel
+  const [refreshing, setRefreshing] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // 🔧 FONCTION DE REFRESH MANUEL (remplace le polling)
+  // Manual refresh functionality
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadTicketData();
     setRefreshing(false);
-    toast.success('Conversation mise à jour');
+    toast.success('Conversation updated');
   };
 
-  // Charger les détails du ticket et messages
+  // Load ticket details and messages
   const loadTicketData = async () => {
     setLoading(true);
     const data = await fetchTicketDetails(ticketId);
@@ -73,53 +72,51 @@ export default function TicketConversationPage() {
       setTicket(data.ticket);
       setMessages(data.messages);
     } else {
-      toast.error('Ticket non trouvé');
+      toast.error('Ticket not found');
       router.push('/support');
     }
     
     setLoading(false);
   };
 
-  // 🔧 SUPPRIMÉ: Le polling automatique
   useEffect(() => {
     loadTicketData();
-    // Plus d'interval ici !
   }, [ticketId]);
 
-  // Scroll automatique vers le bas
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 🔧 NOUVELLE LOGIQUE: Vérifier si l'user peut écrire
+  // Check if user can write messages
   const canUserWrite = () => {
     if (!ticket) return false;
     
-    // User ne peut pas écrire si ticket est pending ou closed
+    // User cannot write if ticket is pending or closed
     if (ticket.status === 'pending') return false;
     if (ticket.status === 'closed') return false;
     
-    // User peut écrire seulement si ticket est open
+    // User can only write when ticket is open
     return ticket.status === 'open';
   };
 
-  // Message d'état pour l'user
+  // Get status message for user
   const getStatusMessage = () => {
     if (!ticket) return '';
     
     switch (ticket.status) {
       case 'pending':
-        return '⏳ Votre ticket est en attente de réponse de notre équipe support. Vous pourrez répondre une fois qu\'un agent aura pris en charge votre demande.';
+        return '⏳ Your ticket is awaiting response from our support team. You will be able to reply once an agent has taken charge of your request.';
       case 'closed':
-        return '🔒 Cette conversation a été fermée par notre équipe support. Si vous avez encore des questions, créez un nouveau ticket.';
+        return '🔒 This conversation has been closed by our support team. If you have additional questions, please create a new ticket.';
       case 'open':
-        return '✅ Vous pouvez maintenant échanger avec notre équipe support.';
+        return '✅ You can now communicate with our support team.';
       default:
         return '';
     }
   };
 
-  // 🔧 MODIFIÉ: Envoyer un message (sans attachments)
+  // Send user message
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
     if (!canUserWrite()) return;
@@ -132,16 +129,16 @@ export default function TicketConversationPage() {
       if (message) {
         setMessages(prev => [...prev, message]);
         setNewMessage('');
-        toast.success('Message envoyé');
+        toast.success('Message sent');
       }
     } catch (error: any) {
-      // 🔧 GESTION D'ERREURS SPÉCIFIQUES
+      // Handle specific error scenarios
       if (error.message.includes('pending') || error.message.includes('closed')) {
-        toast.error('Impossible de répondre dans l\'état actuel du ticket');
-        // Recharger les données pour mettre à jour le statut
+        toast.error('Unable to reply in current ticket state');
+        // Reload data to update status
         await loadTicketData();
       } else {
-        toast.error('Erreur lors de l\'envoi du message');
+        toast.error('Failed to send message');
       }
     } finally {
       setSending(false);
@@ -159,7 +156,7 @@ export default function TicketConversationPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
+    return date.toLocaleDateString('en-US', { 
       day: '2-digit', 
       month: '2-digit', 
       year: 'numeric',
@@ -186,12 +183,12 @@ export default function TicketConversationPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
             <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Ticket non trouvé</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Ticket not found</h3>
             <button 
               onClick={() => router.push('/support')}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold"
             >
-              Retour au support
+              Back to support
             </button>
           </div>
         </div>
@@ -209,7 +206,7 @@ export default function TicketConversationPage() {
             className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
           >
             <ArrowLeft size={20} />
-            Retour au support
+            Back to support
           </button>
           
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
@@ -218,8 +215,8 @@ export default function TicketConversationPage() {
                 <h1 className="text-2xl font-bold text-white mb-2">{ticket.title}</h1>
                 <div className="flex items-center gap-4 text-sm text-gray-400">
                   <span>ID: #{ticket.id}</span>
-                  <span>Catégorie: {ticket.category}</span>
-                  <span>Créé le: {formatDate(ticket.created)}</span>
+                  <span>Category: {ticket.category}</span>
+                  <span>Created: {formatDate(ticket.created)}</span>
                 </div>
               </div>
               
@@ -228,19 +225,19 @@ export default function TicketConversationPage() {
                   {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
                 </span>
                 
-                {/* 🔧 BOUTON REFRESH MANUEL (remplace le polling) */}
+                {/* Manual refresh button */}
                 <button
                   onClick={handleRefresh}
                   disabled={refreshing}
                   className="p-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 text-gray-400 hover:text-white rounded-lg transition-all disabled:opacity-50"
-                  title="Actualiser la conversation"
+                  title="Refresh conversation"
                 >
                   <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={16} />
                 </button>
               </div>
             </div>
 
-            {/* 🔧 MESSAGE D'ÉTAT POUR L'USER */}
+            {/* Status message for user */}
             {getStatusMessage() && (
               <div className={`p-4 rounded-xl border text-sm ${
                 ticket.status === 'pending' 
@@ -287,10 +284,10 @@ export default function TicketConversationPage() {
                       {message.attachments.map((attachment, idx) => (
                         <div key={idx} className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
                           <Eye size={16} />
-                          {/* 🔧 IMAGES NON-CLIQUABLES SI TICKET CLOSED */}
+                          {/* Non-clickable images if ticket is closed */}
                           {ticket.status === 'closed' ? (
                             <span className="text-sm text-gray-400 flex-1 opacity-60">
-                              {attachment.filename} (Archivé)
+                              {attachment.filename} (Archived)
                             </span>
                           ) : (
                             <a 
@@ -314,7 +311,7 @@ export default function TicketConversationPage() {
           </div>
         </div>
 
-        {/* 🔧 Zone de réponse - CONDITIONNELLE (SANS ATTACHMENTS) */}
+        {/* Response area - conditional */}
         {canUserWrite() ? (
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
             <div className="space-y-4">
@@ -324,7 +321,7 @@ export default function TicketConversationPage() {
                   <textarea
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Tapez votre réponse..."
+                    placeholder="Type your response..."
                     className="w-full p-4 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
                     rows={3}
                     onKeyDown={(e) => {
@@ -340,7 +337,7 @@ export default function TicketConversationPage() {
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim() || sending}
                     className="p-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Envoyer (Ctrl+Enter)"
+                    title="Send message (Ctrl+Enter)"
                   >
                     {sending ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" /> : <Send size={20} />}
                   </button>
@@ -348,12 +345,12 @@ export default function TicketConversationPage() {
               </div>
               
               <div className="text-xs text-gray-400">
-                Appuyez sur Ctrl+Enter pour envoyer rapidement
+                Press Ctrl+Enter to send quickly
               </div>
             </div>
           </div>
         ) : (
-          /* 🔧 MESSAGE QUAND USER NE PEUT PAS ÉCRIRE */
+          /* Message when user cannot write */
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
             <div className="text-center py-8">
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
@@ -369,7 +366,7 @@ export default function TicketConversationPage() {
               </div>
               
               <h3 className="text-lg font-semibold text-white mb-2">
-                {ticket.status === 'pending' ? 'En attente de réponse' : 'Conversation fermée'}
+                {ticket.status === 'pending' ? 'Awaiting response' : 'Conversation closed'}
               </h3>
               
               <p className="text-gray-400 text-sm max-w-md mx-auto mb-6">
@@ -381,7 +378,7 @@ export default function TicketConversationPage() {
                   onClick={() => router.push('/support?tab=contact')}
                   className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all"
                 >
-                  Créer un nouveau ticket
+                  Create new ticket
                 </button>
               )}
             </div>

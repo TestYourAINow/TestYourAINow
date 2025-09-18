@@ -1,4 +1,4 @@
-// app/api/support/tickets/route.ts (UPDATED)
+// app/api/support/tickets/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -7,7 +7,7 @@ import { SupportTicket } from '@/models/SupportTicket';
 import { TicketMessage } from '@/models/TicketMessage';
 import User from '@/models/User';
 
-// GET - Récupérer les tickets de l'utilisateur
+// GET - Retrieve user's tickets
 export async function GET() {
   try {
     await connectToDatabase();
@@ -20,7 +20,7 @@ export async function GET() {
     const tickets = await SupportTicket.find({ userId: session.user.id })
       .sort({ createdAt: -1 });
 
-    // Compter les messages pour chaque ticket
+    // Count messages for each ticket
     const ticketsWithMessageCount = await Promise.all(
       tickets.map(async (ticket) => {
         const messageCount = await TicketMessage.countDocuments({ ticketId: ticket._id });
@@ -46,7 +46,7 @@ export async function GET() {
   }
 }
 
-// POST - Créer un nouveau ticket
+// POST - Create new ticket
 export async function POST(request: Request) {
   try {
     await connectToDatabase();
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
     const { name, email, subject, category, message, attachments } = await request.json();
 
-    // 🔧 VALIDATION des nouvelles catégories
+    // Validate categories
     const validCategories = ['technical', 'billing', 'general', 'account'];
     if (!validCategories.includes(category)) {
       return NextResponse.json(
@@ -75,15 +75,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // 🔧 Créer le ticket avec status 'pending' par défaut
+    // Create ticket with 'pending' status by default
     const ticket = await SupportTicket.create({
       userId: session.user.id,
       title: subject,
       category,
-      status: 'pending' // 🔧 CHANGÉ: Nouveau ticket = pending
+      status: 'pending'
     });
 
-    // Créer le message initial
+    // Create initial message
     await TicketMessage.create({
       ticketId: ticket._id,
       senderType: 'user',

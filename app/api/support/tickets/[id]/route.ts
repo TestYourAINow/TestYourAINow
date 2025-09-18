@@ -26,7 +26,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid ticket ID' }, { status: 400 });
     }
 
-    // Vérifier que le ticket appartient à l'utilisateur ou que c'est un admin
+    // Verify ticket belongs to user or user is admin
     const isAdmin = ['team@testyourainow.com', 'sango_ks@hotmail.com'].includes(session.user.email || '');
     
     const ticketQuery = isAdmin 
@@ -42,7 +42,7 @@ export async function GET(
     const messages = await TicketMessage.find({ ticketId: new mongoose.Types.ObjectId(ticketId) })
       .sort({ createdAt: 1 });
 
-    // Si admin, récupérer les infos de l'utilisateur
+    // If admin, get user information
     let userInfo = null;
     if (isAdmin) {
       const user = await User.findById(ticket.userId);
@@ -82,7 +82,7 @@ export async function GET(
   }
 }
 
-// PUT - Mettre à jour le statut du ticket (ADMIN SEULEMENT)
+// PUT - Update ticket status (ADMIN ONLY)
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -95,21 +95,21 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { status } = await request.json(); // 🔧 Supprimé priority
+    const { status } = await request.json();
     const { id: ticketId } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(ticketId)) {
       return NextResponse.json({ error: 'Invalid ticket ID' }, { status: 400 });
     }
 
-    // 🔧 SEULEMENT LES ADMINS peuvent changer le statut
+    // Only admins can change status
     const isAdmin = ['team@testyourainow.com', 'sango_ks@hotmail.com'].includes(session.user.email || '');
     
     if (!isAdmin) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    // 🔧 Valider les nouveaux statuts
+    // Validate status values
     const validStatuses = ['pending', 'open', 'closed'];
     if (status && !validStatuses.includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });

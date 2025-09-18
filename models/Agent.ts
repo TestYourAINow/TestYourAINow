@@ -17,6 +17,7 @@ export interface AgentDocument extends Document {
   temperature: number;
   top_p: number;
   finalPrompt?: string;
+  rawPrompt?: string; // 🆕 NOUVEAU CHAMP AJOUTÉ
   
   // 🆕 NOUVEAU CHAMP - SÉCURITAIRE
   isDeployed?: boolean; // Optionnel pour ne pas casser l'existant
@@ -60,6 +61,7 @@ const AgentSchema = new Schema<AgentDocument>(
     temperature: { type: Number },
     top_p: { type: Number },
     finalPrompt: { type: String },
+    rawPrompt: { type: String }, // 🆕 NOUVEAU CHAMP AJOUTÉ
     
     // 🆕 NOUVEAU CHAMP - SÉCURITAIRE
     isDeployed: { 

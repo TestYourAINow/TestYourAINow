@@ -14,11 +14,6 @@ export async function POST(req: NextRequest, context: any) {
       return NextResponse.json({ error: 'Demo not found' }, { status: 404 });
     }
 
-    // Vérifier si la démo n'a pas expiré
-    if (new Date(demo.expiresAt).getTime() < Date.now()) {
-      return NextResponse.json({ error: 'Demo expired' }, { status: 410 });
-    }
-
     // Vérifier si la limite n'est pas déjà atteinte
     if (demo.usedCount >= demo.usageLimit) {
       return NextResponse.json({ error: 'Usage limit reached' }, { status: 429 });
