@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: demoTitle,
       description: 'Test your interactive AI demo!',
       url: `https://testyourainow.com/shared/${id}`,
-      siteName: 'TestYourAInow',
+      siteName: 'Test your interactive AI demo!',
       images: [
         {
           url: demoDoc.avatarUrl || 'https://testyourainow.com/og-image.png',
