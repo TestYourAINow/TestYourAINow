@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { connectToDatabase } from '@/lib/db';
 import { Demo } from '@/models/Demo';
 import SharedDemoClient from '@/components/SharedDemoClient';
+import type { Metadata } from 'next';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -31,6 +32,51 @@ interface DemoDocument {
   createdAt: Date;
   expiresAt: Date;
   __v: number;
+}
+
+// Fonction pour générer les métadonnées dynamiques
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+
+  await connectToDatabase();
+  const demoDoc = await Demo.findById(id).lean() as DemoDocument | null;
+  
+  if (!demoDoc || new Date(demoDoc.expiresAt).getTime() < Date.now() || !demoDoc.publicEnabled) {
+    return {
+      title: 'Demo not found - TestYourAInow',
+    };
+  }
+
+  // Utiliser seulement le nom de la démo
+  const demoTitle = demoDoc.name || 'AI Demo';
+
+  return {
+    title: demoTitle,
+    description: 'Test your interactive AI demo!',
+    
+    openGraph: {
+      title: demoTitle,
+      description: 'Test your interactive AI demo!',
+      url: `https://testyourainow.com/shared/${id}`,
+      siteName: 'TestYourAInow',
+      images: [
+        {
+          url: demoDoc.avatarUrl || 'https://testyourainow.com/og-image.png',
+          width: 1200,
+          height: 630,
+          alt: demoTitle,
+        },
+      ],
+      type: 'website',
+    },
+    
+    twitter: {
+      card: 'summary_large_image',
+      title: demoTitle,
+      description: 'Test your interactive AI demo!',
+      images: [demoDoc.avatarUrl || 'https://testyourainow.com/og-image.png'],
+    },
+  };
 }
 
 export default async function SharedDemoPage({ params }: Props) {
