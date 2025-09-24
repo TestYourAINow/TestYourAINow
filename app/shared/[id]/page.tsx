@@ -49,6 +49,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Utiliser seulement le nom de la démo
   const demoTitle = demoDoc.name || 'AI Demo';
+  
+  // Créer l'URL de l'avatar via notre API
+  const avatarImageUrl = demoDoc.avatarUrl && demoDoc.avatarUrl !== '/Default Avatar.png'
+    ? `https://testyourainow.com/api/avatar/${id}`
+    : 'https://testyourainow.com/og-image.png';
 
   return {
     title: demoTitle,
@@ -61,7 +66,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'Test your interactive AI demo!',
       images: [
         {
-          url: 'https://testyourainow.com/og-image.png',
+          url: avatarImageUrl,
           width: 1200,
           height: 630,
           alt: demoTitle,
@@ -74,7 +79,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: demoTitle,
       description: 'Test your interactive AI demo!',
-      images: 'https://testyourainow.com/og-image.png',
+      images: [avatarImageUrl],
     },
   };
 }
