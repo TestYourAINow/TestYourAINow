@@ -7,6 +7,7 @@ import {
   Plus, Trash2, Star, Copy, RefreshCw, Settings, Zap, Lock,
   Activity, Globe, Crown, Sparkles, Info, Bot
 } from "lucide-react";
+import LoadingScreen from '@/components/LoadingScreen';
 
 interface ApiKey {
   id: string;
@@ -23,15 +24,30 @@ export default function ApiKeyPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Form state
   const [newKeyName, setNewKeyName] = useState("");
   const [newApiKey, setNewApiKey] = useState("");
   const [testingKey, setTestingKey] = useState(false);
 
-  useEffect(() => {
-    fetchApiKeys();
-  }, []);
+ useEffect(() => {
+  if (session) {
+    const startTime = Date.now();
+    const minLoadingDuration = 1000;
+    
+    fetchApiKeys().finally(() => {
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, minLoadingDuration - elapsedTime);
+      
+      setTimeout(() => {
+        setInitialLoading(false);
+      }, remainingTime);
+    });
+  } else {
+    setInitialLoading(false);
+  }
+}, [session]);
 
   const fetchApiKeys = async () => {
     try {
@@ -134,11 +150,12 @@ export default function ApiKeyPage() {
     setTimeout(() => setMessage(""), 2000);
   };
 
+ // Loading state pour toute la page
+if (initialLoading || !session) {
+  // SI PAS DE SESSION = LOGIN SCREEN
   if (!session) {
     return (
-      <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
-
-
+      <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8 flex items-center justify-center">
         <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-8 text-center relative z-10 max-w-md mx-4">
           <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
             <Shield className="text-white" size={28} />
@@ -151,6 +168,16 @@ export default function ApiKeyPage() {
       </div>
     );
   }
+  
+  // SI SESSION MAIS LOADING = LOADING SCREEN
+  return (
+    <LoadingScreen 
+      icon={Key} 
+      title="Loading API Keys" 
+      subtitle="Fetching your secure keys..." 
+    />
+  );
+}
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">

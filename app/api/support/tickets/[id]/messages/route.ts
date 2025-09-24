@@ -1,4 +1,4 @@
-// app/api/support/tickets/[id]/messages/route.ts
+// app/api/support/tickets/[id]/messages/route.ts (UPDATED with readByUser)
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -51,6 +51,7 @@ export async function GET(
         senderEmail: msg.senderEmail,
         message: msg.message,
         attachments: msg.attachments || [],
+        readByUser: msg.readByUser,
         createdAt: msg.createdAt.toISOString()
       }))
     });
@@ -64,7 +65,7 @@ export async function GET(
   }
 }
 
-// POST - Add message to a ticket
+// POST - Add message to a ticket (UPDATED with readByUser logic)
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -130,13 +131,18 @@ export async function POST(
       senderName = session.user.name || 'User';
     }
 
+    // NEW: readByUser logic
+    // Support messages start as unread, user messages are always "read" by user
+    const readByUser = senderType === 'user' ? true : false;
+
     const newMessage = await TicketMessage.create({
       ticketId: new mongoose.Types.ObjectId(ticketId),
       senderType,
       senderName,
       senderEmail: session.user.email,
       message: message.trim(),
-      attachments: attachments || []
+      attachments: attachments || [],
+      readByUser // NEW: Set read status
     });
 
     // Status update logic
@@ -162,6 +168,7 @@ export async function POST(
         senderEmail: newMessage.senderEmail,
         message: newMessage.message,
         attachments: newMessage.attachments || [],
+        readByUser: newMessage.readByUser,
         createdAt: newMessage.createdAt.toISOString()
       }
     });

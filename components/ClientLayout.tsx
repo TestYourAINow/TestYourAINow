@@ -1,5 +1,4 @@
-// components\ClientLayout.tsx
-
+// components/ClientLayout.tsx
 'use client'
 
 import { ReactNode, useEffect, useState } from "react";
@@ -17,20 +16,31 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // ✅ État pour vérifier si le composant est monté côté client
+  const [isMounted, setIsMounted] = useState(false);
+
+  // ✅ Éviter l'hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Détecter si on est sur une page widget
   const isWidgetPage = pathname.includes('/website-widget');
   
   // Gérer l'onglet actif pour les pages widget
-  const activeTab = searchParams.get('tab') || 'configuration';
+  const activeTab = isMounted ? (searchParams.get('tab') || 'configuration') : 'configuration';
 
   // Scroll to top à chaque changement de page
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (isMounted) {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, isMounted]);
 
   // Fonction pour changer d'onglet sur les pages widget
   const setActiveTab = (tab: string) => {
+    if (!isMounted) return;
     const newSearchParams = new URLSearchParams(searchParams.toString());
     newSearchParams.set('tab', tab);
     router.push(`${pathname}?${newSearchParams.toString()}`);
@@ -47,7 +57,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname === '/support') return 'Support';
     if (pathname === '/agents/new') return 'Create Agent';
     if (pathname === '/create-connection') return 'Create Connection';
-      if (pathname === '/account-settings') return 'Account Settings';
+    if (pathname === '/account-settings') return 'Account Settings';
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/website-widget')) {
       return 'Widget Config';
     }
@@ -74,7 +84,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname === '/support') return 'Get help and support';
     if (pathname === '/agents/new') return 'Build and customize your AI agent';
     if (pathname === '/create-connection') return 'Connect your AI agent';
-     if (pathname === '/account-settings') return 'Manage your account and preferences';
+    if (pathname === '/account-settings') return 'Manage your account and preferences';
     if (pathname.startsWith('/launch-agent/') && pathname.endsWith('/website-widget')) {
       return 'Customize your chat widget';
     }
@@ -90,9 +100,19 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     return 'Welcome to your AI workspace';
   };
 
+  // ✅ Rendu conditionnel pour éviter l'hydration mismatch
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white relative overflow-hidden">
-
       {/* Enhanced Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Animated Grid Pattern */}
@@ -122,10 +142,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         className={`
           transition-all duration-300 ease-out relative z-10
           ml-0
-          ${collapsed
-            ? 'md:ml-16'
-            : 'md:ml-72'
-          }
+          ${collapsed ? 'md:ml-16' : 'md:ml-72'}
         `}
       >
         {/* Enhanced TopBar */}
@@ -144,8 +161,6 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
 
             {/* Enhanced Vertical Bar */}
             <div className="w-1 h-8 bg-gradient-to-b from-blue-400 via-cyan-400 to-blue-600 rounded-full shadow-lg shadow-blue-400/30"></div>
-
-
 
             {/* Enhanced Title Section */}
             <div className="flex-1">

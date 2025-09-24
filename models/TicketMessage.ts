@@ -14,6 +14,7 @@ export interface TicketMessageDocument extends Document {
     size: number;
     path: string;
   }[];
+  readByUser: boolean; // NEW: Track if user has read this message (for support messages)
   createdAt: Date;
 }
 
@@ -34,7 +35,11 @@ const TicketMessageSchema = new Schema<TicketMessageDocument>(
       filename: { type: String },
       size: { type: Number },
       path: { type: String }
-    }]
+    }],
+    readByUser: { 
+      type: Boolean, 
+      default: false // NEW: Support messages start as unread
+    }
   },
   { timestamps: true }
 );

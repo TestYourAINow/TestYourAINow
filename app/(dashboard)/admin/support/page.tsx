@@ -1,3 +1,4 @@
+// app/(dashboard)/admin/support/page.tsx (UPDATED with expiry warnings)
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -18,6 +19,8 @@ interface AdminTicket {
   category: string;
   created: string;
   updated: string;
+  closedAt?: string; // NEW
+  daysUntilDeletion?: number; // NEW
   messages: number;
   user: {
     name: string;
@@ -107,12 +110,12 @@ export default function AdminSupportPage() {
     });
   };
 
-  // Calculate ticket statistics
+  // Calculate ticket statistics with expiry info
   const stats = {
     total: tickets.length,
     pending: tickets.filter(t => t.status === 'pending').length,
     open: tickets.filter(t => t.status === 'open').length,
-    closed: tickets.filter(t => t.status === 'closed').length
+    closed: tickets.filter(t => t.status === 'closed').length,
   };
 
   if (loading) {
@@ -154,7 +157,7 @@ export default function AdminSupportPage() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
             <div className="flex items-center gap-3">
               <Archive className="text-blue-400" size={24} />
@@ -194,6 +197,8 @@ export default function AdminSupportPage() {
               </div>
             </div>
           </div>
+
+
         </div>
 
         {/* Filters and Search */}
@@ -238,60 +243,88 @@ export default function AdminSupportPage() {
           </div>
 
           <div className="space-y-4">
-            {filteredTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                onClick={() => handleTicketClick(ticket.id)}
-                className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group hover:border-blue-500/30"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
-                        {ticket.title}
-                      </h3>
-                      <span className="text-xs text-gray-400 font-mono">#{ticket.id}</span>
+            {filteredTickets.map((ticket) => {
+              // NEW: Expiry detection for admin view
+              const isNearExpiry = ticket.status === 'closed' && ticket.daysUntilDeletion !== undefined && ticket.daysUntilDeletion <= 7;
+              const isUrgentExpiry = isNearExpiry && ticket.daysUntilDeletion !== undefined && ticket.daysUntilDeletion <= 3;
+              
+              return (
+                <div
+                  key={ticket.id}
+                  onClick={() => handleTicketClick(ticket.id)}
+                  className={`backdrop-blur-sm border rounded-xl p-5 hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group ${
+                    isUrgentExpiry 
+                      ? 'bg-red-800/20 border-red-500/50 hover:border-red-400/60' 
+                      : isNearExpiry 
+                        ? 'bg-orange-800/20 border-orange-500/50 hover:border-orange-400/60'
+                        : 'bg-gray-800/50 border-gray-700/50 hover:border-blue-500/30'
+                  }`}
+                >
+                  {/* NEW: Admin expiry warning */}
+                  {isNearExpiry && (
+                    <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold ${
+                      isUrgentExpiry ? 'bg-red-500/20 text-red-300' : 'bg-orange-500/20 text-orange-300'
+                    }`}>
+                      🗑️ {ticket.daysUntilDeletion === 0 ? 'Deletes today' : `${ticket.daysUntilDeletion}d until deletion`}
+                    </div>
+                  )}
+                  
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
+                          {ticket.title}
+                        </h3>
+                        <span className="text-xs text-gray-400 font-mono">#{ticket.id}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                          <User size={14} />
+                          <span>{ticket.user.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <Mail size={14} />
+                          <span>{ticket.user.email}</span>
+                        </div>
+                        <span className="text-xs text-gray-400">{ticket.category}</span>
+                      </div>
                     </div>
                     
-                    <div className="flex items-center gap-4 mb-3">
-                      <div className="flex items-center gap-2 text-sm text-gray-300">
-                        <User size={14} />
-                        <span>{ticket.user.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <Mail size={14} />
-                        <span>{ticket.user.email}</span>
-                      </div>
-                      <span className="text-xs text-gray-400">{ticket.category}</span>
+                    <div className="flex items-center gap-3">
+                      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
+                        {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                      </span>
+                      <ChevronRight className="text-gray-400 group-hover:text-blue-400 transition-colors" size={20} />
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
-                      {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
-                    </span>
-                    <ChevronRight className="text-gray-400 group-hover:text-blue-400 transition-colors" size={20} />
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between text-xs text-gray-400">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
-                      <Calendar size={12} />
-                      <span>Created {formatDate(ticket.created)}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock size={12} />
-                      <span>Updated {formatDate(ticket.updated)}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MessageCircle size={12} />
-                      <span>{ticket.messages} messages</span>
+                  <div className="flex items-center justify-between text-xs text-gray-400">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1">
+                        <Calendar size={12} />
+                        <span>Created {formatDate(ticket.created)}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock size={12} />
+                        <span>Updated {formatDate(ticket.updated)}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageCircle size={12} />
+                        <span>{ticket.messages} messages</span>
+                      </div>
+                      {/* NEW: Show expiry date if closed */}
+                      {ticket.status === 'closed' && ticket.closedAt && (
+                        <div className="flex items-center gap-1">
+                          <Archive size={12} />
+                          <span>Closed {formatDate(ticket.closedAt)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {filteredTickets.length === 0 && (

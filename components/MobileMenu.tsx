@@ -20,6 +20,7 @@ import {
 import { useSession, signOut } from "next-auth/react"
 import { useState, useRef, useEffect } from "react"
 import { usePathname } from "next/navigation"
+import { useSupport } from "@/hooks/useSupport" // NEW: Import du hook
 
 interface MobileMenuProps {
   isOpen: boolean
@@ -168,8 +169,11 @@ const MobileMenuUserDropdown = () => {
 export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const pathname = usePathname()
   const { data: session } = useSession()
+  
+  // NEW: Récupérer les notifications support
+  const { unreadCounts } = useSupport()
 
-  // 🔧 Empêcher le scroll du body quand le menu est ouvert
+  // Empêcher le scroll du body quand le menu est ouvert
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -190,14 +194,21 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     { href: "/launch-agent", label: "Launch Agent", icon: <Rocket size={20} />, isActive: pathname === "/launch-agent" },
   ]
 
-  // ✅ SUPPORT ADMIN - Visible seulement pour les admins
+  // Support ADMIN - Visible seulement pour les admins
   const isAdmin = ['team@testyourainow.com', 'sango_ks@hotmail.com'].includes(session?.user?.email || '')
 
   const resourceItems = [
     { href: "/api-key", label: "API Key", icon: <Key size={20} />, isActive: pathname === "/api-key" },
     { href: "/video-guides", label: "Video Guides", icon: <PlayCircle size={20} />, isActive: pathname === "/video-guides" },
-    { href: "/support", label: "Support", icon: <HelpCircle size={20} />, isActive: pathname === "/support" },
-    // ✅ SUPPORT ADMIN - Ajouté après Support normal
+    { 
+      href: "/support", 
+      label: "Support", 
+      icon: <HelpCircle size={20} />, 
+      isActive: pathname === "/support",
+      hasNotification: unreadCounts.totalUnread > 0, // NEW: Badge support
+      notificationCount: unreadCounts.totalUnread // NEW: Nombre notifications
+    },
+    // Support ADMIN - Ajouté après Support normal
     ...(isAdmin ? [{
       href: "/admin/support", 
       label: "Support Admin", 
@@ -210,7 +221,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
   return (
     <div className="fixed inset-0 z-50 md:hidden">
-      {/* 🔧 Overlay avec espace à gauche (style YouTube) */}
+      {/* Overlay avec espace à gauche (style YouTube) */}
       <div 
         className={`absolute inset-0 bg-black/50 transition-opacity duration-500 ${
           isOpen ? 'opacity-100' : 'opacity-0'
@@ -219,7 +230,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         style={{ paddingLeft: '20%' }} // Espace à gauche de 20%
       />
       
-      {/* 🔧 Menu 80% largeur - OPAQUE + Animation lente */}
+      {/* Menu 80% largeur - OPAQUE + Animation lente */}
       <div 
         className={`absolute top-0 bottom-0 right-0 bg-gray-900 text-white shadow-2xl transition-transform duration-500 ease-out flex flex-col border-l border-gray-700/50 ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
@@ -227,7 +238,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         style={{ width: '80%' }} // Menu prend 80% de la largeur
       >
         
-        {/* 🔧 Header avec logo et bouton fermer - OPAQUE */}
+        {/* Header avec logo et bouton fermer - OPAQUE */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-gray-700/50 bg-gray-900">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
@@ -246,7 +257,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           </button>
         </div>
 
-        {/* 🔧 Contenu scrollable avec plus d'espace */}
+        {/* Contenu scrollable avec plus d'espace */}
         <div className="flex-1 overflow-y-auto px-6 py-8">
           
           {/* WORKSPACE Section */}
@@ -260,7 +271,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 <Link
                   key={href}
                   href={href}
-                  onClick={onClose} // 🔧 Ferme le menu lors du clic
+                  onClick={onClose} // Ferme le menu lors du clic
                   className={`flex items-center h-14 px-4 rounded-xl transition-all duration-300 relative group ${
                     isActive 
                       ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
@@ -304,11 +315,11 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             </div>
 
             <div className="space-y-3">
-              {resourceItems.map(({ href, label, icon, isActive }) => (
+              {resourceItems.map(({ href, label, icon, isActive, hasNotification, notificationCount }) => (
                 <Link
                   key={href}
                   href={href}
-                  onClick={onClose} // 🔧 Ferme le menu lors du clic
+                  onClick={onClose} // Ferme le menu lors du clic
                   className={`flex items-center h-14 px-4 rounded-xl transition-all duration-300 relative group ${
                     isActive 
                       ? 'text-white bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
@@ -327,12 +338,18 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                       : 'bg-blue-400 opacity-0 group-hover:opacity-100 shadow-blue-400/50 group-hover:shadow-md'
                   }`}></div>
                   
-                  <div className={`w-6 h-6 shrink-0 transition-all duration-300 ${
+                  <div className={`w-6 h-6 shrink-0 transition-all duration-300 relative ${
                     isActive 
                       ? 'text-blue-400 scale-110' 
                       : 'text-blue-400 group-hover:text-cyan-400 group-hover:scale-110'
                   }`}>
                     {icon}
+                    {/* NEW: Badge rouge à côté de l'icône Support */}
+                    {hasNotification && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold text-[10px]">
+                        {notificationCount && notificationCount > 9 ? '9+' : notificationCount}
+                      </span>
+                    )}
                   </div>
                   
                   <span className={`ml-4 font-semibold text-base transition-colors duration-300 ${
@@ -346,7 +363,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           </div>
         </div>
 
-        {/* 🔧 Footer avec user dropdown - OPAQUE */}
+        {/* Footer avec user dropdown - OPAQUE */}
         <div className="border-t border-gray-700/50 p-6 bg-gray-900">
           <MobileMenuUserDropdown />
         </div>

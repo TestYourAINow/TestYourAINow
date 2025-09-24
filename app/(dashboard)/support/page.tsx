@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { 
-  MessageCircle, Search, Clock, CheckCircle, 
-  Send, Paperclip, 
+import {
+  MessageCircle, Search, Clock, CheckCircle,
+  Send, Paperclip,
   Calendar, Archive, PlusCircle, BarChart3, User, Image, X
 } from 'lucide-react';
 import { useSupport } from '@/hooks/useSupport';
@@ -21,10 +21,23 @@ interface AttachmentType {
 
 export default function SupportPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const { tickets, loading, error, createTicket, uploadScreenshot } = useSupport();
 
-  const [activeTab, setActiveTab] = useState('contact');
+  // NEW: Get tab from URL params with fallback
+  const urlTab = searchParams.get('tab') || 'contact';
+  const [activeTab, setActiveTab] = useState(urlTab);
+
+  const {
+    tickets,
+    unreadCounts, // NEW
+    loading,
+    error,
+    createTicket,
+    uploadScreenshot,
+    refetchUnreadCounts // NEW
+  } = useSupport();
+
   const [ticketSearchQuery, setTicketSearchQuery] = useState('');
   const [ticketStatusFilter, setTicketStatusFilter] = useState('all');
   const [contactForm, setContactForm] = useState<{
@@ -40,6 +53,23 @@ export default function SupportPage() {
   });
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
 
+  // NEW: Update URL when tab changes
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    const newUrl = `/support?tab=${newTab}`;
+    router.push(newUrl, { scroll: false });
+
+    // Refresh unread counts when switching to tickets tab
+    if (newTab === 'tickets') {
+      refetchUnreadCounts();
+    }
+  };
+
+  // NEW: Sync tab with URL params
+  useEffect(() => {
+    setActiveTab(urlTab);
+  }, [urlTab]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'text-orange-300 bg-orange-500/20 border border-orange-500/40 backdrop-blur-sm';
@@ -52,7 +82,7 @@ export default function SupportPage() {
   const filteredTickets = tickets.filter(ticket => {
     const matchesStatus = ticketStatusFilter === 'all' || ticket.status === ticketStatusFilter;
     const matchesSearch = ticket.title.toLowerCase().includes(ticketSearchQuery.toLowerCase()) ||
-                         ticket.id.toLowerCase().includes(ticketSearchQuery.toLowerCase());
+      ticket.id.toLowerCase().includes(ticketSearchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -63,19 +93,19 @@ export default function SupportPage() {
   // Upload with 3 file limit
   const handleFileUpload = async (file: File) => {
     if (uploadingAttachment) return;
-    
+
     // Check: Max 3 files
     if (contactForm.attachments.length >= 3) {
       toast.error('Maximum 3 files allowed');
       return;
     }
-    
+
     setUploadingAttachment(true);
-    
+
     try {
       const tempTicketId = 'temp-' + Date.now();
       const attachment = await uploadScreenshot(file, tempTicketId);
-      
+
       setContactForm(prev => ({
         ...prev,
         attachments: [...prev.attachments, {
@@ -86,7 +116,7 @@ export default function SupportPage() {
           path: attachment.path
         }]
       }));
-      
+
       toast.success(`File added (${contactForm.attachments.length + 1}/3)`);
     } catch (error) {
       toast.error('Upload failed');
@@ -97,7 +127,7 @@ export default function SupportPage() {
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const formDataWithUser = {
         name: session?.user?.name || 'User',
@@ -108,18 +138,19 @@ export default function SupportPage() {
         message: contactForm.message,
         attachments: contactForm.attachments
       };
-      
+
       const result = await createTicket(formDataWithUser);
       toast.success(`Ticket ${result.ticketId} created successfully!`);
-      
+
       setContactForm({
         subject: '',
         category: '',
         message: '',
         attachments: []
       });
-      
-      setActiveTab('tickets');
+
+      // NEW: Navigate to tickets tab after creating ticket
+      handleTabChange('tickets');
     } catch (error) {
       toast.error('Failed to create ticket');
     }
@@ -139,7 +170,7 @@ export default function SupportPage() {
                 <Send className="text-white" size={12} />
               </div>
             </div>
-            
+
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2 pb-1">
                 Support Center
@@ -151,7 +182,7 @@ export default function SupportPage() {
           </div>
         </div>
 
-        {/* Navigation tabs */}
+        {/* Navigation tabs with unread badges */}
         <div className="mb-8">
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-2">
             <div className="flex gap-2">
@@ -160,18 +191,26 @@ export default function SupportPage() {
                 { id: 'tickets', label: 'My Tickets', icon: Archive }
               ].map((tab) => {
                 const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                const showBadge = tab.id === 'tickets' && unreadCounts.totalUnread > 0;
+
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                      activeTab === tab.id
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 relative ${isActive
                         ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg'
                         : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-                    }`}
+                      }`}
                   >
                     <Icon size={18} />
                     {tab.label}
+                    {/* Badge seulement si > 0 */}
+                    {showBadge && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                        {unreadCounts.totalUnread > 9 ? '9+' : unreadCounts.totalUnread}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -211,7 +250,7 @@ export default function SupportPage() {
                     <label className="block text-sm font-medium text-gray-300 mb-2">Category *</label>
                     <select
                       value={contactForm.category}
-                      onChange={(e) => setContactForm({...contactForm, category: e.target.value})}
+                      onChange={(e) => setContactForm({ ...contactForm, category: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 transition-all backdrop-blur-sm"
                       required
                     >
@@ -229,7 +268,7 @@ export default function SupportPage() {
                     <input
                       type="text"
                       value={contactForm.subject}
-                      onChange={(e) => setContactForm({...contactForm, subject: e.target.value})}
+                      onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm"
                       placeholder="Briefly describe your issue"
                       required
@@ -241,7 +280,7 @@ export default function SupportPage() {
                     <label className="block text-sm font-medium text-gray-300 mb-2">Message *</label>
                     <textarea
                       value={contactForm.message}
-                      onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
+                      onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                       rows={6}
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm resize-none"
                       placeholder="Describe your issue in detail..."
@@ -270,11 +309,10 @@ export default function SupportPage() {
                       />
                       <label
                         htmlFor="file-upload"
-                        className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer block ${
-                          contactForm.attachments.length >= 3 
-                            ? 'border-gray-600 opacity-50 cursor-not-allowed' 
-                            : 'border-gray-600 hover:border-blue-500/50'
-                        }`}
+                        className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer block ${contactForm.attachments.length >= 3
+                          ? 'border-gray-600 opacity-50 cursor-not-allowed'
+                          : 'border-gray-600 hover:border-blue-500/50'
+                          }`}
                       >
                         {uploadingAttachment ? (
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
@@ -282,9 +320,9 @@ export default function SupportPage() {
                           <Paperclip className="w-8 h-8 text-gray-500 mx-auto mb-2" />
                         )}
                         <p className="text-gray-400 text-sm">
-                          {uploadingAttachment 
-                            ? 'Uploading...' 
-                            : contactForm.attachments.length >= 3 
+                          {uploadingAttachment
+                            ? 'Uploading...'
+                            : contactForm.attachments.length >= 3
                               ? '3 file limit reached'
                               : `Click to add an image (${contactForm.attachments.length}/3)`
                           }
@@ -355,7 +393,7 @@ export default function SupportPage() {
                       Your message will be converted to a support ticket automatically and processed by our team.
                     </div>
                   </div>
-                  
+
                   <div className="p-4 bg-gray-800/30 border border-gray-700/30 rounded-xl">
                     <div className="flex items-center gap-2 mb-2">
                       <Archive className="text-blue-400" size={14} />
@@ -391,8 +429,8 @@ export default function SupportPage() {
                     <Archive className="text-blue-400" size={24} />
                     <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">Support Tickets</h2>
                   </div>
-                  <button 
-                    onClick={() => setActiveTab('contact')}
+                  <button
+                    onClick={() => handleTabChange('contact')}
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all"
                   >
                     <PlusCircle size={16} />
@@ -411,17 +449,16 @@ export default function SupportPage() {
                       className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium"
                     />
                   </div>
-                  
+
                   <div className="flex gap-2">
                     {['all', 'pending', 'open', 'closed'].map((status) => (
                       <button
                         key={status}
                         onClick={() => setTicketStatusFilter(status)}
-                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                          ticketStatusFilter === status
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
-                        }`}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${ticketStatusFilter === status
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
+                          }`}
                       >
                         {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
                       </button>
@@ -434,13 +471,20 @@ export default function SupportPage() {
                     <div
                       key={ticket.id}
                       onClick={() => handleTicketClick(ticket.id)}
-                      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group hover:border-blue-500/30"
+                      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group hover:border-blue-500/30 relative"
                     >
+
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">{ticket.title}</h3>
                             <span className="text-xs text-gray-400 font-mono">#{ticket.id}</span>
+                            {/* Badge unread avec colors plus douces */}
+                            {ticket.unreadCount && ticket.unreadCount > 0 && (
+                              <span className="bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold text-[10px]">
+                                {ticket.unreadCount > 9 ? '9+' : ticket.unreadCount}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-3">
                             <span className={`px-3 py-1 text-xs font-semibold rounded-full shadow-lg ${getStatusColor(ticket.status)}`}>
@@ -481,15 +525,15 @@ export default function SupportPage() {
                       {tickets.length === 0 ? 'No support tickets' : 'No tickets found'}
                     </h3>
                     <p className="text-gray-400 max-w-md mx-auto mb-6">
-                      {tickets.length === 0 
+                      {tickets.length === 0
                         ? "You haven't created any support tickets yet. Need help? Create your first ticket."
                         : "Try adjusting your search or filter criteria to find what you're looking for."
                       }
                     </p>
-                    <button 
+                    <button
                       onClick={() => {
                         if (tickets.length === 0) {
-                          setActiveTab('contact');
+                          handleTabChange('contact');
                         } else {
                           setTicketSearchQuery('');
                           setTicketStatusFilter('all');
@@ -520,9 +564,17 @@ export default function SupportPage() {
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
                     <span className="text-gray-300 font-medium">Open</span>
-                    <span className="text-blue-400 font-bold">
-                      {tickets.filter(t => t.status === 'open').length}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-400 font-bold">
+                        {tickets.filter(t => t.status === 'open').length}
+                      </span>
+                      {/* Badge seulement si > 0 */}
+                      {unreadCounts.totalUnread > 0 && (
+                        <span className="bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                          {unreadCounts.totalUnread > 9 ? '9+' : unreadCounts.totalUnread}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl">
                     <span className="text-gray-300 font-medium">Closed</span>

@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { 
-  ArrowLeft, Send, X, Clock, User, 
-  Headphones, CheckCircle, AlertCircle, MessageCircle, 
-  Eye, RefreshCw
+import {
+  ArrowLeft, Send, X, Clock, User,
+  Headphones, CheckCircle, AlertCircle, MessageCircle,
+  Eye, RefreshCw, Calendar, Archive
 } from 'lucide-react';
 import { useSupport } from '@/hooks/useSupport';
 import { toast } from 'sonner';
@@ -23,6 +23,7 @@ interface TicketMessage {
     size: number;
     path: string;
   }[];
+  readByUser: boolean; // NEW
   createdAt: string;
 }
 
@@ -33,6 +34,8 @@ interface TicketDetails {
   category: string;
   created: string;
   updated: string;
+  closedAt?: string; // NEW
+  daysUntilDeletion?: number; // NEW
   user?: {
     name: string;
     email: string;
@@ -43,16 +46,16 @@ export default function TicketConversationPage() {
   const router = useRouter();
   const params = useParams();
   const ticketId = params.ticketId as string;
-  
+
   const { fetchTicketDetails, addMessage, uploadScreenshot, deleteScreenshot } = useSupport();
-  
+
   const [ticket, setTicket] = useState<TicketDetails | null>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Manual refresh functionality
@@ -67,15 +70,16 @@ export default function TicketConversationPage() {
   const loadTicketData = async () => {
     setLoading(true);
     const data = await fetchTicketDetails(ticketId);
-    
+
     if (data) {
       setTicket(data.ticket);
       setMessages(data.messages);
     } else {
       toast.error('Ticket not found');
-      router.push('/support');
+      // NEW: Navigate to tickets tab instead of support main
+      router.push('/support?tab=tickets');
     }
-    
+
     setLoading(false);
   };
 
@@ -91,11 +95,11 @@ export default function TicketConversationPage() {
   // Check if user can write messages
   const canUserWrite = () => {
     if (!ticket) return false;
-    
+
     // User cannot write if ticket is pending or closed
     if (ticket.status === 'pending') return false;
     if (ticket.status === 'closed') return false;
-    
+
     // User can only write when ticket is open
     return ticket.status === 'open';
   };
@@ -103,7 +107,7 @@ export default function TicketConversationPage() {
   // Get status message for user
   const getStatusMessage = () => {
     if (!ticket) return '';
-    
+
     switch (ticket.status) {
       case 'pending':
         return '⏳ Your ticket is awaiting response from our support team. You will be able to reply once an agent has taken charge of your request.';
@@ -122,10 +126,10 @@ export default function TicketConversationPage() {
     if (!canUserWrite()) return;
 
     setSending(true);
-    
+
     try {
       const message = await addMessage(ticketId, newMessage);
-      
+
       if (message) {
         setMessages(prev => [...prev, message]);
         setNewMessage('');
@@ -156,15 +160,58 @@ export default function TicketConversationPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      day: '2-digit', 
-      month: '2-digit', 
+    return date.toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
+  // NEW: Get expiry warning component
+  const getExpiryWarning = () => {
+    // Fix: Vérifications strictes pour éviter "null"
+    if (!ticket ||
+      ticket.status !== 'closed' ||
+      !ticket.daysUntilDeletion ||
+      ticket.daysUntilDeletion === null ||
+      ticket.daysUntilDeletion === undefined) {
+      return null;
+    }
+
+    const days = ticket.daysUntilDeletion;
+
+    if (days > 7) return null; // Only show warning in last week
+
+    const urgencyLevel = days <= 3 ? 'high' : 'medium';
+    const bgColor = urgencyLevel === 'high' ? 'bg-red-500/20 border-red-500/40' : 'bg-orange-500/20 border-orange-500/40';
+    const textColor = urgencyLevel === 'high' ? 'text-red-300' : 'text-orange-300';
+    const icon = urgencyLevel === 'high' ? AlertCircle : Clock;
+    const IconComponent = icon;
+
+    return (
+      <div className={`p-4 rounded-xl border ${bgColor} mb-4`}>
+        <div className="flex items-start gap-3">
+          <IconComponent className={textColor} size={20} />
+          <div>
+            <h4 className={`font-semibold ${textColor} mb-1`}>
+              {urgencyLevel === 'high' ? 'Urgent: Ticket Deletion Warning' : 'Ticket Deletion Notice'}
+            </h4>
+            <p className="text-sm text-gray-300">
+              This closed ticket will be permanently deleted in <strong>{days} day{days !== 1 ? 's' : ''}</strong>.
+              All messages and attachments will be removed and cannot be recovered.
+            </p>
+            {days <= 3 && (
+              <p className="text-xs text-gray-400 mt-2">
+                📋 Save any important information now before it's deleted.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
   if (loading) {
     return (
       <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
@@ -184,11 +231,11 @@ export default function TicketConversationPage() {
           <div className="text-center py-12">
             <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">Ticket not found</h3>
-            <button 
-              onClick={() => router.push('/support')}
+            <button
+              onClick={() => router.push('/support?tab=tickets')}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold"
             >
-              Back to support
+              Back to tickets
             </button>
           </div>
         </div>
@@ -202,13 +249,13 @@ export default function TicketConversationPage() {
         {/* Header */}
         <div className="mb-6">
           <button
-            onClick={() => router.push('/support')}
+            onClick={() => router.push('/support?tab=tickets')}
             className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
           >
             <ArrowLeft size={20} />
-            Back to support
+            Back to tickets
           </button>
-          
+
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -219,12 +266,12 @@ export default function TicketConversationPage() {
                   <span>Created: {formatDate(ticket.created)}</span>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
                   {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
                 </span>
-                
+
                 {/* Manual refresh button */}
                 <button
                   onClick={handleRefresh}
@@ -237,15 +284,29 @@ export default function TicketConversationPage() {
               </div>
             </div>
 
+{/* Expiry info simple pour tickets fermés */}
+{ticket.status === 'closed' && ticket.daysUntilDeletion !== null && ticket.daysUntilDeletion !== undefined && (
+  <div className="mb-4 text-xs text-gray-400 flex items-center gap-2">
+    <Archive size={12} />
+    <span>
+      {ticket.daysUntilDeletion > 0 
+        ? `This ticket will be deleted in ${ticket.daysUntilDeletion} day${ticket.daysUntilDeletion !== 1 ? 's' : ''}` 
+        : 'This ticket will be deleted today'}
+    </span>
+  </div>
+)}
+
+            {/* NEW: Expiry warning */}
+            {getExpiryWarning()}
+
             {/* Status message for user */}
             {getStatusMessage() && (
-              <div className={`p-4 rounded-xl border text-sm ${
-                ticket.status === 'pending' 
+              <div className={`p-4 rounded-xl border text-sm ${ticket.status === 'pending'
                   ? 'bg-orange-500/10 border-orange-500/20 text-orange-300'
                   : ticket.status === 'closed'
-                  ? 'bg-gray-500/10 border-gray-500/20 text-gray-300'
-                  : 'bg-blue-500/10 border-blue-500/20 text-blue-300'
-              }`}>
+                    ? 'bg-gray-500/10 border-gray-500/20 text-gray-300'
+                    : 'bg-blue-500/10 border-blue-500/20 text-blue-300'
+                }`}>
                 {getStatusMessage()}
               </div>
             )}
@@ -261,11 +322,10 @@ export default function TicketConversationPage() {
                 className={`flex ${message.senderType === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-lg ${
-                    message.senderType === 'user'
+                  className={`max-w-lg ${message.senderType === 'user'
                       ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
                       : 'bg-gray-800 text-gray-100'
-                  } rounded-2xl p-4 shadow-lg`}
+                    } rounded-2xl p-4 shadow-lg relative`}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     {message.senderType === 'support' ? (
@@ -275,10 +335,16 @@ export default function TicketConversationPage() {
                     )}
                     <span className="font-semibold text-sm">{message.senderName}</span>
                     <span className="text-xs opacity-70">{formatDate(message.createdAt)}</span>
+                    {/* NEW: Unread indicator for support messages */}
+                    {message.senderType === 'support' && !message.readByUser && (
+                      <span className="bg-blue-500 rounded-full h-2 w-2 flex-shrink-0">
+                        
+                      </span>
+                    )}
                   </div>
-                  
+
                   <div className="whitespace-pre-line">{message.message}</div>
-                  
+
                   {message.attachments && message.attachments.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {message.attachments.map((attachment, idx) => (
@@ -290,9 +356,9 @@ export default function TicketConversationPage() {
                               {attachment.filename} (Archived)
                             </span>
                           ) : (
-                            <a 
-                              href={attachment.url} 
-                              target="_blank" 
+                            <a
+                              href={attachment.url}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-sm hover:underline flex-1"
                             >
@@ -331,7 +397,7 @@ export default function TicketConversationPage() {
                     }}
                   />
                 </div>
-                
+
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={handleSendMessage}
@@ -343,7 +409,7 @@ export default function TicketConversationPage() {
                   </button>
                 </div>
               </div>
-              
+
               <div className="text-xs text-gray-400">
                 Press Ctrl+Enter to send quickly
               </div>
@@ -353,28 +419,27 @@ export default function TicketConversationPage() {
           /* Message when user cannot write */
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
             <div className="text-center py-8">
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
-                ticket.status === 'pending' 
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${ticket.status === 'pending'
                   ? 'bg-orange-500/20 text-orange-400'
                   : 'bg-gray-500/20 text-gray-400'
-              }`}>
+                }`}>
                 {ticket.status === 'pending' ? (
                   <Clock size={24} />
                 ) : (
                   <CheckCircle size={24} />
                 )}
               </div>
-              
+
               <h3 className="text-lg font-semibold text-white mb-2">
                 {ticket.status === 'pending' ? 'Awaiting response' : 'Conversation closed'}
               </h3>
-              
+
               <p className="text-gray-400 text-sm max-w-md mx-auto mb-6">
                 {getStatusMessage()}
               </p>
 
               {ticket.status === 'closed' && (
-                <button 
+                <button
                   onClick={() => router.push('/support?tab=contact')}
                   className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all"
                 >

@@ -21,6 +21,7 @@ import { useSession, signOut } from "next-auth/react"
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { usePathname } from "next/navigation"
+import { useSupport } from "@/hooks/useSupport" // NEW: Import du hook
 
 // 🆕 Composant Tooltip séparé qui utilise un portail
 const Tooltip = ({ children, text, isVisible, buttonRef }: { 
@@ -231,6 +232,9 @@ export default function Sidebar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const buttonRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({})
   const { data: session } = useSession()
+  
+  // NEW: Récupérer les notifications support
+  const { unreadCounts } = useSupport()
 
   const setButtonRef = (key: string) => (ref: HTMLAnchorElement | null) => {
     buttonRefs.current[key] = ref
@@ -271,7 +275,14 @@ export default function Sidebar() {
   const resourceItems = [
     { href: "/api-key", label: "API Key", icon: <Key size={20} />, isActive: pathname === "/api-key" },
     { href: "/video-guides", label: "Video Guides", icon: <PlayCircle size={20} />, isActive: pathname === "/video-guides" },
-    { href: "/support", label: "Support", icon: <HelpCircle size={20} />, isActive: pathname === "/support" },
+    { 
+      href: "/support", 
+      label: "Support", 
+      icon: <HelpCircle size={20} />, 
+      isActive: pathname === "/support",
+      hasNotification: unreadCounts.totalUnread > 0, // NEW: Badge support
+      notificationCount: unreadCounts.totalUnread // NEW: Nombre notifications
+    },
     // ✅ SUPPORT ADMIN - Ajouté après Support normal
     ...(isAdmin ? [{
       href: "/admin/support", 
@@ -384,7 +395,7 @@ export default function Sidebar() {
             </div>
 
             <div className="space-y-2 px-1">
-              {resourceItems.map(({ href, label, icon, isActive }) => (
+              {resourceItems.map(({ href, label, icon, isActive, hasNotification, notificationCount }) => (
                 <div key={href} className="relative group">
                   <Tooltip 
                     text={label}
@@ -418,7 +429,7 @@ export default function Sidebar() {
                       }`}></div>
                       
                       <div 
-                        className={`w-5 h-5 shrink-0 transition-all duration-300 ${
+                        className={`w-5 h-5 shrink-0 transition-all duration-300 relative ${
                           isActive 
                             ? 'text-blue-400 scale-110' 
                             : 'text-blue-400 group-hover:text-cyan-400 group-hover:scale-110'
@@ -426,6 +437,12 @@ export default function Sidebar() {
                         style={{ marginLeft: '4px' }}
                       >
                         {icon}
+                        {/* NEW: Badge rouge à côté de l'icône Support */}
+                        {hasNotification && (
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold text-[10px]">
+                            {notificationCount && notificationCount > 9 ? '9+' : notificationCount}
+                          </span>
+                        )}
                       </div>
                       
                       <div className={`ml-3 transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>

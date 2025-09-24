@@ -1,4 +1,4 @@
-// app/api/support/tickets/[id]/route.ts (UPDATED - Sans Priority)
+// app/api/support/tickets/[id]/route.ts (UPDATED with closedAt logic)
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -52,6 +52,13 @@ export async function GET(
       };
     }
 
+    // Calculate days until deletion if closed
+    let daysUntilDeletion = null;
+    if (ticket.status === 'closed' && ticket.closedAt) {
+      const daysSinceClosed = Math.floor((Date.now() - ticket.closedAt.getTime()) / (1000 * 60 * 60 * 24));
+      daysUntilDeletion = Math.max(0, 30 - daysSinceClosed);
+    }
+
     return NextResponse.json({
       ticket: {
         id: ticket._id.toString(),
@@ -60,6 +67,8 @@ export async function GET(
         category: ticket.category,
         created: ticket.createdAt.toISOString(),
         updated: ticket.updatedAt.toISOString(),
+        closedAt: ticket.closedAt?.toISOString(),
+        daysUntilDeletion,
         user: userInfo
       },
       messages: messages.map((msg: any) => ({
@@ -69,6 +78,7 @@ export async function GET(
         senderEmail: msg.senderEmail,
         message: msg.message,
         attachments: msg.attachments || [],
+        readByUser: msg.readByUser,
         createdAt: msg.createdAt.toISOString()
       }))
     });
@@ -82,7 +92,7 @@ export async function GET(
   }
 }
 
-// PUT - Update ticket status (ADMIN ONLY)
+// PUT - Update ticket status (ADMIN ONLY) - NOW WITH closedAt LOGIC
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -115,18 +125,32 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
+    const currentTicket = await SupportTicket.findById(new mongoose.Types.ObjectId(ticketId));
+    if (!currentTicket) {
+      return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
+    }
+
+    // Prepare update data with closedAt logic
     const updateData: any = {};
-    if (status) updateData.status = status;
+    if (status) {
+      updateData.status = status;
+      
+      // Set closedAt when closing ticket
+      if (status === 'closed' && currentTicket.status !== 'closed') {
+        updateData.closedAt = new Date();
+      }
+      
+      // Reset closedAt when reopening ticket
+      if (status !== 'closed' && currentTicket.status === 'closed') {
+        updateData.$unset = { closedAt: 1 };
+      }
+    }
 
     const ticket = await SupportTicket.findByIdAndUpdate(
       new mongoose.Types.ObjectId(ticketId),
       updateData,
       { new: true }
     );
-
-    if (!ticket) {
-      return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
-    }
 
     return NextResponse.json({ success: true });
 

@@ -6,6 +6,7 @@ export interface SupportTicketDocument extends Document {
   title: string;
   category: string;
   status: 'pending' | 'open' | 'closed';
+  closedAt?: Date; // NEW: Track when ticket was closed for auto-deletion
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,6 +21,7 @@ const SupportTicketSchema = new Schema<SupportTicketDocument>(
       enum: ['pending', 'open', 'closed'],
       default: 'pending'
     },
+    closedAt: { type: Date }, // NEW: Set when status changes to 'closed'
   },
   { timestamps: true }
 );
