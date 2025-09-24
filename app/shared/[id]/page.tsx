@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'Test your interactive AI demo!',
       images: [
         {
-          url: demoDoc.avatarUrl || 'https://testyourainow.com/og-image.png',
+          url: demoDoc.avatarUrl || 'https://testyourainow.com/pixpa.png',
           width: 1200,
           height: 630,
           alt: demoTitle,
@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: demoTitle,
       description: 'Test your interactive AI demo!',
-      images: [demoDoc.avatarUrl || 'https://testyourainow.com/og-image.png'],
+      images: [demoDoc.avatarUrl || 'https://testyourainow.com/pixpa.png'],
     },
   };
 }
