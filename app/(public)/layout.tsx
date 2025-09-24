@@ -9,7 +9,32 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   title: "TestYourAInow",
-  description: "Turn your AI prompt into interactive demos — in minutes",
+  description: "Build and share your AI agents with a single link. No coding. No hassle. Just results.",
+  
+  // Open Graph pour l'aperçu social (Facebook, WhatsApp, etc.)
+  openGraph: {
+    title: "TestYourAInow",
+    description: "Turn your AI prompt into interactive demos — in minutes",
+    url: "https://testyourainow.com",
+    siteName: "TestYourAInow",
+    images: [
+      {
+        url: "https://testyourainow.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "TestYourAInow - Build and share your AI agents with a single link. No coding. No hassle. Just results.",
+      },
+    ],
+    type: "website",
+  },
+  
+  // Twitter Cards pour l'aperçu sur Twitter/X
+  twitter: {
+    card: "summary_large_image",
+    title: "TestYourAInow",
+    description: "Build and share your AI agents with a single link. No coding. No hassle. Just results.",
+    images: ["https://testyourainow.com/og-image.png"],
+  },
 };
 
 export default function RootLayout({
