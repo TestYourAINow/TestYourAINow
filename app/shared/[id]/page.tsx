@@ -57,13 +57,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: demoTitle,
-    description: 'Test your interactive AI demo!',
+    description: 'Click to try your AI demo!',
     
     openGraph: {
       title: demoTitle,
-      description: 'Test your interactive AI demo!',
+      description: 'Click to try your AI demo!',
       url: `https://testyourainow.com/shared/${id}`,
-      siteName: 'Test your interactive AI demo!',
+      siteName: 'Click to try your AI demo!',
       images: [
         {
           url: avatarImageUrl,
@@ -78,7 +78,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       title: demoTitle,
-      description: 'Test your interactive AI demo!',
+      description: 'Click to try your AI demo!',
       images: [avatarImageUrl],
     },
   };
