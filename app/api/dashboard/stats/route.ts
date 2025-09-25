@@ -1,11 +1,11 @@
-// app/api/dashboard/stats/route.ts - VERSION ENHANCED CORRIGÉE
+// app/api/dashboard/stats/route.ts - VERSION NETTOYÉE SANS Analytics
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { Connection } from "@/models/Connection";
-import { Conversation } from "@/models/Conversation";
+// 🗑️ SUPPRIMÉ - import { Conversation } from "@/models/Conversation";
 import { Folder } from "@/models/Folder";
 import { AgentVersion } from "@/models/AgentVersion";
 import { Demo } from "@/models/Demo";
@@ -61,21 +61,24 @@ export async function GET(request: NextRequest) {
       isActive: true 
     });
 
+    // 🗑️ SUPPRIMÉ - Section conversations complète
     // 6. 💬 CONVERSATIONS - Conversations de mes agents
-    const userAgentIds = await Agent.find({ userId: userId }).select('_id');
-    const agentObjectIds = userAgentIds.map(agent => agent._id);
-    
-    const totalConversations = agentObjectIds.length > 0 
-      ? await Conversation.countDocuments({ 
-          agentId: { $in: agentObjectIds },
-          isDeleted: false 
-        })
-      : 0;
+    // const userAgentIds = await Agent.find({ userId: userId }).select('_id');
+    // const agentObjectIds = userAgentIds.map(agent => agent._id);
+    // const totalConversations = agentObjectIds.length > 0 
+    //   ? await Conversation.countDocuments({ 
+    //       agentId: { $in: agentObjectIds },
+    //       isDeleted: false 
+    //     })
+    //   : 0;
 
     // 7. 📁 FOLDERS - Nombre de dossiers créés par l'utilisateur
     const totalFolders = await Folder.countDocuments({ userId: userId });
     
     // 8. 🔄 VERSIONS - Nombre de versions d'agents sauvegardées
+    const userAgentIds = await Agent.find({ userId: userId }).select('_id');
+    const agentObjectIds = userAgentIds.map(agent => agent._id);
+    
     const totalVersions = agentObjectIds.length > 0 
       ? await AgentVersion.countDocuments({ 
           agentId: { $in: agentObjectIds } 
@@ -112,16 +115,16 @@ export async function GET(request: NextRequest) {
 
     console.log(`📊 [PLATFORM BREAKDOWN] Calculated:`, platformBreakdown);
 
-    // 🎯 RÉPONSE FINALE - CORRIGÉE avec vraies données
+    // 🎯 RÉPONSE FINALE - NETTOYÉE
     const dashboardStats = {
       // ✅ Métriques principales existantes
       totalAgents,
       activeAgents,
       totalIntegrations,
-      totalDeployments, // 🔧 CORRIGÉ - seulement connections
-      activeDeployments, // 🔧 CORRIGÉ - seulement connections
+      totalDeployments,
+      activeDeployments,
       totalApiKeys,
-      totalConversations,
+      // 🗑️ SUPPRIMÉ - totalConversations,
       
       // ✅ Métriques secondaires
       totalFolders,
@@ -131,7 +134,7 @@ export async function GET(request: NextRequest) {
       // ✅ Données supplémentaires
       agentsByStatus,
       
-      // 🔧 CORRIGÉ - Platform Breakdown basé sur vraies Connections
+      // Platform Breakdown basé sur vraies Connections
       platformBreakdown,
       
       // ✅ Métadonnées
@@ -142,12 +145,12 @@ export async function GET(request: NextRequest) {
     console.log(`📊 [DASHBOARD] Stats calculated for user ${userId}:`, {
       totalAgents,
       activeAgents,
-      totalConversations,
+      // 🗑️ SUPPRIMÉ - totalConversations,
       totalFolders,
       totalVersions,
       totalDemos: `${totalDemos}/15`,
-      totalDeployments, // 🔧 CORRIGÉ
-      activeDeployments, // 🔧 CORRIGÉ
+      totalDeployments,
+      activeDeployments,
       platformBreakdown
     });
 

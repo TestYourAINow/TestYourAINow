@@ -906,7 +906,6 @@ export default function LaunchAgentPage() {
       {loading && (
         <FadeInSection>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-            <CompactQuickDeployButton />
             {[...Array(9)].map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="bg-gradient-to-br from-gray-900/40 to-gray-800/20 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-5 h-[240px] flex flex-col items-center">

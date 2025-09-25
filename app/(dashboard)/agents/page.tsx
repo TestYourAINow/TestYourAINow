@@ -771,8 +771,7 @@ export default function AgentsPage() {
       {/* Main Content */}
       {loading ? (
         <FadeInSection>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-            <QuickCreateAgentButton />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6"> 
             {[...Array(9)].map((_, i) => (
               <AgentCardSkeleton key={i} />
             ))}

@@ -1,7 +1,7 @@
-// app/(dashboard)/dashboard/page.tsx - VERSION PROPRE avec Analytics
+// app/(dashboard)/dashboard/page.tsx - VERSION PROPRE NETTOYÉE
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-// 🆕 Import des types analytics
-import type { AnalyticsData } from '@/types/analytics';
+// 🗑️ SUPPRIMÉ - Import des types analytics
+// import type { AnalyticsData } from '@/types/analytics';
 
 // 🎨 Composants d'icônes (inchangés)
 const InstagramIcon = ({ size = 24, className = "" }) => (
@@ -70,7 +70,7 @@ const WebsiteIcon = ({ size = 24, className = "" }) => (
   </svg>
 )
 
-// 📊 Types pour le dashboard existant
+// 📊 Types pour le dashboard - NETTOYÉ
 interface DashboardStats {
   totalAgents: number;
   activeAgents: number;
@@ -78,7 +78,7 @@ interface DashboardStats {
   totalDeployments: number;
   activeDeployments: number;
   totalApiKeys: number;
-  totalConversations: number;
+  // 🗑️ SUPPRIMÉ - totalConversations: number;
   totalFolders: number;
   totalVersions: number;
   totalDemos: number;
@@ -111,22 +111,15 @@ export default function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
-  // 🆕 États pour analytics avec types corrects
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState<string>('last-7-days');
-  const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
-  const [selectedConnection, setSelectedConnection] = useState<string>('all');
+  // 🗑️ SUPPRIMÉ - États pour analytics avec types corrects
+  // const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  // const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  // const [selectedPeriod, setSelectedPeriod] = useState<string>('last-7-days');
+  // const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
+  // const [selectedConnection, setSelectedConnection] = useState<string>('all');
 
-  // Périodes disponibles
-  const periods = [
-    { value: 'today', label: 'Today' },
-    { value: 'yesterday', label: 'Yesterday' },
-    { value: 'this-week', label: 'This Week' },
-    { value: 'last-week', label: 'Last Week' },
-    { value: 'last-7-days', label: 'Last 7 Days' },
-    { value: 'last-30-days', label: 'Last 30 Days' }
-  ] as const;
+  // 🗑️ SUPPRIMÉ - Périodes disponibles
+  // const periods = [...]
 
   // Fonction pour charger les stats du dashboard (existante)
   const fetchDashboardStats = async (isRefresh = false) => {
@@ -164,102 +157,31 @@ export default function DashboardPage() {
     }
   };
 
-  // 🆕 Fonction pour charger les analytics
-  const fetchAnalyticsData = async (period: string) => {
-    setAnalyticsLoading(true);
-    try {
-      console.log(`📊 [DASHBOARD] Fetching analytics for period: ${period}`);
-      
-      const response = await fetch(`/api/analytics/conversations?period=${period}`, {
-        method: 'GET',
-        credentials: 'include',
-        cache: 'no-cache'
-      });
+  // 🗑️ SUPPRIMÉ - Fonction pour charger les analytics
+  // const fetchAnalyticsData = async (period: string) => {...};
 
-      if (!response.ok) {
-        console.error(`Analytics API error: ${response.status}`);
-        return;
-      }
-
-      const result: AnalyticsData = await response.json();
-      
-      if (result.success) {
-        setAnalyticsData(result);
-        // Reset des filtres secondaires
-        setSelectedPlatform('all');
-        setSelectedConnection('all');
-        console.log('✅ [DASHBOARD] Analytics loaded:', result.summary);
-      }
-    } catch (err) {
-      console.error('Analytics fetch error (non-blocking):', err);
-    } finally {
-      setAnalyticsLoading(false);
-    }
-  };
-
-  // Chargements initiaux
+  // Chargements initiaux - NETTOYÉ
   useEffect(() => {
     fetchDashboardStats();
-    fetchAnalyticsData(selectedPeriod);
+    // 🗑️ SUPPRIMÉ - fetchAnalyticsData(selectedPeriod);
   }, []);
 
-  // Recharger analytics quand période change
-  useEffect(() => {
-    if (selectedPeriod) {
-      fetchAnalyticsData(selectedPeriod);
-    }
-  }, [selectedPeriod]);
+  // 🗑️ SUPPRIMÉ - Recharger analytics quand période change
+  // useEffect(() => {...}, [selectedPeriod]);
 
-  // Auto-refresh existant
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchDashboardStats(true);
-    }, 5 * 60 * 1000);
+  // 🗑️ SUPPRIMÉ - Auto-refresh automatique
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     fetchDashboardStats(true);
+  //   }, 5 * 60 * 1000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
-    return () => clearInterval(interval);
-  }, []);
+  // 🗑️ SUPPRIMÉ - Connections disponibles selon la plateforme (effet domino)
+  // const availableConnections = useMemo(() => {...}, [...]);
 
-  // 🆕 Connections disponibles selon la plateforme (effet domino)
-  const availableConnections = useMemo(() => {
-    if (!analyticsData || selectedPlatform === 'all') {
-      const allConnections = new Map<string, number>();
-      analyticsData?.availableFilters.platforms.forEach(platform => {
-        platform.connections.forEach(conn => {
-          const key = `${conn.value}:${conn.label}`;
-          allConnections.set(key, (allConnections.get(key) || 0) + conn.count);
-        });
-      });
-
-      return Array.from(allConnections.entries()).map(([key, count]) => {
-        const [value, label] = key.split(':');
-        return { value, label, count };
-      });
-    }
-
-    const platform = analyticsData.availableFilters.platforms.find(p => p.value === selectedPlatform);
-    return platform?.connections || [];
-  }, [analyticsData, selectedPlatform]);
-
-  // 🆕 Données analytics filtrées
-  const filteredAnalytics = useMemo((): AnalyticsData | null => {
-    if (!analyticsData) return null;
-
-    let platformBreakdown = analyticsData.chartData.platformBreakdown;
-    
-    if (selectedPlatform !== 'all') {
-      platformBreakdown = platformBreakdown.filter(item => {
-        return item.platform.toLowerCase().replace(' ', '-') === selectedPlatform;
-      });
-    }
-
-    return {
-      ...analyticsData,
-      chartData: {
-        ...analyticsData.chartData,
-        platformBreakdown
-      }
-    };
-  }, [analyticsData, selectedPlatform, selectedConnection]);
+  // 🗑️ SUPPRIMÉ - Données analytics filtrées
+  // const filteredAnalytics = useMemo((): AnalyticsData | null => {...}, [...]);
 
   // Quick actions existantes
   const quickActions = [
@@ -413,265 +335,85 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Section Analytics + Métriques */}
+        {/* 🗑️ SUPPRIMÉ - Section Analytics + Métriques */}
+        {/* TOUTE la section "Section Analytics + Métriques" avec le graphique, filtres et Analytics Summary a été supprimée */}
+
+        {/* Section des métriques principales - Agent Status et Demo Progress déplacés */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
           
-          {/* 📊 Graphique Analytics avec filtres */}
+          {/* Agent Status - DÉPLACÉ ICI */}
           <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 group-hover:scale-110 transition-transform duration-300">
-                  <BarChart3 className="text-blue-400" size={20} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Conversations Analytics</h3>
-                  <p className="text-gray-400 text-sm">
-                    {analyticsData ? analyticsData.period.label : 'Interactive analytics'}
-                  </p>
-                </div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
+                <Gauge className="text-emerald-400" size={20} />
               </div>
-
-              {/* Filtres avec effet domino */}
-              <div className="flex items-center gap-2">
-                {/* Période */}
-                <select
-                  value={selectedPeriod}
-                  onChange={(e) => setSelectedPeriod(e.target.value)}
-                  className="bg-gray-700/50 border border-gray-600/50 text-white rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                  disabled={analyticsLoading}
-                >
-                  {periods.map(period => (
-                    <option key={period.value} value={period.value}>
-                      {period.label}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Plateforme */}
-                {analyticsData && (
-                  <select
-                    value={selectedPlatform}
-                    onChange={(e) => {
-                      setSelectedPlatform(e.target.value);
-                      setSelectedConnection('all');
-                    }}
-                    className="bg-gray-700/50 border border-gray-600/50 text-white rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="all">All Platforms</option>
-                    {analyticsData.availableFilters.platforms.map(platform => (
-                      <option key={platform.value} value={platform.value}>
-                        {platform.label} ({platform.count})
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {analyticsLoading && (
-                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                )}
+              <div>
+                <h3 className="text-lg font-bold text-white">Agent Status</h3>
+                <p className="text-gray-400 text-sm">Active vs Inactive</p>
               </div>
             </div>
             
-            {/* Graphique */}
-            <div className="h-64">
-              {analyticsLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-gray-400 text-sm">Loading analytics...</div>
-                </div>
-              ) : filteredAnalytics?.chartData.dailyActivity ? (
+            <div className="flex items-center justify-between">
+              <div className="h-24 w-24">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={filteredAnalytics.chartData.dailyActivity}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="#9ca3af" 
-                      fontSize={12}
-                      tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#1f2937', 
-                        border: '1px solid #374151',
-                        borderRadius: '12px',
-                        color: '#fff',
-                        pointerEvents: 'none'
-                      }} 
-                    />
-                    <Bar 
-                      dataKey="messages" 
-                      fill="url(#gradient)" 
-                      radius={[4, 4, 0, 0]} 
-                      name="Messages"
-                      style={{ pointerEvents: 'none' }}
-                    />
-                    <Bar 
-                      dataKey="conversations" 
-                      fill="url(#gradient2)" 
-                      radius={[4, 4, 0, 0]} 
-                      name="Conversations"
-                      style={{ pointerEvents: 'none' }}
-                    />
-                    <defs>
-                      <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={CHART_COLORS.primary} />
-                        <stop offset="100%" stopColor={CHART_COLORS.secondary} />
-                      </linearGradient>
-                      <linearGradient id="gradient2" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={CHART_COLORS.success} />
-                        <stop offset="100%" stopColor={CHART_COLORS.warning} />
-                      </linearGradient>
-                    </defs>
-                  </BarChart>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={20}
+                      outerRadius={40}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
                 </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  No analytics data available
+              </div>
+              
+              <div className="flex-1 space-y-2 ml-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                  <span className="text-gray-300">Active ({stats.activeAgents})</span>
                 </div>
-              )}
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 rounded-full bg-gray-600"></div>  
+                  <span className="text-gray-300">Inactive ({stats.agentsByStatus.inactive})</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Colonne droite avec métriques */}
-          <div className="space-y-6">
-            
-            {/* Analytics Summary */}
-            {analyticsData && (
-              <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center border border-purple-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <TrendingUp className="text-purple-400" size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">Analytics Summary</h3>
-                    <p className="text-gray-400 text-sm">{analyticsData.period.label}</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-700/30 rounded-xl p-3">
-                    <div className="text-xs text-gray-400 mb-1">Conversations</div>
-                    <div className="text-xl font-bold text-white">
-                      {analyticsData.summary.totalConversations}
-                    </div>
-                  </div>
-                  <div className="bg-gray-700/30 rounded-xl p-3">
-                    <div className="text-xs text-gray-400 mb-1">Messages</div>
-                    <div className="text-xl font-bold text-white">
-                      {analyticsData.summary.totalMessages}
-                    </div>
-                  </div>
-                  <div className="bg-gray-700/30 rounded-xl p-3">
-                    <div className="text-xs text-gray-400 mb-1">Avg/Conv</div>
-                    <div className="text-xl font-bold text-white">
-                      {analyticsData.summary.avgMessagesPerConversation}
-                    </div>
-                  </div>
-                  <div className="bg-gray-700/30 rounded-xl p-3">
-                    <div className="text-xs text-gray-400 mb-1">Platforms</div>
-                    <div className="text-xl font-bold text-white">
-                      {analyticsData.summary.uniquePlatforms}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Mini graphique plateforme si filtré */}
-                {selectedPlatform !== 'all' && 
-                 filteredAnalytics?.chartData?.platformBreakdown && 
-                 filteredAnalytics.chartData.platformBreakdown.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-700/50">
-                    <div className="text-xs text-gray-400 mb-2">Platform Focus</div>
-                    {filteredAnalytics.chartData.platformBreakdown.map((platform, index) => (
-                      <div key={index} className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: platform.color }}
-                          ></div>
-                          <span className="text-gray-300 text-xs">{platform.platform}</span>
-                        </div>
-                        <span className="text-white font-semibold text-xs">{platform.conversations}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          {/* Demo Progress - DÉPLACÉ ICI */}
+          <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-cyan-500/20 rounded-xl flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform duration-300">
+                <Share2 className="text-cyan-400" size={20} />
               </div>
-            )}
-
-            {/* Agent Status */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
-                  <Gauge className="text-emerald-400" size={20} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Agent Status</h3>
-                  <p className="text-gray-400 text-sm">Active vs Inactive</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="h-24 w-24">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={20}
-                        outerRadius={40}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                
-                <div className="flex-1 space-y-2 ml-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                    <span className="text-gray-300">Active ({stats.activeAgents})</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="w-2 h-2 rounded-full bg-gray-600"></div>  
-                    <span className="text-gray-300">Inactive ({stats.agentsByStatus.inactive})</span>
-                  </div>
-                </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Demo Shares</h3>
+                <p className="text-gray-400 text-sm">Public demos created</p>
               </div>
             </div>
-
-            {/* Demo Progress */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-cyan-500/20 rounded-xl flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform duration-300">
-                  <Share2 className="text-cyan-400" size={20} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Demo Shares</h3>
-                  <p className="text-gray-400 text-sm">Public demos created</p>
-                </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-white">{stats.totalDemos}/15</span>
+                <span className="text-cyan-400 text-sm font-medium">{Math.round(demoProgress)}%</span>
               </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-white">{stats.totalDemos}/15</span>
-                  <span className="text-cyan-400 text-sm font-medium">{Math.round(demoProgress)}%</span>
-                </div>
-                <div className="w-full bg-gray-700/50 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-cyan-600 to-cyan-400 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${demoProgress}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs text-gray-400">
-                  {15 - stats.totalDemos} remaining
-                </p>
+              <div className="w-full bg-gray-700/50 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-cyan-600 to-cyan-400 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${demoProgress}%` }}
+                ></div>
               </div>
+              <p className="text-xs text-gray-400">
+                {15 - stats.totalDemos} remaining
+              </p>
             </div>
           </div>
         </div>
@@ -735,7 +477,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Reste des sections du dashboard existant */}
+        {/* Additional Metrics */}
         <div className="mb-8">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
             <BarChart3 className="text-blue-400" size={24} />
