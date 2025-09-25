@@ -343,7 +343,7 @@ export function useSupport() {
       if (document.visibilityState === 'visible') {
         fetchUnreadCounts();
       }
-    }, 30000);
+    }, 15 * 60 * 1000); // 15 minutes
 
     return () => {
       window.removeEventListener('focus', handleFocus);

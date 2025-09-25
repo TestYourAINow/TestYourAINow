@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { 
-  ArrowLeft, Settings, Zap, MessageSquare, Globe, Bot, 
+import {
+  ArrowLeft, Settings, Zap, MessageSquare, Globe, Bot,
   CheckCircle, Rocket, Layers, Sparkles, Users, Monitor,
   ArrowRight, Play, Wifi
 } from 'lucide-react'
@@ -64,41 +64,46 @@ const WebsiteIcon = ({ size = 24, className = "" }) => (
 
 // Suppression de l'API Integration - seulement 4 intégrations maintenant
 const integrations = [
-  { 
-    label: 'Website Widget', 
-    value: 'website-widget', 
+  {
+    label: 'Website Widget',
+    value: 'website-widget',
     icon: WebsiteIcon,
     description: 'Embed AI chat on your website',
     color: 'from-cyan-500 to-blue-500',
     popular: true,
-    suggestedName: 'Website Assistant'
+    suggestedName: 'Website Assistant',
+    disabled: false // Ajout explicite
   },
-  { 
-    label: 'Facebook Messenger', 
-    value: 'facebook-messenger', 
+  {
+    label: 'Facebook Messenger',
+    value: 'facebook-messenger',
     icon: FacebookIcon,
     description: 'Connect to Facebook messages',
     color: 'from-blue-500 to-indigo-500',
     popular: false,
-    suggestedName: 'Facebook Support Bot'
+    suggestedName: 'Facebook Support Bot',
+    disabled: false
   },
-  { 
-    label: 'Instagram DMs', 
-    value: 'instagram-dms', 
+  {
+    label: 'Instagram DMs',
+    value: 'instagram-dms',
     icon: InstagramIcon,
     description: 'Handle Instagram direct messages',
     color: 'from-pink-500 to-purple-500',
     popular: false,
-    suggestedName: 'Instagram Chat Bot'
+    suggestedName: 'Instagram Chat Bot',
+    disabled: false
   },
-  { 
-    label: 'SMS Integration', 
-    value: 'sms', 
+  {
+    label: 'SMS Integration',
+    value: 'sms',
     icon: SMSIcon,
     description: 'Text message conversations',
     color: 'from-green-500 to-emerald-500',
     popular: false,
-    suggestedName: 'SMS Assistant'
+    suggestedName: 'SMS Assistant',
+    disabled: true, // 🎯 DÉSACTIVÉ
+    comingSoon: true // 🎯 NOUVEAU : badge "Coming Soon"
   }
 ]
 
@@ -115,19 +120,18 @@ const StepIndicator = ({ currentStep, totalSteps }: { currentStep: number; total
       <div key={i} className="flex items-center">
         <div className={`
           w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300
-          ${i + 1 === currentStep 
-            ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30' 
+          ${i + 1 === currentStep
+            ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30'
             : i + 1 < currentStep
-            ? 'bg-emerald-600 text-white'
-            : 'bg-gray-700 text-gray-400'
+              ? 'bg-emerald-600 text-white'
+              : 'bg-gray-700 text-gray-400'
           }
         `}>
           {i + 1 < currentStep ? <CheckCircle size={16} /> : i + 1}
         </div>
         {i < totalSteps - 1 && (
-          <div className={`w-8 h-0.5 mx-2 transition-all duration-300 ${
-            i + 1 < currentStep ? 'bg-emerald-500' : 'bg-gray-700'
-          }`} />
+          <div className={`w-8 h-0.5 mx-2 transition-all duration-300 ${i + 1 < currentStep ? 'bg-emerald-500' : 'bg-gray-700'
+            }`} />
         )}
       </div>
     ))}
@@ -135,63 +139,82 @@ const StepIndicator = ({ currentStep, totalSteps }: { currentStep: number; total
 );
 
 // Platform card component
-const PlatformCard = ({ 
-  integration, 
-  isSelected, 
-  onSelect 
-}: { 
-  integration: typeof integrations[0]; 
-  isSelected: boolean; 
+const PlatformCard = ({
+  integration,
+  isSelected,
+  onSelect
+}: {
+  integration: typeof integrations[0];
+  isSelected: boolean;
   onSelect: () => void;
 }) => {
   const IconComponent = integration.icon;
-  
+  const isDisabled = integration.disabled || false;
+
   return (
     <button
       type="button"
-      onClick={onSelect}
+      onClick={isDisabled ? undefined : onSelect} // 🎯 Désactive le clic si disabled
+      disabled={isDisabled} // 🎯 Attribut disabled
       className={`
         relative p-6 rounded-2xl border-2 transition-all duration-300 text-left group
-        ${isSelected 
-          ? 'border-blue-500 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 shadow-xl shadow-blue-500/20 scale-105' 
-          : 'border-gray-700/50 bg-gradient-to-br from-gray-900/60 to-gray-800/40 hover:border-blue-500/50 hover:shadow-lg hover:scale-102'
+        ${isDisabled
+          ? 'border-gray-700/30 bg-gray-900/30 cursor-not-allowed opacity-60' // 🎯 Style disabled
+          : isSelected
+            ? 'border-blue-500 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 shadow-xl shadow-blue-500/20 scale-105'
+            : 'border-gray-700/50 bg-gradient-to-br from-gray-900/60 to-gray-800/40 hover:border-blue-500/50 hover:shadow-lg hover:scale-102'
         }
       `}
     >
       {/* Popular Badge */}
-      {integration.popular && (
+      {integration.popular && !isDisabled && (
         <div className="absolute -top-2 -right-2 bg-gradient-to-r from-emerald-500 to-emerald-400 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-lg">
           Popular
         </div>
       )}
-      
+
+      {/* 🎯 NOUVEAU : Coming Soon Badge */}
+      {integration.comingSoon && (
+        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-gray-600 to-gray-500 text-gray-200 text-xs px-2 py-1 rounded-full font-semibold shadow-lg">
+          Coming Soon
+        </div>
+      )}
+
       {/* Icon Container */}
       <div className={`
         w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300
-        ${isSelected 
-          ? `bg-gradient-to-r ${integration.color}/20 border-2 border-blue-500/40 shadow-lg` 
-          : 'bg-gray-800/50 border-2 border-gray-700/50 group-hover:border-blue-500/30'
+        ${isDisabled
+          ? 'bg-gray-800/30 border-2 border-gray-700/30' // 🎯 Style disabled
+          : isSelected
+            ? `bg-gradient-to-r ${integration.color}/20 border-2 border-blue-500/40 shadow-lg`
+            : 'bg-gray-800/50 border-2 border-gray-700/50 group-hover:border-blue-500/30'
         }
       `}>
-        <IconComponent size={32} />
+        <IconComponent size={32} className={isDisabled ? 'opacity-50' : ''} />
       </div>
-      
+
       {/* Content */}
       <div>
-        <h3 className={`font-bold text-lg mb-2 transition-colors ${
-          isSelected ? 'text-white' : 'text-gray-200 group-hover:text-white'
-        }`}>
+        <h3 className={`font-bold text-lg mb-2 transition-colors ${isDisabled
+            ? 'text-gray-500' // 🎯 Style disabled
+            : isSelected
+              ? 'text-white'
+              : 'text-gray-200 group-hover:text-white'
+          }`}>
           {integration.label}
         </h3>
-        <p className={`text-sm transition-colors ${
-          isSelected ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300'
-        }`}>
+        <p className={`text-sm transition-colors ${isDisabled
+            ? 'text-gray-600' // 🎯 Style disabled
+            : isSelected
+              ? 'text-gray-300'
+              : 'text-gray-400 group-hover:text-gray-300'
+          }`}>
           {integration.description}
         </p>
       </div>
-      
-      {/* Selection Indicator */}
-      {isSelected && (
+
+      {/* Selection Indicator - Ne s'affiche pas si disabled */}
+      {isSelected && !isDisabled && (
         <div className="absolute top-4 right-4 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
           <CheckCircle size={16} className="text-white" />
         </div>
@@ -201,13 +224,13 @@ const PlatformCard = ({
 };
 
 // Agent card component
-const AgentCard = ({ 
-  agent, 
-  isSelected, 
-  onSelect 
-}: { 
-  agent: Agent; 
-  isSelected: boolean; 
+const AgentCard = ({
+  agent,
+  isSelected,
+  onSelect
+}: {
+  agent: Agent;
+  isSelected: boolean;
   onSelect: () => void;
 }) => (
   <button
@@ -215,8 +238,8 @@ const AgentCard = ({
     onClick={onSelect}
     className={`
       p-4 rounded-xl border transition-all duration-300 text-left w-full
-      ${isSelected 
-        ? 'border-blue-500 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 shadow-lg shadow-blue-500/20' 
+      ${isSelected
+        ? 'border-blue-500 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 shadow-lg shadow-blue-500/20'
         : 'border-gray-700/50 bg-gray-800/40 hover:border-blue-500/50 hover:bg-gray-800/60'
       }
     `}
@@ -224,27 +247,25 @@ const AgentCard = ({
     <div className="flex items-center gap-3">
       <div className={`
         w-10 h-10 rounded-xl flex items-center justify-center transition-all
-        ${isSelected 
-          ? 'bg-blue-600/20 border-2 border-blue-500/40' 
+        ${isSelected
+          ? 'bg-blue-600/20 border-2 border-blue-500/40'
           : 'bg-gray-700/50 border border-gray-600/50'
         }
       `}>
         <Bot size={20} className={isSelected ? 'text-blue-400' : 'text-gray-400'} />
       </div>
-      
+
       <div className="flex-1 min-w-0">
-        <h4 className={`font-semibold truncate ${
-          isSelected ? 'text-white' : 'text-gray-200'
-        }`}>
+        <h4 className={`font-semibold truncate ${isSelected ? 'text-white' : 'text-gray-200'
+          }`}>
           {agent.name}
         </h4>
-        <p className={`text-xs ${
-          isSelected ? 'text-blue-300' : 'text-gray-400'
-        }`}>
+        <p className={`text-xs ${isSelected ? 'text-blue-300' : 'text-gray-400'
+          }`}>
           {agent.integrations?.length || 0} integration{agent.integrations?.length !== 1 ? 's' : ''}
         </p>
       </div>
-      
+
       {isSelected && (
         <CheckCircle size={20} className="text-blue-500 flex-shrink-0" />
       )}
@@ -271,52 +292,52 @@ export default function CreateConnectionPage() {
 
 
   // Dans app/(dashboard)/create-connection/page.tsx
-// Remplace la fonction handleSubmit existante par celle-ci :
+  // Remplace la fonction handleSubmit existante par celle-ci :
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  if (!name || !integration || !aiBuildId) return;
-  
-  setIsSubmitting(true);
-  
-  try {
-    const res = await fetch('/api/connections', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, integrationType: integration, aiBuildId }),
-    })
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name || !integration || !aiBuildId) return;
 
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Unknown error')
+    setIsSubmitting(true);
 
-    // 🎯 NOUVELLE REDIRECTION : Va directement vers la page de la connection créée
-    if (data.connection && data.connection._id) {
-      const connectionId = data.connection._id;
-      const integrationType = data.connection.integrationType;
-      
-      // Redirection selon le type de connection
-      if (integrationType === 'website-widget') {
-        // Pour le website widget, va vers la page de configuration
-        router.push(`/launch-agent/${connectionId}/website-widget?tab=configuration`);
-      } else if (integrationType === 'sms') {
-        // Pour SMS, retourne sur launch-agent (page pas encore créée)
-        router.push('/launch-agent');
+    try {
+      const res = await fetch('/api/connections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, integrationType: integration, aiBuildId }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Unknown error')
+
+      // 🎯 NOUVELLE REDIRECTION : Va directement vers la page de la connection créée
+      if (data.connection && data.connection._id) {
+        const connectionId = data.connection._id;
+        const integrationType = data.connection.integrationType;
+
+        // Redirection selon le type de connection
+        if (integrationType === 'website-widget') {
+          // Pour le website widget, va vers la page de configuration
+          router.push(`/launch-agent/${connectionId}/website-widget?tab=configuration`);
+        } else if (integrationType === 'sms') {
+          // Pour SMS, retourne sur launch-agent (page pas encore créée)
+          router.push('/launch-agent');
+        } else {
+          // Pour Instagram et Facebook, va vers la page de détails
+          router.push(`/launch-agent/${connectionId}/${integrationType}?tab=configuration`);
+        }
       } else {
-        // Pour Instagram et Facebook, va vers la page de détails
-        router.push(`/launch-agent/${connectionId}/${integrationType}?tab=configuration`);
+        // Fallback vers la page générale si pas d'ID
+        router.push('/launch-agent');
       }
-    } else {
-      // Fallback vers la page générale si pas d'ID
-      router.push('/launch-agent');
+
+    } catch (err) {
+      alert('Error creating connection.')
+      console.error(err)
+    } finally {
+      setIsSubmitting(false);
     }
-    
-  } catch (err) {
-    alert('Error creating connection.')
-    console.error(err)
-  } finally {
-    setIsSubmitting(false);
   }
-}
 
   const canProceedToStep2 = integration !== '';
   const canProceedToStep3 = canProceedToStep2 && name.trim() !== '';
@@ -324,7 +345,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
-      
+
       {/* Header */}
       <FadeInSection>
         <div className="max-w-4xl mx-auto mb-8">
@@ -332,13 +353,13 @@ const handleSubmit = async (e: React.FormEvent) => {
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
             <span>Back to Deployment Center</span>
           </Link>
-          
+
           <div className="text-center">
             <div className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-2xl px-6 py-3 mb-6">
               <Rocket className="text-blue-400" size={24} />
               <span className="text-blue-200 font-semibold">Connection Wizard</span>
             </div>
-            
+
             <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-3">
               Create New Connection
             </h1>
@@ -360,7 +381,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       <FadeInSection>
         <div className="max-w-4xl mx-auto">
           <form onSubmit={handleSubmit}>
-            
+
             {/* Step 1: Select Platform */}
             {currentStep === 1 && (
               <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 shadow-2xl">
@@ -371,7 +392,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <h2 className="text-2xl font-bold text-white mb-2">Choose Your Platform</h2>
                   <p className="text-gray-400">Select where you want to deploy your AI agent</p>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {integrations.map((item) => (
                     <PlatformCard
@@ -382,7 +403,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     />
                   ))}
                 </div>
-                
+
                 <div className="flex justify-center">
                   <button
                     type="button"
@@ -407,7 +428,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <h2 className="text-2xl font-bold text-white mb-2">Name Your Connection</h2>
                   <p className="text-gray-400">Give your connection a memorable name to easily identify it later</p>
                 </div>
-                
+
                 <div className="max-w-md mx-auto">
                   <label className="block text-sm font-semibold text-white mb-3">
                     Connection Name
@@ -420,7 +441,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     className="w-full px-6 py-4 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm text-lg"
                     required
                   />
-                  
+
                   <div className="mt-8 flex justify-center gap-4">
                     <button
                       type="button"
@@ -454,7 +475,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <h2 className="text-2xl font-bold text-white mb-2">Select Your AI Agent</h2>
                   <p className="text-gray-400">Choose which AI agent will handle the conversations</p>
                 </div>
-                
+
                 <div className="max-w-2xl mx-auto">
                   {agents.length > 0 ? (
                     <div className="grid gap-3 mb-8">
@@ -482,7 +503,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       </Link>
                     </div>
                   )}
-                  
+
                   <div className="flex justify-center gap-4">
                     <button
                       type="button"
