@@ -119,6 +119,8 @@ export default function SignupPage() {
     }
 
     try {
+      console.log("🔍 Création du compte pour:", email);
+      
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -128,12 +130,15 @@ export default function SignupPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        console.error("❌ Erreur création compte:", data);
         if (data.field === "email") setEmailAvailable(false);
         if (data.field === "username") setUsernameAvailable(false);
         setError(data.error || "Something went wrong.");
         setIsLoading(false);
         return;
       }
+
+      console.log("✅ Compte créé, tentative de connexion...");
 
       const loginRes = await signIn("credentials", {
         identifier: email,
@@ -142,26 +147,43 @@ export default function SignupPage() {
       });
 
       if (loginRes?.error) {
+        console.error("❌ Erreur connexion:", loginRes.error);
         setError("Account created but login failed.");
         setIsLoading(false);
         return;
       }
 
+      console.log("✅ Connexion réussie, tentative de checkout pour:", email);
+
       const checkoutRes = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email }), // S'assurer que l'email est bien envoyé
       });
 
-      const { url } = await checkoutRes.json();
+      if (!checkoutRes.ok) {
+        const errorData = await checkoutRes.json();
+        console.error("❌ Erreur checkout:", errorData);
+        setError(`Checkout error: ${errorData.error || 'Unknown error'}`);
+        setIsLoading(false);
+        return;
+      }
+
+      const checkoutData = await checkoutRes.json();
+      console.log("✅ Réponse checkout:", checkoutData);
+      
+      const { url } = checkoutData;
 
       if (url) {
+        console.log("🔄 Redirection vers Stripe:", url);
         router.push(url);
       } else {
-        setError("Unable to start checkout.");
+        console.error("❌ Pas d'URL dans la réponse checkout");
+        setError("Unable to start checkout - no URL received.");
         setIsLoading(false);
       }
-    } catch {
+    } catch (error) {
+      console.error("❌ Erreur générale:", error);
       setError("Server error. Please try again later.");
       setIsLoading(false);
     }
