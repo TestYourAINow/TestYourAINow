@@ -215,6 +215,12 @@ export default function Home() {
 
   // Handler pour subscription
   const handleSubscribe = async () => {
+    // Vérifier qu'on a une session avec email
+    if (!session?.user?.email) {
+      setError("You must be logged in to subscribe.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
@@ -223,6 +229,8 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
+        // ✅ AJOUT DE L'EMAIL dans le body
+        body: JSON.stringify({ email: session.user.email }),
       });
       const data = await res.json();
       if (data.url) {
