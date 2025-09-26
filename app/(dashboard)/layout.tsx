@@ -23,7 +23,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   if (!user?.isSubscribed) {
     // 🔥 redirection directe vers Stripe Checkout
-    redirect("/api/stripe/checkout")
+    redirect("/subscribe")
   }
 
   return (

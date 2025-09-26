@@ -12,7 +12,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 
 export async function POST(request: Request) {
   console.log("🔍 Début checkout API");
-  
+
   const session = await getServerSession(authOptions);
   console.log("📧 Session email:", session?.user?.email);
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     // Récupère l'email depuis le body OU depuis la session
     const body = await request.json();
     const email = body.email || session.user.email;
-    
+
     console.log("📧 Email utilisé:", email);
 
     let user = await User.findOne({ email });
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    
+
     console.log("🔄 Création de la session checkout");
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       automatic_tax: { enabled: true },
       billing_address_collection: 'required',
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/cancel`,
+      cancel_url: `${baseUrl}/subscribe`,
       customer: stripeCustomerId,
       customer_update: {
         address: "auto",
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
 
     console.log("✅ Session checkout créée:", checkoutSession.id);
     return NextResponse.json({ url: checkoutSession.url });
-    
+
   } catch (error: any) {
     console.error("❌ Erreur Stripe:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

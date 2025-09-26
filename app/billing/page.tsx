@@ -1,22 +1,23 @@
-// app/success/page.tsx
+// app/(public)/billing/page.tsx
 "use client"
 
-import { useEffect, Suspense } from "react"
-import { useRouter } from "next/navigation"
-import { CheckCircle, Loader2, Sparkles } from "lucide-react"
+import { useEffect } from "react"
+import { Loader2, CreditCard } from "lucide-react"
 
-function SuccessContent() {
-  const router = useRouter()
-
+export default function BillingPage() {
   useEffect(() => {
-    // Redirect after 3 seconds
-    // Stripe webhook handles database updates
-    const timer = setTimeout(() => {
-      router.push("/dashboard")
-    }, 3000)
+    const goToPortal = async () => {
+      const res = await fetch("/api/stripe/portal", { method: "POST" })
+      const data = await res.json()
+      if (data?.url) {
+        window.location.href = data.url
+      } else {
+        alert("Error redirecting to billing portal")
+      }
+    }
 
-    return () => clearTimeout(timer)
-  }, [router])
+    goToPortal()
+  }, [])
 
   return (
     <div 
@@ -45,17 +46,17 @@ function SuccessContent() {
 
       <div className="relative z-10 w-full max-w-lg">
 
-        {/* Success Card */}
+        {/* Loading Card */}
         <div className="bg-gray-900/60 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 shadow-2xl">
           <div className="text-center space-y-6">
-            {/* Success Message */}
+            {/* Loading Message */}
             <div className="space-y-4">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-green-400/20 rounded-full border border-emerald-500/30">
-                <CheckCircle size={40} className="text-emerald-400" />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500/20 to-cyan-400/20 rounded-full border border-blue-500/30">
+                <CreditCard size={40} className="text-blue-400" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Payment Successful!</h2>
-                <p className="text-gray-300">Your account has been successfully upgraded and is now being configured.</p>
+                <h2 className="text-2xl font-bold text-white mb-2">Redirecting to Stripe</h2>
+                <p className="text-gray-300">You're being redirected to our secure billing portal to manage your subscription.</p>
               </div>
             </div>
 
@@ -63,53 +64,45 @@ function SuccessContent() {
             <div className="bg-gray-800/40 rounded-xl p-6 border border-gray-700/30">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <Loader2 size={24} className="animate-spin text-blue-400" />
-                <span className="text-white font-medium">Setting up your account...</span>
+                <span className="text-white font-medium">Connecting to billing portal...</span>
               </div>
               <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full animate-pulse"></div>
               </div>
             </div>
 
-            {/* Next Steps */}
+            {/* Information */}
             <div className="text-left space-y-3">
-              <h3 className="text-white font-semibold mb-3">What happens next:</h3>
+              <h3 className="text-white font-semibold mb-3">In the billing portal you can:</h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-3 text-gray-300">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  <span>Subscription activated</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-300">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  <span>Premium features unlocked</span>
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                  <span>View and download invoices</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-300">
                   <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                  <span>Redirecting to dashboard</span>
+                  <span>Update payment methods</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-300">
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                  <span>Manage subscription settings</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-300">
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                  <span>View billing history</span>
                 </div>
               </div>
             </div>
 
-            {/* Auto Redirect Notice */}
+            {/* Security Notice */}
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 backdrop-blur-sm">
               <p className="text-blue-300 text-sm font-medium text-center">
-                You will be automatically redirected in a few seconds
+                Your payment information is securely managed by Stripe
               </p>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
-}
-
-export default function SuccessPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center text-white">
-        <Loader2 size={32} className="animate-spin" />
-      </div>
-    }>
-      <SuccessContent />
-    </Suspense>
   )
 }

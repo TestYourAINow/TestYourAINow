@@ -24,7 +24,7 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith('/admin/support')) {
     const adminEmails = ['team@testyourainow.com', 'sango_ks@hotmail.com'];
     const userEmail = token.email;
-    
+
     if (!userEmail || !adminEmails.includes(userEmail)) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
