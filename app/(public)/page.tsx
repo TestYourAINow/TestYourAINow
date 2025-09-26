@@ -245,7 +245,7 @@ export default function Home() {
     }
   };
 
-  // Data pour toutes les features (y compris Prompt Builder)
+  // Data pour toutes les features (y compris Prompt Builder) 
   const allFeatures = [
     {
       title: "No Prompt Expertise Required",
