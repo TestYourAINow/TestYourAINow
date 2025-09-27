@@ -4,7 +4,7 @@
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { useState } from "react"
-import { CreditCard, RotateCcw, ArrowLeft, Loader2 } from "lucide-react"
+import { CreditCard, RotateCcw, ArrowLeft, Loader2, CheckCircle, Zap, Shield, Users, Globe, Palette, Bot, Settings } from "lucide-react"
 
 export default function SubscribePage() {
   const { data: session } = useSession()
@@ -24,7 +24,7 @@ export default function SubscribePage() {
 
       if (!checkoutRes.ok) {
         const errorData = await checkoutRes.json()
-        console.error("❌ Erreur checkout:", errorData)
+        console.error("Checkout error:", errorData)
         alert(`Checkout error: ${errorData.error || 'Unknown error'}`)
         setIsLoading(false)
         return
@@ -40,11 +40,54 @@ export default function SubscribePage() {
         setIsLoading(false)
       }
     } catch (error) {
-      console.error("❌ Erreur générale:", error)
+      console.error("General error:", error)
       alert("Server error. Please try again later.")
       setIsLoading(false)
     }
   }
+
+  const features = [
+    {
+      icon: <Zap className="w-5 h-5" />,
+      title: "Unlimited AI Builds",
+      description: "Create as many AI agents as you need"
+    },
+    {
+      icon: <Shield className="w-5 h-5" />,
+      title: "Advanced Prompt Testing",
+      description: "Professional-grade testing suite"
+    },
+    {
+      icon: <Users className="w-5 h-5" />,
+      title: "Priority Support",
+      description: "Dedicated team assistance"
+    },
+    {
+      icon: <Globe className="w-5 h-5" />,
+      title: "Demo Sharing",
+      description: "Share your AI agents with the world"
+    },
+    {
+      icon: <Palette className="w-5 h-5" />,
+      title: "Custom Branding",
+      description: "White-label your AI solutions"
+    },
+    {
+      icon: <Bot className="w-5 h-5" />,
+      title: "AI Agent Templates",
+      description: "Pre-built templates for rapid deployment"
+    },
+    {
+      icon: <Settings className="w-5 h-5" />,
+      title: "Widget Embeds",
+      description: "Seamless website integration"
+    },
+    {
+      icon: <Globe className="w-5 h-5" />,
+      title: "Multi-Platform Deployment",
+      description: "Deploy across multiple channels"
+    }
+  ]
 
   return (
     <div 
@@ -62,7 +105,7 @@ export default function SubscribePage() {
         animation: 'premiumFloat 25s ease-in-out infinite'
       }}
     >
-      {/* Animated orbs */}
+      {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
@@ -87,43 +130,25 @@ export default function SubscribePage() {
               </div>
             </div>
 
-            {/* Information Section */}
+            {/* Features Section */}
             <div className="bg-gray-800/40 rounded-xl p-6 border border-gray-700/30">
               <div className="text-left space-y-3">
-                <h3 className="text-white font-semibold mb-3">What you get with Full Access:</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 text-gray-300">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                    <span>Unlimited AI Builds</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-300">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                    <span>Advanced Prompt Testings</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-300">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                    <span>Priority support</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-300">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                    <span>Demo Sharing</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-300">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                    <span>Custom Branding</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-300">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                    <span>AI Agent Templates</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-300">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                    <span>Widget Embeds</span>
-                  </div>
-                   <div className="flex items-center gap-3 text-gray-300">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                    <span>Multi-Platform Deployment</span>
-                  </div>
+                <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-cyan-400" />
+                  What you get with Full Access:
+                </h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {features.map((feature, index) => (
+                    <div key={index} className="flex items-start gap-3 text-gray-300">
+                      <div className="text-cyan-400 mt-0.5">
+                        {feature.icon}
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">{feature.title}</div>
+                        <div className="text-sm text-gray-400">{feature.description}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

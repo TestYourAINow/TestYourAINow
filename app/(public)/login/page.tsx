@@ -6,45 +6,65 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LogIn, Loader2 } from "lucide-react";
 
+/**
+ * Enterprise login component with modern authentication flow
+ * Supports both email and username authentication
+ * Includes proper error handling and loading states
+ */
 export default function LoginPage() {
+  // Authentication state management
   const [identifier, setIdentifier] = useState(""); // email OR username
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Next.js hooks for session and routing
   const { data: session } = useSession();
   const router = useRouter();
 
+  /**
+   * Redirect authenticated users to dashboard
+   */
   useEffect(() => {
     if (session) {
       router.push("/agents");
     }
   }, [session, router]);
 
+  /**
+   * Handle form submission with credential validation
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
+    // Client-side validation
     if (!identifier || !password) {
       setError("Please enter both identifier and password.");
       setIsLoading(false);
       return;
     }
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      identifier,
-      password,
-    });
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        identifier,
+        password,
+      });
 
-    if (res?.error) {
-      setError(res.error);
-    } else {
-      router.push("/agents");
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        // Successful authentication - redirect to dashboard
+        router.push("/agents");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
@@ -63,7 +83,7 @@ export default function LoginPage() {
         animation: 'premiumFloat 25s ease-in-out infinite'
       }}
     >
-      {/* Orbes animés comme le hero */}
+      {/* Animated background orbs for visual depth */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
@@ -71,6 +91,7 @@ export default function LoginPage() {
         <div className="absolute top-1/3 right-1/3 w-80 h-80 bg-emerald-600/4 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '6s' }} />
         <div className="absolute bottom-1/3 left-1/6 w-72 h-72 bg-pink-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '8s' }} />
       </div>
+
       <div className="relative z-10 w-full max-w-md">
         {/* Header Section */}
         <div className="text-center mb-8">
@@ -83,11 +104,11 @@ export default function LoginPage() {
           <p className="text-gray-400 text-lg">Sign in to your TestYourAI account</p>
         </div>
 
-        {/* Login Form */}
+        {/* Authentication Form */}
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="bg-gray-900/60 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 shadow-2xl">
             <div className="space-y-5">
-              {/* Email/Username Input */}
+              {/* Email/Username Input Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Email or Username
@@ -99,10 +120,11 @@ export default function LoginPage() {
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                   disabled={isLoading}
+                  autoComplete="username"
                 />
               </div>
 
-              {/* Password Input */}
+              {/* Password Input Field with Visibility Toggle */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Password
@@ -115,32 +137,34 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full px-4 py-3.5 pr-12 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                     disabled={isLoading}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1"
                     disabled={isLoading}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
               </div>
 
-              {/* Error Message */}
+              {/* Error Message Display */}
               {error && (
                 <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 backdrop-blur-sm">
                   <p className="text-red-400 text-sm font-medium">{error}</p>
                 </div>
               )}
 
-              {/* Submit Button */}
+              {/* Submit Button with Loading State */}
               <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full group relative px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed overflow-hidden"
               >
-                {/* Shimmer Effect */}
+                {/* Button hover shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 
                 <div className="relative flex items-center justify-center gap-2">
@@ -161,7 +185,7 @@ export default function LoginPage() {
           </div>
         </form>
 
-        {/* Footer */}
+        {/* Registration Link Footer */}
         <div className="text-center mt-8">
           <p className="text-gray-400">
             Don't have an account?{" "}

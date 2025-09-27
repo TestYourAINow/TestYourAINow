@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Zap, Wrench, Handshake, FlaskConical, Rocket, CheckCircle, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Zap, Wrench, Handshake, FlaskConical, Rocket, CheckCircle, Sparkles, ChevronLeft, ChevronRight, Target } from 'lucide-react';
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 
-// Types pour les features
+// Feature interface definitions
 interface Feature {
   title: string;
   subtitle: string;
@@ -23,12 +23,12 @@ interface FeatureCarouselProps {
   features: Feature[];
 }
 
-// Composant Carousel Premium Ultra-Moderne
+// Premium Feature Carousel Component
 function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-  // Auto-play functionality
+  // Auto-play functionality with 6-second intervals
   useEffect(() => {
     if (!isAutoPlaying) return;
 
@@ -57,13 +57,13 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
-      {/* Premium Backdrop avec glow */}
+      {/* Premium backdrop with glow effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5 rounded-[2rem] blur-3xl"></div>
 
-      {/* Carousel Container Ultra-Premium */}
+      {/* Main carousel container */}
       <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-700/30 shadow-[0_32px_64px_rgba(0,0,0,0.4)]">
 
-        {/* Slides Container - Hauteur auto pour éviter les coupures */}
+        {/* Slides container with auto height */}
         <div className="relative">
           {features.map((feature: Feature, index: number) => (
             <div
@@ -73,9 +73,9 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px] lg:min-h-[600px]">
 
-                {/* Content Side - Espacement généreux */}
+                {/* Content section with generous spacing */}
                 <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-12 xl:p-16 order-2 lg:order-1">
-                  {/* Header avec badge et icon */}
+                  {/* Header with badge and icon */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
                     <div className={`inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r ${feature.badgeColor} rounded-xl sm:rounded-2xl text-white font-bold text-xs sm:text-sm shadow-xl`}>
                       {feature.badge}
@@ -88,7 +88,7 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
                     </div>
                   </div>
 
-                  {/* Title avec taille responsive */}
+                  {/* Responsive title */}
                   <h3 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
                     <span className="bg-gradient-to-r from-white via-gray-100 to-gray-200 bg-clip-text text-transparent">
                       {feature.title}
@@ -106,13 +106,13 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
                   </p>
                 </div>
 
-                {/* Image Side - Container flexible */}
+                {/* Image section with flexible container */}
                 <div className="relative order-1 lg:order-2 p-6 sm:p-8 lg:p-12 flex items-center justify-center min-h-[300px] sm:min-h-[400px] lg:min-h-[500px]">
                   <div className="relative w-full max-w-sm sm:max-w-md lg:max-w-lg group">
-                    {/* Container principal avec aspect ratio flexible */}
+                    {/* Main container with flexible aspect ratio */}
                     <div className="relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/80 backdrop-blur-xl border border-gray-600/30 shadow-2xl transition-all duration-700 group-hover:shadow-blue-500/20 group-hover:border-blue-500/30">
 
-                      {/* Image avec padding pour être visible entièrement */}
+                      {/* Image with padding for full visibility */}
                       <Image
                         src={feature.image}
                         alt={feature.imageAlt}
@@ -121,11 +121,11 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
                         sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 35vw"
                       />
 
-                      {/* Glow très subtil */}
+                      {/* Subtle glow effect */}
                       <div className="absolute inset-0 bg-gradient-to-t from-blue-500/3 via-transparent to-purple-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-xl sm:rounded-2xl lg:rounded-3xl"></div>
                     </div>
 
-                    {/* Ring effet */}
+                    {/* Ring effect */}
                     <div className="absolute inset-0 rounded-xl sm:rounded-2xl lg:rounded-3xl ring-1 ring-white/5 group-hover:ring-blue-400/20 transition-all duration-700"></div>
                   </div>
                 </div>
@@ -134,7 +134,7 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
           ))}
         </div>
 
-        {/* Navigation Arrows - Position fixe calculée */}
+        {/* Navigation arrows with fixed positioning */}
         <button
           onClick={prevSlide}
           className="absolute left-1 sm:left-2 p-2 sm:p-3 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-600/30 rounded-lg sm:rounded-xl text-white hover:from-gray-700/90 hover:to-gray-800/90 hover:border-blue-500/30 transition-all duration-300 z-30 group shadow-xl hover:shadow-blue-500/20"
@@ -156,7 +156,7 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
         </button>
       </div>
 
-      {/* Dots Navigation - Seulement les dots, plus clean */}
+      {/* Dot navigation - clean and minimal */}
       <div className="flex justify-center mt-8 sm:mt-12 gap-3 sm:gap-4">
         {features.map((_: Feature, index: number) => (
           <button
@@ -183,11 +183,11 @@ export default function Home() {
   const isSubscribed = session?.user?.isSubscribed;
   const redirectUrl = session ? "/dashboard" : "/signup";
 
-  // State pour la section pricing
+  // State for pricing section
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ✨ EFFET DE SCROLL FADE - SIMPLE ET FLUIDE
+  // Smooth scroll fade effect
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
@@ -216,9 +216,9 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Handler pour subscription
+  // Subscription handler
   const handleSubscribe = async () => {
-    // Vérifier qu'on a une session avec email
+    // Verify session with email exists
     if (!session?.user?.email) {
       setError("You must be logged in to subscribe.");
       return;
@@ -232,23 +232,23 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        // ✅ AJOUT DE L'EMAIL dans le body
+        // Include user email in request body
         body: JSON.stringify({ email: session.user.email }),
       });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
       } else {
-        throw new Error("Impossible de rediriger vers Stripe.");
+        throw new Error("Unable to redirect to Stripe.");
       }
     } catch (err: any) {
-      setError(err.message || "Erreur inconnue.");
+      setError(err.message || "Unknown error occurred.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Data pour toutes les features (y compris Prompt Builder)
+  // Feature data for carousel (including Prompt Builder)
   const allFeatures = [
     {
       title: "No Prompt Expertise Required",
@@ -296,7 +296,7 @@ export default function Home() {
     }
   ];
 
-  // Variables pour pricing
+  // CTA text configuration
   const ctaText = !session
     ? "Get 50% off"
     : isSubscribed
@@ -330,7 +330,7 @@ export default function Home() {
         backgroundSize: '100% 100%, 800px 800px, 600px 600px, 400px 400px, 100% 100%'
       }}
     >
-      {/* Premium Background with Animated Orbs */}
+      {/* Premium background with animated orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
@@ -339,7 +339,7 @@ export default function Home() {
         <div className="absolute bottom-1/3 left-1/6 w-72 h-72 bg-pink-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '8s' }} />
       </div>
 
-      {/* HERO SECTION - Optimisé Mobile */}
+      {/* Hero section - mobile optimized */}
       <section
         className="relative text-white min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-20 pt-16 sm:pt-20"
         style={{
@@ -351,13 +351,13 @@ export default function Home() {
         }}
       >
         <div className="text-center max-w-5xl mx-auto">
-          {/* Premium Badge - Responsive */}
+          {/* Premium badge - responsive */}
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-6 sm:mb-8 backdrop-blur-xl">
             <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 animate-pulse" />
             <span className="text-blue-400 text-xs sm:text-sm font-semibold">Build AI Agents in Minutes</span>
           </div>
 
-          {/* Titre Principal - Responsive */}
+          {/* Main title - responsive */}
           <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-6 sm:mb-8 leading-tight">
             Build{" "}
             <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent animate-pulse">
@@ -365,7 +365,7 @@ export default function Home() {
             </span>
           </h1>
 
-          {/* Description - Responsive */}
+          {/* Description - responsive */}
           <p className="text-gray-300 text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed px-4">
             Build and share your AI agents with a single link.{" "}
             <span className="text-blue-400 font-semibold">No coding.</span>{" "}
@@ -373,7 +373,7 @@ export default function Home() {
             <span className="text-white font-semibold">Just results.</span>
           </p>
 
-          {/* Boutons CTA - Stack sur mobile, côte à côte sur desktop */}
+          {/* CTA buttons - stack on mobile, side by side on desktop */}
           <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 px-4">
             {/* Primary CTA */}
             <Link
@@ -406,7 +406,7 @@ export default function Home() {
             </a>
           </div>
 
-          {/* Trust Indicators - Responsive avec stack sur mobile */}
+          {/* Trust indicators - responsive with stacking on mobile */}
           <div className="mt-12 sm:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-gray-400 text-sm px-4">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
@@ -424,9 +424,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* AI PROMPT BUILDER SECTION - Maintenant dans le carousel */}
-
-      {/* PREMIUM FEATURE CAROUSEL SECTION */}
+      {/* Premium feature carousel section */}
       <section
         id="features"
         className="relative text-white py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-20"
@@ -439,10 +437,8 @@ export default function Home() {
         }}
       >
         <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
+          {/* Section header */}
           <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-
-
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
               From idea to{' '}
               <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
@@ -455,12 +451,12 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Premium Carousel */}
+          {/* Premium carousel */}
           <PremiumFeatureCarousel features={allFeatures} />
         </div>
       </section>
 
-      {/* PRICING SECTION - Optimisé Mobile */}
+      {/* Pricing section - mobile optimized */}
       <section
         className="relative text-white py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-20"
         style={{
@@ -472,7 +468,7 @@ export default function Home() {
         }}
       >
         <div className="max-w-5xl mx-auto text-center">
-          {/* Section Badge */}
+          {/* Section badge */}
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600/20 to-green-600/20 border border-emerald-500/30 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-6 sm:mb-8 backdrop-blur-xl">
             <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 animate-pulse" />
             <span className="text-emerald-400 text-xs sm:text-sm font-semibold">Limited Time Offer</span>
@@ -494,17 +490,17 @@ export default function Home() {
             at checkout
           </p>
 
-          {/* Pricing Card - Responsive */}
+          {/* Pricing card - responsive */}
           <div className="relative inline-block w-full max-w-lg mx-auto px-4">
-            {/* Glow Effect */}
+            {/* Glow effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-2xl sm:rounded-3xl blur-2xl"></div>
 
             <div className="relative bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 hover:border-blue-500/50 rounded-2xl sm:rounded-3xl p-6 sm:p-10 shadow-2xl transition-all duration-300 hover:shadow-blue-500/25 group">
-              {/* Inner Glow */}
+              {/* Inner glow */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-cyan-600/10 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
               <div className="relative z-10">
-                {/* Header Badge */}
+                {/* Header badge */}
                 <div className="text-center mb-6 sm:mb-8">
                   <span className="inline-block bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 text-blue-400 text-xs sm:text-sm font-semibold px-4 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-xl">
                     Full Access to TestYourAI Now
@@ -528,11 +524,11 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Features List - Responsive */}
+                {/* Features list - responsive */}
                 <ul className="space-y-3 sm:space-y-4 mb-8 sm:mb-10">
                   {[
                     "Unlimited AI Builds",
-                    "Advanced Prompt Testings",
+                    "Advanced Prompt Testing",
                     "Demo Sharing",
                     "Custom Branding",
                     "AI Agent Templates",
@@ -548,7 +544,7 @@ export default function Home() {
                   ))}
                 </ul>
 
-                {/* CTA Button - Responsive */}
+                {/* CTA Button - responsive */}
                 {showLink ? (
                   <a
                     href={ctaLink}
@@ -579,7 +575,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FINAL CTA SECTION - Optimisé Mobile */}
+      {/* Final CTA section - mobile optimized */}
       <section
         className="relative text-white py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-20 text-center"
         style={{
@@ -591,7 +587,7 @@ export default function Home() {
         }}
       >
         <div className="max-w-4xl mx-auto">
-          {/* Section Badge */}
+          {/* Section badge */}
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-6 sm:mb-8 backdrop-blur-xl">
             <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
             <span className="text-blue-400 text-xs sm:text-sm font-semibold">Ready to Launch?</span>

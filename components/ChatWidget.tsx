@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { MessageCircle, RotateCcw, X, Send } from 'lucide-react';
 import styles from './ChatWidget.module.css';
 
-// ✨ TYPES - Identiques à route.ts
+// Type definitions matching backend API
 interface ChatWidgetConfig {
   _id: string;
   name: string;
@@ -36,9 +37,9 @@ interface ChatWidgetProps {
   isPreview?: boolean;
 }
 
-// 🎯 COMPOSANT PRINCIPAL - Identique à route.ts
+// Main chat widget component
 export default function ChatWidget({ config, isPreview = false }: ChatWidgetProps) {
-  // ========== ÉTATS ==========
+  // State management
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -46,28 +47,28 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
   const [showPopup, setShowPopup] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // ========== REFS ==========
+  // Component refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // ========== STORAGE KEY ==========
+  // Storage configuration
   const STORAGE_KEY = `chatbot_conversation_${config._id}`;
 
-  // ========== COMPUTED ==========
+  // Theme and styling
   const isDark = config.theme === 'dark';
   const primaryColor = config.primaryColor || '#3b82f6';
 
-  // ========== DÉTECTION MOBILE (Identique à route.ts) ==========
+  // Mobile device detection
   const detectMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
            window.innerWidth <= 768;
   };
 
-  // ========== PERSISTANCE (Identique à route.ts) ==========
+  // Conversation persistence
   const saveConversation = () => {
-    if (isPreview) return; // Pas de sauvegarde en mode preview
+    if (isPreview) return;
     
     try {
       const conversationData = {
@@ -81,19 +82,20 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationData));
     } catch (error) {
-      console.log('Impossible de sauvegarder la conversation');
+      console.error('Failed to save conversation state');
     }
   };
 
   const loadConversation = () => {
-    if (isPreview) return false; // Pas de chargement en mode preview
+    if (isPreview) return false;
     
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const data = JSON.parse(saved);
         
-        const maxAge = 60 * 60 * 1000; // 1 heure
+        // Expire conversations after 1 hour
+        const maxAge = 60 * 60 * 1000;
         if (Date.now() - data.timestamp < maxAge) {
           const loadedMessages = (data.messages || []).map((msg: any, index: number) => ({
             id: `loaded_${index}`,
@@ -114,21 +116,18 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
         }
       }
     } catch (error) {
-      console.log('Impossible de charger la conversation');
+      console.error('Failed to load conversation state');
     }
     return false;
   };
 
-  // ========== EFFETS ==========
-  
-  // 🏁 Initialisation mobile et conversation
+  // Component initialization
   useEffect(() => {
     setIsMobile(detectMobile());
     
-    // Charger la conversation sauvegardée
     const loaded = loadConversation();
     
-    // Si pas de conversation chargée, ajouter le message de bienvenue
+    // Show welcome message if no conversation loaded
     if (!loaded && config.showWelcomeMessage && config.welcomeMessage) {
       setMessages([{
         id: 'welcome',
@@ -139,7 +138,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   }, []);
 
-  // 💬 Popup automatique (identique à route.ts)
+  // Popup behavior management
   useEffect(() => {
     if (config.showPopup && config.popupMessage && !isOpen) {
       const timer = setTimeout(() => {
@@ -151,7 +150,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   }, [config.showPopup, config.popupMessage, config.popupDelay, isOpen]);
 
-  // 🔄 Auto-scroll des messages
+  // Auto-scroll to latest message
   useEffect(() => {
     if (messagesEndRef.current) {
       setTimeout(() => {
@@ -163,7 +162,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   }, [messages, isTyping]);
 
-  // 🎯 Focus automatique et mobile setup
+  // Focus management and mobile optimization
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
@@ -175,7 +174,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   }, [isOpen, isMobile]);
 
-  // 📏 Auto-resize textarea (Identique à route.ts)
+  // Auto-resize textarea
   useEffect(() => {
     const textarea = inputRef.current;
     if (textarea) {
@@ -186,14 +185,14 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   }, [inputValue]);
 
-  // 📱 Gestion resize et orientation (Identique à route.ts)
+  // Responsive design and orientation handling
   useEffect(() => {
     const handleResize = () => {
       const wasMobile = isMobile;
       setIsMobile(detectMobile());
       
       if (wasMobile !== isMobile && isOpen) {
-        // Logique de changement mobile/desktop si nécessaire
+        // Handle mobile/desktop transition if needed
       }
     };
 
@@ -221,12 +220,12 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     };
   }, [isMobile, isOpen]);
 
-  // 💾 Sauvegarder à chaque changement
+  // Persist conversation state
   useEffect(() => {
     saveConversation();
   }, [messages, isOpen]);
 
-  // 📱 Gestion du clavier virtuel mobile (Identique à route.ts)
+  // Virtual keyboard handling for mobile
   useEffect(() => {
     if (!isMobile) return;
 
@@ -254,14 +253,12 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   }, [isMobile, isOpen]);
 
-  // ========== FONCTIONS ==========
-
-  // 📨 Envoyer un message (API identique à route.ts)
+  // Send message to AI agent
   const sendMessage = async () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
 
-    // Message utilisateur
+    // Add user message
     const userMessage: Message = {
       id: crypto.randomUUID(),
       text: trimmed,
@@ -278,17 +275,17 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
       inputRef.current.style.height = isMobile ? '44px' : '32px';
     }
 
-    // Blur et refocus sur mobile
+    // Mobile input handling
     if (isMobile && inputRef.current) {
       inputRef.current.blur();
       setTimeout(() => inputRef.current?.focus(), 100);
     }
     
-    // Animation typing
+    // Show typing indicator
     setTimeout(() => setIsTyping(true), 200);
 
     try {
-      // 🎯 API EXACTE de route.ts
+      // Prepare conversation history
       const history = updatedMessages
         .filter(msg => msg.id !== 'welcome')
         .map(msg => ({
@@ -296,6 +293,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
           content: msg.text,
         }));
 
+      // API request headers
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'x-public-kind': 'widget',
@@ -318,7 +316,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
       setTimeout(() => {
         const botMessage: Message = {
           id: crypto.randomUUID(),
-          text: data.reply || "Désolé, je n'ai pas pu traiter votre demande.",
+          text: data.reply || "Sorry, I couldn't process your request.",
           isBot: true,
           timestamp: new Date()
         };
@@ -327,12 +325,12 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
       }, 800);
       
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      console.error('Message send failed:', error);
       
       setTimeout(() => {
         const errorMessage: Message = {
           id: crypto.randomUUID(),
-          text: "Désolé, une erreur s'est produite. Veuillez réessayer.",
+          text: "Sorry, something went wrong. Please try again.",
           isBot: true,
           timestamp: new Date()
         };
@@ -342,7 +340,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   };
 
-  // 🔄 Nouvelle conversation
+  // Reset conversation
   const resetChat = () => {
     const welcomeMessages = config.showWelcomeMessage && config.welcomeMessage
       ? [{
@@ -355,20 +353,19 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     
     setMessages(welcomeMessages);
     
-    // Clear localStorage
     if (!isPreview) {
       localStorage.removeItem(STORAGE_KEY);
     }
   };
 
-  // 🎭 Toggle chat ouvert/fermé (Identique à route.ts)
+  // Toggle chat window
   const toggleChat = () => {
     const newIsOpen = !isOpen;
     setIsOpen(newIsOpen);
     setShowPopup(false);
     
     if (newIsOpen) {
-      // Si on ouvre et qu'il y a un message de bienvenue et pas de messages
+      // Show welcome message with typing animation
       if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
         setTimeout(() => {
           setIsTyping(true);
@@ -386,25 +383,23 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   };
 
-  // 🎹 Gestion Enter dans l'input (Identique à route.ts)
+  // Keyboard event handling
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      // Sur mobile : Entrée = toujours saut de ligne
+      // Mobile: Enter always creates new line
       if (isMobile) {
-        // Ne rien faire, laisser le comportement par défaut (saut de ligne)
         return;
       }
       
-      // Sur desktop : Entrée seule = envoyer, Shift+Entrée = saut de ligne
+      // Desktop: Enter sends, Shift+Enter creates new line
       if (!e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
-      // Si Shift+Entrée, ne rien faire = saut de ligne par défaut
     }
   };
 
-  // 🎯 Focus mobile optimisé (Identique à route.ts)
+  // Mobile-optimized input focus
   const handleInputFocus = () => {
     if (isMobile) {
       setTimeout(() => {
@@ -416,7 +411,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     }
   };
 
-  // ========== PLACEMENT DYNAMIQUE ==========
+  // Dynamic widget positioning
   const getWidgetClasses = () => {
     let classes = styles.chatWidget;
     if (isPreview) classes += ` ${styles.preview}`;
@@ -431,7 +426,6 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     } as React.CSSProperties;
 
     if (!isPreview) {
-      // Position selon config placement
       const [vertical, horizontal] = config.placement.split('-');
       if (vertical === 'top') {
         baseStyles.top = '8px';
@@ -457,57 +451,43 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     };
   };
 
-  // ========== UTILITAIRES ==========
-  const addMessageToDOM = (text: string, isBot: boolean, timestamp = new Date()) => {
-    const message: Message = {
-      id: crypto.randomUUID(),
-      text,
-      isBot,
-      timestamp
-    };
-    setMessages(prev => [...prev, message]);
-  };
-
+  // Default avatar fallback
   const getDefaultAvatar = () => {
     return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+';
   };
 
-  // ========== RENDER ==========
   return (
     <div 
       className={getWidgetClasses()}
       style={getWidgetStyles()}
     >
       
-      {/* 💭 POPUP BUBBLE */}
+      {/* Popup notification bubble */}
       {showPopup && !isOpen && config.popupMessage && (
         <div className={styles.chatPopup}>
           {config.popupMessage}
         </div>
       )}
 
-      {/* 🔘 CHAT BUTTON */}
+      {/* Chat trigger button */}
       {!isOpen && (
         <button
           className={styles.chatButton}
           onClick={toggleChat}
-          aria-label="Ouvrir le chat"
+          aria-label="Open chat"
         >
-          {/* SVG exact de route.ts */}
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-            <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
-          </svg>
+          <MessageCircle size={24} color="white" />
         </button>
       )}
 
-      {/* 🏠 CHAT WINDOW */}
+      {/* Main chat interface */}
       {isOpen && (
         <div 
           className={`${styles.chatWindow} ${isDark ? styles.dark : ''}`}
           style={getWindowStyles()}
         >
           
-          {/* 📋 HEADER */}
+          {/* Chat header */}
           <div className={styles.chatHeader}>
             <div className={styles.chatHeaderContent}>
               <div className={styles.chatAvatarContainer}>
@@ -527,7 +507,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                   {config.chatTitle || config.name}
                 </h3>
                 <p className={styles.chatSubtitle}>
-                  {config.subtitle || 'En ligne'}
+                  {config.subtitle || 'Online'}
                 </p>
               </div>
             </div>
@@ -535,31 +515,23 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
               <button
                 className={styles.chatActionBtn}
                 onClick={resetChat}
-                title="Nouvelle conversation"
-                aria-label="Nouvelle conversation"
+                title="New conversation"
+                aria-label="New conversation"
               >
-                {/* SVG exact de route.ts */}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="1 4 1 10 7 10"></polyline>
-                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                </svg>
+                <RotateCcw size={18} />
               </button>
               <button
                 className={styles.chatActionBtn}
                 onClick={toggleChat}
-                title="Fermer"
-                aria-label="Fermer le chat"
+                title="Close"
+                aria-label="Close chat"
               >
-                {/* SVG exact de route.ts */}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <X size={18} />
               </button>
             </div>
           </div>
 
-          {/* 💬 MESSAGES */}
+          {/* Message history */}
           <div 
             ref={messagesContainerRef}
             className={`${styles.chatMessages} ${isDark ? styles.dark : ''}`}
@@ -595,7 +567,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                 </div>
               ))}
 
-              {/* ⌨️ TYPING INDICATOR */}
+              {/* Typing indicator */}
               {isTyping && (
                 <div className={`${styles.message} ${styles.bot}`}>
                   <img
@@ -621,7 +593,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
             </div>
           </div>
 
-          {/* ⌨️ INPUT AREA */}
+          {/* Input area */}
           <div className={`${styles.chatInputArea} ${isDark ? styles.dark : ''}`}>
             <div className={styles.chatInputContainer}>
               <textarea
@@ -630,7 +602,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onFocus={handleInputFocus}
-                placeholder={config.placeholderText || 'Tapez votre message...'}
+                placeholder={config.placeholderText || 'Type your message...'}
                 className={`${styles.chatInput} ${isDark ? styles.dark : ''}`}
                 disabled={isTyping}
                 autoComplete="off"
@@ -645,16 +617,13 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                 onClick={sendMessage}
                 disabled={!inputValue.trim() || isTyping}
                 className={styles.chatSendBtn}
-                aria-label="Envoyer le message"
+                aria-label="Send message"
                 style={{
                   width: isMobile ? '44px' : '40px',
                   height: isMobile ? '44px' : '40px'
                 }}
               >
-                {/* SVG exact de route.ts */}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2.01 21L23 12 2.01 3 2 10L17 12 2 14Z"/>
-                </svg>
+                <Send size={18} />
               </button>
             </div>
           </div>

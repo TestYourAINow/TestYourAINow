@@ -12,7 +12,7 @@ export async function GET(
   try {
     await connectToDatabase();
     
-    // Récupérer la config depuis la DB
+    // Retrieve configuration from database
     const rawConfig = await ChatbotConfig.findById(widgetId).lean();
     
     if (!rawConfig) {
@@ -22,19 +22,19 @@ export async function GET(
     const config = JSON.parse(JSON.stringify(rawConfig));
     const isDark = config.theme === 'dark';
 
-    // 🎯 HTML COMPLET MOBILE OPTIMISÉ
+    // Enterprise-grade HTML with mobile optimization
     const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <!-- 🎯 META MOBILE OPTIMISÉ -->
+  <!-- Mobile-optimized viewport configuration -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>${config.name || 'Chat Widget'}</title>
   <style>
-/* STYLES DE BASE - DESKTOP ET MOBILE */
+/* Base styles - Desktop and Mobile */
 * { 
   box-sizing: border-box; 
   margin: 0; 
@@ -90,12 +90,12 @@ html, body {
   bottom: 100%;
   right: 0;
   margin-bottom: 16px;
-  /* 🎯 MÊMES DIMENSIONS QUE TON PREVIEW */
+  /* Consistent dimensions with preview */
   min-width: 55px;
   max-width: min(200px, calc(100vw - 120px));
   width: max-content;
   padding: 12px 16px;
-  /* 🎯 STYLE MODERNE UNIFIÉ */
+  /* Modern unified styling */
   border-radius: 20px;
   font-size: 14px;
   font-weight: 500;
@@ -103,16 +103,16 @@ html, body {
   line-height: 1.3;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  /* 🎯 DÉGRADÉ + BORDURE */
+  /* Gradient with border */
   background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
   border: 2px solid rgba(255, 255, 255, 0.15);
-  /* 🎯 OMBRE MODERNE */
+  /* Modern shadow */
   box-shadow: 
     0 4px 12px rgba(0, 0, 0, 0.15),
     0 0 0 1px rgba(255, 255, 255, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  /* 🎯 ANIMATION */
+  /* Animation */
   animation: slideUpBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -133,11 +133,11 @@ html, body {
   position: absolute;
   bottom: 16px;
   right: 16px;
-  /* 🎯 DIMENSIONS DESKTOP NORMALES - PAS PLEIN ÉCRAN */
-  width: 380px;  /* Largeur fixe pour desktop */
-  height: 600px; /* Hauteur fixe pour desktop */
-  max-width: calc(100vw - 40px); /* Sécurité pour petits écrans */
-  max-height: calc(100vh - 40px); /* Sécurité pour petits écrans */
+  /* Standard desktop dimensions - not fullscreen */
+  width: 380px;  /* Fixed width for desktop */
+  height: 600px; /* Fixed height for desktop */
+  max-width: calc(100vw - 40px); /* Safety for small screens */
+  max-height: calc(100vh - 40px); /* Safety for small screens */
   border-radius: 20px;
   box-shadow: 
   0 4px 16px rgba(0, 0, 0, 0.15),
@@ -397,7 +397,7 @@ html, body {
 
 .hidden { display: none !important; }
 
-/* 🎯 MOBILE UNIQUEMENT - Media queries très spécifiques */
+/* Mobile-specific optimizations */
 @media screen and (max-width: 768px) and (pointer: coarse) and (hover: none) {
   
   html, body {
@@ -445,7 +445,7 @@ html, body {
     max-width: calc(100vw - 120px);
   }
   
-  /* MOBILE FULLSCREEN UNIQUEMENT quand classe appliquée */
+  /* Mobile fullscreen mode when class is applied */
   .chat-widget.mobile-fullscreen {
     position: fixed !important;
     top: 0 !important;
@@ -579,14 +579,14 @@ html, body {
       </div>
     ` : ''}
     
-    <!-- Bouton -->
+    <!-- Button -->
     <button class="chat-button" id="chatButton">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
         <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
       </svg>
     </button>
     
-    <!-- Fenêtre Chat -->
+    <!-- Chat Window -->
     <div class="chat-window hidden" id="chatWindow">
       <!-- Header -->
       <div class="chat-header">
@@ -597,17 +597,17 @@ html, body {
           </div>
           <div>
             <div class="chat-title">${config.chatTitle || config.name}</div>
-            <div class="chat-subtitle">${config.subtitle || 'En ligne'}</div>
+            <div class="chat-subtitle">${config.subtitle || 'Online'}</div>
           </div>
         </div>
         <div class="chat-actions">
-          <button class="chat-action-btn" id="resetBtn" title="Nouvelle conversation">
+          <button class="chat-action-btn" id="resetBtn" title="Start new conversation">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="1 4 1 10 7 10"></polyline>
               <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
             </svg>
           </button>
-          <button class="chat-action-btn" id="closeBtn" title="Fermer">
+          <button class="chat-action-btn" id="closeBtn" title="Close">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -628,7 +628,7 @@ html, body {
           <textarea 
             class="chat-input" 
             id="messageInput" 
-            placeholder="${config.placeholderText || 'Tapez votre message...'}"
+            placeholder="${config.placeholderText || 'Type your message...'}"
             rows="1"
           ></textarea>
           <button class="chat-send-btn" id="sendBtn" disabled>
@@ -642,51 +642,51 @@ html, body {
   </div>
   
   <script>
-    // Variables globales
+    // Global variables
     let isOpen = false;
     let isTyping = false;
     let messages = [];
     let isMobile = false;
-    let currentSessionId = null; // 🆕 NOUVEAU - sessionId persistant
+    let currentSessionId = null; // Persistent session ID
     
     // Configuration
     const config = ${JSON.stringify(config)};
     
-    // 🆕 NOUVELLE FONCTION - Génération/récupération sessionId
+    // Session ID generation and retrieval
     function generateSessionId() {
       const storageKey = 'widget_session_' + config._id;
       
-      // Essayer de récupérer depuis localStorage
+      // Try to retrieve from localStorage
       let sessionId = localStorage.getItem(storageKey);
       
       if (!sessionId) {
-        // Générer un nouveau sessionId
+        // Generate new session ID
         const timestamp = Date.now();
         const randomString = Math.random().toString(36).substr(2, 9);
         sessionId = 'session_' + timestamp + '_' + randomString;
         
-        // Sauvegarder dans localStorage
+        // Save to localStorage
         try {
           localStorage.setItem(storageKey, sessionId);
-          console.log('🆕 [WIDGET] New sessionId generated:', sessionId);
+          console.log('New session ID generated:', sessionId);
         } catch (error) {
-          console.warn('⚠️ [WIDGET] Cannot save sessionId to localStorage');
+          console.warn('Cannot save session ID to localStorage');
         }
       } else {
-        console.log('✅ [WIDGET] Existing sessionId loaded:', sessionId);
+        console.log('Existing session ID loaded:', sessionId);
       }
       
       return sessionId;
     }
     
-    // 🎯 DÉTECTION MOBILE AMÉLIORÉE
+    // Enhanced mobile detection
     function detectMobile() {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
              (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
              window.innerWidth <= 768;
     }
     
-    // 💾 PERSISTANCE - Code existant modifié pour inclure sessionId
+    // Conversation persistence - modified to include session ID
     const STORAGE_KEY = 'chatbot_conversation_' + config._id;
     
     function saveConversation() {
@@ -695,11 +695,11 @@ html, body {
           messages: messages,
           timestamp: Date.now(),
           isOpen: isOpen,
-          sessionId: currentSessionId // 🆕 INCLURE sessionId
+          sessionId: currentSessionId // Include session ID
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationData));
       } catch (error) {
-        console.log('Impossible de sauvegarder la conversation');
+        console.log('Unable to save conversation');
       }
     }
     
@@ -709,14 +709,14 @@ html, body {
         if (saved) {
           const data = JSON.parse(saved);
           
-          const maxAge = 60 * 60 * 1000; // 1 heure
+          const maxAge = 60 * 60 * 1000; // 1 hour
           if (Date.now() - data.timestamp < maxAge) {
             messages = data.messages || [];
             
-            // 🆕 Récupérer sessionId sauvegardé si disponible
+            // Retrieve saved session ID if available
             if (data.sessionId) {
               currentSessionId = data.sessionId;
-              console.log('📋 [WIDGET] SessionId loaded from conversation:', currentSessionId);
+              console.log('Session ID loaded from conversation:', currentSessionId);
             }
             
             if (messages.length > 0) {
@@ -733,7 +733,7 @@ html, body {
                 chatWindow?.classList.remove('hidden');
                 popup?.classList.add('hidden');
                 
-                // 🎯 MOBILE: Appliquer le mode plein écran
+                // Mobile: Apply fullscreen mode
                 if (isMobile) {
                   chatWidget?.classList.add('mobile-fullscreen');
                 }
@@ -750,7 +750,7 @@ html, body {
           }
         }
       } catch (error) {
-        console.log('Impossible de charger la conversation');
+        console.log('Unable to load conversation');
       }
       return false;
     }
@@ -777,7 +777,7 @@ html, body {
       messagesContainer?.appendChild(messageEl);
     }
     
-    // Éléments DOM
+    // DOM elements
     const popup = document.getElementById('chatPopup');
     const button = document.getElementById('chatButton');
     const chatWindow = document.getElementById('chatWindow');
@@ -794,7 +794,7 @@ html, body {
     resetBtn?.addEventListener('click', resetChat);
     sendBtn?.addEventListener('click', sendMessage);
     
-    // INPUT MOBILE OPTIMISÉ
+    // Mobile-optimized input handling
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
       
@@ -804,7 +804,7 @@ html, body {
       this.style.overflowY = newHeight >= 120 ? 'auto' : 'hidden';
     });
     
-    // MOBILE: Gestion du clavier virtuel
+    // Mobile: Virtual keyboard management
     input?.addEventListener('focus', function() {
       if (isMobile) {
         setTimeout(() => {
@@ -819,22 +819,22 @@ html, body {
     
     input?.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
-        // Sur mobile : Entrée = toujours saut de ligne
+        // Mobile: Enter = always line break
         if (isMobile) {
-          // Ne rien faire, laisser le comportement par défaut (saut de ligne)
+          // Do nothing, let default behavior (line break)
           return;
         }
         
-        // Sur desktop : Entrée seule = envoyer, Shift+Entrée = saut de ligne
+        // Desktop: Enter alone = send, Shift+Enter = line break
         if (!e.shiftKey) {
           e.preventDefault();
           sendMessage();
         }
-        // Si Shift+Entrée, ne rien faire = saut de ligne par défaut
+        // If Shift+Enter, do nothing = default line break
       }
     });
     
-    // MOBILE: Gestion du resize pour clavier virtuel
+    // Mobile: Viewport resize handling for virtual keyboard
     if (isMobile) {
       let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       
@@ -865,7 +865,7 @@ html, body {
       }
     }
     
-    // FONCTIONS MODIFIÉES POUR MOBILE
+    // Mobile-modified functions
     function toggleChat() {
       isOpen = !isOpen;
       if (isOpen) {
@@ -938,9 +938,9 @@ html, body {
       messages = [];
       localStorage.removeItem(STORAGE_KEY);
       
-      // 🆕 NOUVEAU - Générer un nouveau sessionId lors du reset
+      // Generate new session ID on reset
       currentSessionId = generateSessionId();
-      console.log('🔄 [WIDGET] Chat reset, new sessionId:', currentSessionId);
+      console.log('Chat reset, new session ID:', currentSessionId);
       
       if (config.showWelcomeMessage && config.welcomeMessage) {
         addMessage(config.welcomeMessage, true);
@@ -951,7 +951,7 @@ html, body {
       const text = input?.value?.trim();
       if (!text) return;
       
-      // 🆕 S'assurer qu'on a un sessionId avant d'envoyer
+      // Ensure we have a session ID before sending
       if (!currentSessionId) {
         currentSessionId = generateSessionId();
       }
@@ -979,7 +979,7 @@ html, body {
           },
           body: JSON.stringify({
             message: text,
-            sessionId: currentSessionId, // 🆕 PASSER LE sessionId
+            sessionId: currentSessionId, // Pass session ID
             previousMessages: messages.map(m => ({ 
               role: m.isBot ? 'assistant' : 'user', 
               content: m.text 
@@ -990,11 +990,11 @@ html, body {
         
         const data = await response.json();
         hideTyping();
-        addMessage(data.reply || "Désolé, je n'ai pas pu traiter votre demande.", true);
+        addMessage(data.reply || "Sorry, I couldn't process your request.", true);
       } catch (error) {
-        console.error('Erreur:', error);
+        console.error('API Error:', error);
         hideTyping();
-        addMessage("Désolé, une erreur s'est produite. Veuillez réessayer.", true);
+        addMessage("Sorry, an error occurred. Please try again.", true);
       }
     }
     
@@ -1070,14 +1070,14 @@ html, body {
       }
     });
     
-    // 🆕 INITIALISATION - Générer sessionId au chargement
+    // Initialization - Generate session ID on load
     window.addEventListener('DOMContentLoaded', function() {
       isMobile = detectMobile();
       
-      // Générer/récupérer sessionId
+      // Generate/retrieve session ID
       currentSessionId = generateSessionId();
       
-      // Charger conversation existante
+      // Load existing conversation
       const loaded = loadConversation();
       
       if (isMobile && input) {
@@ -1085,12 +1085,12 @@ html, body {
         input.style.minHeight = '44px';
       }
       
-      console.log('🎯 [WIDGET] Initialized with sessionId:', currentSessionId);
+      console.log('Widget initialized with session ID:', currentSessionId);
     });
     
     if (config.showPopup && config.popupMessage && popup) {
       setTimeout(() => {
-        if (!isOpen) { // Retiré la condition mobile qui masquait le popup
+        if (!isOpen) { // Removed mobile condition that was hiding popup
           popup.classList.remove('hidden');
         }
       }, (config.popupDelay || 3) * 1000);
@@ -1105,7 +1105,7 @@ html, body {
       } 
     }, '*');
     
-    console.log('Widget chargé avec succès - Mobile:', isMobile, '- SessionId:', currentSessionId);
+    console.log('Widget loaded successfully - Mobile:', isMobile, '- Session ID:', currentSessionId);
   </script>
 </body>
 </html>`;
@@ -1123,7 +1123,7 @@ html, body {
     });
 
   } catch (error) {
-    console.error('Erreur chargement widget:', error);
+    console.error('Widget loading error:', error);
     
     const errorHtml = `<!DOCTYPE html>
 <html>
@@ -1148,8 +1148,8 @@ html, body {
 </head>
 <body>
   <div class="error">
-    <h3>Widget non disponible</h3>
-    <p>Le widget demandé n'a pas pu être chargé.</p>
+    <h3>Widget Unavailable</h3>
+    <p>The requested widget could not be loaded.</p>
   </div>
 </body>
 </html>`;

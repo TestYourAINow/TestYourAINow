@@ -1,4 +1,4 @@
-// app\api\stripe\checkout\route.ts
+// app/api/stripe/checkout/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getServerSession } from "next-auth";
@@ -11,38 +11,38 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 })
 
 export async function POST(request: Request) {
-  console.log("🔍 Début checkout API");
+  console.log("Initializing checkout session");
 
   const session = await getServerSession(authOptions);
-  console.log("📧 Session email:", session?.user?.email);
+  console.log("Session email:", session?.user?.email);
 
   if (!session || !session.user?.email) {
-    console.log("❌ Pas de session ou email");
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    console.log("Unauthorized access - missing session or email");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     await connectToDatabase();
 
-    // Récupère l'email depuis le body OU depuis la session
+    // Extract email from request body or session
     const body = await request.json();
     const email = body.email || session.user.email;
 
-    console.log("📧 Email utilisé:", email);
+    console.log("Processing checkout for email:", email);
 
     let user = await User.findOne({ email });
 
     if (!user) {
-      console.log("❌ Utilisateur introuvable avec email:", email);
-      return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
+      console.log("User not found for email:", email);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    console.log("✅ Utilisateur trouvé:", user._id);
+    console.log("User found:", user._id);
 
-    // ➕ Crée un client Stripe s'il n'existe pas déjà
+    // Create Stripe customer if one doesn't exist
     let stripeCustomerId = user.stripeCustomerId;
     if (!stripeCustomerId) {
-      console.log("🔄 Création d'un nouveau client Stripe");
+      console.log("Creating new Stripe customer");
       const customer = await stripe.customers.create({
         email,
         metadata: { userId: user._id.toString() },
@@ -51,14 +51,14 @@ export async function POST(request: Request) {
       stripeCustomerId = customer.id;
       user.stripeCustomerId = stripeCustomerId;
       await user.save();
-      console.log("✅ Client Stripe créé:", stripeCustomerId);
+      console.log("Stripe customer created:", stripeCustomerId);
     } else {
-      console.log("✅ Client Stripe existant:", stripeCustomerId);
+      console.log("Using existing Stripe customer:", stripeCustomerId);
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-    console.log("🔄 Création de la session checkout");
+    console.log("Creating checkout session");
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
@@ -80,11 +80,11 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log("✅ Session checkout créée:", checkoutSession.id);
+    console.log("Checkout session created:", checkoutSession.id);
     return NextResponse.json({ url: checkoutSession.url });
 
   } catch (error: any) {
-    console.error("❌ Erreur Stripe:", error);
+    console.error("Stripe checkout error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
