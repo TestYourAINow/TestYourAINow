@@ -24,9 +24,18 @@ interface FeatureCarouselProps {
 }
 
 // Composant Carousel Premium Ultra-Moderne
+// Composant Carousel Premium Ultra-Moderne avec Support Swipe
 function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  
+  // États pour le swipe
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Distance minimale pour déclencher un swipe
+  const minSwipeDistance = 50;
 
   // Auto-play functionality
   useEffect(() => {
@@ -51,17 +60,102 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
     setCurrentSlide(index);
   };
 
+  // Gestionnaires d'événements tactiles
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsDragging(true);
+    setIsAutoPlaying(false); // Pause auto-play pendant le swipe
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) {
+      setIsDragging(false);
+      return;
+    }
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      nextSlide();
+    } else if (isRightSwipe) {
+      prevSlide();
+    }
+    
+    setIsDragging(false);
+    // Reprendre l'auto-play après un délai
+    setTimeout(() => setIsAutoPlaying(true), 3000);
+  };
+
+  // Gestionnaires pour la souris (optionnel, pour desktop)
+  const onMouseDown = (e: React.MouseEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.clientX);
+    setIsDragging(true);
+    setIsAutoPlaying(false);
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setTouchEnd(e.clientX);
+  };
+
+  const onMouseUp = () => {
+    if (!isDragging) return;
+    
+    if (!touchStart || !touchEnd) {
+      setIsDragging(false);
+      return;
+    }
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      nextSlide();
+    } else if (isRightSwipe) {
+      prevSlide();
+    }
+    
+    setIsDragging(false);
+    setTimeout(() => setIsAutoPlaying(true), 3000);
+  };
+
+  const onMouseLeave = () => {
+    if (isDragging) {
+      setIsDragging(false);
+      setTimeout(() => setIsAutoPlaying(true), 1000);
+    } else {
+      setIsAutoPlaying(true);
+    }
+  };
+
   return (
     <div 
       className="relative max-w-7xl mx-auto"
       onMouseEnter={() => setIsAutoPlaying(false)}
-      onMouseLeave={() => setIsAutoPlaying(true)}
+      onMouseLeave={onMouseLeave}
     >
       {/* Premium Backdrop avec glow */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5 rounded-[2rem] blur-3xl"></div>
       
-      {/* Carousel Container Ultra-Premium */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-700/30 shadow-[0_32px_64px_rgba(0,0,0,0.4)]">
+      {/* Carousel Container Ultra-Premium avec Support Swipe */}
+      <div 
+        className={`relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-700/30 shadow-[0_32px_64px_rgba(0,0,0,0.4)] ${isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'} touch-pan-y`}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+      >
         
         {/* Slides Container - Hauteur auto pour éviter les coupures */}
         <div className="relative">
@@ -70,7 +164,7 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
               key={index}
               className={`${
                 index === currentSlide ? 'block' : 'hidden'
-              } transition-all duration-1000 ease-in-out`}
+              } transition-all duration-1000 ease-in-out ${isDragging ? 'pointer-events-none' : ''}`}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px] lg:min-h-[600px]">
                 
@@ -118,16 +212,17 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
                         src={feature.image}
                         alt={feature.imageAlt}
                         fill
-                        className="object-contain p-4 sm:p-6 transition-transform duration-700 group-hover:scale-[1.02]"
+                        className="object-contain p-4 sm:p-6 transition-transform duration-700 group-hover:scale-[1.02] pointer-events-none"
                         sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 35vw"
+                        draggable={false}
                       />
                       
                       {/* Glow très subtil */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-blue-500/3 via-transparent to-purple-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-xl sm:rounded-2xl lg:rounded-3xl"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-blue-500/3 via-transparent to-purple-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-xl sm:rounded-2xl lg:rounded-3xl pointer-events-none"></div>
                     </div>
 
                     {/* Ring effet */}
-                    <div className="absolute inset-0 rounded-xl sm:rounded-2xl lg:rounded-3xl ring-1 ring-white/5 group-hover:ring-blue-400/20 transition-all duration-700"></div>
+                    <div className="absolute inset-0 rounded-xl sm:rounded-2xl lg:rounded-3xl ring-1 ring-white/5 group-hover:ring-blue-400/20 transition-all duration-700 pointer-events-none"></div>
                   </div>
                 </div>
               </div>
@@ -135,33 +230,36 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
           ))}
         </div>
 
-        {/* Navigation Arrows - Plus petites et proches des bords */}
+        {/* Navigation Arrows - Masquées sur mobile, visibles sur desktop */}
         <button
           onClick={prevSlide}
-          className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-600/30 rounded-lg sm:rounded-xl text-white hover:from-gray-700/90 hover:to-gray-800/90 hover:border-blue-500/30 transition-all duration-300 z-30 group shadow-xl hover:shadow-blue-500/20"
+          className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-600/30 rounded-lg sm:rounded-xl text-white hover:from-gray-700/90 hover:to-gray-800/90 hover:border-blue-500/30 transition-all duration-300 z-30 group shadow-xl hover:shadow-blue-500/20 hidden md:flex items-center justify-center"
         >
           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:text-blue-400 transition-colors duration-300" />
         </button>
 
         <button
           onClick={nextSlide}
-          className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-600/30 rounded-lg sm:rounded-xl text-white hover:from-gray-700/90 hover:to-gray-800/90 hover:border-blue-500/30 transition-all duration-300 z-30 group shadow-xl hover:shadow-blue-500/20"
+          className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-600/30 rounded-lg sm:rounded-xl text-white hover:from-gray-700/90 hover:to-gray-800/90 hover:border-blue-500/30 transition-all duration-300 z-30 group shadow-xl hover:shadow-blue-500/20 hidden md:flex items-center justify-center"
         >
           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:text-blue-400 transition-colors duration-300" />
         </button>
+
+      
       </div>
 
-      {/* Dots Navigation - Seulement les dots, plus clean */}
-      <div className="flex justify-center mt-8 sm:mt-12 gap-3 sm:gap-4">
+      {/* Dots Navigation - Plus d'espace sur mobile pour faciliter le tap */}
+      <div className="flex justify-center mt-8 sm:mt-12 gap-4 sm:gap-4">
         {features.map((_: Feature, index: number) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`relative transition-all duration-500 ${
+            className={`relative transition-all duration-500 touch-manipulation ${
               index === currentSlide
-                ? 'w-8 sm:w-12 h-2 sm:h-3'
-                : 'w-2 sm:w-3 h-2 sm:h-3'
+                ? 'w-8 sm:w-12 h-3 sm:h-3'
+                : 'w-3 sm:w-3 h-3 sm:h-3'
             }`}
+            style={{ minWidth: '12px', minHeight: '12px' }} // Taille minimale pour le touch
           >
             <div className={`w-full h-full rounded-full transition-all duration-500 ${
               index === currentSlide
@@ -250,7 +348,7 @@ export default function Home() {
     {
       title: "No Prompt Expertise Required",
       subtitle: "AI-Powered Prompt Builder",
-      description: "Just say what your agent should do. Our AI turns it into a ready-to-run prompt for you — no guesswork, just clarity.",
+      description: "Just write what your agent should do. Our AI turns it into a ready-to-run prompt for you — no guesswork, just clarity.",
       image: "/prompt-builder.jpg",
       imageAlt: "AI Prompt Builder Preview",
       icon: <Sparkles className="w-6 h-6" />,
