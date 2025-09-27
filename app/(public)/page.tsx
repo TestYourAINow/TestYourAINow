@@ -24,23 +24,14 @@ interface FeatureCarouselProps {
 }
 
 // Composant Carousel Premium Ultra-Moderne
-// Composant Carousel Premium Ultra-Moderne avec Support Swipe
 function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  
-  // États pour le swipe
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-
-  // Distance minimale pour déclencher un swipe
-  const minSwipeDistance = 50;
 
   // Auto-play functionality
   useEffect(() => {
     if (!isAutoPlaying) return;
-    
+
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % features.length);
     }, 6000);
@@ -60,114 +51,28 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
     setCurrentSlide(index);
   };
 
-  // Gestionnaires d'événements tactiles
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-    setIsDragging(true);
-    setIsAutoPlaying(false); // Pause auto-play pendant le swipe
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) {
-      setIsDragging(false);
-      return;
-    }
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe) {
-      nextSlide();
-    } else if (isRightSwipe) {
-      prevSlide();
-    }
-    
-    setIsDragging(false);
-    // Reprendre l'auto-play après un délai
-    setTimeout(() => setIsAutoPlaying(true), 3000);
-  };
-
-  // Gestionnaires pour la souris (optionnel, pour desktop)
-  const onMouseDown = (e: React.MouseEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.clientX);
-    setIsDragging(true);
-    setIsAutoPlaying(false);
-  };
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    setTouchEnd(e.clientX);
-  };
-
-  const onMouseUp = () => {
-    if (!isDragging) return;
-    
-    if (!touchStart || !touchEnd) {
-      setIsDragging(false);
-      return;
-    }
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe) {
-      nextSlide();
-    } else if (isRightSwipe) {
-      prevSlide();
-    }
-    
-    setIsDragging(false);
-    setTimeout(() => setIsAutoPlaying(true), 3000);
-  };
-
-  const onMouseLeave = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      setTimeout(() => setIsAutoPlaying(true), 1000);
-    } else {
-      setIsAutoPlaying(true);
-    }
-  };
-
   return (
-    <div 
+    <div
       className="relative max-w-7xl mx-auto"
       onMouseEnter={() => setIsAutoPlaying(false)}
-      onMouseLeave={onMouseLeave}
+      onMouseLeave={() => setIsAutoPlaying(true)}
     >
       {/* Premium Backdrop avec glow */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5 rounded-[2rem] blur-3xl"></div>
-      
-      {/* Carousel Container Ultra-Premium avec Support Swipe */}
-      <div 
-        className={`relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-700/30 shadow-[0_32px_64px_rgba(0,0,0,0.4)] ${isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'} touch-pan-y`}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-      >
-        
+
+      {/* Carousel Container Ultra-Premium */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-700/30 shadow-[0_32px_64px_rgba(0,0,0,0.4)]">
+
         {/* Slides Container - Hauteur auto pour éviter les coupures */}
         <div className="relative">
           {features.map((feature: Feature, index: number) => (
             <div
               key={index}
-              className={`${
-                index === currentSlide ? 'block' : 'hidden'
-              } transition-all duration-1000 ease-in-out ${isDragging ? 'pointer-events-none' : ''}`}
+              className={`${index === currentSlide ? 'block' : 'hidden'
+                } transition-all duration-1000 ease-in-out`}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px] lg:min-h-[600px]">
-                
+
                 {/* Content Side - Espacement généreux */}
                 <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-12 xl:p-16 order-2 lg:order-1">
                   {/* Header avec badge et icon */}
@@ -175,26 +80,26 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
                     <div className={`inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r ${feature.badgeColor} rounded-xl sm:rounded-2xl text-white font-bold text-xs sm:text-sm shadow-xl`}>
                       {feature.badge}
                     </div>
-                    
+
                     <div className="p-3 sm:p-4 bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-gray-600/30 shadow-lg">
                       <div className="text-blue-400">
                         {feature.icon}
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Title avec taille responsive */}
                   <h3 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
                     <span className="bg-gradient-to-r from-white via-gray-100 to-gray-200 bg-clip-text text-transparent">
                       {feature.title}
                     </span>
                   </h3>
-                  
+
                   {/* Subtitle */}
                   <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold mb-4 sm:mb-6 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                     {feature.subtitle}
                   </p>
-                  
+
                   {/* Description */}
                   <p className="text-gray-300 text-sm sm:text-base lg:text-lg leading-relaxed">
                     {feature.description}
@@ -206,23 +111,22 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
                   <div className="relative w-full max-w-sm sm:max-w-md lg:max-w-lg group">
                     {/* Container principal avec aspect ratio flexible */}
                     <div className="relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/80 backdrop-blur-xl border border-gray-600/30 shadow-2xl transition-all duration-700 group-hover:shadow-blue-500/20 group-hover:border-blue-500/30">
-                      
+
                       {/* Image avec padding pour être visible entièrement */}
                       <Image
                         src={feature.image}
                         alt={feature.imageAlt}
                         fill
-                        className="object-contain p-4 sm:p-6 transition-transform duration-700 group-hover:scale-[1.02] pointer-events-none"
+                        className="object-contain p-4 sm:p-6 transition-transform duration-700 group-hover:scale-[1.02]"
                         sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 35vw"
-                        draggable={false}
                       />
-                      
+
                       {/* Glow très subtil */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-blue-500/3 via-transparent to-purple-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-xl sm:rounded-2xl lg:rounded-3xl pointer-events-none"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-blue-500/3 via-transparent to-purple-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-xl sm:rounded-2xl lg:rounded-3xl"></div>
                     </div>
 
                     {/* Ring effet */}
-                    <div className="absolute inset-0 rounded-xl sm:rounded-2xl lg:rounded-3xl ring-1 ring-white/5 group-hover:ring-blue-400/20 transition-all duration-700 pointer-events-none"></div>
+                    <div className="absolute inset-0 rounded-xl sm:rounded-2xl lg:rounded-3xl ring-1 ring-white/5 group-hover:ring-blue-400/20 transition-all duration-700"></div>
                   </div>
                 </div>
               </div>
@@ -230,42 +134,43 @@ function PremiumFeatureCarousel({ features }: FeatureCarouselProps) {
           ))}
         </div>
 
-        {/* Navigation Arrows - Masquées sur mobile, visibles sur desktop */}
+        {/* Navigation Arrows - Position fixe calculée */}
         <button
           onClick={prevSlide}
-          className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-600/30 rounded-lg sm:rounded-xl text-white hover:from-gray-700/90 hover:to-gray-800/90 hover:border-blue-500/30 transition-all duration-300 z-30 group shadow-xl hover:shadow-blue-500/20 hidden md:flex items-center justify-center"
+          className="absolute left-1 sm:left-2 p-2 sm:p-3 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-600/30 rounded-lg sm:rounded-xl text-white hover:from-gray-700/90 hover:to-gray-800/90 hover:border-blue-500/30 transition-all duration-300 z-30 group shadow-xl hover:shadow-blue-500/20"
+          style={{
+            top: '280px'
+          }}
         >
           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:text-blue-400 transition-colors duration-300" />
         </button>
 
         <button
           onClick={nextSlide}
-          className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-600/30 rounded-lg sm:rounded-xl text-white hover:from-gray-700/90 hover:to-gray-800/90 hover:border-blue-500/30 transition-all duration-300 z-30 group shadow-xl hover:shadow-blue-500/20 hidden md:flex items-center justify-center"
+          className="absolute right-1 sm:right-2 p-2 sm:p-3 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-2xl border border-gray-600/30 rounded-lg sm:rounded-xl text-white hover:from-gray-700/90 hover:to-gray-800/90 hover:border-blue-500/30 transition-all duration-300 z-30 group shadow-xl hover:shadow-blue-500/20"
+          style={{
+            top: '280px'
+          }}
         >
           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:text-blue-400 transition-colors duration-300" />
         </button>
-
-      
       </div>
 
-      {/* Dots Navigation - Plus d'espace sur mobile pour faciliter le tap */}
-      <div className="flex justify-center mt-8 sm:mt-12 gap-4 sm:gap-4">
+      {/* Dots Navigation - Seulement les dots, plus clean */}
+      <div className="flex justify-center mt-8 sm:mt-12 gap-3 sm:gap-4">
         {features.map((_: Feature, index: number) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`relative transition-all duration-500 touch-manipulation ${
-              index === currentSlide
-                ? 'w-8 sm:w-12 h-3 sm:h-3'
-                : 'w-3 sm:w-3 h-3 sm:h-3'
-            }`}
-            style={{ minWidth: '12px', minHeight: '12px' }} // Taille minimale pour le touch
+            className={`relative transition-all duration-500 ${index === currentSlide
+                ? 'w-8 sm:w-12 h-2 sm:h-3'
+                : 'w-2 sm:w-3 h-2 sm:h-3'
+              }`}
           >
-            <div className={`w-full h-full rounded-full transition-all duration-500 ${
-              index === currentSlide
+            <div className={`w-full h-full rounded-full transition-all duration-500 ${index === currentSlide
                 ? 'bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/40'
                 : 'bg-gray-600 hover:bg-gray-500'
-            }`} />
+              }`} />
           </button>
         ))}
       </div>
@@ -277,7 +182,7 @@ export default function Home() {
   const { data: session, status } = useSession();
   const isSubscribed = session?.user?.isSubscribed;
   const redirectUrl = session ? "/dashboard" : "/signup";
-  
+
   // State pour la section pricing
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -289,16 +194,16 @@ export default function Home() {
       const windowHeight = window.innerHeight;
       const fadeStart = windowHeight * 0.5;
       const fadeEnd = windowHeight * 1.2;
-      
+
       let fadeValue = 0;
-      
+
       if (scrollY >= fadeStart && scrollY <= fadeEnd) {
         fadeValue = (scrollY - fadeStart) / (fadeEnd - fadeStart);
         fadeValue = Math.min(fadeValue, 1);
       } else if (scrollY > fadeEnd) {
         fadeValue = 1;
       }
-      
+
       const main = document.querySelector('main');
       if (main) {
         main.style.setProperty('--fade-opacity', fadeValue.toString());
@@ -307,7 +212,7 @@ export default function Home() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -343,7 +248,7 @@ export default function Home() {
     }
   };
 
-  // Data pour toutes les features (y compris Prompt Builder) 
+  // Data pour toutes les features (y compris Prompt Builder)
   const allFeatures = [
     {
       title: "No Prompt Expertise Required",
@@ -372,7 +277,7 @@ export default function Home() {
       subtitle: "Where your agent becomes a pro",
       description: "You refine it, train it, connect integrations — and it comes back ready to close deals.",
       image: "/agent-lab.jpg",
-      imageAlt: "Agent Lab Preview", 
+      imageAlt: "Agent Lab Preview",
       icon: <FlaskConical className="w-6 h-6" />,
       badge: "LAB",
       badgeColor: "from-emerald-600 to-green-600",
@@ -395,19 +300,19 @@ export default function Home() {
   const ctaText = !session
     ? "Get 50% off"
     : isSubscribed
-    ? "Go to Dashboard"
-    : "Activate your access";
+      ? "Go to Dashboard"
+      : "Activate your access";
 
   const showLink = !session || isSubscribed;
 
   const ctaLink = !session
     ? "/signup?"
     : isSubscribed
-    ? "/dashboard"
-    : "#";
+      ? "/dashboard"
+      : "#";
 
   return (
-    <main 
+    <main
       className="bg-premium-gradient bg-grid text-white scroll-smooth relative overflow-hidden"
       style={{
         background: `
@@ -435,7 +340,7 @@ export default function Home() {
       </div>
 
       {/* HERO SECTION - Optimisé Mobile */}
-      <section 
+      <section
         className="relative text-white min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-20 pt-16 sm:pt-20"
         style={{
           backgroundImage: `
@@ -476,8 +381,8 @@ export default function Home() {
               className="group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold px-8 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl text-base sm:text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25 overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-              
-              <Wrench size={20} className="relative z-10 group-hover:rotate-12 transition-transform duration-300 sm:w-6 sm:h-6" /> 
+
+              <Wrench size={20} className="relative z-10 group-hover:rotate-12 transition-transform duration-300 sm:w-6 sm:h-6" />
               <span className="relative z-10">{session ? "Go to Dashboard" : "Start Building"}</span>
               <ArrowRight size={20} className="relative z-10 group-hover:translate-x-1 transition-transform duration-300 sm:w-6 sm:h-6" />
             </Link>
@@ -487,7 +392,7 @@ export default function Home() {
               href="#features"
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById('features')?.scrollIntoView({ 
+                document.getElementById('features')?.scrollIntoView({
                   behavior: 'smooth',
                   block: 'start'
                 });
@@ -495,7 +400,7 @@ export default function Home() {
               className="group relative inline-flex items-center justify-center gap-3 bg-gray-900/60 backdrop-blur-xl border border-gray-700/50 hover:border-blue-500/50 text-white font-bold px-8 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl text-base sm:text-lg transition-all duration-300 hover:bg-gray-800/60 overflow-hidden cursor-pointer"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/10 group-hover:to-cyan-500/10 transition-all duration-300"></div>
-              
+
               <span className="relative z-10">How it works</span>
               <Zap size={18} className="relative z-10 text-blue-400 group-hover:text-cyan-400 transition-colors duration-300 sm:w-6 sm:h-6" />
             </a>
@@ -522,8 +427,8 @@ export default function Home() {
       {/* AI PROMPT BUILDER SECTION - Maintenant dans le carousel */}
 
       {/* PREMIUM FEATURE CAROUSEL SECTION */}
-      <section 
-        id="features" 
+      <section
+        id="features"
         className="relative text-white py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-20"
         style={{
           backgroundImage: `
@@ -537,14 +442,14 @@ export default function Home() {
           {/* Section Header */}
           <div className="text-center mb-12 sm:mb-16 lg:mb-20">
 
-            
+
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
               From idea to{' '}
               <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
                 deployment
               </span>
             </h2>
-            
+
             <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
               Build, refine, and deploy your AI agents with our complete toolkit
             </p>
@@ -556,7 +461,7 @@ export default function Home() {
       </section>
 
       {/* PRICING SECTION - Optimisé Mobile */}
-      <section 
+      <section
         className="relative text-white py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-20"
         style={{
           backgroundImage: `
@@ -580,7 +485,7 @@ export default function Home() {
             </span>{" "}
             for the first 3 months!
           </h1>
-          
+
           <p className="text-gray-300 text-lg sm:text-xl mb-12 sm:mb-16 px-4">
             Use code{" "}
             <span className="bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent font-bold text-xl sm:text-2xl">
@@ -597,7 +502,7 @@ export default function Home() {
             <div className="relative bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 hover:border-blue-500/50 rounded-2xl sm:rounded-3xl p-6 sm:p-10 shadow-2xl transition-all duration-300 hover:shadow-blue-500/25 group">
               {/* Inner Glow */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-cyan-600/10 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
+
               <div className="relative z-10">
                 {/* Header Badge */}
                 <div className="text-center mb-6 sm:mb-8">
@@ -675,7 +580,7 @@ export default function Home() {
       </section>
 
       {/* FINAL CTA SECTION - Optimisé Mobile */}
-      <section 
+      <section
         className="relative text-white py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-20 text-center"
         style={{
           backgroundImage: `
@@ -698,17 +603,17 @@ export default function Home() {
               confidence
             </span>
           </h2>
-          
+
           <p className="text-lg sm:text-xl text-gray-300 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed px-4">
             Simple to build. Powerful to run.
           </p>
-          
+
           <Link
             href={redirectUrl}
             className="group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold px-8 sm:px-12 py-5 sm:py-6 rounded-xl sm:rounded-2xl text-lg sm:text-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25 overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-            
+
             <span className="relative z-10">{session ? "Go to Dashboard" : "Get Started"}</span>
             <ArrowRight size={20} className="relative z-10 group-hover:translate-x-1 transition-transform duration-300 sm:w-6 sm:h-6" />
           </Link>
