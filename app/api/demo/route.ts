@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
     popupMessage,
     popupDelay,
     usageLimit,
+    websiteUrl,
   } = body;
 
   const finalLimit = Math.min(Number(usageLimit || 150), 150);
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
     userId: session.user.id,
     name,
     agentId,
+    websiteUrl: websiteUrl || '',
     
     // 🆕 NOUVEAUX CHAMPS - Ajouter ces deux lignes
     demoToken: crypto.randomBytes(16).toString('hex'),

@@ -14,6 +14,7 @@ const DemoSchema = new Schema({
   theme: { type: String, default: 'dark' },
   color: { type: String, default: '#007bff' },
   avatarUrl: { type: String, default: '' },
+  websiteUrl: { type: String, default: '' },
   
   // Messages
   showWelcome: { type: Boolean, default: true },

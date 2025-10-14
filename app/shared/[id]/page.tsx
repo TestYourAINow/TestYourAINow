@@ -32,6 +32,7 @@ interface DemoDocument {
   createdAt: Date;
   expiresAt: Date;
   __v: number;
+  websiteUrl?: string;
 }
 
 // Fonction pour générer les métadonnées dynamiques
@@ -117,6 +118,7 @@ export default async function SharedDemoPage({ params }: Props) {
     popupDelay: demoDoc.popupDelay || 2,
     usageLimit: demoDoc.usageLimit,
     usedCount: demoDoc.usedCount || 0,
+    websiteUrl: demoDoc.websiteUrl || '',
   };
 
   return (

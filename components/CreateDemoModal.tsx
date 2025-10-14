@@ -23,6 +23,7 @@ interface Props {
     popupMessage: string;
     popupDelay: number;
     usageLimit: number; // ✅ REÇU du parent maintenant
+    websiteUrl: string;
   };
 }
 
@@ -45,7 +46,8 @@ const handleCreate = async () => {
   // Utiliser validatedPopupMessage au lieu de agentConfig.popupMessage
   const configToSave = {
     ...agentConfig,
-    popupMessage: validatedPopupMessage
+    popupMessage: validatedPopupMessage,
+    websiteUrl: agentConfig.websiteUrl || ''
   };
 
   try {

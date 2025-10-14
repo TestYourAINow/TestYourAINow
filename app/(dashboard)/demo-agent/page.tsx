@@ -30,6 +30,7 @@ interface DemoConfig {
   chatTitle: string;
   subtitle: string;
   usageLimit: number;
+  websiteUrl: string;
 }
 
 interface Message {
@@ -131,6 +132,26 @@ const DemoActions = ({
   );
 };
 
+// Liste des sites qui bloquent les iframes
+const knownBlockedDomains = [
+  'google.com',
+  'facebook.com',
+  'instagram.com',
+  'twitter.com',
+  'x.com',
+  'linkedin.com'
+];
+
+// Fonction pour valider l'URL
+const isValidUrl = (url: string) => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export default function DemoAgentPage() {
   // Configuration states
   const [config, setConfig] = useState<DemoConfig>({
@@ -148,6 +169,7 @@ export default function DemoAgentPage() {
     chatTitle: 'AI Assistant',
     subtitle: 'Online',
     usageLimit: 150,
+    websiteUrl: '',
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -190,12 +212,14 @@ export default function DemoAgentPage() {
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
+  const [urlStatus, setUrlStatus] = useState<'valid' | 'blocked' | 'invalid' | null>(null);
+
   // 🆕 AJOUTER CET EFFET - IDENTIQUE À LAUNCH-AGENT
   useEffect(() => {
     const detectMobile = () => {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-             (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
-             window.innerWidth <= 768;
+        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
+        window.innerWidth <= 768;
     };
 
     const handleResize = () => {
@@ -239,15 +263,15 @@ export default function DemoAgentPage() {
 
   // Popup handling
   useEffect(() => {
-  if (!config.agentId || !config.showPopup || isOpen) return;
+    if (!config.agentId || !config.showPopup || isOpen) return;
 
-  setShowPopupBubble(false); // reset à chaque changement d'agent
-  const timer = setTimeout(() => {
-    setShowPopupBubble(true);
-  }, config.popupDelay * 1000);
+    setShowPopupBubble(false); // reset à chaque changement d'agent
+    const timer = setTimeout(() => {
+      setShowPopupBubble(true);
+    }, config.popupDelay * 1000);
 
-  return () => clearTimeout(timer);
-}, [config.agentId, config.popupDelay, config.showPopup, isOpen]);
+    return () => clearTimeout(timer);
+  }, [config.agentId, config.popupDelay, config.showPopup, isOpen]);
 
 
   // Color picker handling
@@ -266,6 +290,31 @@ export default function DemoAgentPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showPicker]);
+
+  // Validation de l'URL du site web
+  useEffect(() => {
+    if (!config.websiteUrl) {
+      setUrlStatus(null);
+      return;
+    }
+
+    // Valider le format de l'URL
+    if (!isValidUrl(config.websiteUrl)) {
+      setUrlStatus('invalid');
+      return;
+    }
+
+    // Vérifier si c'est un domaine connu pour bloquer les iframes
+    try {
+      const url = new URL(config.websiteUrl);
+      const isBlocked = knownBlockedDomains.some(domain =>
+        url.hostname.includes(domain)
+      );
+      setUrlStatus(isBlocked ? 'blocked' : 'valid');
+    } catch {
+      setUrlStatus('invalid');
+    }
+  }, [config.websiteUrl]);
 
   // Utility functions
   const updateConfig = (key: keyof DemoConfig, value: any) => {
@@ -464,7 +513,7 @@ export default function DemoAgentPage() {
             </div>
           ) : (
             <>
-              {/* Background Pattern */}
+              {/* Background Pattern - toujours le même */}
               <div className="absolute inset-0 bg-grid opacity-5" />
 
               {/* Enhanced Watermark */}
@@ -737,6 +786,45 @@ export default function DemoAgentPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Website Background Preview */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">
+                    Website URL (Background Preview)
+                  </label>
+                  <input
+                    type="url"
+                    value={config.websiteUrl}
+                    onChange={(e) => updateConfig('websiteUrl', e.target.value)}
+                    placeholder="https://example.com"
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium lg:text-base text-sm"
+                  />
+                  <p className="lg:text-xs text-xs text-gray-400 lg:mt-2 mt-1.5">
+                    The website will be displayed as background in the shared demo
+                  </p>
+
+                  {/* Status simple - style original */}
+                  {config.websiteUrl && urlStatus === 'valid' && (
+                    <div className="mt-3 flex items-center gap-2 text-emerald-400 text-sm">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full" />
+                      <span>Website configured successfully</span>
+                    </div>
+                  )}
+
+                  {config.websiteUrl && urlStatus === 'blocked' && (
+                    <div className="mt-3 flex items-center gap-2 text-orange-400 text-sm">
+                      <div className="w-2 h-2 bg-orange-400 rounded-full" />
+                      <span>This site may block iframe embedding</span>
+                    </div>
+                  )}
+
+                  {config.websiteUrl && urlStatus === 'invalid' && (
+                    <div className="mt-3 flex items-center gap-2 text-red-400 text-sm">
+                      <div className="w-2 h-2 bg-red-400 rounded-full" />
+                      <span>Invalid URL format</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </CollapsibleSection>
 
@@ -817,10 +905,10 @@ export default function DemoAgentPage() {
 
                 <div className="flex items-center gap-2 text-xs">
                   <div className={`w-2 h-2 rounded-full ${config.popupMessage.length <= 40
-                      ? 'bg-green-400'
-                      : config.popupMessage.length <= 50
-                        ? 'bg-yellow-400'
-                        : 'bg-red-400'
+                    ? 'bg-green-400'
+                    : config.popupMessage.length <= 50
+                      ? 'bg-yellow-400'
+                      : 'bg-red-400'
                     }`} />
                   <span className="text-gray-400">
                     {config.popupMessage.length <= 40
@@ -1009,6 +1097,7 @@ export default function DemoAgentPage() {
           popupMessage: config.popupMessage,
           popupDelay: config.popupDelay,
           usageLimit: config.usageLimit,
+          websiteUrl: config.websiteUrl,
         }}
         onCreateSuccess={async () => {
           const res = await fetch('/api/demo/list');
