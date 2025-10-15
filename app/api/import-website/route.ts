@@ -17,6 +17,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
     }
 
+    // 🆕 SCRAPERAPI KEY depuis les variables d'environnement
+    const SCRAPER_API_KEY = process.env.SCRAPER_API_KEY;
+    
+    // Vérifier si on doit utiliser ScraperAPI
+    const useScraperAPI = !!SCRAPER_API_KEY;
+    
+    if (useScraperAPI) {
+      console.log("🔧 Using ScraperAPI for enhanced scraping");
+    }
+
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -31,31 +41,47 @@ export async function POST(req: NextRequest) {
       'DNT': '1',
     };
 
+    // 🆕 FONCTION POUR CRÉER URL SCRAPERAPI
+    function getScraperApiUrl(targetUrl: string, renderJs: boolean = false): string {
+      if (!SCRAPER_API_KEY) return targetUrl;
+      
+      const params = new URLSearchParams({
+        api_key: SCRAPER_API_KEY,
+        url: targetUrl,
+        render: renderJs ? 'true' : 'false',
+        country_code: 'ca' // Canada pour Subway
+      });
+      
+      return `http://api.scraperapi.com?${params.toString()}`;
+    }
+
     // Fonction pour scraper une page
-    async function scrapePage(pageUrl: string): Promise<PageContent | null> {
+    async function scrapePage(pageUrl: string, renderJs: boolean = false): Promise<PageContent | null> {
       try {
         console.log("Scraping page:", pageUrl);
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s avec ScraperAPI
 
         let response;
         let retries = 0;
         const maxRetries = 2;
 
+        // 🆕 UTILISER SCRAPERAPI SI DISPONIBLE
+        const fetchUrl = useScraperAPI ? getScraperApiUrl(pageUrl, renderJs) : pageUrl;
+
         while (retries <= maxRetries) {
           try {
-            response = await fetch(pageUrl, {
-              headers,
+            response = await fetch(fetchUrl, {
+              headers: useScraperAPI ? {} : headers, // Pas besoin de headers avec ScraperAPI
               signal: controller.signal,
               redirect: 'follow'
             });
 
             clearTimeout(timeoutId);
 
-            if (response.ok) break; // ✅ Succès, sortir de la boucle
+            if (response.ok) break;
 
-            // Si erreur 4xx/5xx, retry
             if (retries < maxRetries) {
               console.log(`⚠️ Retry ${retries + 1}/${maxRetries} for ${pageUrl}`);
               await new Promise(resolve => setTimeout(resolve, 1000));
@@ -108,117 +134,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 🆕 CONFIGURATION OPTIMISÉE POUR PRODUCTION
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-    let response;
-    let retryCount = 0;
-    const maxRetries = 3;
-
-    // 🔄 RETRY LOGIC pour la production
-    while (retryCount <= maxRetries) {
-      try {
-        console.log(`🌐 Fetching main page (attempt ${retryCount + 1}/${maxRetries + 1}): ${url}`);
-        
-        response = await fetch(url, {
-          headers,
-          signal: controller.signal,
-          redirect: 'follow'
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          console.log(`✅ Main page fetched successfully (${response.status})`);
-          break;
-        }
-        
-        // Si erreur serveur, retry
-        if (response.status >= 500 && retryCount < maxRetries) {
-          console.log(`⚠️ Server error ${response.status}, retrying...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          retryCount++;
-          continue;
-        }
-        
-        // Si erreur client (4xx), pas la peine de retry
-        if (response.status >= 400) {
-          clearTimeout(timeoutId);
-          return NextResponse.json({
-            error: `Website returned error ${response.status}. This site may be blocking automated access or require authentication.`
-          }, { status: 400 });
-        }
-        
-      } catch (error: any) {
-        clearTimeout(timeoutId);
-        console.error(`❌ Fetch error (attempt ${retryCount + 1}):`, error.message);
-        
-        if (retryCount < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          retryCount++;
-          continue;
-        }
-        
-        return NextResponse.json({
-          error: error.name === 'AbortError' 
-            ? "Website took too long to respond (timeout after 15s). Try a simpler page or different site."
-            : `Could not connect to website: ${error.message}. The site may be blocking automated access.`
-        }, { status: 400 });
-      }
-    }
-
-    // Vérifier si on a une réponse valide
-    if (!response || !response.ok) {
+    // Scraper la page principale avec render JS si c'est Subway ou similaire
+    const needsJsRendering = url.includes('subway.com') || url.includes('mcdonalds.com');
+    
+    console.log(`🌐 Fetching main page (JS rendering: ${needsJsRendering ? 'ON' : 'OFF'}): ${url}`);
+    
+    const mainPage = await scrapePage(url, needsJsRendering);
+    
+    if (!mainPage || mainPage.content.length < 200) {
       return NextResponse.json({
-        error: "Could not access main page after multiple attempts. The website may be blocking automated requests."
+        error: useScraperAPI 
+          ? "Could not extract enough content from this website even with enhanced scraping"
+          : "Could not access this website. The site may have anti-bot protection. Consider upgrading to premium scraping."
       }, { status: 400 });
     }
 
-    const html = await response.text();
+    console.log(`📝 Main page content extracted: ${mainPage.content.length} characters`);
 
-    // 🔍 VÉRIFIER SI LE CONTENU EST VIDE
-    if (!html || html.length < 100) {
-      return NextResponse.json({
-        error: "Website returned empty content. It may require JavaScript or authentication."
-      }, { status: 400 });
-    }
-
-    const $ = cheerio.load(html);
-
-    // Supprimer les éléments non utiles
-    $('script, style, noscript, header, footer, nav, .cookie, .popup, iframe').remove();
-
-    const title = $('title').text().trim() || $('h1').first().text().trim();
-
-    const textElements: string[] = [];
-
-    // Extraire le contenu principal
-    $('h1, h2, h3, h4, h5, h6, p, li').each((_, element) => {
-      const text = $(element).text().trim();
-      if (text && text.length > 10 && text.length < 500) {
-        textElements.push(text);
-      }
-    });
-
-    const mainContent = textElements.join('\n').trim();
-
-    // 🔍 VÉRIFIER SI ON A DU CONTENU
-    if (mainContent.length < 200) {
-      return NextResponse.json({
-        error: "Could not extract enough content from this website. It may use heavy JavaScript or block scraping."
-      }, { status: 400 });
-    }
-
-    console.log(`📝 Main page content extracted: ${mainContent.length} characters`);
-
-    const pages: PageContent[] = [{
-      url: url,
-      title: title,
-      content: mainContent
-    }];
+    const pages: PageContent[] = [mainPage];
 
     // 2. Extraire les liens de navigation
+    const $ = cheerio.load(mainPage.content);
     const baseUrl = new URL(url);
     const domain = baseUrl.origin;
 
@@ -229,19 +165,11 @@ export async function POST(req: NextRequest) {
       const href = $(element).attr('href');
       const text = $(element).text().trim().toLowerCase();
 
-      // Filtrer les liens importants
       if (href && (
-        // Anglais
         text.includes('about') || text.includes('services') || text.includes('pricing') ||
         text.includes('contact') || text.includes('help') || text.includes('faq') ||
-        text.includes('features') || text.includes('how') || text.includes('why') ||
-        text.includes('team') || text.includes('company') || text.includes('support') ||
-        text.includes('menu') || text.includes('products') || // 🆕 AJOUTÉ
-        // Français
-        text.includes('à-propos') || text.includes('apropos') || text.includes('tarifs') ||
-        text.includes('prix') || text.includes('aide') || text.includes('équipe') ||
-        text.includes('equipe') || text.includes('nous') || text.includes('entreprise') ||
-        text.includes('pourquoi') || text.includes('comment') || text.includes('produits')
+        text.includes('menu') || text.includes('products') ||
+        text.includes('à-propos') || text.includes('tarifs') || text.includes('produits')
       )) {
         let fullUrl = href;
         if (href.startsWith('/')) {
@@ -261,11 +189,9 @@ export async function POST(req: NextRequest) {
 
     // Pages communes
     const commonPages = [
-      '/about', '/about-us', '/services', '/pricing', '/contact',
-      '/faq', '/help', '/features', '/how-it-works', '/support',
-      '/menu', '/products', // 🆕 AJOUTÉ
-      '/a-propos', '/apropos', '/services', '/tarifs', '/prix', '/contact',
-      '/aide', '/faq', '/fonctionnalites', '/equipe', '/entreprise', '/nous'
+      '/about', '/services', '/pricing', '/contact', '/faq',
+      '/menu', '/products',
+      '/a-propos', '/tarifs', '/produits'
     ];
 
     for (const page of commonPages) {
@@ -274,40 +200,30 @@ export async function POST(req: NextRequest) {
 
     console.log(`🔗 Found ${importantLinks.size} important links to scrape`);
 
-    // 3. Scraper les pages importantes (max 8 pour éviter timeout)
-    const maxPages = 8;
+    // 3. Scraper les pages importantes (limité selon l'utilisation de ScraperAPI)
+    const maxPages = useScraperAPI ? 5 : 8; // Moins de pages avec ScraperAPI pour économiser les crédits
     const linksToScrape = Array.from(importantLinks).slice(0, maxPages);
 
     for (const link of linksToScrape) {
       if (link !== url) {
-        const pageContent = await scrapePage(link);
+        const pageContent = await scrapePage(link, needsJsRendering);
         if (pageContent && pageContent.content.length > 100) {
           pages.push(pageContent);
           console.log(`✅ Scraped: ${link} (${pageContent.content.length} chars)`);
         }
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Pause plus longue avec ScraperAPI
+        await new Promise(resolve => setTimeout(resolve, useScraperAPI ? 1000 : 500));
       }
     }
 
     console.log(`📊 Total pages scraped: ${pages.length}`);
 
     // 4. Compiler tout le contenu
-    let finalContent = '';
+    let finalContent = `# ${pages[0].title}\n\n`;
 
-    // Titre principal
-    finalContent += `# ${pages[0].title}\n\n`;
-
-    // Meta description
-    const metaDesc = $('meta[name="description"]').attr('content');
-    if (metaDesc) {
-      finalContent += `${metaDesc}\n\n`;
-    }
-
-    // Contenu de chaque page
     for (const page of pages) {
       if (page.content.length > 50) {
-        finalContent += `\n## ${page.title}\n\n`;
-        finalContent += `${page.content}\n\n`;
+        finalContent += `\n## ${page.title}\n\n${page.content}\n\n`;
       }
     }
 
@@ -336,7 +252,8 @@ export async function POST(req: NextRequest) {
       metadata: {
         pagesScraped: pages.length,
         totalLength: finalContent.length,
-        pages: pages.map(p => ({ url: p.url, title: p.title }))
+        pages: pages.map(p => ({ url: p.url, title: p.title })),
+        usedScraperAPI: useScraperAPI
       }
     });
 
