@@ -19,8 +19,16 @@ export async function POST(req: NextRequest) {
 
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Connection': 'keep-alive',
+      'Upgrade-Insecure-Requests': '1',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'none',
+      'Cache-Control': 'max-age=0',
+      'DNT': '1',
     };
 
     // Fonction pour scraper une page
@@ -29,14 +37,45 @@ export async function POST(req: NextRequest) {
         console.log("Scraping page:", pageUrl);
 
         const controller = new AbortController();
-        // Timeout généreux pour Vercel Pro
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const timeoutId = setTimeout(() => controller.abort(), 12000); // 🆕 12s au lieu de 8s
 
-        const response = await fetch(pageUrl, {
-          headers,
-          signal: controller.signal,
-          redirect: 'follow'
-        });
+        let response;
+        let retries = 0;
+        const maxRetries = 2;
+
+        while (retries <= maxRetries) {
+          try {
+            response = await fetch(pageUrl, {
+              headers,
+              signal: controller.signal,
+              redirect: 'follow'
+            });
+
+            clearTimeout(timeoutId);
+
+            if (response.ok) break; // ✅ Succès, sortir de la boucle
+
+            // Si erreur 4xx/5xx, retry
+            if (retries < maxRetries) {
+              console.log(`⚠️ Retry ${retries + 1}/${maxRetries} for ${pageUrl}`);
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Attendre 1s
+              retries++;
+            } else {
+              return null; // ❌ Échec après tous les retries
+            }
+          } catch (error) {
+            clearTimeout(timeoutId);
+            if (retries < maxRetries) {
+              console.log(`⚠️ Retry ${retries + 1}/${maxRetries} after error for ${pageUrl}`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              retries++;
+            } else {
+              return null; // ❌ Échec après tous les retries
+            }
+          }
+        }
+
+        if (!response || !response.ok) return null;
 
         clearTimeout(timeoutId);
 
@@ -82,7 +121,32 @@ export async function POST(req: NextRequest) {
     const pages: PageContent[] = [mainPage];
 
     // 2. Extraire les liens de navigation de la page principale
-    const response = await fetch(url, { headers });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    let response;
+    try {
+      response = await fetch(url, {
+        headers,
+        signal: controller.signal,
+        redirect: 'follow'
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        return NextResponse.json({
+          error: `Website returned error ${response.status}. Try a different URL.`
+        }, { status: 400 });
+      }
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      return NextResponse.json({
+        error: error.name === 'AbortError'
+          ? "Website took too long to respond. Try a simpler page or different site."
+          : "Could not connect to website. It may be blocking automated access."
+      }, { status: 400 });
+    }
+
     const html = await response.text();
     const $ = cheerio.load(html);
 
@@ -198,8 +262,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Limiter la taille finale
-    if (finalContent.length > 15000) {
-      finalContent = finalContent.slice(0, 15000) + '\n\n[Content truncated due to length...]';
+    if (finalContent.length > 25000) {
+      finalContent = finalContent.slice(0, 25000) + '\n\n[Content truncated due to length...]';
     }
 
     return NextResponse.json({

@@ -55,15 +55,23 @@ export async function POST(req: NextRequest) {
     }
 
     const userPrompt = `
-Transform the following company information into a friendly, well-structured FAQ written in Markdown.
+Transform the following company information into a well-structured FAQ.
 
-- Use a casual and engaging tone, as if the brand was talking to a curious customer.
-- Keep the answers concise, but informative.
-- Only include relevant Q&A based on the input.
-- If the input lacks enough info, just say so in a helpful sentence.
-- Format each item like this:
-**Q: What is [question]?**
-- A: [Answer]
+CRITICAL INSTRUCTIONS:
+1. Write the FAQ in the SAME LANGUAGE as the input content (French → French, English → English)
+2. DO NOT include any introductory text like "Here's a friendly FAQ" or "Sure thing!"
+3. DO NOT include any closing text like "Feel free to reach out" or "Need further assistance"
+4. Start DIRECTLY with the first Q&A
+5. End with the last Q&A - nothing after
+
+FORMAT:
+**Q: [question]?**
+- A: [answer]
+
+STYLE:
+- Use a casual and engaging tone
+- Keep answers concise but informative
+- Only include relevant Q&A based on the input
 
 Here is the content to use:
 ${content}
