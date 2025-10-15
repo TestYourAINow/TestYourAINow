@@ -149,11 +149,11 @@ const StepIndicator = ({ currentStep, formData }: { currentStep: Step; formData:
   const steps = [
     { number: 1, title: "AI Type & Basics", icon: Bot, color: "from-blue-500 to-cyan-500" },
     { number: 2, title: "Model Settings", icon: Settings, color: "from-purple-500 to-pink-500" },
-    { 
-      number: 3, 
-      title: formData.template === 'raw' ? "Raw Prompt" : "Personality & Knowledge", 
-      icon: formData.template === 'raw' ? FileText : User, 
-      color: "from-green-500 to-emerald-500" 
+    {
+      number: 3,
+      title: formData.template === 'raw' ? "Raw Prompt" : "Personality & Knowledge",
+      icon: formData.template === 'raw' ? FileText : User,
+      color: "from-green-500 to-emerald-500"
     },
     { number: 4, title: "Final Review", icon: CheckCircle, color: "from-orange-500 to-red-500" },
   ];
@@ -949,11 +949,10 @@ export default function CreateAgentWizard() {
                 {currentStep === 3 && (
                   <div className="space-y-8">
                     <div className="text-center mb-10">
-                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg ${
-                        formData.template === 'raw' 
+                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg ${formData.template === 'raw'
                           ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-indigo-500/30'
                           : 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-green-500/30'
-                      }`}>
+                        }`}>
                         {formData.template === 'raw' ? (
                           <FileText className="w-10 h-10 text-white" />
                         ) : (
@@ -964,8 +963,8 @@ export default function CreateAgentWizard() {
                         {formData.template === 'raw' ? 'Raw Prompt' : 'Personality & Knowledge'}
                       </h2>
                       <p className="text-gray-400 text-lg">
-                        {formData.template === 'raw' 
-                          ? 'Paste your complete prompt exactly as you want it' 
+                        {formData.template === 'raw'
+                          ? 'Paste your complete prompt exactly as you want it'
                           : 'Define how your AI should behave and what it knows'
                         }
                       </p>
@@ -973,33 +972,120 @@ export default function CreateAgentWizard() {
 
                     {formData.template === 'raw' ? (
                       // 🆕 Mode Raw Prompt
-                      <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-                            <FileText className="w-6 h-6 text-white" />
+                      <div>
+                        {/* Raw Prompt Textarea */}
+                        <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 mb-6">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                              <FileText className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-semibold text-white">Raw Prompt</h3>
+                              <p className="text-sm text-gray-400">Paste your complete prompt here</p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="text-xl font-semibold text-white">Raw Prompt</h3>
-                            <p className="text-sm text-gray-400">Paste your complete prompt here</p>
+
+                          <TextareaAutosize
+                            value={formData.rawPrompt}
+                            onChange={(e) => updateFormData("rawPrompt", e.target.value)}
+                            minRows={20}
+                            className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-mono text-sm backdrop-blur-sm"
+                            placeholder="Paste your complete prompt here..."
+                          />
+
+                          <div className="flex justify-between items-center mt-3">
+                            <div className="text-xs text-gray-400 flex items-center gap-2">
+                              <FileText size={12} />
+                              This prompt will be used exactly as written, without AI modifications
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {formData.rawPrompt.length.toLocaleString()} characters
+                            </div>
                           </div>
                         </div>
-                        
-                        <TextareaAutosize
-                          value={formData.rawPrompt}
-                          onChange={(e) => updateFormData("rawPrompt", e.target.value)}
-                          minRows={20}
-                          className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-mono text-sm backdrop-blur-sm"
-                          placeholder="Paste your complete prompt here..."
-                        />
-                        
-                        <div className="flex justify-between items-center mt-3">
-                          <div className="text-xs text-gray-400 flex items-center gap-2">
-                            <FileText size={12} />
-                            This prompt will be used exactly as written, without AI modifications
+
+                        {/* 🆕 Company Info Section - COPIÉ DU MODE NORMAL */}
+                        <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <label className="block text-sm font-medium text-gray-300">
+                              Company Information (Optional)
+                            </label>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setShowImportModal(true)}
+                                className="text-xs bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
+                              >
+                                <Upload size={12} />
+                                Import Website
+                              </button>
+
+                              {!isFaqGenerated ? (
+                                <button
+                                  type="button"
+                                  onClick={handleGenerateFaq}
+                                  disabled={faqGenerating || !formData.companyInfo.trim()}
+                                  className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-purple-500/20 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                                >
+                                  {faqGenerating ? (
+                                    <>
+                                      <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                                      Converting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Zap size={12} />
+                                      Turn into FAQ
+                                    </>
+                                  )}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={handleRevertFaq}
+                                  className="text-xs bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 font-medium shadow-lg hover:shadow-xl hover:shadow-red-500/20 transform hover:scale-105"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M9 14L4 9l5-5" />
+                                    <path d="M4 9h16" />
+                                  </svg>
+                                  Revert FAQ
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => updateFormData("companyInfo", "")}
+                                className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                              >
+                                Clear
+                              </button>
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {formData.rawPrompt.length.toLocaleString()} characters
-                          </div>
+
+                          <TextareaAutosize
+                            value={formData.companyInfo}
+                            onChange={(e) => updateFormData("companyInfo", e.target.value)}
+                            minRows={6}
+                            className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none placeholder-gray-400 font-medium backdrop-blur-sm"
+                            placeholder="Add company information, services, pricing, policies, contact details..."
+                          />
+                          <QualityIndicator content={formData.companyInfo} minLength={100} />
+                          <CharacterCounter content={formData.companyInfo} maxLength={15000} />
+
+                          <p className="text-xs text-gray-400 mt-3">
+                            💡 This information will be added to your raw prompt as additional context.
+                          </p>
                         </div>
                       </div>
                     ) : (
@@ -1202,14 +1288,13 @@ export default function CreateAgentWizard() {
                           )}
                           <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
                             <span className="text-gray-400 text-sm">Template</span>
-                            <span className={`px-3 py-1 text-xs rounded-full text-white ${
-                              formData.template === 'sales' ? 'bg-orange-600' :
-                              formData.template === 'support' ? 'bg-blue-600' : 
-                              formData.template === 'raw' ? 'bg-indigo-600' : 'bg-purple-600'
-                            }`}>
+                            <span className={`px-3 py-1 text-xs rounded-full text-white ${formData.template === 'sales' ? 'bg-orange-600' :
+                                formData.template === 'support' ? 'bg-blue-600' :
+                                  formData.template === 'raw' ? 'bg-indigo-600' : 'bg-purple-600'
+                              }`}>
                               {formData.template === 'sales' ? 'Sales AI' :
-                                formData.template === 'support' ? 'Support AI' : 
-                                formData.template === 'raw' ? 'Raw Prompt' : 'Custom'}
+                                formData.template === 'support' ? 'Support AI' :
+                                  formData.template === 'raw' ? 'Raw Prompt' : 'Custom'}
                             </span>
                           </div>
                           <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">

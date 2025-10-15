@@ -38,19 +38,28 @@ export async function POST(
       rawPrompt = "", // 🆕 NOUVEAU CHAMP AJOUTÉ
     } = agent;
 
-    // 🆕 LOGIQUE RAW PROMPT - UTILISER TEL QUEL
+    // 🆕 LOGIQUE RAW PROMPT - UTILISER TEL QUEL + COMPANY INFO
     if (template === 'raw' && rawPrompt?.trim()) {
       console.log('🎯 Raw prompt mode - using as-is');
-      
-      agent.finalPrompt = rawPrompt.trim();
+
+      // Commencer avec le raw prompt
+      let finalRawPrompt = rawPrompt.trim();
+
+      // 🆕 AJOUTER COMPANY INFO SI PRÉSENT
+      if (companyInfo?.trim() && companyInfo.length > 10) {
+        console.log('📄 Adding company info to raw prompt');
+        finalRawPrompt += '\n\n--- Company Information ---\n' + companyInfo.trim();
+      }
+
+      agent.finalPrompt = finalRawPrompt;
       await agent.save();
-      
-      return NextResponse.json({ prompt: rawPrompt.trim() });
+
+      return NextResponse.json({ prompt: finalRawPrompt });
     }
 
     // 🔧 CHANGEMENT PRINCIPAL - Utiliser la clé spécifique de l'agent
     const { openai, error } = await createAgentOpenAI(agent);
-    
+
     if (!openai) {
       return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
     }
@@ -74,7 +83,7 @@ export async function POST(
 *(Note: FAQ is generic due to lack of detailed company info.)*
         `
         : isSales
-        ? `
+          ? `
 - Q: What kind of products or services do you offer?
   A: We provide a variety of options depending on your needs.
 - Q: Where are you located?
@@ -85,7 +94,7 @@ export async function POST(
   A: Let me check what's currently available for you.
 *(Note: This FAQ is based on general expectations due to missing company information.)*
         `
-        : `
+          : `
 - Q: Can you tell me more about the company?
   A: I'm here to help with any questions you have about our services and support.
 - Q: How can I contact customer support?
@@ -169,14 +178,14 @@ ${adjustedCompanyInfo}
     return NextResponse.json({ prompt: output });
   } catch (error: any) {
     console.error("Prompt generation error:", error);
-    
+
     if (error.status === 401 || error.code === 'invalid_api_key') {
       return NextResponse.json(
         { error: "Invalid OpenAI API key. Please check your selected API key." },
         { status: 400 }
       );
     }
-    
+
     return NextResponse.json({ error: "Failed to generate prompt" }, { status: 500 });
   }
 }
