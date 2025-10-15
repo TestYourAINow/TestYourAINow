@@ -513,8 +513,26 @@ export default function DemoAgentPage() {
             </div>
           ) : (
             <>
-              {/* Background Pattern - toujours le même */}
-              <div className="absolute inset-0 bg-grid opacity-5" />
+              {/* Background - Website Preview or Pattern */}
+              {config.websiteUrl ? (
+                <div className="absolute inset-0 overflow-hidden">
+                  <iframe
+                    src={config.websiteUrl}
+                    className="w-full h-full border-0"
+                    style={{
+                      pointerEvents: 'none',
+                      transform: 'scale(1)',
+                      transformOrigin: 'top left'
+                    }}
+                    sandbox="allow-same-origin allow-scripts"
+                    title="Website Preview"
+                  />
+                  {/* Overlay pour bloquer les interactions */}
+                  <div className="absolute inset-0 bg-transparent" style={{ pointerEvents: 'auto' }} />
+                </div>
+              ) : (
+                <div className="absolute inset-0 bg-grid opacity-5" />
+              )}
 
               {/* Enhanced Watermark */}
               <div style={{
@@ -805,9 +823,15 @@ export default function DemoAgentPage() {
 
                   {/* Status simple - style original */}
                   {config.websiteUrl && urlStatus === 'valid' && (
-                    <div className="mt-3 flex items-center gap-2 text-emerald-400 text-sm">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full" />
-                      <span>Website configured successfully</span>
+                    <div className="mt-3 space-y-2">
+                      <div className="mt-3 flex items-center gap-2 text-emerald-400 text-sm">
+                        <div className="w-2 h-2 bg-emerald-400 rounded-full" />
+                        <span>Website configured (may not preview if blocked)</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-gray-400 text-xs bg-gray-800/30 px-3 py-2 rounded-lg border border-gray-700/30">
+                        <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <span>If the website does not appear, it's because some websites block embedding for security reasons. You can still continue with your demo without a live background. The widget will work perfectly on any website.</span>
+                      </div>
                     </div>
                   )}
 
