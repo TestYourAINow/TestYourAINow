@@ -269,7 +269,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       content: finalContent,
       metadata: {
-        pagesScraped: pages.length,
+        pagesScraped: pages.length, 
         totalLength: finalContent.length,
         pages: pages.map(p => ({ url: p.url, title: p.title }))
       }
