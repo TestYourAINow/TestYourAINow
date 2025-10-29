@@ -1,8 +1,11 @@
+// components\ChatWidget.tsx
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, RotateCcw, X, Send } from 'lucide-react';
 import styles from './ChatWidget.module.css';
+import { formatMessageContent } from '@/lib/formatMessage';
 
 // Type definitions matching backend API
 interface ChatWidgetConfig {
@@ -62,14 +65,14 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
   // Mobile device detection
   const detectMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-           (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
-           window.innerWidth <= 768;
+      (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
+      window.innerWidth <= 768;
   };
 
   // Conversation persistence
   const saveConversation = () => {
     if (isPreview) return;
-    
+
     try {
       const conversationData = {
         messages: messages.map(msg => ({
@@ -88,12 +91,12 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
 
   const loadConversation = () => {
     if (isPreview) return false;
-    
+
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const data = JSON.parse(saved);
-        
+
         // Expire conversations after 1 hour
         const maxAge = 60 * 60 * 1000;
         if (Date.now() - data.timestamp < maxAge) {
@@ -103,15 +106,15 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
             isBot: msg.isBot,
             timestamp: new Date(msg.timestamp)
           }));
-          
+
           setMessages(loadedMessages);
-          
+
           if (data.isOpen && !isPreview) {
             setTimeout(() => {
               setIsOpen(true);
             }, 100);
           }
-          
+
           return true;
         }
       }
@@ -124,9 +127,9 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
   // Component initialization
   useEffect(() => {
     setIsMobile(detectMobile());
-    
+
     const loaded = loadConversation();
-    
+
     // Show welcome message if no conversation loaded
     if (!loaded && config.showWelcomeMessage && config.welcomeMessage) {
       setMessages([{
@@ -154,7 +157,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
   useEffect(() => {
     if (messagesEndRef.current) {
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ 
+        messagesEndRef.current?.scrollIntoView({
           behavior: 'smooth',
           block: 'end'
         });
@@ -190,7 +193,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     const handleResize = () => {
       const wasMobile = isMobile;
       setIsMobile(detectMobile());
-      
+
       if (wasMobile !== isMobile && isOpen) {
         // Handle mobile/desktop transition if needed
       }
@@ -202,7 +205,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
           if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
           }
-          
+
           if (document.activeElement === inputRef.current && inputRef.current) {
             inputRef.current.blur();
             setTimeout(() => inputRef.current?.focus(), 100);
@@ -213,7 +216,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleOrientationChange);
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleOrientationChange);
@@ -230,12 +233,12 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     if (!isMobile) return;
 
     let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    
+
     const handleViewportChange = () => {
       if (window.visualViewport) {
         const currentHeight = window.visualViewport.height;
         const heightDiff = initialViewportHeight - currentHeight;
-        
+
         if (heightDiff > 150 && isOpen && messagesContainerRef.current) {
           messagesContainerRef.current.style.height = `calc(100vh - 64px - 80px - ${heightDiff}px)`;
           setTimeout(() => {
@@ -246,7 +249,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
         }
       }
     };
-    
+
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleViewportChange);
       return () => window.visualViewport?.removeEventListener('resize', handleViewportChange);
@@ -269,7 +272,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInputValue('');
-    
+
     // Reset textarea height
     if (inputRef.current) {
       inputRef.current.style.height = isMobile ? '44px' : '32px';
@@ -280,7 +283,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
       inputRef.current.blur();
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-    
+
     // Show typing indicator
     setTimeout(() => setIsTyping(true), 200);
 
@@ -312,7 +315,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
       });
 
       const data = await response.json();
-      
+
       setTimeout(() => {
         const botMessage: Message = {
           id: crypto.randomUUID(),
@@ -323,10 +326,10 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
         setMessages(prev => [...prev, botMessage]);
         setIsTyping(false);
       }, 800);
-      
+
     } catch (error) {
       console.error('Message send failed:', error);
-      
+
       setTimeout(() => {
         const errorMessage: Message = {
           id: crypto.randomUUID(),
@@ -344,15 +347,15 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
   const resetChat = () => {
     const welcomeMessages = config.showWelcomeMessage && config.welcomeMessage
       ? [{
-          id: 'welcome',
-          text: config.welcomeMessage,
-          isBot: true,
-          timestamp: new Date()
-        }]
+        id: 'welcome',
+        text: config.welcomeMessage,
+        isBot: true,
+        timestamp: new Date()
+      }]
       : [];
-    
+
     setMessages(welcomeMessages);
-    
+
     if (!isPreview) {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -363,7 +366,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
     const newIsOpen = !isOpen;
     setIsOpen(newIsOpen);
     setShowPopup(false);
-    
+
     if (newIsOpen) {
       // Show welcome message with typing animation
       if (config.showWelcomeMessage && config.welcomeMessage && messages.length === 0) {
@@ -390,7 +393,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
       if (isMobile) {
         return;
       }
-      
+
       // Desktop: Enter sends, Shift+Enter creates new line
       if (!e.shiftKey) {
         e.preventDefault();
@@ -457,11 +460,11 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
   };
 
   return (
-    <div 
+    <div
       className={getWidgetClasses()}
       style={getWidgetStyles()}
     >
-      
+
       {/* Popup notification bubble */}
       {showPopup && !isOpen && config.popupMessage && (
         <div className={styles.chatPopup}>
@@ -482,11 +485,11 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
 
       {/* Main chat interface */}
       {isOpen && (
-        <div 
+        <div
           className={`${styles.chatWindow} ${isDark ? styles.dark : ''}`}
           style={getWindowStyles()}
         >
-          
+
           {/* Chat header */}
           <div className={styles.chatHeader}>
             <div className={styles.chatHeaderContent}>
@@ -532,7 +535,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
           </div>
 
           {/* Message history */}
-          <div 
+          <div
             ref={messagesContainerRef}
             className={`${styles.chatMessages} ${isDark ? styles.dark : ''}`}
           >
@@ -555,7 +558,11 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                   )}
                   <div className={styles.messageContent}>
                     <div className={`${styles.messageBubble} ${message.isBot ? styles.bot : styles.user}`}>
-                      {message.text}
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: formatMessageContent(message.text)
+                        }}
+                      />
                     </div>
                     <div className={styles.messageTimestamp}>
                       {new Date(message.timestamp).toLocaleTimeString([], {
@@ -588,7 +595,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                   </div>
                 </div>
               )}
-              
+
               <div ref={messagesEndRef} style={{ height: '1px' }} />
             </div>
           </div>
@@ -607,7 +614,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                 disabled={isTyping}
                 autoComplete="off"
                 rows={1}
-                style={{ 
+                style={{
                   resize: 'none',
                   fontSize: isMobile ? '16px' : '14px',
                   minHeight: isMobile ? '44px' : '32px'

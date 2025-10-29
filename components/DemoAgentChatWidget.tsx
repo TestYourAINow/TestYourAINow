@@ -1,8 +1,11 @@
+// components\DemoAgentChatWidget.tsx
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, RotateCcw, X, Send } from 'lucide-react';
 import styles from './ChatWidget.module.css';
+import { formatMessageContent } from '@/lib/formatMessage';
 
 // Type definitions for demo page integration
 interface DemoConfig {
@@ -456,7 +459,11 @@ export default function DemoPageChatWidget({
                   )}
                   <div className={styles.messageContent}>
                     <div className={`${styles.messageBubble} ${message.isBot ? styles.bot : styles.user}`}>
-                      {message.text}
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: formatMessageContent(message.text)
+                        }}
+                      />
                     </div>
                     <div className={styles.messageTimestamp}>
                       {new Date(message.timestamp).toLocaleTimeString([], {

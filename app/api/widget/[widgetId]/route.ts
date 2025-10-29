@@ -1,3 +1,5 @@
+// app\api\widget\[widgetId]\route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { ChatbotConfig } from "@/models/ChatbotConfig";
@@ -567,6 +569,46 @@ html, body {
     transform: translateY(0) scale(1); 
   }
 }
+
+.message-bubble .chat-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  word-break: break-word;
+}
+
+.message-bubble.user .chat-link {
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration-color: rgba(255, 255, 255, 0.6);
+}
+
+.message-bubble.user .chat-link:hover {
+  color: white;
+  text-decoration-color: white;
+  text-decoration-thickness: 2px;
+}
+
+.message-bubble.bot .chat-link {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.message-bubble.bot .chat-link:hover {
+  text-decoration-thickness: 2px;
+  opacity: 0.8;
+}
+
+.chat-messages.dark .message-bubble.bot .chat-link {
+  color: #60a5fa;
+}
+
+.chat-messages.dark .message-bubble.bot .chat-link:hover {
+  color: #93c5fd;
+}
   </style>
 </head>
 
@@ -652,6 +694,29 @@ html, body {
     // Configuration
     const config = ${JSON.stringify(config)};
     
+// Ajoutez cette fonction au début du script, après les variables globales
+
+function formatMessageContent(text) {
+  if (!text) return '';
+  
+  // Markdown links: [texte](url) → <a>
+  text = text.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>'
+  );
+  
+  // URLs brutes en liens
+  text = text.replace(
+    /(?<!href=["'])(?<!src=["'])(https?:\/\/[^\s<]+[^<.,:;"'\]\s])/gi,
+    '<a href="$1" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>'
+  );
+  
+  // Line breaks
+  text = text.replace(/\n/g, '<br>');
+  
+  return text;
+}
+
     // Session ID generation and retrieval
     function generateSessionId() {
       const storageKey = 'widget_session_' + config._id;
@@ -763,7 +828,7 @@ html, body {
         messageEl.innerHTML = 
           '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
           '<div>' +
-            '<div class="message-bubble bot">' + text + '</div>' +
+            '<div class="message-bubble bot">' + formatMessageContent(text) + '</div>' +
             '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
           '</div>';
       } else {
