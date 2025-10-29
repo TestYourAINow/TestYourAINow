@@ -39,17 +39,7 @@ interface Props {
 
 export default function SharedDemoClient({ demo, demoId, demoToken }: Props) {
   // ========== ÉTATS POUR LE CHAT ==========
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (demo.showWelcome && demo.welcomeMessage) {
-      return [{
-        id: 'welcome',
-        text: demo.welcomeMessage,
-        isBot: true,
-        timestamp: new Date()
-      }];
-    }
-    return [];
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -180,10 +170,27 @@ export default function SharedDemoClient({ demo, demoId, demoToken }: Props) {
   };
 
   // 🎭 Toggle chat
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
-    setShowPopupBubble(false);
-  };
+const toggleChat = () => {
+  const wasOpen = isOpen;
+  setIsOpen(!isOpen);
+  setShowPopupBubble(false);
+  
+  // Animation de typing au premier ouverture
+  if (!wasOpen && messages.length === 0 && demo.showWelcome && demo.welcomeMessage) {
+    setTimeout(() => {
+      setIsTyping(true);
+      setTimeout(() => {
+        setIsTyping(false);
+        setMessages([{
+          id: 'welcome',
+          text: demo.welcomeMessage,
+          isBot: true,
+          timestamp: new Date()
+        }]);
+      }, 1500);
+    }, 400);
+  }
+};
 
   // 📊 Calculs stats
   const usagePercentage = (usedCount / demo.usageLimit) * 100;
