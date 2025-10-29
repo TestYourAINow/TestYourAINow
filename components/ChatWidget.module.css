@@ -419,22 +419,24 @@
   text-decoration-thickness: 2px;
 }
 
+/* 🔵 BOT LINKS - TOUJOURS BLEU (light mode) */
 .messageBubble.bot :global(.chat-link) {
-  color: var(--primary-color);
+  color: #60a5fa; /* Bleu clair fixe */
   font-weight: 500;
 }
 
 .messageBubble.bot :global(.chat-link):hover {
+  color: #93c5fd; /* Bleu plus clair au hover */
   text-decoration-thickness: 2px;
-  opacity: 0.8;
 }
 
+/* 🔵 BOT LINKS - TOUJOURS BLEU (dark mode) */
 .chatMessages.dark .messageBubble.bot :global(.chat-link) {
-  color: #60a5fa;
+  color: #60a5fa; /* Même bleu en dark */
 }
 
 .chatMessages.dark .messageBubble.bot :global(.chat-link):hover {
-  color: #93c5fd;
+  color: #93c5fd; /* Même hover en dark */
 }
 
 .hidden { display: none !important; }

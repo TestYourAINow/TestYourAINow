@@ -570,6 +570,7 @@ html, body {
   }
 }
 
+/* 🔗 Liens cliquables */
 .message-bubble .chat-link {
   color: inherit;
   text-decoration: underline;
@@ -592,16 +593,18 @@ html, body {
   text-decoration-thickness: 2px;
 }
 
+/* 🔵 BOT LINKS - TOUJOURS BLEU */
 .message-bubble.bot .chat-link {
-  color: var(--primary-color);
+  color: #60a5fa;
   font-weight: 500;
 }
 
 .message-bubble.bot .chat-link:hover {
+  color: #93c5fd;
   text-decoration-thickness: 2px;
-  opacity: 0.8;
 }
 
+/* 🔵 DARK MODE - MÊME BLEU */
 .chat-messages.dark .message-bubble.bot .chat-link {
   color: #60a5fa;
 }
