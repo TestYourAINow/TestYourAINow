@@ -1,3 +1,5 @@
+// components\DeploymentModal.tsx
+
 import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { X, Copy, Check, Code, ExternalLink, Rocket, Zap, Shield } from 'lucide-react';
