@@ -1,3 +1,5 @@
+/* components\ChatWidget.module.css */
+
 /* 🎯 STYLES EXACTS DE route.ts - Version CSS Module */
 
 /* STYLES DE BASE - DESKTOP ET MOBILE */
@@ -392,6 +394,49 @@
 .chatSendBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 🔗 Styles pour les liens cliquables dans les messages */
+.messageBubble :global(.chat-link) {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  word-break: break-word;
+}
+
+.messageBubble.user :global(.chat-link) {
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration-color: rgba(255, 255, 255, 0.6);
+}
+
+.messageBubble.user :global(.chat-link):hover {
+  color: white;
+  text-decoration-color: white;
+  text-decoration-thickness: 2px;
+}
+
+/* 🔵 BOT LINKS - TOUJOURS BLEU (light mode) */
+.messageBubble.bot :global(.chat-link) {
+  color: #60a5fa; /* Bleu clair fixe */
+  font-weight: 500;
+}
+
+.messageBubble.bot :global(.chat-link):hover {
+  color: #93c5fd; /* Bleu plus clair au hover */
+  text-decoration-thickness: 2px;
+}
+
+/* 🔵 BOT LINKS - TOUJOURS BLEU (dark mode) */
+.chatMessages.dark .messageBubble.bot :global(.chat-link) {
+  color: #60a5fa; /* Même bleu en dark */
+}
+
+.chatMessages.dark .messageBubble.bot :global(.chat-link):hover {
+  color: #93c5fd; /* Même hover en dark */
 }
 
 .hidden { display: none !important; }
