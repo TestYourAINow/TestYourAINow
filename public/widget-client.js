@@ -215,65 +215,61 @@ window.AIChatWidget = {
 
   // Display chat launcher button with optimized dimensions
   showButton: function() {
-  if (!this.iframe) return;
-  
-  const buttonSize = 64;
-  const shadowMargin = 15;
-  const hoverMargin = 8;
-  
-  // Optimized calculations for popup with 55 character support
-  const popupMinWidth = 55;
-  const popupMaxWidth = 200;
-  const popupHeight = 55;
-  const popupMarginTop = popupHeight + 32;
-  const popupMarginLeft = Math.max(60, popupMaxWidth - buttonSize);
-  
-  const iframeWidth = Math.max(
-    buttonSize + (shadowMargin * 2) + hoverMargin,
-    popupMaxWidth + 24
-  );
-  
-  const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
-  
-  if (this.isMobile) {
-    this.iframe.style.cssText = `
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      width: ${iframeWidth}px;
-      height: ${iframeHeight}px;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;  /* ✅ ACTIVER LES CLICS */
-      display: block;
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-    `;
-  } else {
-    this.iframe.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: ${iframeWidth}px;
-      height: ${iframeHeight}px;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;  /* ✅ ACTIVER LES CLICS */
-      display: block;
-    `;
-  }
-  
-  // ✅ FORCER L'AFFICHAGE DU POPUP DANS L'IFRAME
-  if (this.iframe.contentWindow) {
-    this.iframe.contentWindow.postMessage({ type: 'SHOW_POPUP_IF_ENABLED' }, '*');
-  }
-},
+    if (!this.iframe) return;
+    
+    const buttonSize = 64;
+    const shadowMargin = 15;
+    const hoverMargin = 8;
+    
+    // Optimized calculations for popup with 55 character support
+    const popupMinWidth = 55;
+    const popupMaxWidth = 200; // Matches CSS specifications
+    const popupHeight = 55; // Estimated for 55 characters across ~2 lines
+    const popupMarginTop = popupHeight + 32; // popup height + margin
+    const popupMarginLeft = Math.max(60, popupMaxWidth - buttonSize);
+    
+    // Optimized iframe dimensions
+    const iframeWidth = Math.max(
+      buttonSize + (shadowMargin * 2) + hoverMargin, // Minimum for button
+      popupMaxWidth + 24 // Maximum for popup + margins
+    );
+    
+    const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
+    
+    if (this.isMobile) {
+      this.iframe.style.cssText = `
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        width: ${iframeWidth}px;
+        height: ${iframeHeight}px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      `;
+    } else {
+      this.iframe.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: ${iframeWidth}px;
+        height: ${iframeHeight}px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+      `;
+    }
+  },
 
   // Widget open state handler
   handleWidgetOpen: function(data) {

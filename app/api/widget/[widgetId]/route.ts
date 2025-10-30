@@ -92,7 +92,6 @@ html, body {
   bottom: 100%;
   right: 0;
   margin-bottom: 16px;
-  z-index: 10;
   /* Consistent dimensions with preview */
   min-width: 55px;
   max-width: min(200px, calc(100vw - 120px));
@@ -1140,28 +1139,22 @@ function formatMessageContent(text) {
     });
     
     // Initialization - Generate session ID on load
-    // ✅ CORRECTION DU TIMING DU POPUP
-window.addEventListener('DOMContentLoaded', function() {
-  isMobile = detectMobile();
-  currentSessionId = generateSessionId();
-  const loaded = loadConversation();
-  
-  if (isMobile && input) {
-    input.style.fontSize = '16px';
-    input.style.minHeight = '44px';
-  }
-  
-  // ✅ Afficher le popup SEULEMENT si pas déjà chargé ouvert
-  if (config.showPopup && config.popupMessage && popup && !loaded) {
-    setTimeout(() => {
-      if (!isOpen) {  // Double vérification
-        popup.classList.remove('hidden');
+    window.addEventListener('DOMContentLoaded', function() {
+      isMobile = detectMobile();
+      
+      // Generate/retrieve session ID
+      currentSessionId = generateSessionId();
+      
+      // Load existing conversation
+      const loaded = loadConversation();
+      
+      if (isMobile && input) {
+        input.style.fontSize = '16px';
+        input.style.minHeight = '44px';
       }
-    }, (config.popupDelay || 3) * 1000);
-  }
-  
-  console.log('Widget initialized with session ID:', currentSessionId);
-});
+      
+      console.log('Widget initialized with session ID:', currentSessionId);
+    });
     
     if (config.showPopup && config.popupMessage && popup) {
       setTimeout(() => {
@@ -1181,17 +1174,6 @@ window.addEventListener('DOMContentLoaded', function() {
     }, '*');
     
     console.log('Widget loaded successfully - Mobile:', isMobile, '- Session ID:', currentSessionId);
-    // Écouter les messages du parent
-window.addEventListener('message', (event) => {
-  if (event.data.type === 'SHOW_POPUP_IF_ENABLED') {
-    // Afficher le popup si configuré ET si le chat n'est pas ouvert
-    if (config.showPopup && config.popupMessage && popup && !isOpen) {
-      setTimeout(() => {
-        popup.classList.remove('hidden');
-      }, (config.popupDelay || 3) * 1000);
-    }
-  }
-});
   </script>
 </body>
 </html>`;
