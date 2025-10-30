@@ -1,3 +1,4 @@
+// public\widget-client.js
 // Enterprise Chat Widget Client - Mobile Optimized
 // Professional-grade widget integration solution
 

@@ -3,7 +3,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, RotateCcw, X, Send } from 'lucide-react';
 import styles from './ChatWidget.module.css';
 import { formatMessageContent } from '@/lib/formatMessage';
 
@@ -494,7 +493,9 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
           onClick={toggleChat}
           aria-label="Open chat"
         >
-          <MessageCircle size={24} color="white" />
+           <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+            <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
+          </svg>
         </button>
       )}
 
@@ -536,7 +537,10 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                 title="New conversation"
                 aria-label="New conversation"
               >
-                <RotateCcw size={18} />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
               </button>
               <button
                 className={styles.chatActionBtn}
@@ -544,7 +548,10 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                 title="Close"
                 aria-label="Close chat"
               >
-                <X size={18} />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
               </button>
             </div>
           </div>
@@ -645,7 +652,9 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                   height: isMobile ? '44px' : '40px'
                 }}
               >
-                <Send size={18} />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2.01 21L23 12 2.01 3 2 10L17 12 2 14Z"/>
+                </svg>
               </button>
             </div>
           </div>
