@@ -1,4 +1,4 @@
-// components\ChatWidget.tsx
+// components\ChatWidget.tsx 
 
 'use client';
 
@@ -140,6 +140,21 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
       }]);
     }
   }, []);
+
+   useEffect(() => {
+    if (isPreview && messages.length <= 1) {
+      if (config.showWelcomeMessage && config.welcomeMessage) {
+        setMessages([{
+          id: 'welcome',
+          text: config.welcomeMessage,
+          isBot: true,
+          timestamp: new Date()
+        }]);
+      } else {
+        setMessages([]);
+      }
+    }
+  }, [config.welcomeMessage, config.showWelcomeMessage, isPreview]);
 
   // Popup behavior management
   useEffect(() => {

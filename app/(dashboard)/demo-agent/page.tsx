@@ -1,3 +1,5 @@
+// app\(dashboard)\demo-agent\page.tsx
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
