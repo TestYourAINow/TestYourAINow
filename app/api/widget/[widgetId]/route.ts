@@ -708,11 +708,19 @@ function formatMessageContent(text) {
     '<a href="$2" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>'
   );
   
-  // URLs brutes en liens
-  text = text.replace(
-    /(?<!href=["'])(?<!src=["'])(https?:\/\/[^\s<]+[^<.,:;"'\]\s])/gi,
-    '<a href="$1" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>'
-  );
+  // URLs brutes en liens (version compatible)
+  var parts = text.split(/(<a[^>]*>.*?<\/a>)/g);
+  
+  text = parts.map(function(part) {
+    if (part.startsWith('<a')) {
+      return part;
+    }
+    
+    return part.replace(
+      /(https?:\/\/[^\s<]+[^<.,:;"'\]\s])/gi,
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>'
+    );
+  }).join('');
   
   // Line breaks
   text = text.replace(/\n/g, '<br>');
