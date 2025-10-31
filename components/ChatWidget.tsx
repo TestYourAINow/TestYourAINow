@@ -580,11 +580,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                   )}
                   <div className={styles.messageContent}>
                     <div className={`${styles.messageBubble} ${message.isBot ? styles.bot : styles.user}`}>
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: formatMessageContent(message.text)
-                        }}
-                      />
+                      {message.text}
                     </div>
                     <div className={styles.messageTimestamp}>
                       {new Date(message.timestamp).toLocaleTimeString([], {
