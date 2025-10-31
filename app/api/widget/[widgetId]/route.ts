@@ -1,4 +1,4 @@
-// app\api\widget\[widgetId]\route.ts
+// app/api/widget/[widgetId]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
@@ -92,12 +92,10 @@ html, body {
   bottom: 100%;
   right: 0;
   margin-bottom: 16px;
-  /* Consistent dimensions with preview */
   min-width: 55px;
   max-width: min(200px, calc(100vw - 120px));
   width: max-content;
   padding: 12px 16px;
-  /* Modern unified styling */
   border-radius: 20px;
   font-size: 14px;
   font-weight: 500;
@@ -105,16 +103,13 @@ html, body {
   line-height: 1.3;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  /* Gradient with border */
   background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 85%, #06b6d4));
   border: 2px solid rgba(255, 255, 255, 0.15);
-  /* Modern shadow */
   box-shadow: 
     0 4px 12px rgba(0, 0, 0, 0.15),
     0 0 0 1px rgba(255, 255, 255, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  /* Animation */
   animation: slideUpBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -135,11 +130,10 @@ html, body {
   position: absolute;
   bottom: 16px;
   right: 16px;
-  /* Standard desktop dimensions - not fullscreen */
-  width: 380px;  /* Fixed width for desktop */
-  height: 600px; /* Fixed height for desktop */
-  max-width: calc(100vw - 40px); /* Safety for small screens */
-  max-height: calc(100vh - 40px); /* Safety for small screens */
+  width: 380px;
+  height: 600px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
   border-radius: 20px;
   box-shadow: 
   0 4px 16px rgba(0, 0, 0, 0.15),
@@ -687,74 +681,81 @@ html, body {
   </div>
   
   <script>
+    // 🔍 PREMIER LOG - Si tu ne vois pas ça, le script ne se charge PAS
+    console.log('🚀 [WIDGET-IFRAME] Script started loading...');
+    
     // Global variables
     let isOpen = false;
     let isTyping = false;
     let messages = [];
     let isMobile = false;
-    let currentSessionId = null; // Persistent session ID
+    let currentSessionId = null;
     
     // Configuration
-    const config = ${JSON.stringify(config)};
+    console.log('📝 [WIDGET-IFRAME] Loading config...');
+    const config = ${JSON.stringify(config).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/\//g, '\\/')};
+    console.log('✅ [WIDGET-IFRAME] Config loaded:', config._id);
     
-// Ajoutez cette fonction au début du script, après les variables globales
-
 function formatMessageContent(text) {
   if (!text) return '';
   
   // Markdown links: [texte](url) → <a>
+  // Construction dynamique de la regex pour éviter les problèmes d'échappement
+  const markdownLinkRegex = new RegExp('\\\\[([^\\\\]]+)\\\\]\\\\(([^)]+)\\\\)', 'g');
   text = text.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
+    markdownLinkRegex,
     '<a href="$2" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>'
   );
   
-  // URLs brutes en liens
+  // URLs brutes en liens (version simplifiée sans lookbehind qui pose problème)
   text = text.replace(
-    /(?<!href=["'])(?<!src=["'])(https?:\/\/[^\s<]+[^<.,:;"'\]\s])/gi,
-    '<a href="$1" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>'
+    /(https?:\\/\\/[^\\s<>"']+)/gi,
+    function(match, url) {
+      // Vérifier que ce n'est pas déjà dans un attribut href
+      if (text.indexOf('href="' + url) === -1 && text.indexOf("href='" + url) === -1) {
+        return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" class="chat-link">' + url + '</a>';
+      }
+      return match;
+    }
   );
   
   // Line breaks
-  text = text.replace(/\n/g, '<br>');
+  text = text.replace(/\\n/g, '<br>');
   
   return text;
 }
 
-    // Session ID generation and retrieval
+    // Session ID generation
     function generateSessionId() {
       const storageKey = 'widget_session_' + config._id;
       
-      // Try to retrieve from localStorage
-      let sessionId = localStorage.getItem(storageKey);
-      
-      if (!sessionId) {
-        // Generate new session ID
-        const timestamp = Date.now();
-        const randomString = Math.random().toString(36).substr(2, 9);
-        sessionId = 'session_' + timestamp + '_' + randomString;
+      try {
+        let sessionId = localStorage.getItem(storageKey);
         
-        // Save to localStorage
-        try {
+        if (!sessionId) {
+          const timestamp = Date.now();
+          const randomString = Math.random().toString(36).substr(2, 9);
+          sessionId = 'session_' + timestamp + '_' + randomString;
+          
           localStorage.setItem(storageKey, sessionId);
-          console.log('New session ID generated:', sessionId);
-        } catch (error) {
-          console.warn('Cannot save session ID to localStorage');
+          console.log('✅ [WIDGET] New session ID generated:', sessionId);
+        } else {
+          console.log('✅ [WIDGET] Existing session ID loaded:', sessionId);
         }
-      } else {
-        console.log('Existing session ID loaded:', sessionId);
+        
+        return sessionId;
+      } catch (error) {
+        console.warn('⚠️ [WIDGET] localStorage unavailable, using fallback');
+        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       }
-      
-      return sessionId;
     }
     
-    // Enhanced mobile detection
     function detectMobile() {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
              (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
              window.innerWidth <= 768;
     }
     
-    // Conversation persistence - modified to include session ID
     const STORAGE_KEY = 'chatbot_conversation_' + config._id;
     
     function saveConversation() {
@@ -763,7 +764,7 @@ function formatMessageContent(text) {
           messages: messages,
           timestamp: Date.now(),
           isOpen: isOpen,
-          sessionId: currentSessionId // Include session ID
+          sessionId: currentSessionId
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationData));
       } catch (error) {
@@ -777,11 +778,10 @@ function formatMessageContent(text) {
         if (saved) {
           const data = JSON.parse(saved);
           
-          const maxAge = 60 * 60 * 1000; // 1 hour
+          const maxAge = 60 * 60 * 1000;
           if (Date.now() - data.timestamp < maxAge) {
             messages = data.messages || [];
             
-            // Retrieve saved session ID if available
             if (data.sessionId) {
               currentSessionId = data.sessionId;
               console.log('Session ID loaded from conversation:', currentSessionId);
@@ -801,7 +801,6 @@ function formatMessageContent(text) {
                 chatWindow?.classList.remove('hidden');
                 popup?.classList.add('hidden');
                 
-                // Mobile: Apply fullscreen mode
                 if (isMobile) {
                   chatWidget?.classList.add('mobile-fullscreen');
                 }
@@ -845,7 +844,6 @@ function formatMessageContent(text) {
       messagesContainer?.appendChild(messageEl);
     }
     
-    // DOM elements
     const popup = document.getElementById('chatPopup');
     const button = document.getElementById('chatButton');
     const chatWindow = document.getElementById('chatWindow');
@@ -856,13 +854,11 @@ function formatMessageContent(text) {
     const resetBtn = document.getElementById('resetBtn');
     const closeBtn = document.getElementById('closeBtn');
     
-    // Event listeners
     button?.addEventListener('click', toggleChat);
     closeBtn?.addEventListener('click', closeChat);
     resetBtn?.addEventListener('click', resetChat);
     sendBtn?.addEventListener('click', sendMessage);
     
-    // Mobile-optimized input handling
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
       
@@ -872,7 +868,6 @@ function formatMessageContent(text) {
       this.style.overflowY = newHeight >= 120 ? 'auto' : 'hidden';
     });
     
-    // Mobile: Virtual keyboard management
     input?.addEventListener('focus', function() {
       if (isMobile) {
         setTimeout(() => {
@@ -887,22 +882,17 @@ function formatMessageContent(text) {
     
     input?.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
-        // Mobile: Enter = always line break
         if (isMobile) {
-          // Do nothing, let default behavior (line break)
           return;
         }
         
-        // Desktop: Enter alone = send, Shift+Enter = line break
         if (!e.shiftKey) {
           e.preventDefault();
           sendMessage();
         }
-        // If Shift+Enter, do nothing = default line break
       }
     });
     
-    // Mobile: Viewport resize handling for virtual keyboard
     if (isMobile) {
       let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       
@@ -933,7 +923,6 @@ function formatMessageContent(text) {
       }
     }
     
-    // Mobile-modified functions
     function toggleChat() {
       isOpen = !isOpen;
       if (isOpen) {
@@ -1006,7 +995,6 @@ function formatMessageContent(text) {
       messages = [];
       localStorage.removeItem(STORAGE_KEY);
       
-      // Generate new session ID on reset
       currentSessionId = generateSessionId();
       console.log('Chat reset, new session ID:', currentSessionId);
       
@@ -1019,7 +1007,6 @@ function formatMessageContent(text) {
       const text = input?.value?.trim();
       if (!text) return;
       
-      // Ensure we have a session ID before sending
       if (!currentSessionId) {
         currentSessionId = generateSessionId();
       }
@@ -1047,7 +1034,7 @@ function formatMessageContent(text) {
           },
           body: JSON.stringify({
             message: text,
-            sessionId: currentSessionId, // Pass session ID
+            sessionId: currentSessionId,
             previousMessages: messages.map(m => ({ 
               role: m.isBot ? 'assistant' : 'user', 
               content: m.text 
@@ -1138,14 +1125,9 @@ function formatMessageContent(text) {
       }
     });
     
-    // Initialization - Generate session ID on load
     window.addEventListener('DOMContentLoaded', function() {
       isMobile = detectMobile();
-      
-      // Generate/retrieve session ID
       currentSessionId = generateSessionId();
-      
-      // Load existing conversation
       const loaded = loadConversation();
       
       if (isMobile && input) {
@@ -1153,12 +1135,12 @@ function formatMessageContent(text) {
         input.style.minHeight = '44px';
       }
       
-      console.log('Widget initialized with session ID:', currentSessionId);
+      console.log('✅ [WIDGET] Initialized - sessionId:', currentSessionId);
     });
     
     if (config.showPopup && config.popupMessage && popup) {
       setTimeout(() => {
-        if (!isOpen) { // Removed mobile condition that was hiding popup
+        if (!isOpen) {
           popup.classList.remove('hidden');
         }
       }, (config.popupDelay || 3) * 1000);
@@ -1173,7 +1155,7 @@ function formatMessageContent(text) {
       } 
     }, '*');
     
-    console.log('Widget loaded successfully - Mobile:', isMobile, '- Session ID:', currentSessionId);
+    console.log('✅ [WIDGET] Widget loaded - Mobile:', isMobile, '- Session:', currentSessionId);
   </script>
 </body>
 </html>`;
