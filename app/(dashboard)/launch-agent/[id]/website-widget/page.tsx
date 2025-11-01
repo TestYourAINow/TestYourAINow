@@ -12,6 +12,8 @@ import {
 import { DeploymentModal, DeployButton } from '@/components/DeploymentModal';
 import ChatWidget from '@/components/ChatWidget';
 import { DeleteConversationModal } from '@/components/DeleteConversationModal';
+import { ShareAccessModal } from '@/components/ShareAccessModal';
+import { ShareAccessButton } from '@/components/ShareAccessButton';
 
 // Types - LOGIQUE IDENTIQUE + NOUVEAUX TYPES CONVERSATIONS
 interface ChatbotConfig {
@@ -165,6 +167,9 @@ const ChatbotBuilder: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // 🆕 STATES POUR LE MODAL DE PARTAGE
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -1042,6 +1047,18 @@ if (diffHours < 48) return 'Yesterday';
               </div>
             </div>
 
+            {/* 🆕 Share Access Button */}
+            {connection?.integrationType === 'website-widget' && (
+              <div className="border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm overflow-hidden">
+                <div className="lg:p-4 p-3">
+                  <ShareAccessButton
+                    onClick={() => setShowShareModal(true)}
+                    disabled={!savedWidgetId}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Deploy Widget Button */}
             <div className="border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm overflow-hidden">
               <div className="lg:p-4 p-3">
@@ -1442,6 +1459,14 @@ if (diffHours < 48) return 'Yesterday';
         isDeleting={isDeleting}
         title="Delete Conversation"
         message="Are you sure you want to delete this conversation? This action cannot be undone and will permanently remove all messages from the database."
+      />
+
+      {/* 🆕 Share Access Modal */}
+      <ShareAccessModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        connectionId={connectionId}
+        connectionName={name || 'AI Assistant'}
       />
 
 
