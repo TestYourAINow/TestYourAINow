@@ -472,7 +472,28 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
 
   // MAIN INTERFACE
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+  <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+    
+    {/* 🆕 BULLES FLOTTANTES - AJOUTE ICI */}
+    <div className="fixed inset-0 pointer-events-none z-0">
+      {/* Grille animée subtile */}
+      <div
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px',
+          animation: 'gridFloat 20s ease-in-out infinite'
+        }}
+      />
+
+      {/* Orbes colorés flottants */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+    </div>
       
       {/* Mobile Preview Widget */}
       {isMobileView && activeTab === 'preview' && connection.aiBuildId && (
@@ -1416,6 +1437,14 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
             linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
           background-size: 24px 24px;
         }
+
+        /* 🆕 ANIMATION GRILLE */
+  @keyframes gridFloat {
+    0%, 100% { transform: translateY(0px) translateX(0px); }
+    25% { transform: translateY(-10px) translateX(5px); }
+    50% { transform: translateY(0px) translateX(-5px); }
+    75% { transform: translateY(5px) translateX(0px); }
+  }
 
          /* 🔗 STYLES POUR LES LIENS DANS LES CONVERSATIONS */
   .conversation-message :global(a) {
