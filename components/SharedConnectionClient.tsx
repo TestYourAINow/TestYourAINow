@@ -12,6 +12,7 @@ import {
   Save, Check
 } from 'lucide-react';
 import { DeleteConversationModal } from '@/components/DeleteConversationModal';
+import { formatMessageContent } from '@/lib/formatMessage';
 
 interface SharedConnectionClientProps {
   connection: {
@@ -451,7 +452,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-gray-400">Loading...</p>
         </div>
       </div>
@@ -471,28 +472,28 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
 
   // MAIN INTERFACE
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 bg-grid-pattern">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
       
       {/* Mobile Preview Widget */}
       {isMobileView && activeTab === 'preview' && connection.aiBuildId && (
         <ChatWidget config={config} isPreview={true} />
       )}
 
-      {/* TOPBAR - Style ClientLayout */}
+      {/* TOPBAR - Style identique à website-widget */}
       <header className="h-16 bg-gray-900/80 backdrop-blur-xl border-b border-gray-700/50 flex items-center px-6 sticky top-0 z-20 shadow-lg">
         <div className="flex items-center gap-4 flex-1">
           {/* Badge Shared Access */}
-          <div className="bg-cyan-500/20 border border-cyan-500/40 rounded-lg px-3 py-1.5 backdrop-blur-sm">
+          <div className="bg-blue-500/20 border border-blue-500/40 rounded-lg px-3 py-1.5 backdrop-blur-sm">
             <div className="flex items-center gap-2">
-              <Shield className="text-cyan-400" size={14} />
-              <span className="text-xs font-medium text-cyan-300">
+              <Shield className="text-blue-400" size={14} />
+              <span className="text-xs font-medium text-blue-300">
                 Shared {isReadOnly && '• Read-only'}
               </span>
             </div>
           </div>
 
           {/* Vertical Bar */}
-          <div className="w-1 h-8 bg-gradient-to-b from-cyan-400 via-blue-400 to-cyan-600 rounded-full shadow-lg shadow-cyan-400/30"></div>
+          <div className="w-1 h-8 bg-gradient-to-b from-blue-400 via-cyan-400 to-blue-600 rounded-full shadow-lg shadow-blue-400/30"></div>
 
           {/* Title */}
           <div className="flex-1">
@@ -512,7 +513,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
             onClick={() => setActiveTabFunc('preview')}
             className={`lg:hidden px-3 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
               activeTab === 'preview' 
-                ? 'bg-cyan-600 text-white' 
+                ? 'bg-blue-600 text-white' 
                 : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
             }`}
           >
@@ -525,7 +526,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
             onClick={() => setActiveTabFunc('configuration')}
             className={`px-3 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
               activeTab === 'configuration' 
-                ? 'bg-cyan-600 text-white' 
+                ? 'bg-blue-600 text-white' 
                 : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
             }`}
           >
@@ -538,7 +539,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
             onClick={() => setActiveTabFunc('conversations')}
             className={`px-3 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${
               activeTab === 'conversations' 
-                ? 'bg-cyan-600 text-white' 
+                ? 'bg-blue-600 text-white' 
                 : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
             }`}
           >
@@ -602,9 +603,9 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
         <div className={`lg:w-96 w-full ${activeTab === 'configuration' ? 'flex flex-col h-full' : 'hidden'} bg-gray-900/95 backdrop-blur-xl border-l border-gray-700/50 text-white`}>
           
           {/* Header Configuration Panel */}
-          <div className="lg:p-6 p-3 border-b border-gray-700/50 bg-gradient-to-r from-cyan-600/10 to-blue-600/10 flex-shrink-0">
+          <div className="lg:p-6 p-3 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 flex-shrink-0">
             <div className="flex items-center lg:gap-3 gap-2 mb-2">
-              <Settings className="text-cyan-400" size={24} />
+              <Settings className="text-blue-400" size={24} />
               <div>
                 <h2 className="lg:text-xl text-lg font-bold text-white">Configuration</h2>
                 {isReadOnly ? (
@@ -631,7 +632,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
             {/* General Configuration */}
             <CollapsibleSection
               title="General Configuration"
-              icon={<Settings className="text-cyan-400" size={20} />}
+              icon={<Settings className="text-blue-400" size={20} />}
               defaultOpen={true}
             >
               <div className="lg:space-y-4 space-y-3">
@@ -643,7 +644,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                     onChange={(e) => updateSettings('chatTitle', e.target.value)}
                     disabled={isReadOnly}
                     placeholder="AI Assistant"
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -652,7 +653,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
             {/* Appearance */}
             <CollapsibleSection
               title="Appearance"
-              icon={<Palette className="text-cyan-400" size={20} />}
+              icon={<Palette className="text-blue-400" size={20} />}
               defaultOpen={false}
             >
               <div className="lg:space-y-6 space-y-4">
@@ -668,7 +669,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                         disabled={isReadOnly}
                         className={`w-full lg:h-12 h-10 rounded-xl border-2 transition-all hover:scale-105 relative ${
                           (settings.primaryColor || '#3b82f6') === color
-                            ? 'border-white ring-2 ring-cyan-500/50 shadow-lg'
+                            ? 'border-white ring-2 ring-blue-500/50 shadow-lg'
                             : 'border-gray-600/50 hover:border-gray-500/50'
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                         style={{ backgroundColor: color }}
@@ -694,7 +695,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                       value={settings.primaryColor || '#3b82f6'}
                       onChange={(e) => updateSettings('primaryColor', e.target.value)}
                       disabled={isReadOnly}
-                      className="flex-1 lg:px-4 lg:py-3.5 px-3 py-3 lg:text-sm text-xs bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 lg:px-4 lg:py-3.5 px-3 py-3 lg:text-sm text-xs bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="#3b82f6"
                     />
                   </div>
@@ -709,7 +710,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                       disabled={isReadOnly}
                       className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${
                         config.theme === 'light'
-                          ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white border border-cyan-500/50 shadow-lg shadow-cyan-600/20'
+                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
                           : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
@@ -721,7 +722,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                       disabled={isReadOnly}
                       className={`flex items-center lg:gap-2 gap-1 lg:px-4 lg:py-3.5 px-3 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm lg:text-base text-sm ${
                         config.theme === 'dark'
-                          ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white border border-cyan-500/50 shadow-lg shadow-cyan-600/20'
+                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border border-blue-500/50 shadow-lg shadow-blue-600/20'
                           : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/50'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
@@ -736,7 +737,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                   <label className="block text-sm font-medium text-gray-300 lg:mb-3 mb-2">Bot Avatar</label>
                   {!settings.avatar || settings.avatar === '/Default Avatar.png' ? (
                     <div
-                      className={`border-2 border-dashed border-gray-600/50 rounded-xl lg:p-8 p-6 text-center hover:border-cyan-400/50 transition-all bg-gray-900/30 backdrop-blur-sm group ${
+                      className={`border-2 border-dashed border-gray-600/50 rounded-xl lg:p-8 p-6 text-center hover:border-blue-400/50 transition-all bg-gray-900/30 backdrop-blur-sm group ${
                         isReadOnly ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
                       }`}
                       onDrop={(e) => {
@@ -831,7 +832,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
             {/* Messages */}
             <CollapsibleSection
               title="Messages"
-              icon={<MessageCircle className="text-cyan-400" size={20} />}
+              icon={<MessageCircle className="text-blue-400" size={20} />}
               defaultOpen={false}
             >
               <div className="lg:space-y-4 space-y-3">
@@ -844,7 +845,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                       checked={settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true}
                       onChange={(e) => updateSettings('showWelcomeMessage', e.target.checked)}
                       disabled={isReadOnly}
-                      className="w-4 h-4 text-cyan-600 bg-gray-800 border-gray-600 rounded focus:ring-cyan-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <input
@@ -853,7 +854,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                     onChange={(e) => updateSettings('welcomeMessage', e.target.value)}
                     disabled={isReadOnly}
                     placeholder="Hello! How can I help you today?"
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -865,7 +866,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                     onChange={(e) => updateSettings('subtitle', e.target.value)}
                     disabled={isReadOnly}
                     placeholder="Online"
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -877,7 +878,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                     onChange={(e) => updateSettings('placeholderText', e.target.value)}
                     disabled={isReadOnly}
                     placeholder="Type your message..."
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -887,7 +888,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
             {/* Client Message */}
             <CollapsibleSection
               title="Client Message"
-              icon={<Bot className="text-cyan-400" size={20} />}
+              icon={<Bot className="text-blue-400" size={20} />}
               defaultOpen={false}
             >
               <div className="lg:space-y-4 space-y-3">
@@ -898,7 +899,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                     checked={settings.showPopup !== undefined ? settings.showPopup : true}
                     onChange={(e) => updateSettings('showPopup', e.target.checked)}
                     disabled={isReadOnly}
-                    className="w-4 h-4 text-cyan-600 bg-gray-800 border-gray-600 rounded focus:ring-cyan-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="relative">
@@ -913,7 +914,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                     disabled={isReadOnly}
                     placeholder="Hi! Need help?"
                     maxLength={55}
-                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <div className="absolute right-3 bottom-2 text-xs text-gray-500 pointer-events-none">
                     {(settings.popupMessage || '').length}/55
@@ -946,7 +947,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                     disabled={isReadOnly}
                     min="0"
                     max="30"
-                    className="lg:w-32 w-24 lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 transition-all font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="lg:w-32 w-24 lg:px-4 lg:py-3.5 px-3 py-3 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium backdrop-blur-sm lg:text-base text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -1052,40 +1053,64 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                     )}
 
                     <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                      {conversationDetailsLoading ? (
-                        <div className="text-center text-gray-400 py-8">
-                          <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                          Loading messages...
-                        </div>
-                      ) : (
-                        selectedConversation.messages.map((message, index) => (
-                          <div
-                            key={index}
-                            className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
-                          >
-                            <div className={`max-w-xs px-3 py-2 rounded-xl ${
-                              message.role === 'user'
-                                ? 'bg-gray-800/50 text-white'
-                                : 'bg-cyan-600/20 text-cyan-200 border border-cyan-500/30'
-                            }`}>
-                              <p className="text-sm">{message.content}</p>
-                              <p className="text-xs mt-1 opacity-70">
-                                {formatTime(message.timestamp)}
-                              </p>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
+  {conversationDetailsLoading ? (
+    <div className="text-center text-gray-400 py-8">
+      <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+      Loading messages...
+    </div>
+  ) : (
+    selectedConversation.messages.map((message, index) => (
+      <div
+        key={index}
+        className={`flex items-start gap-2 ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
+      >
+        {/* Avatar User (gauche) */}
+        {message.role === 'user' && (
+          <div className="w-7 h-7 rounded-full bg-gray-700/50 flex items-center justify-center flex-shrink-0 mt-1">
+            <User size={14} className="text-gray-300" />
+          </div>
+        )}
+        
+        {/* Message Bubble */}
+        <div className={`max-w-[70%] px-3 py-2.5 rounded-2xl shadow-sm ${
+          message.role === 'user'
+            ? 'bg-gradient-to-br from-gray-700 to-gray-800 text-white border border-gray-600/50'
+            : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-blue-500/30'
+        }`}>
+          <div 
+            className="text-sm leading-relaxed conversation-message"
+            dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
+          />
+          <p className="text-xs mt-1.5 opacity-70">
+            {formatTime(message.timestamp)}
+          </p>
+        </div>
+        
+        {/* Avatar Bot (droite) */}
+        {message.role === 'assistant' && (
+          <img 
+            src={settings.avatar || '/Default Avatar.png'} 
+            alt="Bot" 
+            className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-1 border border-gray-600/30"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement;
+              target.src = '/Default Avatar.png';
+            }}
+          />
+        )}
+      </div>
+    ))
+  )}
+  <div ref={messagesEndRef} />
+</div>
                   </div>
                 </div>
               ) : (
                 <div className="h-full overflow-y-auto">
                   <div className="p-3 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-cyan-600/20 border border-cyan-500/40 rounded-lg flex items-center justify-center">
-                        <MessageCircle className="text-cyan-400" size={12} />
+                      <div className="w-6 h-6 bg-blue-600/20 border border-blue-500/40 rounded-lg flex items-center justify-center">
+                        <MessageCircle className="text-blue-400" size={12} />
                       </div>
                       <div>
                         <h2 className="font-bold text-white text-sm">Conversations</h2>
@@ -1095,7 +1120,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                     <button
                       onClick={fetchConversations}
                       disabled={conversationsLoading}
-                      className="w-6 h-6 bg-cyan-600/20 hover:bg-cyan-600/30 disabled:opacity-50 rounded-lg flex items-center justify-center text-cyan-400 transition-all"
+                      className="w-6 h-6 bg-blue-600/20 hover:bg-blue-600/30 disabled:opacity-50 rounded-lg flex items-center justify-center text-blue-400 transition-all"
                     >
                       <RefreshCw size={12} className={conversationsLoading ? 'animate-spin' : ''} />
                     </button>
@@ -1103,7 +1128,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
 
                   {conversationsLoading ? (
                     <div className="p-6 text-center text-gray-400">
-                      <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                      <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                       Loading conversations...
                     </div>
                   ) : conversations.length === 0 ? (
@@ -1167,8 +1192,8 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                 <div className="w-96 border-r border-gray-800 bg-gray-950 flex flex-col">
                   <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-cyan-600/20 border border-cyan-500/40 rounded-lg flex items-center justify-center">
-                        <MessageCircle className="text-cyan-400" size={16} />
+                      <div className="w-8 h-8 bg-blue-600/20 border border-blue-500/40 rounded-lg flex items-center justify-center">
+                        <MessageCircle className="text-blue-400" size={16} />
                       </div>
                       <div>
                         <h2 className="font-bold text-white">Conversations</h2>
@@ -1178,7 +1203,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                     <button
                       onClick={fetchConversations}
                       disabled={conversationsLoading}
-                      className="w-8 h-8 bg-cyan-600/20 hover:bg-cyan-600/30 disabled:opacity-50 rounded-lg flex items-center justify-center text-cyan-400 transition-all"
+                      className="w-8 h-8 bg-blue-600/20 hover:bg-blue-600/30 disabled:opacity-50 rounded-lg flex items-center justify-center text-blue-400 transition-all"
                     >
                       <RefreshCw size={14} className={conversationsLoading ? 'animate-spin' : ''} />
                     </button>
@@ -1187,7 +1212,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                   <div className="flex-1 overflow-y-auto">
                     {conversationsLoading ? (
                       <div className="p-8 text-center text-gray-400">
-                        <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                        <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                         Loading conversations...
                       </div>
                     ) : conversations.length === 0 ? (
@@ -1207,7 +1232,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                           onClick={() => fetchConversationDetails(conv.conversationId)}
                           className={`p-4 border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-all group ${
                             selectedConversation?.conversationId === conv.conversationId
-                              ? 'bg-cyan-900/20 border-cyan-500/30'
+                              ? 'bg-blue-900/20 border-blue-500/30'
                               : ''
                           }`}
                         >
@@ -1266,7 +1291,7 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                         <div className="flex gap-2">
                           <button
                             onClick={() => fetchConversationDetails(selectedConversation.conversationId)}
-                            className="w-8 h-8 bg-cyan-600/20 hover:bg-cyan-600/30 rounded-lg flex items-center justify-center text-cyan-400 transition-all"
+                            className="w-8 h-8 bg-blue-600/20 hover:bg-blue-600/30 rounded-lg flex items-center justify-center text-blue-400 transition-all"
                           >
                             <RefreshCw size={14} />
                           </button>
@@ -1294,33 +1319,57 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
                           </div>
                         )}
 
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                          {conversationDetailsLoading ? (
-                            <div className="text-center text-gray-400 py-8">
-                              <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                              Loading messages...
-                            </div>
-                          ) : (
-                            selectedConversation.messages.map((message, index) => (
-                              <div
-                                key={index}
-                                className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
-                              >
-                                <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${
-                                  message.role === 'user'
-                                    ? 'bg-gray-800/50 text-white'
-                                    : 'bg-cyan-600/20 text-cyan-200 border border-cyan-500/30'
-                                }`}>
-                                  <p className="text-sm">{message.content}</p>
-                                  <p className="text-xs mt-1 opacity-70">
-                                    {formatTime(message.timestamp)}
-                                  </p>
-                                </div>
-                              </div>
-                            ))
-                          )}
-                          <div ref={messagesEndRef} />
-                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  {conversationDetailsLoading ? (
+    <div className="text-center text-gray-400 py-8">
+      <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+      Loading messages...
+    </div>
+  ) : (
+    selectedConversation.messages.map((message, index) => (
+      <div
+        key={index}
+        className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
+      >
+        {/* Avatar User (gauche) */}
+        {message.role === 'user' && (
+          <div className="w-8 h-8 rounded-full bg-gray-700/50 flex items-center justify-center flex-shrink-0 mt-1">
+            <User size={16} className="text-gray-300" />
+          </div>
+        )}
+        
+        {/* Message Bubble */}
+        <div className={`max-w-md px-4 py-3 rounded-2xl shadow-md ${
+          message.role === 'user'
+            ? 'bg-gradient-to-br from-gray-700 to-gray-800 text-white border border-gray-600/50'
+            : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-blue-500/30'
+        }`}>
+          <div 
+            className="text-sm leading-relaxed conversation-message"
+            dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
+          />
+          <p className="text-xs mt-2 opacity-70">
+            {formatTime(message.timestamp)}
+          </p>
+        </div>
+        
+        {/* Avatar Bot (droite) */}
+        {message.role === 'assistant' && (
+          <img 
+            src={settings.avatar || '/Default Avatar.png'} 
+            alt="Bot" 
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1 border border-gray-600/30"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement;
+              target.src = '/Default Avatar.png';
+            }}
+          />
+        )}
+      </div>
+    ))
+  )}
+  <div ref={messagesEndRef} />
+</div>
                       </div>
                     </>
                   ) : (
@@ -1367,6 +1416,26 @@ const SharedConnectionClient: React.FC<SharedConnectionClientProps> = ({
             linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
           background-size: 24px 24px;
         }
+
+         /* 🔗 STYLES POUR LES LIENS DANS LES CONVERSATIONS */
+  .conversation-message :global(a) {
+    color: rgba(255, 255, 255, 0.95) !important;
+    text-decoration: underline !important;
+    text-decoration-color: rgba(255, 255, 255, 0.6) !important;
+    text-decoration-thickness: 1.5px !important;
+    text-underline-offset: 2px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    word-break: break-word !important;
+  }
+  
+  .conversation-message :global(a):hover {
+    color: white !important;
+    text-decoration-color: white !important;
+    text-decoration-thickness: 2px !important;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3) !important;
+  }
       `}</style>
     </div>
   );

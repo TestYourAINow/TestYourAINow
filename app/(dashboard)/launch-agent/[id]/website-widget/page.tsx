@@ -14,6 +14,7 @@ import ChatWidget from '@/components/ChatWidget';
 import { DeleteConversationModal } from '@/components/DeleteConversationModal';
 import { ShareAccessModal } from '@/components/ShareAccessModal';
 import { ShareAccessButton } from '@/components/ShareAccessButton';
+import { formatMessageContent } from '@/lib/formatMessage';
 
 // Types - LOGIQUE IDENTIQUE + NOUVEAUX TYPES CONVERSATIONS
 interface ChatbotConfig {
@@ -174,40 +175,40 @@ const ChatbotBuilder: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // 🆕 AJOUTER CES LIGNES
-const [isMobileView, setIsMobileView] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
 
-useEffect(() => {
-  const detectMobile = () => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-           (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
-           window.innerWidth <= 768;
-  };
+  useEffect(() => {
+    const detectMobile = () => {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
+        window.innerWidth <= 768;
+    };
 
-  const handleResize = () => {
+    const handleResize = () => {
+      setIsMobileView(detectMobile());
+    };
+
     setIsMobileView(detectMobile());
-  };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-  setIsMobileView(detectMobile());
-  window.addEventListener('resize', handleResize);
-  return () => window.removeEventListener('resize', handleResize);
-}, []);
-
-// Ajouter cette fonction après tes imports et avant le composant ChatbotBuilder
-const getNumericId = (userId: string) => {
-  const hash = userId.split('_').pop() || '';
-  let numeric = '';
-  for (let i = 0; i < Math.min(hash.length, 6); i++) {
-    const char = hash[i];
-    if (/[0-9]/.test(char)) {
-      // Garder les chiffres comme chiffres
-      numeric += char;
-    } else if (/[a-zA-Z]/.test(char)) {
-      // Convertir les lettres : a=1, b=2, c=3, etc.
-      numeric += (char.toLowerCase().charCodeAt(0) - 96).toString().slice(-1);
+  // Ajouter cette fonction après tes imports et avant le composant ChatbotBuilder
+  const getNumericId = (userId: string) => {
+    const hash = userId.split('_').pop() || '';
+    let numeric = '';
+    for (let i = 0; i < Math.min(hash.length, 6); i++) {
+      const char = hash[i];
+      if (/[0-9]/.test(char)) {
+        // Garder les chiffres comme chiffres
+        numeric += char;
+      } else if (/[a-zA-Z]/.test(char)) {
+        // Convertir les lettres : a=1, b=2, c=3, etc.
+        numeric += (char.toLowerCase().charCodeAt(0) - 96).toString().slice(-1);
+      }
     }
-  }
-  return numeric.substring(0, 6);
-};
+    return numeric.substring(0, 6);
+  };
 
   // Configuration pour le ChatWidget
   const config: ChatbotConfig = {
@@ -434,9 +435,9 @@ const getNumericId = (userId: string) => {
     const now = new Date();
     const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
 
-  if (diffHours < 1) return 'A few minutes ago';
-if (diffHours < 24) return `${diffHours}h ago`;
-if (diffHours < 48) return 'Yesterday';
+    if (diffHours < 1) return 'A few minutes ago';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffHours < 48) return 'Yesterday';
     return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   };
 
@@ -582,12 +583,12 @@ if (diffHours < 48) return 'Yesterday';
   const selectedAgentName = agents.find(a => a._id === selectedAgent)?.name;
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 bg-grid-pattern">
+    <div className="h-[calc(100vh-64px)] overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
 
       {/* 🆕 AJOUTER CETTE LIGNE */}
-{isMobileView && activeTab === 'preview' && selectedAgent && (
-  <ChatWidget config={widgetConfig} isPreview={true} />
-)}
+      {isMobileView && activeTab === 'preview' && selectedAgent && (
+        <ChatWidget config={widgetConfig} isPreview={true} />
+      )}
 
       {/* LAYOUT PRINCIPAL - Hauteurs responsives */}
       <div className="flex lg:h-full h-full lg:flex-row flex-col">
@@ -655,17 +656,17 @@ if (diffHours < 48) return 'Yesterday';
                 <span>Interactive Preview</span>
               </div>
 
-             {(!isMobileView || activeTab !== 'preview') && (
-  <div style={{
-    position: 'absolute',
-    top: '64px',
-    left: 0,
-    right: 0,
-    bottom: 0
-  }}>
-    <ChatWidget config={widgetConfig} isPreview={true} />
-  </div>
-)}
+              {(!isMobileView || activeTab !== 'preview') && (
+                <div style={{
+                  position: 'absolute',
+                  top: '64px',
+                  left: 0,
+                  right: 0,
+                  bottom: 0
+                }}>
+                  <ChatWidget config={widgetConfig} isPreview={true} />
+                </div>
+              )}
             </>
           )}
         </div>
@@ -1129,17 +1130,41 @@ if (diffHours < 48) return 'Yesterday';
                         selectedConversation.messages.map((message, index) => (
                           <div
                             key={index}
-                            className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
+                            className={`flex items-start gap-2 ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
                           >
-                            <div className={`max-w-xs px-3 py-2 rounded-xl ${message.role === 'user'
-                              ? 'bg-gray-800/50 text-white'
-                              : 'bg-blue-600/20 text-blue-200'
+                            {/* Avatar User (gauche) */}
+                            {message.role === 'user' && (
+                              <div className="w-7 h-7 rounded-full bg-gray-700/50 flex items-center justify-center flex-shrink-0 mt-1">
+                                <User size={14} className="text-gray-300" />
+                              </div>
+                            )}
+
+                            {/* Message Bubble */}
+                            <div className={`max-w-[70%] px-3 py-2.5 rounded-2xl shadow-sm ${message.role === 'user'
+                                ? 'bg-gradient-to-br from-gray-700 to-gray-800 text-white border border-gray-600/50'
+                                : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-blue-500/30'
                               }`}>
-                              <p className="text-sm">{message.content}</p>
-                              <p className="text-xs mt-1 opacity-70">
+                              <div
+                                className="text-sm leading-relaxed conversation-message"
+                                dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
+                              />
+                              <p className="text-xs mt-1.5 opacity-70">
                                 {formatTime(message.timestamp)}
                               </p>
                             </div>
+
+                            {/* Avatar Bot (droite) */}
+                            {message.role === 'assistant' && (
+                              <img
+                                src={settings.avatar || '/Default Avatar.png'}
+                                alt="Bot"
+                                className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-1 border border-gray-600/30"
+                                onError={(e) => {
+                                  const target = e.currentTarget as HTMLImageElement;
+                                  target.src = '/Default Avatar.png';
+                                }}
+                              />
+                            )}
                           </div>
                         ))
                       )}
@@ -1216,15 +1241,15 @@ if (diffHours < 48) return 'Yesterday';
                             </div>
                           </div>
                           {/* Delete button pour mobile */}
-<button
-  onClick={(e) => {
-    e.stopPropagation()
-    initiateDelete(conv.conversationId)
-  }}
-  className="w-6 h-6 bg-red-600/20 hover:bg-red-600/30 rounded flex items-center justify-center text-red-400 transition-all"
->
-  <Trash2 size={12} />
-</button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              initiateDelete(conv.conversationId)
+                            }}
+                            className="w-6 h-6 bg-red-600/20 hover:bg-red-600/30 rounded flex items-center justify-center text-red-400 transition-all"
+                          >
+                            <Trash2 size={12} />
+                          </button>
                         </div>
                       </div>
                     ))
@@ -1394,7 +1419,7 @@ if (diffHours < 48) return 'Yesterday';
                           )}
 
                           {/* Messages */}
-                          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                          <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {conversationDetailsLoading ? (
                               <div className="text-center text-gray-400 py-8">
                                 <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -1404,17 +1429,41 @@ if (diffHours < 48) return 'Yesterday';
                               selectedConversation.messages.map((message, index) => (
                                 <div
                                   key={index}
-                                  className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
+                                  className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}
                                 >
-                                  <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl ${message.role === 'user'
-                                    ? 'bg-gray-800/50 text-white'
-                                    : 'bg-blue-600/20 text-blue-200 border border-blue-500/30'
+                                  {/* Avatar User (gauche) */}
+                                  {message.role === 'user' && (
+                                    <div className="w-8 h-8 rounded-full bg-gray-700/50 flex items-center justify-center flex-shrink-0 mt-1">
+                                      <User size={16} className="text-gray-300" />
+                                    </div>
+                                  )}
+
+                                  {/* Message Bubble */}
+                                  <div className={`max-w-md px-4 py-3 rounded-2xl shadow-md ${message.role === 'user'
+                                      ? 'bg-gradient-to-br from-gray-700 to-gray-800 text-white border border-gray-600/50'
+                                      : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-blue-500/30'
                                     }`}>
-                                    <p className="text-sm">{message.content}</p>
-                                    <p className="text-xs mt-1 opacity-70">
+                                    <div
+                                      className="text-sm leading-relaxed conversation-message"
+                                      dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
+                                    />
+                                    <p className="text-xs mt-2 opacity-70">
                                       {formatTime(message.timestamp)}
                                     </p>
                                   </div>
+
+                                  {/* Avatar Bot (droite) */}
+                                  {message.role === 'assistant' && (
+                                    <img
+                                      src={settings.avatar || '/Default Avatar.png'}
+                                      alt="Bot"
+                                      className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1 border border-gray-600/30"
+                                      onError={(e) => {
+                                        const target = e.currentTarget as HTMLImageElement;
+                                        target.src = '/Default Avatar.png';
+                                      }}
+                                    />
+                                  )}
                                 </div>
                               ))
                             )}
@@ -1484,6 +1533,26 @@ if (diffHours < 48) return 'Yesterday';
             linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
           background-size: 24px 24px;
         }
+
+        /* 🔗 STYLES POUR LES LIENS DANS LES CONVERSATIONS */
+  .conversation-message :global(a) {
+    color: rgba(255, 255, 255, 0.95) !important;
+    text-decoration: underline !important;
+    text-decoration-color: rgba(255, 255, 255, 0.6) !important;
+    text-decoration-thickness: 1.5px !important;
+    text-underline-offset: 2px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    word-break: break-word !important;
+  }
+  
+  .conversation-message :global(a):hover {
+    color: white !important;
+    text-decoration-color: white !important;
+    text-decoration-thickness: 2px !important;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3) !important;
+  }
       `}</style>
     </div>
   );

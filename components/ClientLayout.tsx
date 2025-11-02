@@ -26,7 +26,11 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
   }, []);
 
   // Détecter si on est sur une page widget
-  const isWidgetPage = pathname.includes('/website-widget');
+  // Pages sans bulles flottantes
+const isWidgetPage = pathname.includes('/website-widget');
+const isDemoAgentPage = pathname === '/demo-agent';
+const isAgentLabPage = pathname === '/agent-lab';
+const hideOrbs = isWidgetPage || isDemoAgentPage || isAgentLabPage;
   
   // Gérer l'onglet actif pour les pages widget
   const activeTab = isMounted ? (searchParams.get('tab') || 'configuration') : 'configuration';
@@ -128,11 +132,16 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
           }}
         />
 
-        {/* Subtle Gradient Orbs */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+        {/* Subtle Gradient Orbs - Masqués sur certaines pages */}
+{!hideOrbs && (
+  <>
+    <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse"></div>
+    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+    <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+  </>
+)}
       </div>
+      
 
       {/* Sidebar - SEULEMENT SUR DESKTOP */}
       <Sidebar />
