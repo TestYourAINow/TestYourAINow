@@ -712,6 +712,26 @@ export default function CreateAgentWizard() {
                               contextWindow: "128K",
                             },
                             {
+                              id: "gpt-5-nano",
+                              name: "GPT-5 Nano",
+                              description: "Fastest, most cost-efficient version of GPT-5",
+                              badge: "New",
+                              badgeColor: "bg-purple-500",
+                              inputPrice: 0.05,
+                              outputPrice: 0.40,
+                              contextWindow: "400K",
+                            },
+                            {
+                              id: "gpt-5-mini",
+                              name: "GPT-5 Mini",
+                              description: "A faster, cost-efficient version of GPT-5 for well-defined tasks",
+                              badge: "New",
+                              badgeColor: "bg-purple-500",
+                              inputPrice: 0.25,
+                              outputPrice: 2.00,
+                              contextWindow: "400K",
+                            },
+                            {
                               id: "gpt-4-turbo",
                               name: "GPT-4 Turbo",
                               description: "Advanced reasoning with large context window",
@@ -950,8 +970,8 @@ export default function CreateAgentWizard() {
                   <div className="space-y-8">
                     <div className="text-center mb-10">
                       <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg ${formData.template === 'raw'
-                          ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-indigo-500/30'
-                          : 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-green-500/30'
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-indigo-500/30'
+                        : 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-green-500/30'
                         }`}>
                         {formData.template === 'raw' ? (
                           <FileText className="w-10 h-10 text-white" />
@@ -1289,8 +1309,8 @@ export default function CreateAgentWizard() {
                           <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
                             <span className="text-gray-400 text-sm">Template</span>
                             <span className={`px-3 py-1 text-xs rounded-full text-white ${formData.template === 'sales' ? 'bg-orange-600' :
-                                formData.template === 'support' ? 'bg-blue-600' :
-                                  formData.template === 'raw' ? 'bg-indigo-600' : 'bg-purple-600'
+                              formData.template === 'support' ? 'bg-blue-600' :
+                                formData.template === 'raw' ? 'bg-indigo-600' : 'bg-purple-600'
                               }`}>
                               {formData.template === 'sales' ? 'Sales AI' :
                                 formData.template === 'support' ? 'Support AI' :

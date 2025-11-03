@@ -25,6 +25,28 @@ const modelOptions = [
     outputPrice: 0.60,
     contextWindow: "128K",
   },
+  // 🆕 NOUVEAUX MODÈLES GPT-5
+  {
+    id: "gpt-5-nano",
+    name: "GPT-5 Nano",
+    description: "Fastest, most cost-efficient version of GPT-5",
+    badge: "New",
+    badgeColor: "bg-purple-500",
+    inputPrice: 0.05,
+    outputPrice: 0.40,
+    contextWindow: "400K",
+  },
+  {
+    id: "gpt-5-mini",
+    name: "GPT-5 Mini",
+    description: "A faster, cost-efficient version of GPT-5 for well-defined tasks",
+    badge: "New",
+    badgeColor: "bg-purple-500",
+    inputPrice: 0.25,
+    outputPrice: 2.00,
+    contextWindow: "400K",
+  },
+  // FIN NOUVEAUX MODÈLES GPT-5
   {
     id: "gpt-4-turbo",
     name: "GPT-4 Turbo",
@@ -132,8 +154,6 @@ export default function AiModelDropdown({
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [showDropdown]);
-
-  // Fermer sur scroll pour éviter le décalage - SUPPRIMÉ CAR ON SUIT MAINTENANT
 
   const handleSelect = (modelId: string) => {
     onModelSelect(modelId);
