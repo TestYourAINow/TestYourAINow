@@ -1,3 +1,5 @@
+// app\api\connections\[id]\route.ts
+
 import { connectToDatabase } from '@/lib/db'
 import { Connection } from '@/models/Connection'
 import { Agent } from '@/models/Agent'
@@ -55,24 +57,119 @@ export async function PUT(req: NextRequest, context: any) {
   const body = await req.json()
   const { name, aiBuildId, settings } = body
 
-  const connection = await Connection.findOneAndUpdate(
-    {
-      _id: params.id,
-      userId: session.user.id,
-    },
-    {
-      ...(name && { name }),
-      ...(aiBuildId && { aiBuildId }),
-      ...(settings && { settings }),
-    },
-    { new: true }
-  )
+  console.log('📝 [API] PUT request received:', { name, aiBuildId, settings });
+
+  // 🆕 DÉTECTER CHANGEMENT DE PÉRIODE
+  const connection = await Connection.findOne({
+    _id: params.id,
+    userId: session.user.id,
+  });
 
   if (!connection) {
     return NextResponse.json({ error: 'Connection not found' }, { status: 404 })
   }
 
-  return NextResponse.json({ success: true, connection })
+  let resetPeriod = false;
+  let historyEntry = null;
+  
+  // Si la durée de période change ET qu'une période existe déjà
+  if (settings?.periodDays && 
+      connection.periodDays !== settings.periodDays && 
+      connection.periodStartDate) {
+    
+    console.log(`🔄 [LIMIT] Period duration changed from ${connection.periodDays} to ${settings.periodDays} days`);
+    
+    // Sauvegarder la période actuelle dans l'historique
+    historyEntry = {
+      period: `${connection.periodStartDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      })} to ${new Date().toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      })}`,
+      messagesUsed: connection.currentPeriodUsage,
+      overageMessages: connection.overageCount || 0,
+      startDate: connection.periodStartDate,
+      endDate: new Date(),
+      note: `Period changed from ${connection.periodDays} to ${settings.periodDays} days`
+    };
+    
+    resetPeriod = true;
+  }
+
+  // 🔧 CONSTRUIRE L'OBJET DE MISE À JOUR
+  const updateData: any = {};
+  
+  if (name) updateData.name = name;
+  if (aiBuildId) updateData.aiBuildId = aiBuildId;
+  if (settings) updateData.settings = settings;
+  
+  // 🆕 EXTRAIRE LES CHAMPS DE LIMITE DE "SETTINGS" ET LES METTRE AU BON ENDROIT
+  if (settings?.limitEnabled !== undefined) {
+    updateData.limitEnabled = settings.limitEnabled;
+    console.log('📊 [LIMIT] limitEnabled:', settings.limitEnabled);
+  }
+  if (settings?.messageLimit !== undefined) {
+    updateData.messageLimit = settings.messageLimit;
+    console.log('📊 [LIMIT] messageLimit:', settings.messageLimit);
+  }
+  if (settings?.periodDays !== undefined) {
+    updateData.periodDays = settings.periodDays;
+    console.log('📊 [LIMIT] periodDays:', settings.periodDays);
+  }
+  if (settings?.allowOverage !== undefined) {
+    updateData.allowOverage = settings.allowOverage;
+    console.log('📊 [LIMIT] allowOverage:', settings.allowOverage);
+  }
+  if (settings?.limitReachedMessage !== undefined) {
+    updateData.limitReachedMessage = settings.limitReachedMessage;
+    console.log('📊 [LIMIT] limitReachedMessage:', settings.limitReachedMessage);
+  }
+  if (settings?.showLimitMessage !== undefined) {
+    updateData.showLimitMessage = settings.showLimitMessage;
+    console.log('📊 [LIMIT] showLimitMessage:', settings.showLimitMessage);
+  }
+  
+  // 🔄 RESET SI PÉRIODE CHANGÉE
+  if (resetPeriod) {
+    updateData.currentPeriodUsage = 0;
+    updateData.overageCount = 0;
+    updateData.periodStartDate = null;
+    updateData.periodEndDate = null;
+    
+    // Ajouter à l'historique
+    if (historyEntry) {
+      updateData.$push = { usageHistory: historyEntry };
+    }
+    
+    console.log('🔄 [LIMIT] Period reset applied');
+  }
+
+  console.log('📝 [API] Update data:', updateData);
+
+  const updatedConnection = await Connection.findOneAndUpdate(
+    {
+      _id: params.id,
+      userId: session.user.id,
+    },
+    updateData,
+    { new: true }
+  )
+
+  if (!updatedConnection) {
+    return NextResponse.json({ error: 'Connection not found' }, { status: 404 })
+  }
+
+  console.log('✅ [API] Connection updated:', {
+    limitEnabled: updatedConnection.limitEnabled,
+    messageLimit: updatedConnection.messageLimit,
+    periodDays: updatedConnection.periodDays
+  });
+
+  return NextResponse.json({ success: true, connection: updatedConnection })
 }
 
 // 🆕 DELETE MODIFIÉ - Avec CASCADE DELETE

@@ -775,8 +775,9 @@ export default function CreateAgentWizard() {
 
                           const selectedModel = modelOptions.find(m => m.id === formData.openaiModel);
                           return selectedModel ? (
-                            <div className="mt-6 p-4 bg-gray-900/50 rounded-xl">
-                              <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="mt-6 p-4 bg-gray-900/50 rounded-xl space-y-4">
+                              {/* Context Window & Type */}
+                              <div className="grid grid-cols-2 gap-4 text-sm pb-4 border-b border-gray-700/30">
                                 <div>
                                   <div className="text-gray-400 mb-1">Context Window</div>
                                   <div className="text-white font-semibold">{selectedModel.contextWindow}</div>
@@ -784,11 +785,42 @@ export default function CreateAgentWizard() {
                                 <div>
                                   <div className="text-gray-400 mb-1">Type</div>
                                   <div className="text-white font-semibold">
-                                    {selectedModel.id.includes('4o') ? 'Multimodal' : 'Text'}
+                                    {selectedModel.id.includes('4o') || selectedModel.id.includes('5') ? 'Multimodal' : 'Text'}
                                   </div>
                                 </div>
                               </div>
-                              <p className="text-gray-400 text-sm mt-3">{selectedModel.description}</p>
+
+                              {/* Description */}
+                              <p className="text-gray-400 text-sm">{selectedModel.description}</p>
+
+                              {/* Token Pricing */}
+                              <div>
+                                <div className="text-gray-300 text-sm font-semibold mb-2 flex items-center gap-2">
+                                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                  </svg>
+                                  Token Pricing
+                                </div>
+                                <div className="text-white text-sm font-medium mb-3">
+                                  Input: <span className="text-green-400">${selectedModel.inputPrice.toFixed(2)}/1M</span>
+                                  {' • '}
+                                  Output: <span className="text-green-400">${selectedModel.outputPrice.toFixed(2)}/1M</span>
+                                </div>
+                                <div className="text-xs text-gray-500 bg-gray-800/50 rounded-lg p-3 border border-gray-700/30">
+                                  💡 A token is approximately 4 characters or 0.75 words. You only pay for what you use.
+                                </div>
+                                <a
+                                  href="https://platform.openai.com/docs/models"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-gray-500 hover:text-gray-400 transition-colors flex items-center gap-1 mt-2"
+                                >
+                                  Learn more about models
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                  </svg>
+                                </a>
+                              </div>
                             </div>
                           ) : null;
                         })()}
@@ -867,102 +899,7 @@ export default function CreateAgentWizard() {
                       </div>
                     </div>
 
-                    {/* Pricing Info */}
-                    {(() => {
-                      const modelOptions = [
-                        {
-                          id: "gpt-4o",
-                          name: "GPT-4o",
-                          description: "Multimodal model, excellent for complex tasks",
-                          badge: "Most Popular",
-                          badgeColor: "bg-blue-500",
-                          inputPrice: 2.50,
-                          outputPrice: 10.00,
-                          contextWindow: "128K",
-                        },
-                        {
-                          id: "gpt-4o-mini",
-                          name: "GPT-4o Mini",
-                          description: "Fast and cost-effective multimodal model",
-                          badge: "Best Value",
-                          badgeColor: "bg-green-500",
-                          inputPrice: 0.15,
-                          outputPrice: 0.60,
-                          contextWindow: "128K",
-                        },
-                        {
-                          id: "gpt-4-turbo",
-                          name: "GPT-4 Turbo",
-                          description: "Advanced reasoning with large context window",
-                          badge: "",
-                          badgeColor: "",
-                          inputPrice: 10.00,
-                          outputPrice: 30.00,
-                          contextWindow: "128K",
-                        },
-                        {
-                          id: "gpt-4",
-                          name: "GPT-4",
-                          description: "High-intelligence standard model",
-                          badge: "",
-                          badgeColor: "",
-                          inputPrice: 30.00,
-                          outputPrice: 60.00,
-                          contextWindow: "8K",
-                        },
-                        {
-                          id: "gpt-4-32k",
-                          name: "GPT-4 32K",
-                          description: "Extended context version of GPT-4",
-                          badge: "",
-                          badgeColor: "",
-                          inputPrice: 60.00,
-                          outputPrice: 120.00,
-                          contextWindow: "32K",
-                        },
-                        {
-                          id: "gpt-3.5-turbo",
-                          name: "GPT-3.5 Turbo",
-                          description: "Fast and efficient for most tasks",
-                          badge: "",
-                          badgeColor: "",
-                          inputPrice: 0.50,
-                          outputPrice: 1.50,
-                          contextWindow: "16K",
-                        },
-                      ];
 
-                      const selectedModel = modelOptions.find(m => m.id === formData.openaiModel);
-                      return selectedModel ? (
-                        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
-                          <div className="flex items-center gap-3 mb-4">
-                            <TrendingUp className="w-6 h-6 text-green-400" />
-                            <h3 className="text-lg font-semibold text-green-400">Token Pricing</h3>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-6">
-                            <div>
-                              <div className="text-sm text-gray-400 mb-1">Input Cost</div>
-                              <div className="text-2xl font-bold text-white">
-                                ${selectedModel.inputPrice.toFixed(2)}
-                              </div>
-                              <div className="text-xs text-gray-400">per 1M tokens</div>
-                            </div>
-                            <div>
-                              <div className="text-sm text-gray-400 mb-1">Output Cost</div>
-                              <div className="text-2xl font-bold text-white">
-                                ${selectedModel.outputPrice.toFixed(2)}
-                              </div>
-                              <div className="text-xs text-gray-400">per 1M tokens</div>
-                            </div>
-                          </div>
-
-                          <div className="text-xs text-gray-500 bg-gray-900/30 rounded-xl p-3 mt-4">
-                            💡 A token is approximately 4 characters or 0.75 words. You only pay for what you use.
-                          </div>
-                        </div>
-                      ) : null;
-                    })()}
                   </div>
                 )}
                 {/* STEP 3 - Personality & Knowledge OU Raw Prompt */}

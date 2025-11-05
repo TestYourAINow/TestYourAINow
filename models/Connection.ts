@@ -18,11 +18,11 @@ const ConnectionSchema = new Schema({
   webhookSecret: { type: String },
   webhookUrl: { type: String },
   
-  // 🆕 NOUVEAUX CHAMPS - Système de partage sécurisé
+  // Champs de partage existants
   shareToken: { 
     type: String, 
     unique: true, 
-    sparse: true // Permet null/undefined sans conflit
+    sparse: true
   },
   shareEnabled: { 
     type: Boolean, 
@@ -37,7 +37,7 @@ const ConnectionSchema = new Schema({
     type: String, 
     validate: {
       validator: function(v: string) {
-        return !v || /^\d{6}$/.test(v); // 6 chiffres exactement
+        return !v || /^\d{6}$/.test(v);
       },
       message: 'PIN code must be exactly 6 digits'
     }
@@ -53,11 +53,70 @@ const ConnectionSchema = new Schema({
     type: Date 
   },
   
+  // 🆕 NOUVEAU - SYSTÈME DE LIMITE MENSUELLE
+  limitEnabled: {
+    type: Boolean,
+    default: false
+  },
+  messageLimit: {
+    type: Number,
+    default: null
+  },
+  currentPeriodUsage: {
+    type: Number,
+    default: 0
+  },
+  periodStartDate: {
+    type: Date,
+    default: null
+  },
+  periodEndDate: {
+    type: Date,
+    default: null
+  },
+  periodDays: {
+    type: Number,
+    default: 30,
+    enum: [30, 90, 365]
+  },
+  
+  // 🆕 MODE OVERAGE (dépassement autorisé)
+  allowOverage: {
+    type: Boolean,
+    default: false
+  },
+  overageCount: {
+    type: Number,
+    default: 0
+  },
+  
+  // 🆕 MESSAGES PERSONNALISÉS
+  limitReachedMessage: {
+    type: String,
+    default: 'Monthly message limit reached. Please contact support to upgrade your plan.'
+  },
+  showLimitMessage: {
+    type: Boolean,
+    default: true
+  },
+  
+  // 🆕 HISTORIQUE DES PÉRIODES
+  usageHistory: [{
+    period: String,
+    messagesUsed: Number,
+    overageMessages: { type: Number, default: 0 },
+    startDate: Date,
+    endDate: Date,
+    note: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
+  
   createdAt: { type: Date, default: Date.now },
 })
 
-// 🔍 Index pour les requêtes de partage
+// Index pour les requêtes de partage
 ConnectionSchema.index({ shareToken: 1 });
 ConnectionSchema.index({ userId: 1, integrationType: 1 });
+ConnectionSchema.index({ limitEnabled: 1, periodEndDate: 1 });
 
 export const Connection = models.Connection || model('Connection', ConnectionSchema)

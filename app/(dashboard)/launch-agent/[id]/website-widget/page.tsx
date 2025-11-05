@@ -7,7 +7,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import {
   Send, X, MessageCircle, Settings, Globe, Smartphone, Plus, RotateCcw, User, Bot, Info,
   Monitor, Upload, Palette, Save, ExternalLink, Code, Sparkles, Moon, Sun, ChevronRight, ChevronLeft,
-  RefreshCw, Trash2, Clock, ArrowLeft
+  RefreshCw, Trash2, Clock, ArrowLeft, BarChart3
 } from 'lucide-react';
 import { DeploymentModal, DeployButton } from '@/components/DeploymentModal';
 import ChatWidget from '@/components/ChatWidget';
@@ -15,6 +15,7 @@ import { DeleteConversationModal } from '@/components/DeleteConversationModal';
 import { ShareAccessModal } from '@/components/ShareAccessModal';
 import { ShareAccessButton } from '@/components/ShareAccessButton';
 import { formatMessageContent } from '@/lib/formatMessage';
+import UsageLimitModal, { LimitSettings } from '@/components/UsageLimitModal';
 
 // Types - LOGIQUE IDENTIQUE + NOUVEAUX TYPES CONVERSATIONS
 interface ChatbotConfig {
@@ -171,6 +172,9 @@ const ChatbotBuilder: React.FC = () => {
 
   // 🆕 STATES POUR LE MODAL DE PARTAGE
   const [showShareModal, setShowShareModal] = useState(false);
+
+  // 🆕 STATE POUR LE MODAL DE LIMITE
+  const [showLimitModal, setShowLimitModal] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -550,6 +554,58 @@ const ChatbotBuilder: React.FC = () => {
       alert('Error saving: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // 🆕 FONCTION POUR SAUVEGARDER LES LIMITES
+  const handleSaveLimits = async (limitSettings: LimitSettings) => {
+    if (!connectionId) return;
+
+    console.log('💾 [LIMIT] Saving usage limits:', limitSettings);
+
+    try {
+      // 🔧 FIX: Envoyer les données directement, pas dans "settings"
+      const response = await fetch(`/api/connections/${connectionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name, // Garder le nom
+          aiBuildId: selectedAgent, // Garder l'agent
+          settings: {
+            ...settings, // Garder tous les autres settings
+
+            // 🆕 AJOUTER LES LIMITES DIRECTEMENT DANS SETTINGS
+            limitEnabled: limitSettings.enabled,
+            messageLimit: limitSettings.messageLimit,
+            periodDays: limitSettings.periodDays,
+            allowOverage: limitSettings.allowOverage,
+            limitReachedMessage: limitSettings.limitReachedMessage,
+            showLimitMessage: limitSettings.showLimitMessage
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error saving usage limits');
+      }
+
+      const result = await response.json();
+      console.log('✅ [LIMIT] Usage limits saved successfully:', result);
+
+      // Recharger la connection pour afficher les nouvelles données
+      const res = await fetch(`/api/connections/${connectionId}`);
+      const data = await res.json();
+      if (data?.connection) {
+        setConnection(data.connection);
+        console.log('🔄 [LIMIT] Connection reloaded:', data.connection);
+      }
+
+    } catch (error) {
+      console.error('❌ [LIMIT] Error saving usage limits:', error);
+      alert('Error saving usage limits: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -1048,6 +1104,21 @@ const ChatbotBuilder: React.FC = () => {
               </div>
             </div>
 
+            <div className="border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm overflow-hidden">
+  <div className="lg:p-4 p-3">
+    <button
+      onClick={() => setShowLimitModal(true)}
+      className="w-full lg:py-4 py-3.5 lg:px-6 px-4 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 hover:from-blue-600/30 hover:to-cyan-600/30 border border-blue-500/30 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center lg:gap-3 gap-2 shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] lg:text-base text-sm group relative overflow-hidden"
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+      
+      <Clock className="lg:w-5 lg:h-5 w-4 h-4 relative z-10 text-blue-400" />
+      <span className="relative z-10">Usage Limits & Analytics</span>
+      <BarChart3 className="lg:w-5 lg:h-5 w-4 h-4 relative z-10 text-cyan-400" />
+    </button>
+  </div>
+</div>
+
             {/* 🆕 Share Access Button */}
             {connection?.integrationType === 'website-widget' && (
               <div className="border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm overflow-hidden">
@@ -1141,8 +1212,8 @@ const ChatbotBuilder: React.FC = () => {
 
                             {/* Message Bubble */}
                             <div className={`max-w-[70%] px-3 py-2.5 rounded-2xl shadow-sm ${message.role === 'user'
-                                ? 'bg-gradient-to-br from-gray-700 to-gray-800 text-white border border-gray-600/50'
-                                : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-blue-500/30'
+                              ? 'bg-gradient-to-br from-gray-700 to-gray-800 text-white border border-gray-600/50'
+                              : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-blue-500/30'
                               }`}>
                               <div
                                 className="text-sm leading-relaxed conversation-message"
@@ -1440,8 +1511,8 @@ const ChatbotBuilder: React.FC = () => {
 
                                   {/* Message Bubble */}
                                   <div className={`max-w-md px-4 py-3 rounded-2xl shadow-md ${message.role === 'user'
-                                      ? 'bg-gradient-to-br from-gray-700 to-gray-800 text-white border border-gray-600/50'
-                                      : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-blue-500/30'
+                                    ? 'bg-gradient-to-br from-gray-700 to-gray-800 text-white border border-gray-600/50'
+                                    : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-blue-500/30'
                                     }`}>
                                     <div
                                       className="text-sm leading-relaxed conversation-message"
@@ -1516,6 +1587,14 @@ const ChatbotBuilder: React.FC = () => {
         onClose={() => setShowShareModal(false)}
         connectionId={connectionId}
         connectionName={name || 'AI Assistant'}
+      />
+
+      {/* 🆕 USAGE LIMIT MODAL */}
+      <UsageLimitModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        connection={connection}
+        onSave={handleSaveLimits}
       />
 
 

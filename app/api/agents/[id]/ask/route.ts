@@ -664,7 +664,7 @@ export async function POST(
     const widgetId = req.headers.get('x-widget-id'); // 🆕 NOUVEAU
     const widgetToken = req.headers.get('x-widget-token');
     
-    let isPublicOK = false;
+    let isPublicOK = false; 
     let session = null;
 
     if (publicKind === 'demo' && demoId && demoToken) {
@@ -689,6 +689,115 @@ export async function POST(
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
+
+    // 🆕 LOGIQUE DE LIMITE - VÉRIFICATION AVANT TRAITEMENT
+if (publicKind === 'widget' && widgetId) {
+  console.log(`🔒 [LIMIT] Checking usage limits for widget: ${widgetId}`);
+  
+  try {
+    const { Connection } = await import('@/models/Connection');
+    const connection = await Connection.findById(widgetId);
+    
+    if (connection?.limitEnabled && connection.messageLimit) {
+      const now = new Date();
+      
+      // 🎯 PREMIÈRE UTILISATION : Initialiser la période
+      if (!connection.periodStartDate) {
+        console.log(`🆕 [LIMIT] First usage - Initializing period`);
+        connection.periodStartDate = now;
+        connection.periodEndDate = new Date(now.getTime() + (connection.periodDays * 24 * 60 * 60 * 1000));
+        connection.currentPeriodUsage = 0;
+        connection.overageCount = 0;
+        await connection.save();
+      }
+      
+      // 🔄 RESET AUTOMATIQUE si période expirée
+      else if (now >= connection.periodEndDate) {
+        console.log(`🔄 [LIMIT] Period expired - Resetting usage`);
+        
+        // Sauvegarder dans l'historique
+        const historyEntry = {
+          period: `${connection.periodStartDate.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          })} to ${connection.periodEndDate.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          })}`,
+          messagesUsed: connection.currentPeriodUsage,
+          overageMessages: connection.overageCount || 0,
+          startDate: connection.periodStartDate,
+          endDate: connection.periodEndDate,
+          note: 'Period completed'
+        };
+        
+        connection.usageHistory = [...(connection.usageHistory || []), historyEntry];
+        
+        // Nouvelle période
+        connection.periodStartDate = now;
+        connection.periodEndDate = new Date(now.getTime() + (connection.periodDays * 24 * 60 * 60 * 1000));
+        connection.currentPeriodUsage = 0;
+        connection.overageCount = 0;
+        await connection.save();
+        
+        console.log(`✅ [LIMIT] New period started:`, {
+          start: connection.periodStartDate,
+          end: connection.periodEndDate
+        });
+      }
+      
+      // ⚠️ VÉRIFIER LA LIMITE
+      const isOverLimit = connection.currentPeriodUsage >= connection.messageLimit;
+      
+      if (isOverLimit) {
+        console.log(`⚠️ [LIMIT] Limit reached:`, {
+          usage: connection.currentPeriodUsage,
+          limit: connection.messageLimit,
+          allowOverage: connection.allowOverage
+        });
+        
+        // MODE 1: OVERAGE AUTORISÉ (continuer en négatif)
+        if (connection.allowOverage) {
+          console.log(`✅ [LIMIT] Overage mode - Allowing request`);
+          // On laisse passer, le compteur sera incrémenté après
+        }
+        
+        // MODE 2: BLOCAGE (refuser la requête)
+        else {
+          console.log(`❌ [LIMIT] Blocking request - Limit reached`);
+          
+          // Option A: Afficher un message personnalisé
+          if (connection.showLimitMessage && connection.limitReachedMessage) {
+            return NextResponse.json({ 
+              reply: connection.limitReachedMessage,
+              limitReached: true,
+              usage: connection.currentPeriodUsage,
+              limit: connection.messageLimit,
+              periodEndsAt: connection.periodEndDate
+            });
+          }
+          
+          // Option B: Message vide (pas de réponse du tout)
+          else {
+            return NextResponse.json({ 
+              reply: '', // Message vide
+              limitReached: true,
+              usage: connection.currentPeriodUsage,
+              limit: connection.messageLimit,
+              periodEndsAt: connection.periodEndDate
+            });
+          }
+        }
+      }
+      
+    }
+  } catch (error) {
+    console.error('❌ [LIMIT] Error checking limits:', error);
+    // En cas d'erreur, on laisse passer pour ne pas bloquer le service
+  }
+}
 
     const body = await req.json();
     const userMessage: string = body.message;
@@ -903,6 +1012,43 @@ export async function POST(
     console.log(`✅ [WIDGET] Conversation stored successfully: ${conversationId} -> ${realConnectionId}`);
   } catch (error) {
     console.error(`❌ [WIDGET] Storage error:`, error);
+  }
+}
+
+// 🆕 INCRÉMENTER LE COMPTEUR D'USAGE
+if (publicKind === 'widget' && widgetId) {
+  try {
+    const { Connection } = await import('@/models/Connection');
+    const connection = await Connection.findById(widgetId);
+    
+    if (connection?.limitEnabled && connection.messageLimit) {
+      const isOverLimit = connection.currentPeriodUsage >= connection.messageLimit;
+      
+      if (isOverLimit && connection.allowOverage) {
+        // Mode overage : incrémenter le compteur d'overage
+        await Connection.findByIdAndUpdate(widgetId, {
+          $inc: { 
+            currentPeriodUsage: 1,
+            overageCount: 1 
+          }
+        });
+        console.log(`📈 [LIMIT] Overage incremented:`, {
+          usage: connection.currentPeriodUsage + 1,
+          overage: (connection.overageCount || 0) + 1
+        });
+      } else if (!isOverLimit) {
+        // Usage normal : juste incrémenter l'usage
+        await Connection.findByIdAndUpdate(widgetId, {
+          $inc: { currentPeriodUsage: 1 }
+        });
+        console.log(`📈 [LIMIT] Usage incremented:`, {
+          usage: connection.currentPeriodUsage + 1,
+          limit: connection.messageLimit
+        });
+      }
+    }
+  } catch (error) {
+    console.error('❌ [LIMIT] Error incrementing usage:', error);
   }
 }
 
