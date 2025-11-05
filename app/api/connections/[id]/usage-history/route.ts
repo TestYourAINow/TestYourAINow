@@ -9,8 +9,9 @@ import { connectToDatabase } from '@/lib/db';
 // 🗑️ DELETE - Supprimer une période spécifique de l'historique
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
+  const params = await context.params;
   try {
     // 1️⃣ Vérifier la session
     const session = await getServerSession(authOptions);
