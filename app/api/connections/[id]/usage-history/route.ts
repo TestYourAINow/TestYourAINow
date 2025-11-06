@@ -45,7 +45,7 @@ export async function DELETE(
     // 4️⃣ Trouver la connection et vérifier ownership
     const connection = await Connection.findOne({
       _id: params.id,
-      userId: session.user.email
+      userId: session.user.id
     });
 
     if (!connection) {

@@ -690,13 +690,13 @@ export async function POST(
       }
     }
 
-    // 🆕 LOGIQUE DE LIMITE - VÉRIFICATION AVANT TRAITEMENT
+// 🆕 LOGIQUE DE LIMITE - VÉRIFICATION ET INCRÉMENTATION ATOMIQUE
 if (publicKind === 'widget' && widgetId) {
   console.log(`🔒 [LIMIT] Checking usage limits for widget: ${widgetId}`);
   
   try {
     const { Connection } = await import('@/models/Connection');
-    const connection = await Connection.findById(widgetId);
+    let connection = await Connection.findById(widgetId);
     
     if (connection?.limitEnabled && connection.messageLimit) {
       const now = new Date();
@@ -715,7 +715,6 @@ if (publicKind === 'widget' && widgetId) {
       else if (now >= connection.periodEndDate) {
         console.log(`🔄 [LIMIT] Period expired - Resetting usage`);
         
-        // Sauvegarder dans l'historique
         const historyEntry = {
           period: `${connection.periodStartDate.toLocaleDateString('en-US', { 
             month: 'short', 
@@ -734,68 +733,50 @@ if (publicKind === 'widget' && widgetId) {
         };
         
         connection.usageHistory = [...(connection.usageHistory || []), historyEntry];
-        
-        // Nouvelle période
         connection.periodStartDate = now;
         connection.periodEndDate = new Date(now.getTime() + (connection.periodDays * 24 * 60 * 60 * 1000));
         connection.currentPeriodUsage = 0;
         connection.overageCount = 0;
         await connection.save();
-        
-        console.log(`✅ [LIMIT] New period started:`, {
-          start: connection.periodStartDate,
-          end: connection.periodEndDate
-        });
       }
       
-      // ⚠️ VÉRIFIER LA LIMITE
-      const isOverLimit = connection.currentPeriodUsage >= connection.messageLimit;
+      // 🎯 SIMULER CE QUE SERA L'USAGE APRÈS CE MESSAGE
+      const usageAfterThisMessage = connection.currentPeriodUsage + 1;
+      const isOverLimit = usageAfterThisMessage > connection.messageLimit;
       
-      if (isOverLimit) {
-        console.log(`⚠️ [LIMIT] Limit reached:`, {
-          usage: connection.currentPeriodUsage,
-          limit: connection.messageLimit,
-          allowOverage: connection.allowOverage
-        });
+      console.log(`📊 [LIMIT] State check:`, {
+        currentUsage: connection.currentPeriodUsage,
+        afterThisMessage: usageAfterThisMessage,
+        limit: connection.messageLimit,
+        wouldExceed: isOverLimit,
+        allowOverage: connection.allowOverage
+      });
+      
+      // ⚠️ SI CE MESSAGE DÉPASSERAIT LA LIMITE
+      if (isOverLimit && !connection.allowOverage) {
+        console.log(`❌ [LIMIT] BLOCKING - Would exceed limit`);
         
-        // MODE 1: OVERAGE AUTORISÉ (continuer en négatif)
-        if (connection.allowOverage) {
-          console.log(`✅ [LIMIT] Overage mode - Allowing request`);
-          // On laisse passer, le compteur sera incrémenté après
-        }
-        
-        // MODE 2: BLOCAGE (refuser la requête)
-        else {
-          console.log(`❌ [LIMIT] Blocking request - Limit reached`);
-          
-          // Option A: Afficher un message personnalisé
-          if (connection.showLimitMessage && connection.limitReachedMessage) {
-            return NextResponse.json({ 
-              reply: connection.limitReachedMessage,
-              limitReached: true,
-              usage: connection.currentPeriodUsage,
-              limit: connection.messageLimit,
-              periodEndsAt: connection.periodEndDate
-            });
-          }
-          
-          // Option B: Message vide (pas de réponse du tout)
-          else {
-            return NextResponse.json({ 
-              reply: '', // Message vide
-              limitReached: true,
-              usage: connection.currentPeriodUsage,
-              limit: connection.messageLimit,
-              periodEndsAt: connection.periodEndDate
-            });
-          }
+        if (connection.showLimitMessage && connection.limitReachedMessage) {
+          return NextResponse.json({ 
+            reply: connection.limitReachedMessage,
+            limitReached: true,
+            usage: connection.currentPeriodUsage,
+            limit: connection.messageLimit
+          });
+        } else {
+          return NextResponse.json({ 
+            reply: '',
+            limitReached: true,
+            usage: connection.currentPeriodUsage,
+            limit: connection.messageLimit
+          });
         }
       }
       
+      console.log(`✅ [LIMIT] Message allowed - will increment after processing`);
     }
   } catch (error) {
     console.error('❌ [LIMIT] Error checking limits:', error);
-    // En cas d'erreur, on laisse passer pour ne pas bloquer le service
   }
 }
 
@@ -1015,40 +996,71 @@ if (publicKind === 'widget' && widgetId) {
   }
 }
 
-// 🆕 INCRÉMENTER LE COMPTEUR D'USAGE
+// 🆕 INCRÉMENTER LE COMPTEUR (SIMPLE ET ROBUSTE)
 if (publicKind === 'widget' && widgetId) {
   try {
     const { Connection } = await import('@/models/Connection');
+    
+    // Récupérer l'état actuel
     const connection = await Connection.findById(widgetId);
     
     if (connection?.limitEnabled && connection.messageLimit) {
-      const isOverLimit = connection.currentPeriodUsage >= connection.messageLimit;
+      // Calculer si on est en overage MAINTENANT (après le message)
+      const newUsage = connection.currentPeriodUsage + 1;
+      const isNowOverLimit = newUsage > connection.messageLimit;
       
-      if (isOverLimit && connection.allowOverage) {
-        // Mode overage : incrémenter le compteur d'overage
-        await Connection.findByIdAndUpdate(widgetId, {
-          $inc: { 
-            currentPeriodUsage: 1,
-            overageCount: 1 
-          }
+      console.log(`📊 [LIMIT-INCREMENT] Before update:`, {
+        currentUsage: connection.currentPeriodUsage,
+        willBe: newUsage,
+        limit: connection.messageLimit,
+        isOverLimit: isNowOverLimit,
+        allowOverage: connection.allowOverage
+      });
+      
+      if (isNowOverLimit && connection.allowOverage) {
+        // MODE OVERAGE - Incrémenter les deux compteurs
+        const result = await Connection.findByIdAndUpdate(
+          widgetId,
+          {
+            $inc: { 
+              currentPeriodUsage: 1,
+              overageCount: 1 
+            }
+          },
+          { new: true } // Retourner le document mis à jour
+        );
+        
+        console.log(`📈 [LIMIT-INCREMENT] ✅ Overage incremented:`, {
+          usage: result.currentPeriodUsage,
+          limit: result.messageLimit,
+          overage: result.overageCount
         });
-        console.log(`📈 [LIMIT] Overage incremented:`, {
-          usage: connection.currentPeriodUsage + 1,
-          overage: (connection.overageCount || 0) + 1
-        });
-      } else if (!isOverLimit) {
-        // Usage normal : juste incrémenter l'usage
-        await Connection.findByIdAndUpdate(widgetId, {
-          $inc: { currentPeriodUsage: 1 }
-        });
-        console.log(`📈 [LIMIT] Usage incremented:`, {
-          usage: connection.currentPeriodUsage + 1,
-          limit: connection.messageLimit
+        
+      } else {
+        // MODE NORMAL - Incrémenter juste l'usage
+        const result = await Connection.findByIdAndUpdate(
+          widgetId,
+          {
+            $inc: { currentPeriodUsage: 1 }
+          },
+          { new: true } // Retourner le document mis à jour
+        );
+        
+        console.log(`📈 [LIMIT-INCREMENT] ✅ Usage incremented:`, {
+          usage: result.currentPeriodUsage,
+          limit: result.messageLimit
         });
       }
+      
+    } else {
+      console.log(`⚠️ [LIMIT-INCREMENT] Limits not enabled, skipping increment`);
     }
-  } catch (error) {
-    console.error('❌ [LIMIT] Error incrementing usage:', error);
+    
+} catch (err) {
+    const error = err as Error;
+    console.error('❌ [LIMIT-INCREMENT] Error incrementing usage:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack:', error.stack);
   }
 }
 

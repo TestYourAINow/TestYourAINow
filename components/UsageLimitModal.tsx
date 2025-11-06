@@ -4,13 +4,14 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Clock, AlertTriangle, TrendingUp, BarChart3, Info, Trash2, Settings as SettingsIcon } from 'lucide-react';
+import { X, Clock, AlertTriangle, TrendingUp, BarChart3, Info, Trash2, Settings as SettingsIcon, RefreshCw } from 'lucide-react';
 
 interface UsageLimitModalProps {
   isOpen: boolean;
   onClose: () => void;
   connection: any;
   onSave: (settings: LimitSettings) => void;
+  onRefresh?: () => Promise<void>; // 🆕 AJOUT
 }
 
 export interface LimitSettings {
@@ -22,10 +23,10 @@ export interface LimitSettings {
   showLimitMessage: boolean;
 }
 
-export default function UsageLimitModal({ isOpen, onClose, connection, onSave }: UsageLimitModalProps) {
+export default function UsageLimitModal({ isOpen, onClose, connection, onSave, onRefresh }: UsageLimitModalProps) {
   // 🆕 STATE POUR LES ONGLETS
   const [activeTab, setActiveTab] = useState<'analytics' | 'config'>('analytics');
-  
+
   const [limitSettings, setLimitSettings] = useState<LimitSettings>({
     enabled: connection?.limitEnabled || false,
     messageLimit: connection?.messageLimit || 100,
@@ -35,14 +36,16 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
     showLimitMessage: connection?.showLimitMessage !== undefined ? connection.showLimitMessage : true
   });
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingPeriodChange, setPendingPeriodChange] = useState<number | null>(null);
-  
+
   // 🆕 STATES POUR LA SUPPRESSION D'HISTORIQUE
   const [deletingHistoryId, setDeletingHistoryId] = useState<string | null>(null);
   const [showDeleteHistoryDialog, setShowDeleteHistoryDialog] = useState(false);
   const [historyToDelete, setHistoryToDelete] = useState<any>(null);
-  
+
   // 🆕 STATES POUR LE SAVE UX
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -88,34 +91,34 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
   const handleSave = async () => {
     setIsSaving(true);
     setSaveSuccess(false);
-    
+
     try {
       await onSave(limitSettings);
-      
+
       // Success feedback
       setIsSaving(false);
       setSaveSuccess(true);
       setShowToast(true);
       setToastExiting(false);
-      
+
       // Reset success state after 2 seconds
       setTimeout(() => {
         setSaveSuccess(false);
       }, 2000);
-      
+
       // Start slide-out animation after 2.7 seconds
       setTimeout(() => {
         setToastExiting(true);
       }, 2700);
-      
+
       // Hide toast after animation completes (3 seconds total)
       setTimeout(() => {
         setShowToast(false);
         setToastExiting(false);
       }, 3000);
-      
+
       // ❌ PAS DE SWITCH AUTO VERS ANALYTICS
-      
+
     } catch (error) {
       console.error('Save error:', error);
       setIsSaving(false);
@@ -129,11 +132,27 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
     setShowDeleteHistoryDialog(true);
   };
 
+  // 🔄 FONCTION POUR RAFRAÎCHIR LES DONNÉES
+  const handleRefresh = async () => {
+    if (!onRefresh) return;
+
+    setIsRefreshing(true);
+
+    try {
+      await onRefresh();
+      console.log('✅ [REFRESH] Data refreshed successfully');
+    } catch (error) {
+      console.error('❌ [REFRESH] Error refreshing data:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const confirmDeleteHistory = async () => {
     if (!historyToDelete || !connection?._id) return;
 
     setDeletingHistoryId(historyToDelete._id);
-    
+
     try {
       const response = await fetch(`/api/connections/${connection._id}/usage-history`, {
         method: 'DELETE',
@@ -149,9 +168,13 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
         throw new Error('Failed to delete history period');
       }
 
-      // Recharger la connection pour mettre à jour l'UI
-      window.location.reload();
-      
+      console.log('✅ [DELETE] History deleted successfully');
+
+      // Recharger la connection (même logique que handleSave)
+      if (onRefresh) {
+        await onRefresh();
+      }
+
     } catch (error) {
       console.error('Error deleting history:', error);
       alert('Error deleting history period. Please try again.');
@@ -168,7 +191,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
   };
 
   const getPeriodLabel = (days: number) => {
-    switch(days) {
+    switch (days) {
       case 30: return 'Monthly';
       case 90: return 'Quarterly';
       case 365: return 'Yearly';
@@ -184,7 +207,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
     });
   };
 
-  const usagePercentage = connection?.messageLimit 
+  const usagePercentage = connection?.messageLimit
     ? Math.min((connection.currentPeriodUsage / connection.messageLimit) * 100, 100)
     : 0;
 
@@ -196,7 +219,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
     <>
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-          
+
           {/* Header */}
           <div className="p-6 border-b border-gray-700 bg-gray-900">
             <div className="flex items-center justify-between">
@@ -209,7 +232,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                   <p className="text-sm text-gray-400">Monitor and configure message usage</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-white transition-colors"
               >
@@ -221,22 +244,20 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
             <div className="flex gap-2 mt-6">
               <button
                 onClick={() => setActiveTab('analytics')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                  activeTab === 'analytics'
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${activeTab === 'analytics'
                     ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/25'
                     : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
-                }`}
+                  }`}
               >
                 <BarChart3 size={18} />
                 Analytics
               </button>
               <button
                 onClick={() => setActiveTab('config')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                  activeTab === 'config'
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${activeTab === 'config'
                     ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/25'
                     : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
-                }`}
+                  }`}
               >
                 <SettingsIcon size={18} />
                 Configuration
@@ -246,29 +267,46 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
 
           {/* Body - Scrollable */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            
+
             {/* 📊 ONGLET ANALYTICS */}
             {activeTab === 'analytics' && (
               <>
+                {/* 🆕 HEADER AVEC BOUTON REFRESH */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="text-blue-400" size={20} />
+                    <h4 className="font-semibold text-white text-lg">Current Usage</h4>
+                  </div>
+
+                  <button
+                    onClick={handleRefresh}
+                    disabled={isRefreshing || !onRefresh}
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed border border-blue-500/30 text-blue-400 rounded-lg transition-all"
+                  >
+                    <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+                    <span className="text-sm font-medium">
+                      {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                    </span>
+                  </button>
+                </div>
                 {/* Current Period Status - PLUS GROS */}
                 {connection?.limitEnabled && connection?.messageLimit ? (
                   <div className="p-6 bg-gradient-to-br from-blue-600/10 to-cyan-600/10 border border-blue-500/30 rounded-xl">
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-base font-semibold text-blue-400">Current Period Status</span>
-                      <span className={`text-sm px-3 py-1 rounded-full font-medium ${
-                        isOverLimit 
-                          ? connection.allowOverage 
+                      <span className={`text-sm px-3 py-1 rounded-full font-medium ${isOverLimit
+                          ? connection.allowOverage
                             ? 'bg-yellow-500/20 text-yellow-400'
                             : 'bg-red-500/20 text-red-400'
                           : 'bg-green-500/20 text-green-400'
-                      }`}>
-                        {isOverLimit 
+                        }`}>
+                        {isOverLimit
                           ? connection.allowOverage ? 'Overage Mode' : 'Limit Reached'
                           : 'Active'
                         }
                       </span>
                     </div>
-                    
+
                     <div className="flex items-baseline gap-3 mb-3">
                       <span className="text-5xl font-bold text-white">
                         {connection.currentPeriodUsage}
@@ -280,19 +318,18 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="w-full bg-gray-700 rounded-full h-3 mb-4">
-                      <div 
-                        className={`h-3 rounded-full transition-all ${
-                          usagePercentage > 100 ? 'bg-yellow-500' :
-                          usagePercentage > 80 ? 'bg-red-500' :
-                          usagePercentage > 50 ? 'bg-yellow-500' :
-                          'bg-blue-500'
-                        }`}
+                      <div
+                        className={`h-3 rounded-full transition-all ${usagePercentage > 100 ? 'bg-yellow-500' :
+                            usagePercentage > 80 ? 'bg-red-500' :
+                              usagePercentage > 50 ? 'bg-yellow-500' :
+                                'bg-blue-500'
+                          }`}
                         style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between text-sm text-gray-400">
                       <span>Period: {getPeriodLabel(connection.periodDays)}</span>
                       <span>
@@ -325,8 +362,8 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                     </div>
                     <div className="space-y-2 max-h-96 overflow-y-auto">
                       {connection.usageHistory.slice().reverse().map((history: any, i: number) => (
-                        <div 
-                          key={history._id || i} 
+                        <div
+                          key={history._id || i}
                           className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/30 hover:bg-gray-800/70 transition-colors group"
                         >
                           <div className="flex items-center justify-between mb-2">
@@ -348,7 +385,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                                 )}
                               </div>
                             </div>
-                            
+
                             {/* 🆕 BOUTON DELETE */}
                             <button
                               onClick={() => initiateDeleteHistory(history)}
@@ -363,7 +400,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                               )}
                             </button>
                           </div>
-                          
+
                           <div className="flex items-center justify-between text-xs text-gray-500">
                             <span>{formatDate(history.startDate)} - {formatDate(history.endDate)}</span>
                             {history.note && (
@@ -403,7 +440,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                     <input
                       type="checkbox"
                       checked={limitSettings.enabled}
-                      onChange={(e) => setLimitSettings({...limitSettings, enabled: e.target.checked})}
+                      onChange={(e) => setLimitSettings({ ...limitSettings, enabled: e.target.checked })}
                       className="sr-only"
                       id="enable-toggle"
                     />
@@ -423,7 +460,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                       <input
                         type="number"
                         value={limitSettings.messageLimit || ''}
-                        onChange={(e) => setLimitSettings({...limitSettings, messageLimit: parseInt(e.target.value) || 0})}
+                        onChange={(e) => setLimitSettings({ ...limitSettings, messageLimit: parseInt(e.target.value) || 0 })}
                         min="1"
                         placeholder="Ex: 100, 500, 1000..."
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
@@ -470,7 +507,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                           <input
                             type="checkbox"
                             checked={limitSettings.allowOverage}
-                            onChange={(e) => setLimitSettings({...limitSettings, allowOverage: e.target.checked})}
+                            onChange={(e) => setLimitSettings({ ...limitSettings, allowOverage: e.target.checked })}
                             className="sr-only"
                             id="overage-toggle"
                           />
@@ -479,7 +516,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                           </div>
                         </label>
                       </div>
-                      
+
                       <div className="pl-8 space-y-2 text-xs text-gray-400">
                         <p>✅ <strong className="text-yellow-400">Enabled:</strong> Messages continue, overage is tracked separately</p>
                         <p>❌ <strong className="text-yellow-400">Disabled:</strong> Bot stops responding when limit is reached</p>
@@ -495,7 +532,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                             <input
                               type="checkbox"
                               checked={limitSettings.showLimitMessage}
-                              onChange={(e) => setLimitSettings({...limitSettings, showLimitMessage: e.target.checked})}
+                              onChange={(e) => setLimitSettings({ ...limitSettings, showLimitMessage: e.target.checked })}
                               className="sr-only"
                               id="show-message-toggle"
                             />
@@ -512,7 +549,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                             </label>
                             <textarea
                               value={limitSettings.limitReachedMessage}
-                              onChange={(e) => setLimitSettings({...limitSettings, limitReachedMessage: e.target.value})}
+                              onChange={(e) => setLimitSettings({ ...limitSettings, limitReachedMessage: e.target.value })}
                               rows={3}
                               placeholder="Enter a custom message..."
                               className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none resize-none"
@@ -550,13 +587,12 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
               <button
                 onClick={handleSave}
                 disabled={isSaving || saveSuccess}
-                className={`flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
-                  saveSuccess
+                className={`flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${saveSuccess
                     ? 'bg-green-600 text-white cursor-default'
                     : isSaving
-                    ? 'bg-blue-500 text-white cursor-wait'
-                    : 'bg-blue-600 hover:bg-blue-500 text-white'
-                }`}
+                      ? 'bg-blue-500 text-white cursor-wait'
+                      : 'bg-blue-600 hover:bg-blue-500 text-white'
+                  }`}
               >
                 {isSaving ? (
                   <>
@@ -590,7 +626,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
               <div>
                 <h4 className="font-bold text-white mb-2">Reset Usage Counter?</h4>
                 <p className="text-sm text-gray-400">
-                  Changing the period duration will reset your current usage counter 
+                  Changing the period duration will reset your current usage counter
                   ({connection?.currentPeriodUsage}/{connection?.messageLimit} used
                   {connection?.overageCount > 0 && `, +${connection.overageCount} overage`}).
                 </p>
@@ -599,7 +635,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={cancelPeriodChange}
@@ -636,7 +672,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave }:
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={cancelDeleteHistory}

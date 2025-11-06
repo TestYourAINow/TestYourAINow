@@ -100,6 +100,18 @@ export async function PUT(req: NextRequest, context: any) {
     resetPeriod = true;
   }
 
+  // 🆕 DÉTECTER CHANGEMENT DE LIMITE - RECALCULER OVERAGE
+let recalculateOverage = false;
+
+if (settings?.messageLimit && 
+    connection.messageLimit !== settings.messageLimit && 
+    connection.limitEnabled &&
+    connection.currentPeriodUsage > 0) {
+  
+  console.log(`🔄 [LIMIT] Message limit changed from ${connection.messageLimit} to ${settings.messageLimit}`);
+  recalculateOverage = true;
+}
+
   // 🔧 CONSTRUIRE L'OBJET DE MISE À JOUR
   const updateData: any = {};
   
@@ -147,6 +159,34 @@ export async function PUT(req: NextRequest, context: any) {
     
     console.log('🔄 [LIMIT] Period reset applied');
   }
+
+// 🔧 RECALCULER L'OVERAGE SI LA LIMITE A CHANGÉ
+if (recalculateOverage && settings?.messageLimit) {
+  const newLimit = settings.messageLimit;
+  const currentUsage = connection.currentPeriodUsage;
+  
+  if (currentUsage > newLimit) {
+    // On est ENCORE en overage avec la nouvelle limite
+    const newOverage = currentUsage - newLimit;
+    updateData.overageCount = newOverage;
+    
+    console.log(`📊 [LIMIT] Recalculated overage:`, {
+      oldLimit: connection.messageLimit,
+      newLimit: newLimit,
+      currentUsage: currentUsage,
+      newOverage: newOverage
+    });
+  } else {
+    // On n'est PLUS en overage avec la nouvelle limite
+    updateData.overageCount = 0;
+    
+    console.log(`✅ [LIMIT] No longer in overage:`, {
+      oldLimit: connection.messageLimit,
+      newLimit: newLimit,
+      currentUsage: currentUsage
+    });
+  }
+}
 
   console.log('📝 [API] Update data:', updateData);
 

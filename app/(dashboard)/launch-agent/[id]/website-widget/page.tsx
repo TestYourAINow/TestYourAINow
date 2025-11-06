@@ -1590,12 +1590,25 @@ const ChatbotBuilder: React.FC = () => {
       />
 
       {/* 🆕 USAGE LIMIT MODAL */}
-      <UsageLimitModal
-        isOpen={showLimitModal}
-        onClose={() => setShowLimitModal(false)}
-        connection={connection}
-        onSave={handleSaveLimits}
-      />
+     <UsageLimitModal
+  isOpen={showLimitModal}
+  onClose={() => setShowLimitModal(false)}
+  connection={connection}
+  onSave={handleSaveLimits}
+  onRefresh={async () => {
+    // Recharger la connection depuis l'API
+    try {
+      const res = await fetch(`/api/connections/${connectionId}`);
+      const data = await res.json();
+      if (data?.connection) {
+        setConnection(data.connection);
+        console.log('🔄 [RELOAD] Connection reloaded after delete');
+      }
+    } catch (error) {
+      console.error('Error reloading connection:', error);
+    }
+  }}
+/>
 
 
       <style jsx>{`
