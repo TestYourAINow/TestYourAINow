@@ -223,8 +223,8 @@ window.AIChatWidget = {
     
     // Optimized calculations for popup with 55 character support
     const popupMinWidth = 55;
-    const popupMaxWidth = 200; // Matches CSS specifications
-    const popupHeight = 55; // Estimated for 55 characters across ~2 lines
+    const popupMaxWidth = 320; // Matches CSS specifications
+    const popupHeight = 70; // Estimated for 55 characters across ~2 lines
     const popupMarginTop = popupHeight + 32; // popup height + margin
     const popupMarginLeft = Math.max(60, popupMaxWidth - buttonSize);
     
