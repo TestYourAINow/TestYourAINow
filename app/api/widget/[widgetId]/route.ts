@@ -1161,10 +1161,12 @@ function formatMessageContent(text) {
 </html>`;
 
     return new NextResponse(htmlContent, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=300",
+  status: 200,
+  headers: {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-cache, no-store, must-revalidate",  // ← AUCUN CACHE !
+    "Pragma": "no-cache",  // ← Pour compatibilité HTTP/1.0
+    "Expires": "0",        // ← Pour compatibilité
         "X-Frame-Options": "ALLOWALL",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET",
