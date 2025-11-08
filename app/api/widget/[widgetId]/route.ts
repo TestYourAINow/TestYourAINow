@@ -1247,8 +1247,7 @@ if (config.showPopup && config.popupMessage && popup && !popupClosed) {
       data: { 
         width: config.width, 
         height: config.height,
-        isMobile: isMobile,
-        showPopup: config.showPopup
+        isMobile: isMobile
       } 
     }, '*');
     
