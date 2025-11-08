@@ -184,20 +184,6 @@ html, body {
     inset 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
-/* 🎯 ACTIVE - Effet "pressé" */
-.chat-popup-close:active {
-  transform: scale(0.9) rotate(90deg);
-}
-
-.chat-popup-close:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
-}
-
-.chat-popup-close:active {
-  transform: scale(0.95);
-}
-
 .chat-window {
   position: absolute;
   bottom: 16px;
