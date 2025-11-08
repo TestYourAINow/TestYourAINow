@@ -855,7 +855,7 @@ const popupObserver = new MutationObserver((mutations) => {
         // Le popup vient d'apparaître !
         setTimeout(() => {
           sendPopupSize();
-        }, 100); // Petit délai pour que le CSS soit appliqué
+        }, 400); // 🔧 Augmenté à 400ms pour que le CSS + animation soient terminés
       } else if (isHidden && !isOpen) {
         // Le popup vient de se cacher
         parent.postMessage({ 
@@ -870,15 +870,32 @@ const popupObserver = new MutationObserver((mutations) => {
 function sendPopupSize() {
   if (!popup) return;
   
+  // 🔧 FORCER LE REFLOW pour que le CSS soit appliqué
+  popup.offsetHeight;
+  
   // Mesurer les dimensions réelles du popup
   const rect = popup.getBoundingClientRect();
   const computedStyle = window.getComputedStyle(popup);
   
-  // Largeur réelle incluant padding et border
-  const popupWidth = Math.ceil(rect.width);
-  const popupHeight = Math.ceil(rect.height);
+  // 🎯 OBTENIR LA MAX-WIDTH DU CSS comme backup
+  const cssMaxWidth = computedStyle.maxWidth;
+  let maxWidthValue = 320; // Valeur par défaut
+  
+  if (cssMaxWidth && cssMaxWidth !== 'none') {
+    // Extraire la valeur numérique (ex: "min(320px, calc(...))" → 320)
+    const match = cssMaxWidth.match(/(\d+)px/);
+    if (match) {
+      maxWidthValue = parseInt(match[1]);
+    }
+  }
+  
+  // 🎯 PRENDRE LA PLUS GRANDE LARGEUR (réelle ou CSS max-width)
+  const popupWidth = Math.max(Math.ceil(rect.width), 120); // Minimum 120px
+  const popupHeight = Math.ceil(rect.height) || 70; // Minimum 70px
   
   console.log('📏 [POPUP] Real size:', popupWidth, 'x', popupHeight);
+  console.log('   └─ CSS max-width:', maxWidthValue);
+  console.log('   └─ Measured rect:', Math.ceil(rect.width), 'x', Math.ceil(rect.height));
   
   // Envoyer au parent (widget-client.js)
   parent.postMessage({ 
@@ -903,7 +920,7 @@ window.addEventListener('DOMContentLoaded', function() {
   if (popup && !popup.classList.contains('hidden')) {
     setTimeout(() => {
       sendPopupSize();
-    }, 100);
+    }, 400); // 🔧 Augmenté à 400ms
   }
 });
 
