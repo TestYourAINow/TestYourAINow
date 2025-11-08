@@ -127,25 +127,66 @@ html, body {
 }
 
 .chat-popup-close {
+  /* 🎯 POSITION - À l'extérieur en haut à droite */
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  top: -10px;        /* Au-dessus du popup */
+  right: -10px;      /* À droite du popup */
+  
+  /* 🎯 DIMENSIONS */
+  width: 24px;
+  height: 24px;
+  
+  /* 🎯 COULEUR - Utilise la couleur primaire choisie */
+  background: linear-gradient(
+    135deg, 
+    var(--primary-color), 
+    color-mix(in srgb, var(--primary-color) 85%, #06b6d4)
+  );
+  
+  /* 🎯 CONTOUR - Gris clair pour ne pas "blender" */
+  border: 2px solid rgba(200, 200, 200, 0.3);
+  
+  /* 🎯 OMBRE - Pour effet de profondeur */
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.2),              /* Ombre externe */
+    inset 0 1px 2px rgba(255, 255, 255, 0.2); /* Lumière interne */
+  
+  /* 🎯 FORME */
   border-radius: 50%;
-  cursor: pointer;
+  
+  /* 🎯 TEXTE */
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  
+  /* 🎯 CENTRAGE DU "×" */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: bold;
-  line-height: 1;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(5px);
+  
+  /* 🎯 INTERACTION */
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 10;
+  
+  /* Éviter la sélection du texte */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 🎯 HOVER - Agrandissement + rotation */
+.chat-popup-close:hover {
+  transform: scale(1.15) rotate(90deg);  /* Le X devient + */
+  border-color: rgba(200, 200, 200, 0.5); /* Contour plus visible */
+  box-shadow: 
+    0 3px 8px rgba(0, 0, 0, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+/* 🎯 ACTIVE - Effet "pressé" */
+.chat-popup-close:active {
+  transform: scale(0.9) rotate(90deg);
 }
 
 .chat-popup-close:hover {
