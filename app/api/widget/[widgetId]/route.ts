@@ -177,7 +177,7 @@ html, body {
 
 /* 🎯 HOVER - Agrandissement + rotation */
 .chat-popup-close:hover {
-  transform: scale(1.15) rotate(90deg);  /* Le X devient + */
+  transform: scale(1.15)
   border-color: rgba(200, 200, 200, 0.5); /* Contour plus visible */
   box-shadow: 
     0 3px 8px rgba(0, 0, 0, 0.25),
