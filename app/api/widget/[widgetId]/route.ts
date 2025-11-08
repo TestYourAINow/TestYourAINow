@@ -1248,6 +1248,7 @@ if (config.showPopup && config.popupMessage && popup && !popupClosed) {
         width: config.width, 
         height: config.height,
         isMobile: isMobile
+        showPopup: config.showPopup
       } 
     }, '*');
     

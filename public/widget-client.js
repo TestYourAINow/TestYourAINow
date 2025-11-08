@@ -87,7 +87,7 @@ window.AIChatWidget = {
     setTimeout(() => {
       if (this.iframe && this.iframe.style.opacity === '0') {
         console.warn('AIChatWidget: Initialization timeout, forcing display');
-        this.showButton();
+        this.showButtonOnly();
       }
     }, 10000);
   },
@@ -192,46 +192,56 @@ window.AIChatWidget = {
               isMobile: this.isMobile 
             });
           } else {
-            this.showButton();
+            // 🆕 Garde la bonne taille selon showPopup
+            if (this.config.showPopup) {
+              this.showButtonWithPopup();
+            } else {
+              this.showButtonOnly();
+            }
           }
         }
       }, 150);
     });
   },
 
-  // Widget ready state handler
+  // 🆕 MODIFIÉ - Widget ready state handler
   handleWidgetReady: function(data) {
     if (!this.iframe) return;
     
-    console.log('AIChatWidget: Widget ready - Mobile:', data.isMobile || this.isMobile);
+    console.log('AIChatWidget: Widget ready - Mobile:', data.isMobile || this.isMobile, '- ShowPopup:', data.showPopup);
     
     if (data.width) this.config.width = data.width;
     if (data.height) this.config.height = data.height;
     if (data.isMobile !== undefined) this.isMobile = data.isMobile;
+    if (data.showPopup !== undefined) this.config.showPopup = data.showPopup;
     
     this.isOpen = false;
-    this.showButton();
+    
+    // 🆕 CHOIX DE LA TAILLE SELON LE POPUP
+    if (data.showPopup) {
+      this.showButtonWithPopup();
+    } else {
+      this.showButtonOnly();
+    }
   },
 
-  // Display chat launcher button with optimized dimensions
-  showButton: function() {
+  // 🆕 NOUVELLE FONCTION - Grande iframe (avec popup)
+  showButtonWithPopup: function() {
     if (!this.iframe) return;
     
     const buttonSize = 64;
     const shadowMargin = 15;
     const hoverMargin = 8;
     
-    // Optimized calculations for popup with 55 character support
-    const popupMinWidth = 55;
-    const popupMaxWidth = 320; // Matches CSS specifications
-    const popupHeight = 70; // Estimated for 55 characters across ~2 lines
-    const popupMarginTop = popupHeight + 32; // popup height + margin
-    const popupMarginLeft = Math.max(60, popupMaxWidth - buttonSize);
+    // Popup dimensions (55 caractères max)
+    const popupMaxWidth = 200;
+    const popupHeight = 70;
+    const popupMarginTop = popupHeight + 32;
     
-    // Optimized iframe dimensions
+    // Dimensions optimales pour le popup
     const iframeWidth = Math.max(
-      buttonSize + (shadowMargin * 2) + hoverMargin, // Minimum for button
-      popupMaxWidth + 24 // Maximum for popup + margins
+      buttonSize + (shadowMargin * 2) + hoverMargin,
+      popupMaxWidth + 50  // 50px pour marges + bouton X
     );
     
     const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
@@ -269,84 +279,134 @@ window.AIChatWidget = {
         display: block;
       `;
     }
+    
+    console.log('AIChatWidget: Button with popup displayed -', iframeWidth + 'x' + iframeHeight);
   },
 
-// Widget open state handler
-handleWidgetOpen: function(data) {
-  if (!this.iframe) return;
-  
-  console.log('AIChatWidget: Opening chat interface - Mobile:', data.isMobile || this.isMobile);
-  this.isOpen = true;
-  
-  // Update mobile state if provided
-  if (data.isMobile !== undefined) {
-    this.isMobile = data.isMobile;
-  }
-  
-  // 🎯 FIX: Fullscreen SEULEMENT pour vrais mobiles (pas desktop en fenêtre étroite)
-  const isActualMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                         (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
-  
-  if (isActualMobile) {
-    // Mobile: Fullscreen mode
-    this.iframe.style.cssText = `
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      height: 100dvh !important;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-    `;
+  // 🆕 NOUVELLE FONCTION - Petite iframe (sans popup)
+  showButtonOnly: function() {
+    if (!this.iframe) return;
     
-    // Lock body scroll
-    if (this.lockBodyScroll) {
-      this.lockBodyScroll();
+    const buttonSize = 64;
+    const shadowMargin = 15;
+    const hoverMargin = 8;
+    
+    const iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin;
+    const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin;
+    
+    if (this.isMobile) {
+      this.iframe.style.cssText = `
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        width: ${iframeWidth}px;
+        height: ${iframeHeight}px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      `;
+    } else {
+      this.iframe.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: ${iframeWidth}px;
+        height: ${iframeHeight}px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+      `;
     }
     
-  } else {
-    // Desktop: Standard behavior (même si fenêtre étroite)
-    const maxHeight = window.innerHeight - 100;
-    const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-    const baseHeight = Math.min(this.config.height, maxHeight);
+    console.log('AIChatWidget: Button only displayed -', iframeWidth + 'x' + iframeHeight);
+  },
+
+  // Widget open state handler
+  handleWidgetOpen: function(data) {
+    if (!this.iframe) return;
     
-    const animationMargin = 25;
-    const borderRadius = 10;
-    const totalMarginWidth = animationMargin + borderRadius;
-    const totalMarginHeight = animationMargin + borderRadius;
+    console.log('AIChatWidget: Opening chat interface - Mobile:', data.isMobile || this.isMobile);
+    this.isOpen = true;
     
-    const finalWidth = baseWidth + totalMarginWidth;
-    const finalHeight = baseHeight + totalMarginHeight;
+    // Update mobile state if provided
+    if (data.isMobile !== undefined) {
+      this.isMobile = data.isMobile;
+    }
     
-    // 🎯 Desktop: Dimensions fixes en bas à droite
-    this.iframe.style.cssText = `
-      position: fixed !important;
-      bottom: 24px !important;
-      right: 24px !important;
-      width: ${finalWidth}px !important;
-      height: ${finalHeight}px !important;
-      top: auto !important;
-      left: auto !important;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-    `;
-  }
-},
+    // 🎯 FIX: Fullscreen SEULEMENT pour vrais mobiles (pas desktop en fenêtre étroite)
+    const isActualMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                           (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
+    
+    if (isActualMobile) {
+      // Mobile: Fullscreen mode
+      this.iframe.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      `;
+      
+      // Lock body scroll
+      if (this.lockBodyScroll) {
+        this.lockBodyScroll();
+      }
+      
+    } else {
+      // Desktop: Standard behavior (même si fenêtre étroite)
+      const maxHeight = window.innerHeight - 100;
+      const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
+      const baseHeight = Math.min(this.config.height, maxHeight);
+      
+      const animationMargin = 25;
+      const borderRadius = 10;
+      const totalMarginWidth = animationMargin + borderRadius;
+      const totalMarginHeight = animationMargin + borderRadius;
+      
+      const finalWidth = baseWidth + totalMarginWidth;
+      const finalHeight = baseHeight + totalMarginHeight;
+      
+      // 🎯 Desktop: Dimensions fixes en bas à droite
+      this.iframe.style.cssText = `
+        position: fixed !important;
+        bottom: 24px !important;
+        right: 24px !important;
+        width: ${finalWidth}px !important;
+        height: ${finalHeight}px !important;
+        top: auto !important;
+        left: auto !important;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+      `;
+    }
+  },
 
   // Widget close state handler
   handleWidgetClose: function(data) {
@@ -360,7 +420,12 @@ handleWidgetOpen: function(data) {
       this.unlockBodyScroll();
     }
     
-    this.showButton();
+    // 🆕 Revenir à la bonne taille selon showPopup
+    if (this.config.showPopup) {
+      this.showButtonWithPopup();
+    } else {
+      this.showButtonOnly();
+    }
   },
 
   // Dynamic resize handler
@@ -413,7 +478,12 @@ handleWidgetOpen: function(data) {
         isMobile: this.isMobile
       });
     } else {
-      this.showButton();
+      // 🆕 Garde la bonne taille selon showPopup
+      if (this.config.showPopup) {
+        this.showButtonWithPopup();
+      } else {
+        this.showButtonOnly();
+      }
     }
   },
 
