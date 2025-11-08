@@ -1243,15 +1243,13 @@ if (config.showPopup && config.popupMessage && popup && !popupClosed) {
 }
     
     parent.postMessage({ 
-  type: 'WIDGET_READY', 
-  data: { 
-    width: config.width, 
-    height: config.height,
-    isMobile: isMobile,
-    showPopup: config.showPopup,           // 🆕 AJOUTER
-    popupMessage: config.popupMessage      // 🆕 AJOUTER
-  } 
-}, '*');
+      type: 'WIDGET_READY', 
+      data: { 
+        width: config.width, 
+        height: config.height,
+        isMobile: isMobile
+      } 
+    }, '*');
     
     console.log('✅ [WIDGET] Widget loaded - Mobile:', isMobile, '- Session:', currentSessionId);
   </script>

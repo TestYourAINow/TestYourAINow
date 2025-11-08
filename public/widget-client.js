@@ -200,92 +200,76 @@ window.AIChatWidget = {
   },
 
   // Widget ready state handler
-handleWidgetReady: function(data) {
-  if (!this.iframe) return;
-  
-  console.log('AIChatWidget: Widget ready - Mobile:', data.isMobile || this.isMobile);
-  
-  if (data.width) this.config.width = data.width;
-  if (data.height) this.config.height = data.height;
-  if (data.isMobile !== undefined) this.isMobile = data.isMobile;
-  
-  // 🆕 STOCKER LES INFOS DU POPUP
-  if (data.showPopup !== undefined) this.config.showPopup = data.showPopup;
-  if (data.popupMessage !== undefined) this.config.popupMessage = data.popupMessage;
-  
-  this.isOpen = false;
-  this.showButton();
-},
+  handleWidgetReady: function(data) {
+    if (!this.iframe) return;
+    
+    console.log('AIChatWidget: Widget ready - Mobile:', data.isMobile || this.isMobile);
+    
+    if (data.width) this.config.width = data.width;
+    if (data.height) this.config.height = data.height;
+    if (data.isMobile !== undefined) this.isMobile = data.isMobile;
+    
+    this.isOpen = false;
+    this.showButton();
+  },
 
-// Display chat launcher button with optimized dimensions
-showButton: function() {
-  if (!this.iframe) return;
-  
-  const buttonSize = 64;
-  const shadowMargin = 15;
-  const hoverMargin = 8;
-  
-  // 🆕 VÉRIFIER SI LE POPUP EST ACTIVÉ
-  const hasPopup = this.config.showPopup && this.config.popupMessage;
-  
-  let iframeWidth, iframeHeight;
-  
-  if (hasPopup) {
-    // ✅ POPUP ACTIVÉ → Grande iframe pour contenir popup + bouton
+  // Display chat launcher button with optimized dimensions
+  showButton: function() {
+    if (!this.iframe) return;
+    
+    const buttonSize = 64;
+    const shadowMargin = 15;
+    const hoverMargin = 8;
+    
+    // Optimized calculations for popup with 55 character support
     const popupMinWidth = 55;
-    const popupMaxWidth = 320;
-    const popupHeight = 70;
-    const popupMarginTop = popupHeight + 32;
+    const popupMaxWidth = 320; // Matches CSS specifications
+    const popupHeight = 70; // Estimated for 55 characters across ~2 lines
+    const popupMarginTop = popupHeight + 32; // popup height + margin
     const popupMarginLeft = Math.max(60, popupMaxWidth - buttonSize);
     
-    iframeWidth = Math.max(
-      buttonSize + (shadowMargin * 2) + hoverMargin,
-      popupMaxWidth + 24
+    // Optimized iframe dimensions
+    const iframeWidth = Math.max(
+      buttonSize + (shadowMargin * 2) + hoverMargin, // Minimum for button
+      popupMaxWidth + 24 // Maximum for popup + margins
     );
     
-    iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
+    const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
     
-  } else {
-    // ✅ PAS DE POPUP → Petite iframe pour juste le bouton
-    iframeWidth = buttonSize + (shadowMargin * 2) + hoverMargin;
-    iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin;
-  }
-  
-  // Appliquer les dimensions calculées
-  if (this.isMobile) {
-    this.iframe.style.cssText = `
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      width: ${iframeWidth}px;
-      height: ${iframeHeight}px;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-    `;
-  } else {
-    this.iframe.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: ${iframeWidth}px;
-      height: ${iframeHeight}px;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-    `;
-  }
-},
+    if (this.isMobile) {
+      this.iframe.style.cssText = `
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        width: ${iframeWidth}px;
+        height: ${iframeHeight}px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      `;
+    } else {
+      this.iframe.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: ${iframeWidth}px;
+        height: ${iframeHeight}px;
+        border: none;
+        z-index: 999999;
+        background: transparent;
+        opacity: 1;
+        pointer-events: auto;
+        display: block;
+      `;
+    }
+  },
 
 // Widget open state handler
 handleWidgetOpen: function(data) {
