@@ -894,9 +894,19 @@ function formatMessageContent(text) {
 
     // 🆕 Fermer le popup avec le bouton X
     closePopupBtn?.addEventListener('click', function(e) {
-      e.stopPropagation(); // Empêcher d'ouvrir le chat
-      popup?.classList.add('hidden');
-    });
+  e.stopPropagation();
+  popup?.classList.add('hidden');
+  
+  // Sauvegarder l'heure de fermeture (pas juste "true")
+  try {
+    localStorage.setItem('popup_closed_' + config._id, JSON.stringify({
+      closed: true,
+      timestamp: Date.now() // Heure actuelle
+    }));
+  } catch(err) {
+    console.log('Cannot save popup state');
+  }
+});
     
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
@@ -1177,13 +1187,33 @@ function formatMessageContent(text) {
       console.log('✅ [WIDGET] Initialized - sessionId:', currentSessionId);
     });
     
-    if (config.showPopup && config.popupMessage && popup) {
-      setTimeout(() => {
-        if (!isOpen) {
-          popup.classList.remove('hidden');
-        }
-      }, (config.popupDelay || 3) * 1000);
+    // Vérifier si le popup a été fermé récemment
+let popupClosed = false;
+try {
+  const popupData = localStorage.getItem('popup_closed_' + config._id);
+  if (popupData) {
+    const data = JSON.parse(popupData);
+    const maxAge = 60 * 60 * 1000; // 1 HEURE (comme le chat)
+    
+    // Si fermé il y a moins d'1 heure → ne pas afficher
+    if (Date.now() - data.timestamp < maxAge) {
+      popupClosed = true;
+    } else {
+      // Expiration dépassée → supprimer l'ancienne donnée
+      localStorage.removeItem('popup_closed_' + config._id);
     }
+  }
+} catch(e) {
+  console.log('Cannot read popup state');
+}
+
+if (config.showPopup && config.popupMessage && popup && !popupClosed) {
+  setTimeout(() => {
+    if (!isOpen) {
+      popup.classList.remove('hidden');
+    }
+  }, (config.popupDelay || 3) * 1000);
+}
     
     parent.postMessage({ 
       type: 'WIDGET_READY', 
