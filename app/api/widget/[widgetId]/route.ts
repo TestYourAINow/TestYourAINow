@@ -845,6 +845,68 @@ function formatMessageContent(text) {
     }
     
     const popup = document.getElementById('chatPopup');
+
+const popupObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+      const isHidden = popup.classList.contains('hidden');
+      
+      if (!isHidden && !isOpen) {
+        // Le popup vient d'apparaître !
+        setTimeout(() => {
+          sendPopupSize();
+        }, 100); // Petit délai pour que le CSS soit appliqué
+      } else if (isHidden && !isOpen) {
+        // Le popup vient de se cacher
+        parent.postMessage({ 
+          type: 'POPUP_HIDE' 
+        }, '*');
+      }
+    }
+  });
+});
+
+// Fonction pour mesurer et envoyer la taille réelle du popup
+function sendPopupSize() {
+  if (!popup) return;
+  
+  // Mesurer les dimensions réelles du popup
+  const rect = popup.getBoundingClientRect();
+  const computedStyle = window.getComputedStyle(popup);
+  
+  // Largeur réelle incluant padding et border
+  const popupWidth = Math.ceil(rect.width);
+  const popupHeight = Math.ceil(rect.height);
+  
+  console.log('📏 [POPUP] Real size:', popupWidth, 'x', popupHeight);
+  
+  // Envoyer au parent (widget-client.js)
+  parent.postMessage({ 
+    type: 'POPUP_SHOW',
+    data: {
+      popupWidth: popupWidth,
+      popupHeight: popupHeight
+    }
+  }, '*');
+}
+
+// Observer les changements de classe sur le popup
+if (popup) {
+  popupObserver.observe(popup, {
+    attributes: true,
+    attributeFilter: ['class']
+  });
+}
+
+// Si le popup est déjà visible au chargement, envoyer sa taille
+window.addEventListener('DOMContentLoaded', function() {
+  if (popup && !popup.classList.contains('hidden')) {
+    setTimeout(() => {
+      sendPopupSize();
+    }, 100);
+  }
+});
+
     const button = document.getElementById('chatButton');
     const chatWindow = document.getElementById('chatWindow');
     const chatWidget = document.querySelector('.chat-widget');
