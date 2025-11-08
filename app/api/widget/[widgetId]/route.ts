@@ -96,7 +96,6 @@ html, body {
   max-width: min(200px, calc(100vw - 120px));
   width: max-content;
   padding: 12px 16px;
-  padding-right: 36px; /* 🆕 Espace pour le bouton X */
   border-radius: 20px;
   font-size: 14px;
   font-weight: 500;
@@ -112,7 +111,6 @@ html, body {
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   animation: slideUpBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative; /* 🆕 Pour positionner le X */
 }
 
 .chat-popup::after {
@@ -128,39 +126,35 @@ html, body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* 🆕 BOUTON X POUR FERMER LE POPUP */
-.popup-close-btn {
+.chat-popup-close {
   position: absolute;
   top: 8px;
   right: 8px;
   width: 20px;
   height: 20px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
   transition: all 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(5px);
   z-index: 10;
 }
 
-.popup-close-btn:hover {
-  background: rgba(0, 0, 0, 0.35);
+.chat-popup-close:hover {
+  background: rgba(255, 255, 255, 0.3);
   transform: scale(1.1);
 }
 
-.popup-close-btn:active {
+.chat-popup-close:active {
   transform: scale(0.95);
-}
-
-.popup-close-btn svg {
-  width: 10px;
-  height: 10px;
-  stroke: white;
-  stroke-width: 2.5;
 }
 
 .chat-window {
@@ -649,16 +643,12 @@ html, body {
 <body>
   <div class="chat-widget">
     <!-- Popup -->
-${config.showPopup && config.popupMessage ? `
-  <div class="chat-popup hidden" id="chatPopup">
-    <button class="popup-close-btn" id="popupCloseBtn" aria-label="Close popup">
-      <svg viewBox="0 0 12 12" fill="none">
-        <path d="M2 2L10 10M10 2L2 10" stroke="currentColor" stroke-linecap="round"/>
-      </svg>
-    </button>
-    ${config.popupMessage}
-  </div>
-` : ''}
+    ${config.showPopup && config.popupMessage ? `
+      <div class="chat-popup hidden" id="chatPopup">
+        <button class="chat-popup-close" id="closePopupBtn" aria-label="Close">×</button>
+        ${config.popupMessage}
+      </div>
+    ` : ''}
     
     <!-- Button -->
     <button class="chat-button" id="chatButton">
@@ -888,19 +878,6 @@ function formatMessageContent(text) {
     
     const popup = document.getElementById('chatPopup');
     const button = document.getElementById('chatButton');
-const popupCloseBtn = document.getElementById('popupCloseBtn'); // 🆕
-
-// 🆕 Fermer le popup quand on clique sur X
-if (popupCloseBtn) {
-  popupCloseBtn.addEventListener('click', function(e) {
-    e.stopPropagation(); // Empêche d'ouvrir le chat
-    if (popup) {
-      popup.classList.add('hidden');
-    }
-  });
-}
-
-    
     const chatWindow = document.getElementById('chatWindow');
     const chatWidget = document.querySelector('.chat-widget');
     const messagesContainer = document.getElementById('messagesContainer');
@@ -908,11 +885,18 @@ if (popupCloseBtn) {
     const sendBtn = document.getElementById('sendBtn');
     const resetBtn = document.getElementById('resetBtn');
     const closeBtn = document.getElementById('closeBtn');
+    const closePopupBtn = document.getElementById('closePopupBtn');
     
     button?.addEventListener('click', toggleChat);
     closeBtn?.addEventListener('click', closeChat);
     resetBtn?.addEventListener('click', resetChat);
     sendBtn?.addEventListener('click', sendMessage);
+
+    // 🆕 Fermer le popup avec le bouton X
+    closePopupBtn?.addEventListener('click', function(e) {
+      e.stopPropagation(); // Empêcher d'ouvrir le chat
+      popup?.classList.add('hidden');
+    });
     
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
