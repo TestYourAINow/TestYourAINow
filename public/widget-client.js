@@ -271,75 +271,82 @@ window.AIChatWidget = {
     }
   },
 
-  // Widget open state handler
-  handleWidgetOpen: function(data) {
-    if (!this.iframe) return;
+// Widget open state handler
+handleWidgetOpen: function(data) {
+  if (!this.iframe) return;
+  
+  console.log('AIChatWidget: Opening chat interface - Mobile:', data.isMobile || this.isMobile);
+  this.isOpen = true;
+  
+  // Update mobile state if provided
+  if (data.isMobile !== undefined) {
+    this.isMobile = data.isMobile;
+  }
+  
+  // 🎯 FIX: Fullscreen SEULEMENT pour vrais mobiles (pas desktop en fenêtre étroite)
+  const isActualMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                         (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
+  
+  if (isActualMobile) {
+    // Mobile: Fullscreen mode
+    this.iframe.style.cssText = `
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    `;
     
-    console.log('AIChatWidget: Opening chat interface - Mobile:', data.isMobile || this.isMobile);
-    this.isOpen = true;
-    
-    // Update mobile state if provided
-    if (data.isMobile !== undefined) {
-      this.isMobile = data.isMobile;
+    // Lock body scroll
+    if (this.lockBodyScroll) {
+      this.lockBodyScroll();
     }
     
-    if (this.isMobile) {
-      // Mobile: Fullscreen mode
-      this.iframe.style.cssText = `
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        display: block;
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-      `;
-      
-      // Lock body scroll
-      if (this.lockBodyScroll) {
-        this.lockBodyScroll();
-      }
-      
-    } else {
-      // Desktop: Standard behavior with shadow margins
-      const maxHeight = window.innerHeight - 100;
-      const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-      const baseHeight = Math.min(this.config.height, maxHeight);
-      
-      const animationMargin = 25;
-      const borderRadius = 10;
-      const totalMarginWidth = animationMargin + borderRadius;
-      const totalMarginHeight = animationMargin + borderRadius;
-      
-      const finalWidth = baseWidth + totalMarginWidth;
-      const finalHeight = baseHeight + totalMarginHeight;
-      
-      this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        width: ${finalWidth}px;
-        height: ${finalHeight}px;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        display: block;
-      `;
-    }
-  },
+  } else {
+    // Desktop: Standard behavior (même si fenêtre étroite)
+    const maxHeight = window.innerHeight - 100;
+    const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
+    const baseHeight = Math.min(this.config.height, maxHeight);
+    
+    const animationMargin = 25;
+    const borderRadius = 10;
+    const totalMarginWidth = animationMargin + borderRadius;
+    const totalMarginHeight = animationMargin + borderRadius;
+    
+    const finalWidth = baseWidth + totalMarginWidth;
+    const finalHeight = baseHeight + totalMarginHeight;
+    
+    // 🎯 Desktop: Dimensions fixes en bas à droite
+    this.iframe.style.cssText = `
+      position: fixed !important;
+      bottom: 24px !important;
+      right: 24px !important;
+      width: ${finalWidth}px !important;
+      height: ${finalHeight}px !important;
+      top: auto !important;
+      left: auto !important;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+    `;
+  }
+},
 
   // Widget close state handler
   handleWidgetClose: function(data) {
