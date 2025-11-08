@@ -126,6 +126,38 @@ html, body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+.chat-popup-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(5px);
+  z-index: 10;
+}
+
+.chat-popup-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.chat-popup-close:active {
+  transform: scale(0.95);
+}
+
+
 .chat-window {
   position: absolute;
   bottom: 16px;
@@ -614,6 +646,7 @@ html, body {
     <!-- Popup -->
     ${config.showPopup && config.popupMessage ? `
       <div class="chat-popup hidden" id="chatPopup">
+        <button class="chat-popup-close" id="closePopupBtn" aria-label="Close">×</button>
         ${config.popupMessage}
       </div>
     ` : ''}
@@ -853,11 +886,18 @@ function formatMessageContent(text) {
     const sendBtn = document.getElementById('sendBtn');
     const resetBtn = document.getElementById('resetBtn');
     const closeBtn = document.getElementById('closeBtn');
+    const closePopupBtn = document.getElementById('closePopupBtn');
     
     button?.addEventListener('click', toggleChat);
     closeBtn?.addEventListener('click', closeChat);
     resetBtn?.addEventListener('click', resetChat);
     sendBtn?.addEventListener('click', sendMessage);
+
+     // 🆕 Fermer le popup avec le bouton X
+    closePopupBtn?.addEventListener('click', function(e) {
+      e.stopPropagation(); // Empêcher d'ouvrir le chat
+      popup?.classList.add('hidden');
+    });
     
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
