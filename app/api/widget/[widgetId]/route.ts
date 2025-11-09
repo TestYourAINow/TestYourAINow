@@ -1,4 +1,4 @@
-// app/api/widget/[widgetId]/route.ts - VERSION AVEC ÉTATS
+// app/api/widget/[widgetId]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
@@ -36,7 +36,7 @@ export async function GET(
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>${config.name || 'Chat Widget'}</title>
   <style>
-/* ✅ GARDÉ - Tout ton CSS exact (pas de changements) */
+/* Base styles - Desktop and Mobile */
 * { 
   box-sizing: border-box; 
   margin: 0; 
@@ -127,38 +127,58 @@ html, body {
 }
 
 .chat-popup-close {
+  /* 🎯 POSITION - À l'extérieur en haut à droite */
   position: absolute;
-  top: -10px;
-  right: -10px;
+  top: -10px;        /* Au-dessus du popup */
+  right: -10px;      /* À droite du popup */
+  
+  /* 🎯 DIMENSIONS */
   width: 24px;
   height: 24px;
+  
+  /* 🎯 COULEUR - Utilise la couleur primaire choisie */
   background: linear-gradient(
     135deg, 
     var(--primary-color), 
     color-mix(in srgb, var(--primary-color) 85%, #06b6d4)
   );
+  
+  /* 🎯 CONTOUR - Gris clair pour ne pas "blender" */
   border: 2px solid rgba(200, 200, 200, 0.3);
+  
+  /* 🎯 OMBRE - Pour effet de profondeur */
   box-shadow: 
-    0 2px 6px rgba(0, 0, 0, 0.2),
-    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    0 2px 6px rgba(0, 0, 0, 0.2),              /* Ombre externe */
+    inset 0 1px 2px rgba(255, 255, 255, 0.2); /* Lumière interne */
+  
+  /* 🎯 FORME */
   border-radius: 50%;
+  
+  /* 🎯 TEXTE */
   color: white;
   font-size: 16px;
   font-weight: 600;
   line-height: 1;
+  
+  /* 🎯 CENTRAGE DU "×" */
   display: flex;
   align-items: center;
   justify-content: center;
+  
+  /* 🎯 INTERACTION */
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 10;
+  
+  /* Éviter la sélection du texte */
   -webkit-user-select: none;
   user-select: none;
 }
 
+/* 🎯 HOVER - Agrandissement + rotation */
 .chat-popup-close:hover {
-  transform: scale(1.15) rotate(90deg);
-  border-color: rgba(200, 200, 200, 0.5);
+  transform: scale(1.15) rotate(90deg);  /* Le X devient + */
+  border-color: rgba(200, 200, 200, 0.5); /* Contour plus visible */
   box-shadow: 
     0 3px 8px rgba(0, 0, 0, 0.25),
     inset 0 1px 2px rgba(255, 255, 255, 0.3);
@@ -173,7 +193,9 @@ html, body {
   max-width: calc(100vw - 40px);
   max-height: calc(100vh - 40px);
   border-radius: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 
+  0 4px 16px rgba(0, 0, 0, 0.15),
+  0 1px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -477,6 +499,7 @@ html, body {
     max-width: calc(100vw - 120px);
   }
   
+  /* Mobile fullscreen mode when class is applied */
   .chat-widget.mobile-fullscreen {
     position: fixed !important;
     top: 0 !important;
@@ -599,6 +622,7 @@ html, body {
   }
 }
 
+/* 🔗 Liens cliquables */
 .message-bubble .chat-link {
   color: inherit;
   text-decoration: underline;
@@ -621,6 +645,7 @@ html, body {
   text-decoration-thickness: 2px;
 }
 
+/* 🔵 BOT LINKS - TOUJOURS BLEU */
 .message-bubble.bot .chat-link {
   color: #60a5fa;
   font-weight: 500;
@@ -631,6 +656,7 @@ html, body {
   text-decoration-thickness: 2px;
 }
 
+/* 🔵 DARK MODE - MÊME BLEU */
 .chat-messages.dark .message-bubble.bot .chat-link {
   color: #60a5fa;
 }
@@ -643,6 +669,7 @@ html, body {
 
 <body>
   <div class="chat-widget">
+    <!-- Popup -->
     ${config.showPopup && config.popupMessage ? `
       <div class="chat-popup hidden" id="chatPopup">
         <button class="chat-popup-close" id="closePopupBtn" aria-label="Close">×</button>
@@ -650,13 +677,16 @@ html, body {
       </div>
     ` : ''}
     
+    <!-- Button -->
     <button class="chat-button" id="chatButton">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
         <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
       </svg>
     </button>
     
+    <!-- Chat Window -->
     <div class="chat-window hidden" id="chatWindow">
+      <!-- Header -->
       <div class="chat-header">
         <div class="chat-header-content">
           <div style="position: relative;">
@@ -684,11 +714,13 @@ html, body {
         </div>
       </div>
       
+      <!-- Messages -->
       <div class="chat-messages" id="chatMessages">
         <div id="messagesContainer">
         </div>
       </div>
       
+      <!-- Input -->
       <div class="chat-input-area">
         <div class="chat-input-container">
           <textarea 
@@ -708,14 +740,17 @@ html, body {
   </div>
   
   <script>
+    // 🔍 PREMIER LOG - Si tu ne vois pas ça, le script ne se charge PAS
     console.log('🚀 [WIDGET-IFRAME] Script started loading...');
     
+    // Global variables
     let isOpen = false;
     let isTyping = false;
     let messages = [];
     let isMobile = false;
     let currentSessionId = null;
     
+    // Configuration
     console.log('📝 [WIDGET-IFRAME] Loading config...');
     const config = ${JSON.stringify(config).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/\//g, '\\/')};
     console.log('✅ [WIDGET-IFRAME] Config loaded:', config._id);
@@ -723,15 +758,19 @@ html, body {
 function formatMessageContent(text) {
   if (!text) return '';
   
+  // Markdown links: [texte](url) → <a>
+  // Construction dynamique de la regex pour éviter les problèmes d'échappement
   const markdownLinkRegex = new RegExp('\\\\[([^\\\\]]+)\\\\]\\\\(([^)]+)\\\\)', 'g');
   text = text.replace(
     markdownLinkRegex,
     '<a href="$2" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>'
   );
   
+  // URLs brutes en liens (version simplifiée sans lookbehind qui pose problème)
   text = text.replace(
     /(https?:\\/\\/[^\\s<>"']+)/gi,
     function(match, url) {
+      // Vérifier que ce n'est pas déjà dans un attribut href
       if (text.indexOf('href="' + url) === -1 && text.indexOf("href='" + url) === -1) {
         return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" class="chat-link">' + url + '</a>';
       }
@@ -739,11 +778,13 @@ function formatMessageContent(text) {
     }
   );
   
+  // Line breaks
   text = text.replace(/\\n/g, '<br>');
   
   return text;
 }
 
+    // Session ID generation
     function generateSessionId() {
       const storageKey = 'widget_session_' + config._id;
       
@@ -878,26 +919,21 @@ function formatMessageContent(text) {
     resetBtn?.addEventListener('click', resetChat);
     sendBtn?.addEventListener('click', sendMessage);
 
-    // 🆕 MODIFIÉ - Fermer le popup avec communication d'état
+    // 🆕 Fermer le popup avec le bouton X
     closePopupBtn?.addEventListener('click', function(e) {
-      e.stopPropagation();
-      popup?.classList.add('hidden');
-      
-      // 🆕 NOUVEAU - Dire au parent: retour à bulle seule
-      parent.postMessage({ 
-        type: 'WIDGET_STATE_CHANGE',
-        state: 'button_only'
-      }, '*');
-      
-      try {
-        localStorage.setItem('popup_closed_' + config._id, JSON.stringify({
-          closed: true,
-          timestamp: Date.now()
-        }));
-      } catch(err) {
-        console.log('Cannot save popup state');
-      }
-    });
+  e.stopPropagation();
+  popup?.classList.add('hidden');
+  
+  // Sauvegarder l'heure de fermeture (pas juste "true")
+  try {
+    localStorage.setItem('popup_closed_' + config._id, JSON.stringify({
+      closed: true,
+      timestamp: Date.now() // Heure actuelle
+    }));
+  } catch(err) {
+    console.log('Cannot save popup state');
+  }
+});
     
     input?.addEventListener('input', function() {
       sendBtn.disabled = !this.value.trim();
@@ -1178,37 +1214,33 @@ function formatMessageContent(text) {
       console.log('✅ [WIDGET] Initialized - sessionId:', currentSessionId);
     });
     
-    // 🆕 MODIFIÉ - Gestion du popup avec communication d'état
-    let popupClosed = false;
-    try {
-      const popupData = localStorage.getItem('popup_closed_' + config._id);
-      if (popupData) {
-        const data = JSON.parse(popupData);
-        const maxAge = 60 * 60 * 1000;
-        
-        if (Date.now() - data.timestamp < maxAge) {
-          popupClosed = true;
-        } else {
-          localStorage.removeItem('popup_closed_' + config._id);
-        }
-      }
-    } catch(e) {
-      console.log('Cannot read popup state');
+    // Vérifier si le popup a été fermé récemment
+let popupClosed = false;
+try {
+  const popupData = localStorage.getItem('popup_closed_' + config._id);
+  if (popupData) {
+    const data = JSON.parse(popupData);
+    const maxAge = 60 * 60 * 1000; // 1 HEURE (comme le chat)
+    
+    // Si fermé il y a moins d'1 heure → ne pas afficher
+    if (Date.now() - data.timestamp < maxAge) {
+      popupClosed = true;
+    } else {
+      // Expiration dépassée → supprimer l'ancienne donnée
+      localStorage.removeItem('popup_closed_' + config._id);
     }
+  }
+} catch(e) {
+  console.log('Cannot read popup state');
+}
 
-    if (config.showPopup && config.popupMessage && popup && !popupClosed) {
-      setTimeout(() => {
-        if (!isOpen) {
-          popup.classList.remove('hidden');
-          
-          // 🆕 NOUVEAU - Dire au parent: popup visible
-          parent.postMessage({ 
-            type: 'WIDGET_STATE_CHANGE',
-            state: 'button_with_popup'
-          }, '*');
-        }
-      }, (config.popupDelay || 3) * 1000);
+if (config.showPopup && config.popupMessage && popup && !popupClosed) {
+  setTimeout(() => {
+    if (!isOpen) {
+      popup.classList.remove('hidden');
     }
+  }, (config.popupDelay || 3) * 1000);
+}
     
     parent.postMessage({ 
       type: 'WIDGET_READY', 
@@ -1225,12 +1257,12 @@ function formatMessageContent(text) {
 </html>`;
 
     return new NextResponse(htmlContent, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0",
+  status: 200,
+  headers: {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-cache, no-store, must-revalidate",  // ← AUCUN CACHE !
+    "Pragma": "no-cache",  // ← Pour compatibilité HTTP/1.0
+    "Expires": "0",        // ← Pour compatibilité
         "X-Frame-Options": "ALLOWALL",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET",
