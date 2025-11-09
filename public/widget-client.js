@@ -1,6 +1,6 @@
-// public\widget-client.js
-// Enterprise Chat Widget Client - Mobile Optimized
-// Professional-grade widget integration solution
+// public/widget-client.js - VERSION FINALE PRODUCTION
+// Enterprise Chat Widget Client - Mobile Optimized with State Management
+// Version 2.2 - Clean Production Build
 
 window.AIChatWidget = {
   iframe: null,
@@ -12,16 +12,22 @@ window.AIChatWidget = {
     height: 600
   },
   
-  // Primary initialization method
+  WIDGET_STATES: {
+    BUTTON_ONLY: 'button_only',
+    BUTTON_WITH_POPUP: 'button_with_popup',
+    CHAT_OPEN: 'chat_open'
+  },
+  
+  currentState: null,
+  
   init: function(options = {}) {
     if (!options.widgetId) {
-      console.error('AIChatWidget: widgetId required for initialization');
+      console.error('AIChatWidget: widgetId required');
       return;
     }
     
-    // Prevent duplicate widget initialization
     if (document.getElementById("ai-chat-widget")) {
-      console.warn('AIChatWidget: Widget already initialized');
+      console.warn('AIChatWidget: Already initialized');
       return;
     }
 
@@ -32,14 +38,12 @@ window.AIChatWidget = {
     this.setupMobileHandlers();
   },
 
-  // Advanced mobile device detection
   detectMobile: function() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
            window.innerWidth <= 768;
   },
 
-  // Create and configure iframe container
   createIframe: function() {
     const iframe = document.createElement("iframe");
     iframe.id = "ai-chat-widget";
@@ -47,84 +51,67 @@ window.AIChatWidget = {
     iframe.title = "AI Assistant";
     iframe.loading = "lazy";
     
-    // Mobile-specific optimization to prevent zoom
     if (this.isMobile) {
       iframe.style.cssText = `
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        width: 0px;
-        height: 0px;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 0;
-        pointer-events: none;
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
+        position: fixed; bottom: 16px; right: 16px;
+        width: 0px; height: 0px; border: none; z-index: 999999;
+        background: transparent; opacity: 0; pointer-events: none;
+        -webkit-transform: translateZ(0); transform: translateZ(0);
       `;
     } else {
       iframe.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        width: 0px;
-        height: 0px;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 0;
-        pointer-events: none;
+        position: fixed; bottom: 24px; right: 24px;
+        width: 0px; height: 0px; border: none; z-index: 999999;
+        background: transparent; opacity: 0; pointer-events: none;
       `;
     }
 
     this.iframe = iframe;
     document.body.appendChild(iframe);
     
-    // Fallback timeout for initialization
     setTimeout(() => {
       if (this.iframe && this.iframe.style.opacity === '0') {
-        console.warn('AIChatWidget: Initialization timeout, forcing display');
-        this.showButton();
+        this.setWidgetState(this.WIDGET_STATES.BUTTON_ONLY);
       }
     }, 10000);
   },
 
-  // Setup cross-frame communication listener
   setupMessageListener: function() {
     window.addEventListener('message', (event) => {
-      // Security: Verify origin whitelist
       const allowedOrigins = [
         'https://testyourainow.com',
         'http://localhost:3000',
         'http://127.0.0.1:3000'
       ];
       
-      if (!allowedOrigins.some(origin => event.origin.includes(origin))) {
-        return;
-      }
+      const isLocalhost = event.origin.includes('localhost') || 
+                         event.origin.includes('127.0.0.1') ||
+                         event.origin === 'null';
       
-      const { type, data } = event.data;
+      if (!isLocalhost && !allowedOrigins.some(origin => event.origin.includes(origin))) return;
+      
+      const { type, data, state } = event.data;
       
       switch (type) {
         case 'WIDGET_READY':
           this.handleWidgetReady(data);
           break;
-          
+        case 'WIDGET_STATE_CHANGE':
+          if (state === 'button_with_popup') {
+            this.setWidgetState(this.WIDGET_STATES.BUTTON_WITH_POPUP, event.data);
+          } else if (state === 'button_only') {
+            this.setWidgetState(this.WIDGET_STATES.BUTTON_ONLY, event.data);
+          }
+          break;
         case 'WIDGET_OPEN':
           this.handleWidgetOpen(data);
           break;
-          
         case 'WIDGET_CLOSE':
           this.handleWidgetClose(data);
           break;
-          
         case 'WIDGET_ERROR':
           this.handleWidgetError(data);
           break;
-          
         case 'WIDGET_RESIZE':
           this.handleWidgetResize(data);
           break;
@@ -132,19 +119,15 @@ window.AIChatWidget = {
     });
   },
 
-  // Mobile-specific event handlers
   setupMobileHandlers: function() {
     if (!this.isMobile) return;
 
-    // Body scroll management for mobile fullscreen
     let initialBodyOverflow = '';
     
     this.lockBodyScroll = () => {
       initialBodyOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
-      
-      // Prevent iOS bounce scrolling
       document.addEventListener('touchmove', this.preventBounce, { passive: false });
     };
     
@@ -155,27 +138,22 @@ window.AIChatWidget = {
     };
     
     this.preventBounce = (e) => {
-      // Allow scrolling only within iframe
-      if (!e.target.closest('#ai-chat-widget')) {
-        e.preventDefault();
-      }
+      if (!e.target.closest('#ai-chat-widget')) e.preventDefault();
     };
 
-    // Orientation change handling
     window.addEventListener('orientationchange', () => {
       setTimeout(() => {
         this.isMobile = this.detectMobile();
         if (this.isOpen) {
-          this.handleWidgetOpen({ 
-            width: this.config.width, 
+          this.setWidgetState(this.WIDGET_STATES.CHAT_OPEN, {
+            width: this.config.width,
             height: this.config.height,
-            isMobile: this.isMobile 
+            isMobile: this.isMobile
           });
         }
       }, 500);
     });
 
-    // Dynamic mobile/desktop detection on resize
     let resizeTimeout;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
@@ -183,302 +161,159 @@ window.AIChatWidget = {
         const wasMobile = this.isMobile;
         this.isMobile = this.detectMobile();
         
-        if (wasMobile !== this.isMobile) {
-          // Handle mobile/desktop transition
-          if (this.isOpen) {
-            this.handleWidgetOpen({ 
-              width: this.config.width, 
-              height: this.config.height,
-              isMobile: this.isMobile 
-            });
-          } else {
-            this.showButton();
-          }
+        if (wasMobile !== this.isMobile && this.isOpen) {
+          this.setWidgetState(this.WIDGET_STATES.CHAT_OPEN, {
+            width: this.config.width,
+            height: this.config.height,
+            isMobile: this.isMobile
+          });
+        } else if (wasMobile !== this.isMobile) {
+          this.setWidgetState(this.currentState || this.WIDGET_STATES.BUTTON_ONLY);
         }
       }, 150);
     });
   },
 
-  // Widget ready state handler
+  setWidgetState: function(state, data = {}) {
+    if (!this.iframe) return;
+    this.currentState = state;
+    
+    if (state === this.WIDGET_STATES.BUTTON_ONLY) {
+      const size = 64, margin = 16;
+      this.iframe.style.cssText = `
+        position: fixed; ${this.isMobile ? 'bottom: 16px; right: 16px;' : 'bottom: 24px; right: 24px;'}
+        width: ${size + margin * 2}px; height: ${size + margin * 2}px;
+        border: none; z-index: 999999; background: transparent;
+        opacity: 1; pointer-events: auto; display: block;
+        ${this.isMobile ? '-webkit-transform: translateZ(0); transform: translateZ(0);' : ''}
+      `;
+    }
+    else if (state === this.WIDGET_STATES.BUTTON_WITH_POPUP) {
+      const popupMaxWidth = Math.min(320, window.innerWidth - 100);
+      const width = popupMaxWidth + 40, height = 212;
+      this.iframe.style.cssText = `
+        position: fixed; ${this.isMobile ? 'bottom: 16px; right: 16px;' : 'bottom: 24px; right: 24px;'}
+        width: ${width}px; height: ${height}px;
+        border: none; z-index: 999999; background: transparent;
+        opacity: 1; pointer-events: auto; display: block;
+        ${this.isMobile ? '-webkit-transform: translateZ(0); transform: translateZ(0);' : ''}
+      `;
+    }
+    else if (state === this.WIDGET_STATES.CHAT_OPEN) {
+      const isActualMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                             (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
+      
+      if (isActualMobile) {
+        this.iframe.style.cssText = `
+          position: fixed !important; inset: 0 !important;
+          width: 100vw !important; height: 100vh !important;
+          border: none; z-index: 999999; background: transparent;
+          opacity: 1; pointer-events: auto; display: block;
+          -webkit-transform: translateZ(0); transform: translateZ(0);
+        `;
+        if (this.lockBodyScroll) this.lockBodyScroll();
+      } else {
+        const chatWidth = Math.min(data.width || this.config.width || 380, window.innerWidth - 48);
+        const chatHeight = Math.min(data.height || this.config.height || 600, window.innerHeight - 100);
+        this.iframe.style.cssText = `
+          position: fixed !important; bottom: 24px !important; right: 24px !important;
+          width: ${chatWidth}px !important; height: ${chatHeight}px !important;
+          border: none; z-index: 999999; background: transparent;
+          opacity: 1; pointer-events: auto; display: block;
+        `;
+      }
+      this.isOpen = true;
+    }
+  },
+
   handleWidgetReady: function(data) {
     if (!this.iframe) return;
-    
-    console.log('AIChatWidget: Widget ready - Mobile:', data.isMobile || this.isMobile);
-    
     if (data.width) this.config.width = data.width;
     if (data.height) this.config.height = data.height;
     if (data.isMobile !== undefined) this.isMobile = data.isMobile;
-    
     this.isOpen = false;
-    this.showButton();
+    this.setWidgetState(this.WIDGET_STATES.BUTTON_ONLY);
   },
 
-  // Display chat launcher button with optimized dimensions
-  showButton: function() {
+  handleWidgetOpen: function(data) {
     if (!this.iframe) return;
-    
-    const buttonSize = 64;
-    const shadowMargin = 15;
-    const hoverMargin = 8;
-    
-    // Optimized calculations for popup with 55 character support
-    const popupMinWidth = 55;
-    const popupMaxWidth = 320; // Matches CSS specifications
-    const popupHeight = 70; // Estimated for 55 characters across ~2 lines
-    const popupMarginTop = popupHeight + 32; // popup height + margin
-    const popupMarginLeft = Math.max(60, popupMaxWidth - buttonSize);
-    
-    // Optimized iframe dimensions
-    const iframeWidth = Math.max(
-      buttonSize + (shadowMargin * 2) + hoverMargin, // Minimum for button
-      popupMaxWidth + 24 // Maximum for popup + margins
-    );
-    
-    const iframeHeight = buttonSize + (shadowMargin * 2) + hoverMargin + popupMarginTop;
-    
-    if (this.isMobile) {
-      this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        width: ${iframeWidth}px;
-        height: ${iframeHeight}px;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        display: block;
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-      `;
-    } else {
-      this.iframe.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        width: ${iframeWidth}px;
-        height: ${iframeHeight}px;
-        border: none;
-        z-index: 999999;
-        background: transparent;
-        opacity: 1;
-        pointer-events: auto;
-        display: block;
-      `;
-    }
+    if (data.isMobile !== undefined) this.isMobile = data.isMobile;
+    this.setWidgetState(this.WIDGET_STATES.CHAT_OPEN, data);
   },
 
-// Widget open state handler
-handleWidgetOpen: function(data) {
-  if (!this.iframe) return;
-  
-  console.log('AIChatWidget: Opening chat interface - Mobile:', data.isMobile || this.isMobile);
-  this.isOpen = true;
-  
-  // Update mobile state if provided
-  if (data.isMobile !== undefined) {
-    this.isMobile = data.isMobile;
-  }
-  
-  // 🎯 FIX: Fullscreen SEULEMENT pour vrais mobiles (pas desktop en fenêtre étroite)
-  const isActualMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                         (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
-  
-  if (isActualMobile) {
-    // Mobile: Fullscreen mode
-    this.iframe.style.cssText = `
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      height: 100dvh !important;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-    `;
-    
-    // Lock body scroll
-    if (this.lockBodyScroll) {
-      this.lockBodyScroll();
-    }
-    
-  } else {
-    // Desktop: Standard behavior (même si fenêtre étroite)
-    const maxHeight = window.innerHeight - 100;
-    const baseWidth = Math.min(this.config.width, window.innerWidth - 48);
-    const baseHeight = Math.min(this.config.height, maxHeight);
-    
-    const animationMargin = 25;
-    const borderRadius = 10;
-    const totalMarginWidth = animationMargin + borderRadius;
-    const totalMarginHeight = animationMargin + borderRadius;
-    
-    const finalWidth = baseWidth + totalMarginWidth;
-    const finalHeight = baseHeight + totalMarginHeight;
-    
-    // 🎯 Desktop: Dimensions fixes en bas à droite
-    this.iframe.style.cssText = `
-      position: fixed !important;
-      bottom: 24px !important;
-      right: 24px !important;
-      width: ${finalWidth}px !important;
-      height: ${finalHeight}px !important;
-      top: auto !important;
-      left: auto !important;
-      border: none;
-      z-index: 999999;
-      background: transparent;
-      opacity: 1;
-      pointer-events: auto;
-      display: block;
-    `;
-  }
-},
-
-  // Widget close state handler
   handleWidgetClose: function(data) {
     if (!this.iframe) return;
-    
-    console.log('AIChatWidget: Closing chat interface - Mobile:', data?.isMobile || this.isMobile);
     this.isOpen = false;
-    
-    // Unlock body scroll on mobile
-    if (this.isMobile && this.unlockBodyScroll) {
-      this.unlockBodyScroll();
-    }
-    
-    this.showButton();
+    if (this.isMobile && this.unlockBodyScroll) this.unlockBodyScroll();
+    this.setWidgetState(this.WIDGET_STATES.BUTTON_ONLY);
   },
 
-  // Dynamic resize handler
   handleWidgetResize: function(data) {
     if (!this.iframe || !this.isOpen) return;
-    
     if (data.width) this.config.width = data.width;
     if (data.height) this.config.height = data.height;
     if (data.isMobile !== undefined) this.isMobile = data.isMobile;
-    
-    this.handleWidgetOpen(data);
+    this.setWidgetState(this.WIDGET_STATES.CHAT_OPEN, data);
   },
 
-  // Error state handler
   handleWidgetError: function(data) {
     console.error('AIChatWidget Error:', data.error);
-    
     if (this.iframe) {
       this.iframe.style.opacity = '0';
-      setTimeout(() => {
-        if (this.iframe) {
-          this.iframe.src = this.iframe.src;
-        }
-      }, 2000);
+      setTimeout(() => { if (this.iframe) this.iframe.src = this.iframe.src; }, 2000);
     }
   },
 
-  // Screen size change handler
   handleResize: function() {
     if (!this.iframe) return;
-    
     const wasMobile = this.isMobile;
     this.isMobile = this.detectMobile();
-    
-    if (wasMobile !== this.isMobile) {
-      // Handle mobile/desktop mode transition
-      if (this.isOpen) {
-        if (this.isMobile && this.lockBodyScroll) {
-          this.lockBodyScroll();
-        } else if (!this.isMobile && this.unlockBodyScroll) {
-          this.unlockBodyScroll();
-        }
-      }
+    if (wasMobile !== this.isMobile && this.isOpen) {
+      if (this.isMobile && this.lockBodyScroll) this.lockBodyScroll();
+      else if (!this.isMobile && this.unlockBodyScroll) this.unlockBodyScroll();
     }
-    
     if (this.isOpen) {
-      this.handleWidgetOpen({ 
-        width: this.config.width, 
-        height: this.config.height,
-        isMobile: this.isMobile
+      this.setWidgetState(this.WIDGET_STATES.CHAT_OPEN, {
+        width: this.config.width, height: this.config.height, isMobile: this.isMobile
       });
     } else {
-      this.showButton();
+      this.setWidgetState(this.currentState || this.WIDGET_STATES.BUTTON_ONLY);
     }
   },
 
-  // Complete cleanup and resource management
   destroy: function() {
-    if (this.iframe) {
-      this.iframe.remove();
-      this.iframe = null;
-    }
-    
-    // Unlock scroll if necessary
-    if (this.isMobile && this.unlockBodyScroll) {
-      this.unlockBodyScroll();
-    }
-    
+    if (this.iframe) { this.iframe.remove(); this.iframe = null; }
+    if (this.isMobile && this.unlockBodyScroll) this.unlockBodyScroll();
     this.isOpen = false;
     this.widgetId = null;
-    window.removeEventListener('resize', this.handleResize.bind(this));
-    console.log('AIChatWidget: Successfully destroyed');
+    this.currentState = null;
   },
 
-  // Public API for status monitoring
   getStatus: function() {
     return {
-      isLoaded: !!this.iframe,
-      isOpen: this.isOpen,
-      isMobile: this.isMobile,
-      widgetId: this.widgetId,
-      config: this.config
+      isLoaded: !!this.iframe, isOpen: this.isOpen, isMobile: this.isMobile,
+      widgetId: this.widgetId, config: this.config, currentState: this.currentState
     };
   },
 
-  // Widget control methods
   open: function() {
-    if (this.iframe) {
-      this.iframe.contentWindow?.postMessage({ type: 'FORCE_OPEN' }, '*');
-    }
+    if (this.iframe) this.iframe.contentWindow?.postMessage({ type: 'FORCE_OPEN' }, '*');
   },
 
   close: function() {
-    if (this.iframe) {
-      this.iframe.contentWindow?.postMessage({ type: 'FORCE_CLOSE' }, '*');
-    }
+    if (this.iframe) this.iframe.contentWindow?.postMessage({ type: 'FORCE_CLOSE' }, '*');
   },
 
   toggle: function() {
-    if (this.isOpen) {
-      this.close();
-    } else {
-      this.open();
-    }
+    this.isOpen ? this.close() : this.open();
   }
 };
 
-// Global resize handler with debounce optimization
 window.addEventListener('resize', function() {
   if (window.AIChatWidget && window.AIChatWidget.handleResize) {
     clearTimeout(window.AIChatWidget.resizeTimeout);
-    window.AIChatWidget.resizeTimeout = setTimeout(() => {
-      window.AIChatWidget.handleResize();
-    }, 150);
+    window.AIChatWidget.resizeTimeout = setTimeout(() => window.AIChatWidget.handleResize(), 150);
   }
 });
 
-// Professional initialization log
-(function() {
-  console.log('AIChatWidget v2.1 Enterprise Edition loaded successfully');
-})();
+console.log('AIChatWidget v2.2 loaded');

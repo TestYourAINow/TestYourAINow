@@ -924,6 +924,12 @@ function formatMessageContent(text) {
   e.stopPropagation();
   popup?.classList.add('hidden');
   
+  // 🆕 AJOUTE CES LIGNES :
+  parent.postMessage({ 
+    type: 'WIDGET_STATE_CHANGE',
+    state: 'button_only'
+  }, '*');
+  
   // Sauvegarder l'heure de fermeture (pas juste "true")
   try {
     localStorage.setItem('popup_closed_' + config._id, JSON.stringify({
@@ -1238,6 +1244,12 @@ if (config.showPopup && config.popupMessage && popup && !popupClosed) {
   setTimeout(() => {
     if (!isOpen) {
       popup.classList.remove('hidden');
+      
+      // 🆕 AJOUTE CES LIGNES :
+      parent.postMessage({ 
+        type: 'WIDGET_STATE_CHANGE',
+        state: 'button_with_popup'
+      }, '*');
     }
   }, (config.popupDelay || 3) * 1000);
 }
