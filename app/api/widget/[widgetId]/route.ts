@@ -65,9 +65,6 @@ html, body {
 }
 
 .chat-button {
-  position: fixed !important;
-  bottom: 8px !important;
-  right: 8px !important;
   width: 64px;
   height: 64px;
   border-radius: 50%;
@@ -80,7 +77,6 @@ html, body {
   justify-content: center;
   background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, #06b6d4));
   animation: bounceIn 0.6s ease-out;
-  z-index: 999999;
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   user-select: none;
@@ -92,9 +88,10 @@ html, body {
 }
 
 .chat-popup {
-  position: fixed !important;
-  bottom: 88px !important;
-  right: 8px !important;
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 16px;
   min-width: 55px;
   max-width: min(200px, calc(100vw - 120px));
   width: max-content;
@@ -114,7 +111,6 @@ html, body {
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   animation: slideUpBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  z-index: 999998;
 }
 
 .chat-popup::after {
