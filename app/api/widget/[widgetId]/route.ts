@@ -819,11 +819,11 @@ function formatMessageContent(text) {
       }
     }
     
-    function detectMobile() {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-             (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) ||
-             window.innerWidth <= 768;
-    }
+  function detectMobile() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || (/MacIntel/.test(navigator.platform) && (navigator.maxTouchPoints || 0) > 2); // iPadOS
+}
+
     
     const STORAGE_KEY = 'chatbot_conversation_' + config._id;
     
@@ -972,19 +972,15 @@ messagesContainer?.appendChild(messageEl);
       }
     });
     
-   const messageInput = document.getElementById('messageInput') as HTMLTextAreaElement;
-
-messageInput?.addEventListener('keydown', function(e: KeyboardEvent) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    
-    const message = messageInput.value.trim();
-    if (message) {
+     input?.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && !e.isComposing) {
+    if (!e.shiftKey) {
+      e.preventDefault();
       sendMessage();
     }
   }
-  // Shift+Enter = nouvelle ligne (comportement par défaut du textarea)
 });
+
     
     if (isMobile) {
       let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
