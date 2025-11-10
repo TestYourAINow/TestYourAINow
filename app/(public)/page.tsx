@@ -139,18 +139,19 @@ export default function Home() {
       className="bg-premium-gradient bg-grid text-white scroll-smooth relative overflow-hidden"
       style={{
         background: `
-          linear-gradient(
-            to bottom,
-            rgba(15, 23, 42, calc(var(--fade-opacity, 0) * 0.9)),
-            rgba(17, 24, 39, calc(var(--fade-opacity, 0) * 0.95)),
-            rgba(15, 23, 42, calc(var(--fade-opacity, 0) * 0.9))
-          ),
-          radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-          radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
-          radial-gradient(circle at 40% 70%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
-          linear-gradient(135deg, #0a0a0b 0%, #111827 25%, #1f2937 50%, #111827 75%, #0a0a0b 100%)
-        `,
-        backgroundSize: '100% 100%, 800px 800px, 600px 600px, 400px 400px, 100% 100%'
+      linear-gradient(
+        to bottom,
+        rgba(15, 23, 42, 0.9),
+        rgba(17, 24, 39, 0.95),
+        rgba(15, 23, 42, 0.9)
+      ),
+      radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 40% 70%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+      linear-gradient(135deg, #0a0a0b 0%, #111827 25%, #1f2937 50%, #111827 75%, #0a0a0b 100%)
+    `,
+        backgroundSize: '100% 100%, 800px 800px, 600px 600px, 400px 400px, 100% 100%',
+        backgroundAttachment: 'fixed'
       }}
     >
       {/* Premium background with animated orbs */}
@@ -650,7 +651,7 @@ export default function Home() {
 
       {/* Pricing section - mobile optimized */}
       <section
-      id="pricing"
+        id="pricing"
         className="observe relative text-white py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-20"
         style={{
           backgroundImage: `
