@@ -972,7 +972,19 @@ messagesContainer?.appendChild(messageEl);
       }
     });
     
-   
+   const messageInput = document.getElementById('messageInput') as HTMLTextAreaElement;
+
+messageInput?.addEventListener('keydown', function(e: KeyboardEvent) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    
+    const message = messageInput.value.trim();
+    if (message) {
+      sendMessage();
+    }
+  }
+  // Shift+Enter = nouvelle ligne (comportement par défaut du textarea)
+});
     
     if (isMobile) {
       let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
