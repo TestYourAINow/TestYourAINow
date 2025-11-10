@@ -672,7 +672,7 @@ const getUserSubtitle = (conv: ConversationSummary | ConversationDetails) => {
                     <p>
                       <strong>2 - </strong>
                       <a
-                        href="https://app.manychat.com/template/310e6be04bdf9e78dccab2974e68c73155e6c57f"
+                        href="https://app.manychat.com/template/94214aba7364ea86bda5d38d4da5ec9b4d228a8f"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-cyan-400 hover:text-cyan-300 underline font-medium"
