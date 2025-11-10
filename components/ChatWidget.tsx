@@ -586,12 +586,13 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
                         }}
                       />
                     </div>
-                    <div className={styles.messageTimestamp}>
-                      {new Date(message.timestamp).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
+                   <div className={styles.messageTimestamp}>
+  {new Date(message.timestamp).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })}
+</div>
                   </div>
                 </div>
               ))}

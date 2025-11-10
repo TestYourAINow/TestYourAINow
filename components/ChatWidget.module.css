@@ -259,22 +259,27 @@
   border-radius: 18px;
   font-size: 14px;
   line-height: 1.4;
-  max-width: 280px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.04);
   -webkit-user-select: text;
   user-select: text;
-  white-space: pre-wrap;
+  overflow-wrap: break-word;  /* Moderne, coupe les mots longs */
+  word-break: break-word;     /* Backup pour vieux navigateurs */
+  white-space: pre-wrap;  
 }
 
 .messageBubble.bot {
   background: #f1f5f9;
   color: #334155;
+  min-width: 30px;
+  max-width: 260px;
 }
 
 .messageBubble.user {
   background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 90%, #06b6d4));
   color: white;
+  min-width: 30px;
+  max-width: 220px;
 }
 
 .chatMessages.dark .messageBubble.bot {
@@ -286,6 +291,11 @@
   font-size: 11px;
   color: #9ca3af;
   margin-top: 4px;
+  text-align: left;
+}
+
+.message.user .messageTimestamp {
+  text-align: right; 
 }
 
 .typingIndicator {

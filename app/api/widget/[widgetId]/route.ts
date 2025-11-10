@@ -336,28 +336,38 @@ html, body {
   border-radius: 18px;
   font-size: 14px;
   line-height: 1.4;
-  max-width: 280px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.04);
   -webkit-user-select: text;
   user-select: text;
   white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;  
 }
 
 .message-bubble.bot {
   background: ${config.theme === 'dark' ? '#1e293b' : '#f1f5f9'};
   color: ${config.theme === 'dark' ? '#e2e8f0' : '#334155'};
+  max-width: 260px;
 }
 
 .message-bubble.user {
   background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 90%, #06b6d4));
   color: white;
+  min-width: 30px;
+  max-width: 220px;
 }
 
 .message-timestamp {
   font-size: 11px;
   color: #9ca3af;
   margin-top: 4px;
+  text-align: left;
+}
+
+.message.user .message-timestamp {
+  text-align: right;
 }
 
 .typing-indicator {
@@ -886,21 +896,21 @@ function formatMessageContent(text) {
       messageEl.className = 'message ' + (isBot ? 'bot' : 'user');
       
       if (isBot) {
-        messageEl.innerHTML = 
-          '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
-          '<div>' +
-            '<div class="message-bubble bot">' + formatMessageContent(text) + '</div>' +
-            '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
-          '</div>';
-      } else {
-        messageEl.innerHTML = 
-          '<div>' +
-            '<div class="message-bubble user">' + text + '</div>' +
-            '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '</div>' +
-          '</div>';
-      }
-      
-      messagesContainer?.appendChild(messageEl);
+  messageEl.innerHTML = 
+    '<img src="' + (config.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEM0Q0RDgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzY5NzU4NSIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjYuNDc3MSAyNS41MjI5IDIyIDIwIDIyQzE0LjQ3NzEgMjIgMTAgMjYuNDc3MSAxMCAzMkgzMFoiIGZpbGw9IiM2OTc1ODUiLz4KPC9zdmc+') + '" alt="Bot" class="message-avatar">' +
+    '<div>' +
+      '<div class="message-bubble bot">' + formatMessageContent(text) + '</div>' +
+      '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true}) + '</div>' +
+    '</div>';
+} else {
+  messageEl.innerHTML = 
+    '<div>' +
+      '<div class="message-bubble user">' + text + '</div>' +
+      '<div class="message-timestamp">' + new Date(timestamp).toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true}) + '</div>' +
+    '</div>';
+}
+
+messagesContainer?.appendChild(messageEl);
     }
     
     const popup = document.getElementById('chatPopup');
