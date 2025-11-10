@@ -972,8 +972,9 @@ messagesContainer?.appendChild(messageEl);
       }
     });
     
-     input?.addEventListener('keydown', function (e) {
+   input?.addEventListener('keydown', function (e) {
   if (e.key === 'Enter' && !e.isComposing) {
+    if (isMobile) return; // sur mobile, Enter crée une ligne
     if (!e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -981,7 +982,6 @@ messagesContainer?.appendChild(messageEl);
   }
 });
 
-    
     if (isMobile) {
       let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       
