@@ -972,18 +972,7 @@ messagesContainer?.appendChild(messageEl);
       }
     });
     
-    input?.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        if (isMobile) {
-          return;
-        }
-        
-        if (!e.shiftKey) {
-          e.preventDefault();
-          sendMessage();
-        }
-      }
-    });
+   
     
     if (isMobile) {
       let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -1280,9 +1269,11 @@ if (config.showPopup && config.popupMessage && popup && !popupClosed) {
 
     return new NextResponse(htmlContent, {
   status: 200,
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=300",
+  headers: {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-cache, no-store, must-revalidate",  // ← AUCUN CACHE !
+    "Pragma": "no-cache",  // ← Pour compatibilité HTTP/1.0
+    "Expires": "0",        // ← Pour compatibilité
         "X-Frame-Options": "ALLOWALL",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET",
