@@ -972,14 +972,18 @@ messagesContainer?.appendChild(messageEl);
       }
     });
     
-    textarea?.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-  // Enter = envoyer (toujours)
-  // Shift+Enter = nouvelle ligne (toujours)
-});
+    input?.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        if (isMobile) {
+          return;
+        }
+        
+        if (!e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      }
+    });
     
     if (isMobile) {
       let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -1276,11 +1280,9 @@ if (config.showPopup && config.popupMessage && popup && !popupClosed) {
 
     return new NextResponse(htmlContent, {
   status: 200,
-  headers: {
-    "Content-Type": "text/html; charset=utf-8",
-    "Cache-Control": "no-cache, no-store, must-revalidate",  // ← AUCUN CACHE !
-    "Pragma": "no-cache",  // ← Pour compatibilité HTTP/1.0
-    "Expires": "0",        // ← Pour compatibilité
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=300",
         "X-Frame-Options": "ALLOWALL",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET",
