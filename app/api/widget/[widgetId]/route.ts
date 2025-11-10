@@ -343,7 +343,6 @@ html, body {
   white-space: pre-wrap;
   overflow-wrap: break-word;
   word-break: break-word;
-  white-space: pre-wrap;  
 }
 
 .message-bubble.bot {
