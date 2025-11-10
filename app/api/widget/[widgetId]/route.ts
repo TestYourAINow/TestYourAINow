@@ -972,18 +972,14 @@ messagesContainer?.appendChild(messageEl);
       }
     });
     
-    input?.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        if (isMobile) {
-          return;
-        }
-        
-        if (!e.shiftKey) {
-          e.preventDefault();
-          sendMessage();
-        }
-      }
-    });
+    textarea?.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+  // Enter = envoyer (toujours)
+  // Shift+Enter = nouvelle ligne (toujours)
+});
     
     if (isMobile) {
       let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
