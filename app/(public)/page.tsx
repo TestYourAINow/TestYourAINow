@@ -874,7 +874,7 @@ export default function Home() {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
 
-            <span className="relative z-10">{session ? "Go to Dashboard" : "Get Started Free"}</span>
+            <span className="relative z-10">{session ? "Go to Dashboard" : "Get Started"}</span>
             <ArrowRight size={20} className="relative z-10 group-hover:translate-x-1 transition-transform duration-300 sm:w-6 sm:h-6" />
           </Link>
 
