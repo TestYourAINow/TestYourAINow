@@ -128,6 +128,7 @@ export default function AdminSupportPage() {
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          ticket.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         ticket.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          ticket.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
     
@@ -349,7 +350,7 @@ export default function AdminSupportPage() {
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
-                  placeholder="Search by title, email, or ID..."
+                  placeholder="Search by title, username, email, or ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400"
@@ -410,7 +411,7 @@ export default function AdminSupportPage() {
                     <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold ${
                       isUrgentExpiry ? 'bg-red-500/20 text-red-300' : 'bg-orange-500/20 text-orange-300'
                     }`}>
-                      🗑️ {ticket.daysUntilDeletion === 0 ? 'Deletes today' : `${ticket.daysUntilDeletion}d until deletion`}
+                       {ticket.daysUntilDeletion === 0 ? 'Deletes today' : `${ticket.daysUntilDeletion}d until deletion`}
                     </div>
                   )}
 
