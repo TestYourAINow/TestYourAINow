@@ -14,7 +14,7 @@ import {
   Mail, 
   User, 
   Lock,
-  AlertCircle 
+  AlertCircle
 } from "lucide-react";
 import clsx from "clsx";
 import { signIn } from "next-auth/react";
@@ -33,6 +33,7 @@ function isValidEmail(email: string): boolean {
  * Professional user registration flow with:
  * - Real-time validation
  * - Password strength requirements
+ * - Terms & Privacy Policy acceptance (REQUIRED)
  * - Automatic authentication post-signup
  * - Stripe checkout integration
  */
@@ -47,6 +48,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // 👈 NOUVEAU
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -159,6 +161,13 @@ export default function SignupPage() {
     const validations = passwordRules.map((rule) => rule.valid);
     if (!validations.every(Boolean)) {
       setError("Password doesn't meet the required security criteria.");
+      setIsLoading(false);
+      return;
+    }
+
+    // 👇 NOUVELLE VALIDATION - Acceptation des termes OBLIGATOIRE
+    if (!agreedToTerms) {
+      setError("You must accept the Terms of Service and Privacy Policy to create an account.");
       setIsLoading(false);
       return;
     }
@@ -416,6 +425,43 @@ export default function SignupPage() {
                   >
                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
+                </div>
+              </div>
+
+              {/* Terms & Privacy Acceptance - OBLIGATOIRE */}
+              <div className="pt-4">
+                <div className="flex items-start gap-3">
+                  <div className="relative flex items-center justify-center mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      disabled={isLoading}
+                      className="peer w-5 h-5 rounded border-2 border-gray-600 bg-gray-900/80 checked:bg-gradient-to-r checked:from-blue-600 checked:to-cyan-600 checked:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer appearance-none"
+                    />
+                    <Check 
+                      size={14} 
+                      className="absolute text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"
+                    />
+                  </div>
+                  <span className="text-sm text-gray-300 leading-relaxed flex-1">
+                    I agree to the{" "}
+                    <Link 
+                      href="/terms" 
+                      target="_blank"
+                      className="text-blue-400 hover:text-blue-300 font-semibold underline underline-offset-2 transition-colors"
+                    >
+                      Terms of Service
+                    </Link>
+                    {" "}and{" "}
+                    <Link 
+                      href="/privacy" 
+                      target="_blank"
+                      className="text-blue-400 hover:text-blue-300 font-semibold underline underline-offset-2 transition-colors"
+                    >
+                      Privacy Policy
+                    </Link>
+                  </span>
                 </div>
               </div>
             </div>
