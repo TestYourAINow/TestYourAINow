@@ -11,7 +11,6 @@ export const metadata: Metadata = {
   title: "TestYourAInow",
   description: "Build and share your AI agents with a single link. No coding. No hassle. Just results.",
   
-  // Open Graph pour l'aperçu social (Facebook, WhatsApp, etc.)
   openGraph: {
     title: "TestYourAInow",
     description: "Turn your AI prompt into interactive demos — in minutes",
@@ -28,7 +27,6 @@ export const metadata: Metadata = {
     type: "website",
   },
   
-  // Twitter Cards pour l'aperçu sur Twitter/X
   twitter: {
     card: "summary_large_image",
     title: "TestYourAInow",
@@ -37,16 +35,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default function PublicLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Header />
-        {children}
-        <Footer />
-      </body>
-    </html>
+    // 🆕 PLUS DE <html> ET <body> ICI!
+    // Juste le contenu spécifique à la section public
+    <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <Header />
+      {children}
+      <Footer />
+    </div>
   );
 }

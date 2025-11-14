@@ -163,6 +163,28 @@ export default function Home() {
         <div className="absolute bottom-1/3 left-1/6 w-72 h-72 bg-pink-600/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '8s' }} />
       </div>
 
+      {/* 🆕 STICKY DISCOUNT BADGE - VERSION AMÉLIORÉE */}
+      <div className="fixed bottom-6 right-6 z-50 animate-bounce-gentle">
+        <a
+          href="#pricing"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById('pricing')?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }}
+          className="group relative flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-5 py-3.5 rounded-full shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-110 border border-blue-500/30 overflow-hidden"
+        >
+          {/* Effet shimmer au hover */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+
+          {/* Contenu */}
+          <span className="relative z-10 text-sm font-bold">🔥 50% OFF</span>
+          <ArrowRight className="relative z-10 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </a>
+      </div>
+
       {/* Hero section - mobile optimized */}
       <section
         className="relative text-white min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-20 pt-16 sm:pt-20"
@@ -884,79 +906,7 @@ export default function Home() {
           </p>
         </div>
       </section>
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% { 
-            transform: translate(0, 0) scale(1); 
-            opacity: 1;
-          }
-          33% { 
-            transform: translate(30px, -30px) scale(1.1); 
-            opacity: 0.8;
-          }
-          66% { 
-            transform: translate(-20px, 20px) scale(0.9); 
-            opacity: 0.9;
-          }
-        }
-        
-        @keyframes float-delayed {
-          0%, 100% { 
-            transform: translate(0, 0) scale(1); 
-            opacity: 1;
-          }
-          33% { 
-            transform: translate(-30px, 30px) scale(0.9); 
-            opacity: 0.7;
-          }
-          66% { 
-            transform: translate(20px, -20px) scale(1.1); 
-            opacity: 0.9;
-          }
-        }
-        
-        @keyframes float-slow {
-          0%, 100% { 
-            transform: translate(0, 0) scale(1); 
-            opacity: 1;
-          }
-          50% { 
-            transform: translate(15px, 15px) scale(1.05); 
-            opacity: 0.8;
-          }
-        }
-        
-        .animate-float {
-          animation: float 20s ease-in-out infinite;
-        }
-        
-        .animate-float-delayed {
-          animation: float-delayed 25s ease-in-out infinite;
-        }
-        
-        .animate-float-slow {
-          animation: float-slow 30s ease-in-out infinite;
-        }
-
-        @keyframes fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(40px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .observe {
-    opacity: 0;
-  }
-
-  .fade-in-up {
-    animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-      `}</style>
+      
     </main>
   );
 }
