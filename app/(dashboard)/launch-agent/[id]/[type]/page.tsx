@@ -656,7 +656,7 @@ const getUserSubtitle = (conv: ConversationSummary | ConversationDetails) => {
               {/* ManyChat Setup */}
               <div className="space-y-4">
                 <a
-                  href="https://manychat.com"
+                  href="https://offers.manychat.com/get/100-off?source={partner_key}&mcdc=2d07bc1a"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-6 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
