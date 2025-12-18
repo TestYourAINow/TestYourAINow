@@ -462,16 +462,18 @@ async function handleWebhookIntegration(
   
   if (webhookIntegrations.length === 0) return null;
 
-  console.log('Webhook integration detected...');
+  console.log('🔍 [WEBHOOK] Checking webhook integrations...');
 
   for (const integration of webhookIntegrations) {
     if (!integration.url || !integration.fields) {
-      console.log(`Webhook ${integration.name} missing URL or fields`);
+      console.log(`⚠️ [WEBHOOK] ${integration.name} missing URL or fields`);
       continue;
     }
 
     try {
-      // 1. Demander à l'IA si ce webhook doit être déclenché
+      // 1️⃣ Demander à l'IA si ce webhook doit être déclenché
+      console.log(`🤔 [WEBHOOK] Checking if ${integration.name} should be triggered...`);
+      
       const shouldTriggerRes = await openai.chat.completions.create({
         model: agentModel,
         temperature: 0,
@@ -481,7 +483,7 @@ async function handleWebhookIntegration(
             content: `You are analyzing if a webhook should be triggered.
 
 Webhook: ${integration.name}
-Description: ${integration.description}
+Description: ${integration.description || 'No description'}
 Required fields: ${integration.fields.map((f: any) => `${f.key} (${f.value})`).join(', ')}
 
 Reply ONLY with 'true' if the user message indicates this webhook should be triggered, 'false' otherwise.`
@@ -496,13 +498,15 @@ Reply ONLY with 'true' if the user message indicates this webhook should be trig
       const shouldTrigger = shouldTriggerRes.choices[0]?.message?.content?.toLowerCase().trim() === 'true';
       
       if (!shouldTrigger) {
-        console.log(`Webhook ${integration.name} not triggered - no matching intent`);
+        console.log(`⏭️ [WEBHOOK] ${integration.name} not triggered - no matching intent`);
         continue;
       }
 
-      console.log(`Webhook ${integration.name} should be triggered`);
+      console.log(`✅ [WEBHOOK] ${integration.name} should be triggered!`);
 
-      // 2. Extraire les données nécessaires avec prompt plus strict
+      // 2️⃣ Extraire les données nécessaires
+      console.log(`📊 [WEBHOOK] Extracting data for ${integration.name}...`);
+      
       const extractRes = await openai.chat.completions.create({
         model: agentModel,
         temperature: 0,
@@ -530,11 +534,10 @@ If missing data:
       });
 
       const rawResponse = extractRes.choices[0]?.message?.content?.trim() || '';
-      console.log('Raw AI response:', rawResponse);
+      console.log(`📝 [WEBHOOK] Raw AI response:`, rawResponse.substring(0, 200));
 
       let extractedData;
       try {
-        // Nettoyer la réponse au cas où il y aurait des backticks ou autre
         const cleanResponse = rawResponse
           .replace(/```json\n?/g, '')
           .replace(/```\n?/g, '')
@@ -542,10 +545,7 @@ If missing data:
         
         extractedData = JSON.parse(cleanResponse);
       } catch (parseError) {
-        console.log('JSON parse failed:', parseError);
-        console.log('Attempting to extract with regex...');
-        
-        // Fallback: essayer d'extraire le JSON avec regex
+        console.log(`⚠️ [WEBHOOK] Parse error, trying regex fallback...`);
         const jsonMatch = rawResponse.match(/\{.*\}/s);
         if (jsonMatch) {
           try {
@@ -559,9 +559,8 @@ If missing data:
       }
       
       if (!extractedData.hasAllData) {
-        console.log(`Missing data for webhook ${integration.name}`, extractedData);
+        console.log(`❌ [WEBHOOK] Missing data for ${integration.name}:`, extractedData);
         
-        // Demander les données manquantes
         const missingFieldsRes = await openai.chat.completions.create({
           model: agentModel,
           temperature: 0.3,
@@ -585,8 +584,9 @@ Ask the user politely to provide the missing information. Be specific about what
         return missingFieldsRes.choices[0]?.message?.content || "I need more information to proceed with this request.";
       }
 
-      // 3. Envoyer le webhook
-      console.log(`Sending webhook to ${integration.url}`, extractedData.data);
+      // 3️⃣ 🔥 ENVOYER LE WEBHOOK ET RÉCUPÉRER LA RÉPONSE
+      console.log(`🚀 [WEBHOOK] Sending webhook to ${integration.url}`);
+      console.log(`📤 [WEBHOOK] Payload:`, JSON.stringify(extractedData.data, null, 2));
       
       const webhookRes = await fetch(integration.url, {
         method: 'POST',
@@ -598,30 +598,50 @@ Ask the user politely to provide the missing information. Be specific about what
       });
 
       const webhookSuccess = webhookRes.ok;
-      let webhookResponseText = '';
+      let webhookResponseData = null;
       
       try {
-        webhookResponseText = await webhookRes.text();
-      } catch {
-        webhookResponseText = 'No response body';
+        // 🆕 RÉCUPÉRER LES DONNÉES RENVOYÉES PAR MAKE
+        const responseText = await webhookRes.text();
+        console.log(`📥 [WEBHOOK] Make response (${webhookRes.status}):`, responseText.substring(0, 500));
+        
+        // Essayer de parser en JSON
+        try {
+          webhookResponseData = JSON.parse(responseText);
+          console.log(`✅ [WEBHOOK] Successfully parsed JSON response`);
+        } catch {
+          console.log(`⚠️ [WEBHOOK] Response is not JSON, using as text`);
+          webhookResponseData = { message: responseText };
+        }
+      } catch (error) {
+        console.log(`❌ [WEBHOOK] Error reading response:`, error);
+        webhookResponseData = null;
       }
 
-      console.log(`Webhook response: ${webhookRes.status} - ${webhookResponseText}`);
-
-      // 4. Générer la réponse
+      // 4️⃣ 🔥 GÉNÉRER LA RÉPONSE EN UTILISANT LES DONNÉES DE MAKE
+      console.log(`🤖 [WEBHOOK] Generating AI response with webhook data...`);
+      
       const confirmationRes = await openai.chat.completions.create({
         model: agentModel,
         temperature: 0.3,
         messages: [
           {
             role: "system",
-            content: `The webhook "${integration.name}" was ${webhookSuccess ? 'successfully' : 'unsuccessfully'} sent.
+            content: `The webhook "${integration.name}" was ${webhookSuccess ? 'successfully' : 'unsuccessfully'} triggered.
 
 Status: ${webhookRes.status}
-Data sent: ${JSON.stringify(extractedData.data, null, 2)}
-Response: ${webhookResponseText.slice(0, 200)}
+Data sent to webhook: ${JSON.stringify(extractedData.data, null, 2)}
 
-Generate a natural, friendly response to inform the user about the ${webhookSuccess ? 'successful submission' : 'issue with the submission'}. Be professional but warm.`
+${webhookResponseData && Object.keys(webhookResponseData).length > 0 ? `
+🔥 IMPORTANT - Data received from webhook:
+${JSON.stringify(webhookResponseData, null, 2)}
+
+Use this data in your response to the user. If there are calendar events, list them clearly. If there's a confirmation, mention it. If there are specific details, include them.
+
+Present the information in a natural, conversational way.
+` : 'No additional data was returned from the webhook.'}
+
+Generate a natural, friendly response to inform the user about the result. Be professional but warm.`
           },
           {
             role: "user",
@@ -633,14 +653,14 @@ Generate a natural, friendly response to inform the user about the ${webhookSucc
       const response = confirmationRes.choices[0]?.message?.content;
       
       if (response) {
-        console.log(`Webhook ${integration.name} processed successfully`);
+        console.log(`✅ [WEBHOOK] ${integration.name} processed successfully`);
+        console.log(`💬 [WEBHOOK] Final response: ${response.substring(0, 200)}...`);
         return response;
       }
 
     } catch (error) {
-      console.error(`Webhook error for ${integration.name}:`, error);
+      console.error(`❌ [WEBHOOK] Error for ${integration.name}:`, error);
       
-      // En cas d'erreur, retourner un message d'erreur générique
       return `I encountered an error while processing your request with ${integration.name}. Please try again or contact support if the issue persists.`;
     }
   }
