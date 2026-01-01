@@ -451,12 +451,49 @@ Respond warmly and professionally to confirm the creation. Include important det
   return null;
 }
 
+// 🔥 HELPERS UNIVERSELS POUR LES DATES (ajouter AVANT handleWebhookIntegration)
+function getDateInTimezone(timezone: string): string {
+  const now = new Date();
+  const userDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+  
+  const year = userDate.getFullYear();
+  const month = String(userDate.getMonth() + 1).padStart(2, '0');
+  const day = String(userDate.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
+
+function getTomorrowInTimezone(timezone: string): string {
+  const now = new Date();
+  const userDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+  userDate.setDate(userDate.getDate() + 1);
+  
+  const year = userDate.getFullYear();
+  const month = String(userDate.getMonth() + 1).padStart(2, '0');
+  const day = String(userDate.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
+
+function getYesterdayInTimezone(timezone: string): string {
+  const now = new Date();
+  const userDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+  userDate.setDate(userDate.getDate() - 1);
+  
+  const year = userDate.getFullYear();
+  const month = String(userDate.getMonth() + 1).padStart(2, '0');
+  const day = String(userDate.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
+
 // FONCTION WEBHOOK CORRIGÉE avec gestion d'erreur JSON
 async function handleWebhookIntegration(
   userMessage: string,
   integrations: any[],
   openai: any,
-  agentModel: string
+  agentModel: string,
+  userTimezone: string = 'UTC'
 ): Promise<string | null> {
   const webhookIntegrations = integrations.filter(i => i.type === "webhook" && i.enabled !== false);
   
@@ -471,8 +508,34 @@ async function handleWebhookIntegration(
     }
 
     try {
-      // 1️⃣ Demander à l'IA si ce webhook doit être déclenché
+      // 🔥 AMÉLIORATION - Détection intelligente basée sur le nom et la description
       console.log(`🤔 [WEBHOOK] Checking if ${integration.name} should be triggered...`);
+      
+      // Construire un contexte riche pour la détection
+      let detectionContext = `Webhook: ${integration.name}\n`;
+      detectionContext += `Description: ${integration.description || 'No description'}\n\n`;
+      
+      // Ajouter des exemples basés sur le nom du webhook
+      if (integration.name.toLowerCase().includes('list') || 
+          integration.name.toLowerCase().includes('check') ||
+          integration.name.toLowerCase().includes('show')) {
+        detectionContext += `TRIGGER when user asks to:\n`;
+        detectionContext += `- Check their calendar/schedule\n`;
+        detectionContext += `- See what's planned\n`;
+        detectionContext += `- Verify availability\n`;
+        detectionContext += `- List events\n\n`;
+        detectionContext += `Examples: "What's on my calendar?", "Am I free today?", "Qu'est-ce que j'ai aujourd'hui?"\n`;
+      }
+      
+      if (integration.name.toLowerCase().includes('add') || 
+          integration.name.toLowerCase().includes('create') ||
+          integration.name.toLowerCase().includes('schedule')) {
+        detectionContext += `TRIGGER when user wants to:\n`;
+        detectionContext += `- Add/create an event\n`;
+        detectionContext += `- Schedule something\n`;
+        detectionContext += `- Book an appointment\n\n`;
+        detectionContext += `Examples: "Add event", "Schedule meeting", "Ajoute un événement"\n`;
+      }
       
       const shouldTriggerRes = await openai.chat.completions.create({
         model: agentModel,
@@ -482,11 +545,11 @@ async function handleWebhookIntegration(
             role: "system",
             content: `You are analyzing if a webhook should be triggered.
 
-Webhook: ${integration.name}
-Description: ${integration.description || 'No description'}
-Required fields: ${integration.fields.map((f: any) => `${f.key} (${f.value})`).join(', ')}
+${detectionContext}
 
-Reply ONLY with 'true' if the user message indicates this webhook should be triggered, 'false' otherwise.`
+Analyze the user's message and reply ONLY with 'true' if it matches this webhook's purpose, 'false' otherwise.
+
+Be generous in matching - if the intent is related, say 'true'.`
           },
           {
             role: "user",
@@ -502,10 +565,17 @@ Reply ONLY with 'true' if the user message indicates this webhook should be trig
         continue;
       }
 
-      console.log(`✅ [WEBHOOK] ${integration.name} should be triggered!`);
+      console.log(`✅ [WEBHOOK] ${integration.name} MATCHED! Proceeding...`);
 
       // 2️⃣ Extraire les données nécessaires
       console.log(`📊 [WEBHOOK] Extracting data for ${integration.name}...`);
+      
+     // 🔥 CALCUL DES DATES DANS LE TIMEZONE UTILISATEUR
+      const todayStr = getDateInTimezone(userTimezone);
+      const tomorrowStr = getTomorrowInTimezone(userTimezone);
+      const yesterdayStr = getYesterdayInTimezone(userTimezone);
+      
+      console.log(`📅 [DATES] Timezone: ${userTimezone}, Today: ${todayStr}, Tomorrow: ${tomorrowStr}`);
       
       const extractRes = await openai.chat.completions.create({
         model: agentModel,
@@ -519,6 +589,18 @@ Extract data for webhook: ${integration.name}
 
 Required fields:
 ${integration.fields.map((f: any) => `- ${f.key}: ${f.value}`).join('\n')}
+
+CRITICAL DATE INFORMATION (User timezone: ${userTimezone}):
+- Today: ${todayStr}
+- Tomorrow: ${tomorrowStr}
+- Yesterday: ${yesterdayStr}
+
+IMPORTANT DATE CONVERSION RULES:
+- "aujourd'hui" / "today" → ${todayStr}
+- "demain" / "tomorrow" → ${tomorrowStr}
+- "hier" / "yesterday" → ${yesterdayStr}
+- For "lundi dernier"/"last Monday": Calculate the most recent occurrence from ${todayStr}
+- Convert ALL natural language dates to YYYY-MM-DD format
 
 Response format (copy exactly):
 {"hasAllData": true, "data": {"field1": "value1", "field2": "value2"}}
@@ -584,7 +666,7 @@ Ask the user politely to provide the missing information. Be specific about what
         return missingFieldsRes.choices[0]?.message?.content || "I need more information to proceed with this request.";
       }
 
-      // 3️⃣ 🔥 ENVOYER LE WEBHOOK ET RÉCUPÉRER LA RÉPONSE
+      // 3️⃣ Envoyer le webhook
       console.log(`🚀 [WEBHOOK] Sending webhook to ${integration.url}`);
       console.log(`📤 [WEBHOOK] Payload:`, JSON.stringify(extractedData.data, null, 2));
       
@@ -601,11 +683,9 @@ Ask the user politely to provide the missing information. Be specific about what
       let webhookResponseData = null;
       
       try {
-        // 🆕 RÉCUPÉRER LES DONNÉES RENVOYÉES PAR MAKE
         const responseText = await webhookRes.text();
         console.log(`📥 [WEBHOOK] Make response (${webhookRes.status}):`, responseText.substring(0, 500));
         
-        // Essayer de parser en JSON
         try {
           webhookResponseData = JSON.parse(responseText);
           console.log(`✅ [WEBHOOK] Successfully parsed JSON response`);
@@ -618,7 +698,7 @@ Ask the user politely to provide the missing information. Be specific about what
         webhookResponseData = null;
       }
 
-      // 4️⃣ 🔥 GÉNÉRER LA RÉPONSE EN UTILISANT LES DONNÉES DE MAKE
+      // 4️⃣ Générer la réponse
       console.log(`🤖 [WEBHOOK] Generating AI response with webhook data...`);
       
       const confirmationRes = await openai.chat.completions.create({
@@ -630,18 +710,17 @@ Ask the user politely to provide the missing information. Be specific about what
             content: `The webhook "${integration.name}" was ${webhookSuccess ? 'successfully' : 'unsuccessfully'} triggered.
 
 Status: ${webhookRes.status}
-Data sent to webhook: ${JSON.stringify(extractedData.data, null, 2)}
+Data sent: ${JSON.stringify(extractedData.data, null, 2)}
 
 ${webhookResponseData && Object.keys(webhookResponseData).length > 0 ? `
 🔥 IMPORTANT - Data received from webhook:
 ${JSON.stringify(webhookResponseData, null, 2)}
 
-Use this data in your response to the user. If there are calendar events, list them clearly. If there's a confirmation, mention it. If there are specific details, include them.
+Use this data in your response. If there are events, list them. If it's a confirmation, mention it.
+Be natural and conversational.
+` : 'No additional data returned.'}
 
-Present the information in a natural, conversational way.
-` : 'No additional data was returned from the webhook.'}
-
-Generate a natural, friendly response to inform the user about the result. Be professional but warm.`
+Generate a natural, friendly response to inform the user.`
           },
           {
             role: "user",
@@ -654,14 +733,12 @@ Generate a natural, friendly response to inform the user about the result. Be pr
       
       if (response) {
         console.log(`✅ [WEBHOOK] ${integration.name} processed successfully`);
-        console.log(`💬 [WEBHOOK] Final response: ${response.substring(0, 200)}...`);
         return response;
       }
 
     } catch (error) {
       console.error(`❌ [WEBHOOK] Error for ${integration.name}:`, error);
-      
-      return `I encountered an error while processing your request with ${integration.name}. Please try again or contact support if the issue persists.`;
+      return `I encountered an error while processing your request with ${integration.name}. Please try again.`;
     }
   }
 
@@ -882,12 +959,17 @@ if (publicKind === 'widget' && widgetId) {
       return NextResponse.json({ reply: calendlyResponse });
     }
 
+    console.log("🔍 DEBUG - Agent integrations:", agent.integrations);
+console.log("🔍 DEBUG - Agent webhooks:", agent.webhooks);
+console.log("🔍 DEBUG - Agent keys:", Object.keys(agent));
+
     // Vérifier les webhooks personnalisés
     const webhookResponse = await handleWebhookIntegration(
       userMessage, 
       agent.integrations || [], 
       openai,
-      agentModel
+      agentModel,
+      userTimezone
     );
 
     if (webhookResponse) {
