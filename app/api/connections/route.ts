@@ -17,7 +17,7 @@ function generateWebhookSecret(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
-// 🆕 Fonction pour générer le token de partage (12 bytes = 16 caractères)
+// Fonction pour générer le token de partage (12 bytes = 16 caractères)
 function generateShareToken(): string {
   return crypto.randomBytes(12).toString('base64url');
 }
@@ -37,16 +37,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
 
-  // Générer les données webhook SEULEMENT pour Facebook et Instagram
+  // 🆕 MODIFIÉ - Générer webhook pour ManyChat ET Webhook universel
   let webhookId, webhookSecret, webhookUrl;
   
   if (integrationType === 'instagram-dms' || integrationType === 'facebook-messenger') {
+    // Pour ManyChat - ancien endpoint
     webhookId = generateWebhookId();
     webhookSecret = generateWebhookSecret();
     webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhook/manychat/${webhookId}`;
+    
+    console.log(`🔗 [MANYCHAT] Generated webhook for ${integrationType}:`, webhookUrl);
+  }
+  
+  // 🆕 NOUVEAU - Pour type "webhook" universel
+  if (integrationType === 'webhook') {
+    webhookId = generateWebhookId();
+    webhookSecret = generateWebhookSecret();
+    webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhook/universal/${webhookId}`;
+    
+    console.log(`🔗 [UNIVERSAL] Generated webhook for universal integration:`, webhookUrl);
   }
 
-  // 🆕 Générer automatiquement shareToken pour website-widget
+  // Générer automatiquement shareToken pour website-widget
   let shareToken, shareCreatedAt;
   
   if (integrationType === 'website-widget') {
@@ -67,7 +79,7 @@ export async function POST(req: NextRequest) {
     ...(webhookSecret && { webhookSecret }),
     ...(webhookUrl && { webhookUrl }),
     
-    // 🆕 Ajouter les données de partage (seulement pour website-widget)
+    // Ajouter les données de partage (seulement pour website-widget)
     ...(shareToken && { 
       shareToken,
       shareEnabled: false, // Désactivé par défaut
@@ -83,6 +95,13 @@ export async function POST(req: NextRequest) {
     console.log(`🎉 [DEPLOYMENT] Agent ${aiBuildId} marked as deployed!`);
   }
 
+  console.log(`✅ [CONNECTION] Created successfully:`, {
+    id: connection._id,
+    name: connection.name,
+    type: integrationType,
+    hasWebhook: !!webhookUrl
+  });
+
   return NextResponse.json({ 
     success: true, 
     connection: {
@@ -90,7 +109,7 @@ export async function POST(req: NextRequest) {
       // Retourner les infos webhook seulement si elles existent
       ...(webhookUrl && { webhookUrl }),
       ...(webhookSecret && { webhookSecret }),
-      // 🆕 Retourner le shareToken si généré
+      // Retourner le shareToken si généré
       ...(shareToken && { shareToken }),
     }
   });

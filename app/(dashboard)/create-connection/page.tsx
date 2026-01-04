@@ -62,7 +62,19 @@ const WebsiteIcon = ({ size = 24, className = "" }) => (
   </svg>
 )
 
-// Suppression de l'API Integration - seulement 4 intégrations maintenant
+// 🆕 NOUVEAU - Icône pour Webhook Integration
+const WebhookIcon = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+    <defs>
+      <linearGradient id="webhook-gradient-create" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#8B5CF6" />
+        <stop offset="100%" stopColor="#EC4899" />
+      </linearGradient>
+    </defs>
+    <path fill="url(#webhook-gradient-create)" d="M10 15l5.88-5.88c.39-.39 1.02-.39 1.41 0l.59.59c.39.39.39 1.02 0 1.41L11 18l-6.88-6.88c-.39-.39-.39-1.02 0-1.41l.59-.59c.39-.39 1.02-.39 1.41 0L10 15zm0-6l5.88 5.88c.39.39 1.02.39 1.41 0l.59-.59c.39-.39.39-1.02 0-1.41L11 6 4.12 12.88c-.39.39-.39 1.02 0 1.41l.59.59c.39.39 1.02.39 1.41 0L10 9z" />
+  </svg>
+)
+
 const integrations = [
   {
     label: 'Website Widget',
@@ -72,7 +84,7 @@ const integrations = [
     color: 'from-cyan-500 to-blue-500',
     popular: true,
     suggestedName: 'Website Assistant',
-    disabled: false // Ajout explicite
+    disabled: false
   },
   {
     label: 'Facebook Messenger',
@@ -94,16 +106,17 @@ const integrations = [
     suggestedName: 'Instagram Chat Bot',
     disabled: false
   },
+  // 🆕 NOUVEAU - Webhook Integration (remplace SMS)
   {
-    label: 'SMS Integration',
-    value: 'sms',
-    icon: SMSIcon,
-    description: 'Text message conversations',
-    color: 'from-green-500 to-emerald-500',
+    label: 'Webhook Integration',
+    value: 'webhook',
+    icon: WebhookIcon,
+    description: 'Universal webhook for SMS, WhatsApp, Slack, Discord, etc.',
+    color: 'from-purple-500 to-pink-500',
     popular: false,
-    suggestedName: 'SMS Assistant',
-    disabled: true, // 🎯 DÉSACTIVÉ
-    comingSoon: true // 🎯 NOUVEAU : badge "Coming Soon"
+    suggestedName: 'Webhook Assistant',
+    disabled: false, // ✅ ACTIVÉ !
+    comingSoon: false
   }
 ]
 
@@ -291,53 +304,47 @@ export default function CreateConnectionPage() {
 
 
 
-  // Dans app/(dashboard)/create-connection/page.tsx
-  // Remplace la fonction handleSubmit existante par celle-ci :
-
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name || !integration || !aiBuildId) return;
+  e.preventDefault()
+  if (!name || !integration || !aiBuildId) return;
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    try {
-      const res = await fetch('/api/connections', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, integrationType: integration, aiBuildId }),
-      })
+  try {
+    const res = await fetch('/api/connections', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, integrationType: integration, aiBuildId }),
+    })
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Unknown error')
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Unknown error')
 
-      // 🎯 NOUVELLE REDIRECTION : Va directement vers la page de la connection créée
-      if (data.connection && data.connection._id) {
-        const connectionId = data.connection._id;
-        const integrationType = data.connection.integrationType;
+    if (data.connection && data.connection._id) {
+      const connectionId = data.connection._id;
+      const integrationType = data.connection.integrationType;
 
-        // Redirection selon le type de connection
-        if (integrationType === 'website-widget') {
-          // Pour le website widget, va vers la page de configuration
-          router.push(`/launch-agent/${connectionId}/website-widget?tab=configuration`);
-        } else if (integrationType === 'sms') {
-          // Pour SMS, retourne sur launch-agent (page pas encore créée)
-          router.push('/launch-agent');
-        } else {
-          // Pour Instagram et Facebook, va vers la page de détails
-          router.push(`/launch-agent/${connectionId}/${integrationType}?tab=configuration`);
-        }
+      // 🆕 MODIFIÉ - Redirection selon le type
+      if (integrationType === 'website-widget') {
+        router.push(`/launch-agent/${connectionId}/website-widget?tab=configuration`);
+      } else if (integrationType === 'webhook') {
+        // 🆕 NOUVEAU - Pour webhook, rediriger vers page de détails webhook
+        router.push(`/launch-agent/${connectionId}/webhook`);
       } else {
-        // Fallback vers la page générale si pas d'ID
-        router.push('/launch-agent');
+        // Instagram et Facebook
+        router.push(`/launch-agent/${connectionId}/${integrationType}?tab=configuration`);
       }
-
-    } catch (err) {
-      alert('Error creating connection.')
-      console.error(err)
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      router.push('/launch-agent');
     }
+
+  } catch (err) {
+    alert('Error creating connection.')
+    console.error(err)
+  } finally {
+    setIsSubmitting(false);
   }
+}
 
   const canProceedToStep2 = integration !== '';
   const canProceedToStep3 = canProceedToStep2 && name.trim() !== '';
