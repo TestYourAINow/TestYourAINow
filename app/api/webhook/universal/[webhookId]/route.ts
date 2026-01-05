@@ -45,14 +45,14 @@ function extractUserData(data: any): UserData {
   console.log(`🔍 [USER DATA] Extracting from universal webhook:`, JSON.stringify(data, null, 2));
 
   // ID utilisateur (essayer plusieurs formats)
-  const contactId = 
-    data.contactId || 
-    data.contact_id || 
-    data.userId || 
-    data.user_id || 
-    data.from || 
-    data.From || 
-    data.sender || 
+  const contactId =
+    data.contactId ||
+    data.contact_id ||
+    data.userId ||
+    data.user_id ||
+    data.from ||
+    data.From ||
+    data.sender ||
     'anonymous';
 
   // Informations personnelles (flexible)
@@ -98,7 +98,8 @@ async function storeInMongoDB(
   userMessage: string,
   aiResponse: string,
   agent: any,
-  connection: any
+  connection: any,
+  requestData: any  // ← AJOUTE ÇA
 ) {
   try {
     console.log(`💾 [MONGODB] Storing conversation: ${conversationId} for user: ${userData.fullName || 'Anonymous'}`);
@@ -124,6 +125,9 @@ async function storeInMongoDB(
 
     if (conversation) {
       conversation.messages.push(userMsg, assistantMsg);
+
+      conversation.platform = 'webhook';
+  conversation.platformDetails = requestData.platform || connection.integrationType || 'unknown';
 
       // Mettre à jour les infos utilisateur si elles ont changé
       if (userData.firstName && userData.firstName !== conversation.userFirstName) {
@@ -161,7 +165,8 @@ async function storeInMongoDB(
         connectionId,
         userId: userData.userId,
         webhookId,
-        platform: connection.integrationType, // "webhook", "sms", "whatsapp", etc.
+        platform: 'webhook',
+        platformDetails: requestData.platform || connection.integrationType || 'unknown',
         agentId: agent._id,
         agentName: agent.name,
 
@@ -197,7 +202,8 @@ async function processWithAI(
   userMessage: string,
   userData: UserData,
   conversationId: string,
-  connection: any
+  connection: any,
+  requestData: any
 ) {
   try {
     console.log(`🤖 Processing message for agent ${agent._id} with user ${userData.fullName || userData.userId}`);
@@ -215,7 +221,8 @@ async function processWithAI(
         userMessage,
         errorMessage,
         agent,
-        connection
+        connection,
+        requestData
       );
       return;
     }
@@ -313,7 +320,8 @@ async function processWithAI(
       userMessage,
       response,
       agent,
-      connection
+      connection,
+      requestData
     );
 
     console.log(`🎉 [COMPLETE] Message processed and stored`);
@@ -339,7 +347,8 @@ async function processWithAI(
       userMessage,
       errorMessage,
       agent,
-      connection
+      connection,
+      requestData
     );
   }
 }
@@ -358,7 +367,7 @@ export async function POST(req: NextRequest, context: any) {
     // Parser le body (JSON ou form-data)
     const contentType = req.headers.get('content-type') || '';
     let data: any;
-    
+
     if (contentType.includes('application/json')) {
       data = await req.json();
     } else if (contentType.includes('application/x-www-form-urlencoded')) {
@@ -406,17 +415,17 @@ export async function POST(req: NextRequest, context: any) {
 
     // Extraire données (format flexible)
     const userData = extractUserData(data);
-    
+
     // Extraire le message (essayer plusieurs champs)
-    const userMessage = 
-      data.message || 
-      data.text || 
-      data.Message || 
-      data.Body || 
-      data.body || 
-      data.content || 
+    const userMessage =
+      data.message ||
+      data.text ||
+      data.Message ||
+      data.Body ||
+      data.body ||
+      data.content ||
       '';
-    
+
     const conversationId = `${webhookId}_${userData.userId}`;
 
     console.log(`📨 Message from ${userData.fullName || userData.userId}: "${userMessage}"`);
@@ -430,7 +439,7 @@ export async function POST(req: NextRequest, context: any) {
     }
 
     // Traiter le message avec l'AI (asynchrone)
-    processWithAI(agent, userMessage, userData, conversationId, connection);
+    processWithAI(agent, userMessage, userData, conversationId, connection, data);
 
     // Retourner immédiatement
     return NextResponse.json({

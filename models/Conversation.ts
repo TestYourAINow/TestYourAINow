@@ -17,7 +17,8 @@ export interface ConversationDocument extends Document {
   webhookId: string            // ID du webhook
   
   // 📊 Métadonnées
-  platform: 'instagram-dms' | 'facebook-messenger' | 'sms' | 'website-widget'
+  platform: 'instagram-dms' | 'facebook-messenger' | 'sms' | 'website-widget' | 'webhook'
+  platformDetails?: string
   agentId: string              // ID de l'agent utilisé
   agentName?: string           // Nom de l'agent (dénormalisé pour performance)
   
@@ -100,10 +101,14 @@ const ConversationSchema = new Schema<ConversationDocument>({
   
   // 📊 Métadonnées
   platform: {
-    type: String,
-    enum: ['instagram-dms', 'facebook-messenger', 'sms', 'website-widget'],
-    required: true
-  },
+  type: String,
+  enum: ['instagram-dms', 'facebook-messenger', 'sms', 'website-widget', 'webhook'],
+  required: true
+},
+platformDetails: {  // ← AJOUTE CE CHAMP
+  type: String,
+  required: false
+},
   agentId: {
     type: String,
     required: true,

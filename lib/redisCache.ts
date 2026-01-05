@@ -84,7 +84,19 @@ export async function getConversationHistory(conversationId: string): Promise<{ 
     const messages = await redis.lrange(`conversation:${conversationId}`, 0, -1);
     console.log(`🔍 [REDIS] Raw messages from Redis:`, messages);
     
-    // 🔧 FIX: Redis renvoie déjà des objets parsés !
+    // ✅ FIX: Vérifier si c'est bien un array
+    if (!messages || !Array.isArray(messages)) {
+      console.log(`⚠️ [REDIS] No messages or invalid format for ${conversationId}`);
+      return [];
+    }
+    
+    // ✅ FIX: Vérifier si le array est vide
+    if (messages.length === 0) {
+      console.log(`📭 [REDIS] No messages found for ${conversationId}`);
+      return [];
+    }
+    
+    // 🔧 Parser les messages
     const parsedMessages = messages.map((msg, index) => {
       // Si c'est déjà un objet, pas besoin de parser
       if (typeof msg === 'object' && msg !== null) {
