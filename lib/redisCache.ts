@@ -12,7 +12,7 @@ export async function storeAIResponse(conversationId: string, response: string):
     console.log(`🚀 [REDIS] Storing response for ${conversationId}: "${response.substring(0, 100)}..."`);
     
     // Stocker avec expiration de 10 minutes (600 secondes)
-    await redis.setex(`ai_response:${conversationId}`, 600, response);
+    await redis.set(`ai_response:${conversationId}`, response, { ex: 600 });
     
     console.log(`✅ [REDIS] Response stored successfully for ${conversationId}`);
   } catch (error) {
@@ -50,21 +50,29 @@ export async function getAIResponse(conversationId: string): Promise<string | nu
 export async function listPendingAIResponses(): Promise<string[]> {
   try {
     const keys = await redis.keys('ai_response:*');
+    
+    // ✅ FIX: Vérifier si c'est un array
+    if (!keys || !Array.isArray(keys)) {
+      console.log(`📋 [REDIS] No pending responses or invalid format`);
+      return [];
+    }
+    
     console.log(`📋 [REDIS] Found ${keys.length} pending responses`);
-    return keys.map(key => key.replace('ai_response:', ''));
+    return keys.map(key => String(key).replace('ai_response:', ''));
   } catch (error) {
     console.error(`❌ [REDIS] Error listing responses:`, error);
     return [];
   }
 }
 
-// 🚀 BONUS: Stocker l'historique des conversations (pour mémoire future)
+// 🚀 Stocker l'historique des conversations (pour mémoire future)
 export async function storeConversationHistory(conversationId: string, message: { role: string; content: string; timestamp: number }): Promise<void> {
   try {
     console.log(`💬 [REDIS] Adding message to conversation ${conversationId}`);
     
     // Ajouter le message à la liste (expire après 1 heure)
-    await redis.lpush(`conversation:${conversationId}`, JSON.stringify(message));
+    const messageString = JSON.stringify(message);
+    await redis.lpush(`conversation:${conversationId}`, messageString);
     await redis.expire(`conversation:${conversationId}`, 3600); // 1 heure
     
     // Garder seulement les 20 derniers messages (éviter spam)
@@ -116,7 +124,7 @@ export async function getConversationHistory(conversationId: string): Promise<{ 
     }).filter(Boolean).reverse(); // Inverse pour avoir chronologique
     
     console.log(`✅ [REDIS] Final parsed messages (${parsedMessages.length}):`, parsedMessages);
-    return parsedMessages;
+    return parsedMessages as { role: string; content: string; timestamp: number }[];
   } catch (error) {
     console.error(`❌ [REDIS] Error fetching conversation history for ${conversationId}:`, error);
     return [];
