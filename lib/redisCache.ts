@@ -11,8 +11,8 @@ export async function storeAIResponse(conversationId: string, response: string):
   try {
     console.log(`🚀 [REDIS] Storing response for ${conversationId}: "${response.substring(0, 100)}..."`);
     
-    // Stocker avec expiration de 10 minutes (600 secondes)
-    await redis.set(`ai_response:${conversationId}`, response, { ex: 600 });
+    // Stocker avec expiration de 1 heure (3600 secondes)
+    await redis.set(`ai_response:${conversationId}`, response, { ex: 3600 });
     
     console.log(`✅ [REDIS] Response stored successfully for ${conversationId}`);
   } catch (error) {

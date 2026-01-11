@@ -8,6 +8,8 @@ import { AgentKnowledge } from '@/models/AgentKnowledge';
 import { Conversation } from '@/models/Conversation'; // 🆕 NOUVEAU
 import { createAgentOpenAIForWebhook } from '@/lib/openai';
 import { storeAIResponse, storeConversationHistory, getConversationHistory } from '@/lib/redisCache';
+import { handleWebhookIntegration } from '@/lib/integrations/webhookHandler';
+
 
 // 📝 Types pour les messages OpenAI
 type ChatMessage = {
@@ -228,6 +230,56 @@ async function processWithAI(agent: any, userMessage: string, userData: UserData
     }
 
     console.log(`✅ OpenAI instance created successfully for agent ${agent._id}`);
+
+    // 🆕 AJOUTER ICI - VÉRIFIER LES WEBHOOKS PERSONNALISÉS AVANT OPENAI
+const userTimezone = userData.timezone || 'America/Montreal';
+
+console.log(`🔍 [WEBHOOK] Checking for webhook integrations...`);
+const webhookResponse = await handleWebhookIntegration(
+  userMessage,
+  agent.integrations || [],
+  openai,
+  agent.openaiModel,
+  userTimezone
+);
+
+if (webhookResponse) {
+  console.log(`✅ [WEBHOOK] Webhook integration handled, storing response`);
+  
+  // Stocker dans MongoDB
+  await storeInMongoDB(
+    conversationId,
+    connection._id.toString(),
+    connection.webhookId,
+    userData,
+    userMessage,
+    webhookResponse,
+    agent,
+    connection
+  );
+  
+  // Stocker dans Redis pour ManyChat
+  await storeAIResponse(conversationId, webhookResponse);
+  
+  // Stocker dans l'historique Redis
+  await storeConversationHistory(conversationId, {
+    role: 'user',
+    content: userMessage,
+    timestamp: Date.now()
+  });
+  
+  await storeConversationHistory(conversationId, {
+    role: 'assistant',
+    content: webhookResponse,
+    timestamp: Date.now()
+  });
+  
+  console.log(`✅ [WEBHOOK] Response stored successfully`);
+  return; // ← IMPORTANT : Arrêter ici
+}
+
+// Si pas de webhook match, continuer normalement avec OpenAI
+console.log(`ℹ️  [WEBHOOK] No webhook match, using standard OpenAI response`);
 
     // 2. Récupérer les connaissances de l'agent
     const knowledge = await AgentKnowledge.find({ agentId: agent._id }).sort({ createdAt: -1 });

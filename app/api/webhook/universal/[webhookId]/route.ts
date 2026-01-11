@@ -8,6 +8,7 @@ import { AgentKnowledge } from '@/models/AgentKnowledge';
 import { Conversation } from '@/models/Conversation';
 import { createAgentOpenAIForWebhook } from '@/lib/openai';
 import { storeAIResponse, storeConversationHistory, getConversationHistory } from '@/lib/redisCache';
+import { handleWebhookIntegration } from '@/lib/integrations/webhookHandler';
 
 type ChatMessage = {
   role: "user" | "assistant" | "system";
@@ -226,6 +227,44 @@ async function processWithAI(
       );
       return;
     }
+
+    // 🆕 2. VÉRIFIER LES WEBHOOKS PERSONNALISÉS AVANT OPENAI
+    const userTimezone = requestData.timezone || userData.timezone || 'America/Montreal';
+    
+    console.log(`🔍 [WEBHOOK] Checking for webhook integrations...`);
+    const webhookResponse = await handleWebhookIntegration(
+      userMessage,
+      agent.integrations || [],
+      openai,
+      agent.openaiModel,
+      userTimezone
+    );
+
+    if (webhookResponse) {
+      console.log(`✅ [WEBHOOK] Webhook integration handled, storing response`);
+      
+      // ✅ CORRIGER - Utiliser storeInMongoDB au lieu de storeConversation
+      await storeInMongoDB(
+        conversationId,
+        connection._id.toString(),
+        connection.webhookId,
+        userData,
+        userMessage,
+        webhookResponse,
+        agent,
+        connection,
+        requestData
+      );
+      
+      // Stocker dans Redis pour Make.com
+      await storeAIResponse(conversationId, webhookResponse);
+      
+      console.log(`✅ [WEBHOOK] Response stored successfully`);
+      return; // ← IMPORTANT : Arrêter ici
+    }
+
+    // 3. Si pas de webhook match, continuer normalement avec OpenAI
+    console.log(`ℹ️  [WEBHOOK] No webhook match, using standard OpenAI response`);
 
     console.log(`✅ OpenAI instance created successfully for agent ${agent._id}`);
 
