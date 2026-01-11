@@ -244,24 +244,13 @@ const webhookResponse = await handleWebhookIntegration(
 );
 
 if (webhookResponse) {
-  console.log(`✅ [WEBHOOK] Webhook integration handled, storing response`);
+  console.log(`✅ [WEBHOOK] Webhook integration handled`);
   
-  // Stocker dans MongoDB
-  await storeInMongoDB(
-    conversationId,
-    connection._id.toString(),
-    connection.webhookId,
-    userData,
-    userMessage,
-    webhookResponse,
-    agent,
-    connection
-  );
-  
-  // Stocker dans Redis pour ManyChat
+  // 🔥 PRIORITÉ 1: Redis (ManyChat a besoin de ça MAINTENANT)
   await storeAIResponse(conversationId, webhookResponse);
+  console.log(`✅ [REDIS] Response stored for ManyChat`);
   
-  // Stocker dans l'historique Redis
+  // 🔥 PRIORITÉ 2: Historique Redis (rapide aussi)
   await storeConversationHistory(conversationId, {
     role: 'user',
     content: userMessage,
@@ -274,8 +263,21 @@ if (webhookResponse) {
     timestamp: Date.now()
   });
   
-  console.log(`✅ [WEBHOOK] Response stored successfully`);
-  return; // ← IMPORTANT : Arrêter ici
+  // 🔥 PRIORITÉ 3: MongoDB (archive, non-bloquant)
+  storeInMongoDB(
+    conversationId,
+    connection._id.toString(),
+    connection.webhookId,
+    userData,
+    userMessage,
+    webhookResponse,
+    agent,
+    connection
+  ).catch(err => console.error('❌ [MONGODB] Storage error:', err));
+  // ← Sans await = s'exécute en arrière-plan
+  
+  console.log(`🎉 [WEBHOOK] Processing complete`);
+  return;
 }
 
 // Si pas de webhook match, continuer normalement avec OpenAI

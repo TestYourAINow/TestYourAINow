@@ -229,39 +229,40 @@ async function processWithAI(
     }
 
     // 🆕 2. VÉRIFIER LES WEBHOOKS PERSONNALISÉS AVANT OPENAI
-    const userTimezone = requestData.timezone || userData.timezone || 'America/Montreal';
-    
-    console.log(`🔍 [WEBHOOK] Checking for webhook integrations...`);
-    const webhookResponse = await handleWebhookIntegration(
-      userMessage,
-      agent.integrations || [],
-      openai,
-      agent.openaiModel,
-      userTimezone
-    );
+const userTimezone = requestData.timezone || userData.timezone || 'America/Montreal';
 
-    if (webhookResponse) {
-      console.log(`✅ [WEBHOOK] Webhook integration handled, storing response`);
-      
-      // ✅ CORRIGER - Utiliser storeInMongoDB au lieu de storeConversation
-      await storeInMongoDB(
-        conversationId,
-        connection._id.toString(),
-        connection.webhookId,
-        userData,
-        userMessage,
-        webhookResponse,
-        agent,
-        connection,
-        requestData
-      );
-      
-      // Stocker dans Redis pour Make.com
-      await storeAIResponse(conversationId, webhookResponse);
-      
-      console.log(`✅ [WEBHOOK] Response stored successfully`);
-      return; // ← IMPORTANT : Arrêter ici
-    }
+console.log(`🔍 [WEBHOOK] Checking for webhook integrations...`);
+const webhookResponse = await handleWebhookIntegration(
+  userMessage,
+  agent.integrations || [],
+  openai,
+  agent.openaiModel,
+  userTimezone
+);
+
+if (webhookResponse) {
+  console.log(`✅ [WEBHOOK] Webhook integration handled, storing response`);
+  
+  // 🔥 STOCKER DANS REDIS EN PREMIER (AVANT MongoDB)
+  await storeAIResponse(conversationId, webhookResponse);
+  console.log(`✅ [WEBHOOK] Response stored in Redis`);
+  
+  // Puis stocker dans MongoDB (peut être plus lent)
+  await storeInMongoDB(
+    conversationId,
+    connection._id.toString(),
+    connection.webhookId,
+    userData,
+    userMessage,
+    webhookResponse,
+    agent,
+    connection,
+    requestData
+  );
+  
+  console.log(`✅ [WEBHOOK] Response stored in MongoDB`);
+  return; // ← Retourner 200 APRÈS avoir tout stocké
+}
 
     // 3. Si pas de webhook match, continuer normalement avec OpenAI
     console.log(`ℹ️  [WEBHOOK] No webhook match, using standard OpenAI response`);
