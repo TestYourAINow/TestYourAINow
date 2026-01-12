@@ -142,497 +142,1943 @@ const formatTime = (timestamp: number) => {
 // ==================== TEMPLATE GENERATORS ====================
 
 const generateWhatsAppTemplate = (webhookUrl: string, connectionName: string) => ({
-  "name": `${connectionName} - WhatsApp via Twilio`,
-  "flow": [
-    {
-      "id": 1,
-      "module": "twilio:TriggerIncomingMessage",
-      "version": 1,
-      "parameters": {
-        "accountSid": "YOUR_TWILIO_ACCOUNT_SID",
-        "authToken": "YOUR_TWILIO_AUTH_TOKEN"
-      },
-      "mapper": {},
-      "metadata": {
-        "designer": { "x": 0, "y": 0 },
-        "restore": {},
-        "expect": [
-          { "name": "Body", "type": "text", "label": "Message Body" },
-          { "name": "From", "type": "text", "label": "Phone Number" }
-        ]
-      }
-    },
-    {
-      "id": 2,
-      "module": "http:ActionSendData",
-      "version": 3,
-      "parameters": {},
-      "mapper": {
-        "url": webhookUrl,
-        "method": "post",
-        "headers": [
-          { "name": "Content-Type", "value": "application/json" }
-        ],
-        "bodyType": "raw",
-        "parseResponse": true,
-        "body": JSON.stringify({
-          message: "{{1.Body}}",
-          from: "{{1.From}}",
-          contactId: "{{1.From}}",
-          platform: "whatsapp"
-        }, null, 2)
-      },
-      "metadata": {
-        "designer": { "x": 300, "y": 0 },
-        "restore": {
-          "expect": {
-            "method": { "mode": "chose", "label": "POST" },
-            "bodyType": { "label": "Raw" }
-          }
+    "name": `${connectionName} - WhatsApp Integration`,
+    "flow": [
+        {
+            "id": 1,
+            "module": "gateway:CustomWebHook",
+            "version": 1,
+            "parameters": {
+                "hook": 1754052,
+                "maxResults": 1
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "restore": {
+                    "parameters": {
+                        "hook": {
+                            "data": {
+                                "editable": "true"
+                            },
+                            "label": "test sms"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "hook",
+                        "type": "hook:gateway-webhook",
+                        "label": "Webhook",
+                        "required": true
+                    },
+                    {
+                        "name": "maxResults",
+                        "type": "number",
+                        "label": "Maximum number of results"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 8,
+            "module": "gateway:WebhookRespond",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "body": "",
+                "status": "204",
+                "headers": []
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "headers": {
+                            "mode": "chose"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "status",
+                        "type": "uinteger",
+                        "label": "Status",
+                        "required": true,
+                        "validate": {
+                            "min": 100
+                        }
+                    },
+                    {
+                        "name": "body",
+                        "type": "any",
+                        "label": "Body"
+                    },
+                    {
+                        "name": "headers",
+                        "spec": [
+                            {
+                                "name": "key",
+                                "type": "text",
+                                "label": "Key",
+                                "required": true,
+                                "validate": {
+                                    "max": 256
+                                }
+                            },
+                            {
+                                "name": "value",
+                                "type": "text",
+                                "label": "Value",
+                                "required": true,
+                                "validate": {
+                                    "max": 4096
+                                }
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Custom headers",
+                        "validate": {
+                            "maxItems": 16
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": 2,
+            "module": "http:MakeRequest",
+            "version": 4,
+            "parameters": {
+                "authenticationType": "noAuth",
+                "tlsType": "",
+                "proxyKeychain": ""
+            },
+            "mapper": {
+                "url": `${webhookUrl}`,
+                "method": "post",
+                "headers": [
+                    {
+                        "name": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "contentType": "json",
+                "parseResponse": true,
+                "stopOnHttpError": true,
+                "allowRedirects": true,
+                "shareCookies": false,
+                "requestCompressedContent": true,
+                "inputMethod": "jsonString",
+                "jsonStringBodyContent": "{\r\n  \"message\": \"{{1.Body}}\",\r\n  \"from\": \"{{substring(1.From; 9)}}\",\r\n  \"contactId\": \"{{substring(1.From; 9)}}\",\r\n  \"platform\": \"whatsapp\"\r\n}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 0,
+                    "name": "HTTP - POST EndPoint"
+                },
+                "restore": {
+                    "parameters": {
+                        "authenticationType": {
+                            "label": "No authenticationUse when no credentials are required for the request."
+                        },
+                        "tlsType": {
+                            "label": "Empty"
+                        },
+                        "proxyKeychain": {
+                            "label": "Choose a key"
+                        }
+                    },
+                    "expect": {
+                        "method": {
+                            "mode": "chose",
+                            "label": "POST"
+                        },
+                        "headers": {
+                            "mode": "chose",
+                            "items": [
+                                null
+                            ]
+                        },
+                        "queryParameters": {
+                            "mode": "chose"
+                        },
+                        "contentType": {
+                            "label": "application/jsonEnter data in the JSON format, as a string or using a data structure."
+                        },
+                        "parseResponse": {
+                            "mode": "chose"
+                        },
+                        "stopOnHttpError": {
+                            "mode": "chose"
+                        },
+                        "allowRedirects": {
+                            "mode": "chose"
+                        },
+                        "shareCookies": {
+                            "mode": "chose"
+                        },
+                        "requestCompressedContent": {
+                            "mode": "chose"
+                        },
+                        "inputMethod": {
+                            "label": "JSON stringEnter the JSON body as a raw text string. If values contain JSON reserved characters, you must escape them manually."
+                        },
+                        "paginationType": {
+                            "label": "Empty"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "authenticationType",
+                        "type": "select",
+                        "label": "Authentication type",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "noAuth",
+                                "apiKey",
+                                "basicAuth",
+                                "oAuth"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "tlsType",
+                        "type": "select",
+                        "label": "Transport layer security (TLS)",
+                        "validate": {
+                            "enum": [
+                                "mTls",
+                                "tls"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "proxyKeychain",
+                        "type": "keychain:proxy",
+                        "label": "Proxy"
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "url",
+                        "type": "url",
+                        "label": "URL",
+                        "required": true
+                    },
+                    {
+                        "name": "method",
+                        "type": "select",
+                        "label": "Method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "get",
+                                "head",
+                                "post",
+                                "put",
+                                "patch",
+                                "delete",
+                                "options"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "headers",
+                        "type": "array",
+                        "label": "Headers",
+                        "spec": {
+                            "name": "value",
+                            "label": "Header",
+                            "type": "collection",
+                            "spec": [
+                                {
+                                    "name": "name",
+                                    "label": "Name",
+                                    "type": "text",
+                                    "required": true,
+                                    "validate": {
+                                        "pattern": "^[-!#$%&'*+.^_`|~0-9A-Za-z]+$"
+                                    }
+                                },
+                                {
+                                    "name": "value",
+                                    "label": "Value",
+                                    "type": "text"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "queryParameters",
+                        "type": "array",
+                        "label": "Query parameters",
+                        "spec": {
+                            "name": "value",
+                            "label": "Parameter",
+                            "type": "collection",
+                            "spec": [
+                                {
+                                    "name": "name",
+                                    "label": "Name",
+                                    "type": "text",
+                                    "required": true
+                                },
+                                {
+                                    "name": "value",
+                                    "label": "Value",
+                                    "type": "text"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "contentType",
+                        "type": "select",
+                        "label": "Body content type",
+                        "validate": {
+                            "enum": [
+                                "json",
+                                "multipart",
+                                "urlEncoded",
+                                "custom"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "parseResponse",
+                        "type": "boolean",
+                        "label": "Parse response",
+                        "required": true
+                    },
+                    {
+                        "name": "stopOnHttpError",
+                        "type": "boolean",
+                        "label": "Return error if HTTP request fails",
+                        "required": true
+                    },
+                    {
+                        "name": "timeout",
+                        "type": "uinteger",
+                        "label": "Timeout",
+                        "validate": {
+                            "min": 1,
+                            "max": 300
+                        }
+                    },
+                    {
+                        "name": "allowRedirects",
+                        "type": "boolean",
+                        "label": "Allow redirects",
+                        "required": true
+                    },
+                    {
+                        "name": "shareCookies",
+                        "type": "boolean",
+                        "label": "Share cookies with other HTTP modules",
+                        "required": true
+                    },
+                    {
+                        "name": "requestCompressedContent",
+                        "type": "boolean",
+                        "label": "Request compressed content",
+                        "required": true
+                    },
+                    {
+                        "name": "inputMethod",
+                        "type": "select",
+                        "label": "Body input method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "dataStructure",
+                                "jsonString"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "jsonStringBodyContent",
+                        "type": "text",
+                        "label": "Body content",
+                        "required": true
+                    },
+                    {
+                        "name": "paginationType",
+                        "type": "select",
+                        "label": "Pagination type",
+                        "validate": {
+                            "enum": [
+                                "offsetBased",
+                                "pageBased",
+                                "urlBased",
+                                "tokenBased"
+                            ]
+                        }
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "data",
+                        "label": "Data",
+                        "type": "any"
+                    },
+                    {
+                        "name": "statusCode",
+                        "label": "Status Code",
+                        "type": "number"
+                    },
+                    {
+                        "name": "headers",
+                        "label": "Headers",
+                        "type": "collection",
+                        "spec": [
+                            {
+                                "name": "content-length",
+                                "label": "Content-Length",
+                                "type": "text"
+                            },
+                            {
+                                "name": "content-encoding",
+                                "label": "Content-Encoding",
+                                "type": "text"
+                            },
+                            {
+                                "name": "content-type",
+                                "label": "Content-Type",
+                                "type": "text"
+                            },
+                            {
+                                "name": "server",
+                                "label": "Server",
+                                "type": "text"
+                            },
+                            {
+                                "name": "cache-control",
+                                "label": "Cache-Control",
+                                "type": "text"
+                            },
+                            {
+                                "name": "set-cookie",
+                                "label": "Set-Cookie",
+                                "type": "array",
+                                "spec": {
+                                    "type": "text"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": 4,
+            "module": "util:FunctionSleep",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "duration": "15"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 900,
+                    "y": 0
+                },
+                "restore": {},
+                "expect": [
+                    {
+                        "name": "duration",
+                        "type": "uinteger",
+                        "label": "Delay",
+                        "required": true,
+                        "validate": {
+                            "max": 300,
+                            "min": 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": 5,
+            "module": "http:MakeRequest",
+            "version": 4,
+            "parameters": {
+                "authenticationType": "noAuth",
+                "tlsType": "",
+                "proxyKeychain": ""
+            },
+            "mapper": {
+                "url": `${webhookUrl}/fetchresponse`,
+                "method": "post",
+                "headers": [
+                    {
+                        "name": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "contentType": "json",
+                "parseResponse": true,
+                "stopOnHttpError": true,
+                "allowRedirects": true,
+                "shareCookies": false,
+                "requestCompressedContent": true,
+                "inputMethod": "jsonString",
+                "jsonStringBodyContent": "{\r\n  \"message\": \"{{1.Body}}\",\r\n  \"from\": \"{{substring(1.From; 9)}}\",\r\n  \"contactId\": \"{{substring(1.From; 9)}}\",\r\n  \"platform\": \"whatsapp\"\r\n}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 1200,
+                    "y": 0,
+                    "name": "http - Fetch Response"
+                },
+                "restore": {
+                    "parameters": {
+                        "authenticationType": {
+                            "label": "No authenticationUse when no credentials are required for the request."
+                        },
+                        "tlsType": {
+                            "label": "Empty"
+                        },
+                        "proxyKeychain": {
+                            "label": "Choose a key"
+                        }
+                    },
+                    "expect": {
+                        "method": {
+                            "mode": "chose",
+                            "label": "POST"
+                        },
+                        "headers": {
+                            "mode": "chose",
+                            "items": [
+                                null
+                            ]
+                        },
+                        "queryParameters": {
+                            "mode": "chose"
+                        },
+                        "contentType": {
+                            "label": "application/jsonEnter data in the JSON format, as a string or using a data structure."
+                        },
+                        "parseResponse": {
+                            "mode": "chose"
+                        },
+                        "stopOnHttpError": {
+                            "mode": "chose"
+                        },
+                        "allowRedirects": {
+                            "mode": "chose"
+                        },
+                        "shareCookies": {
+                            "mode": "chose"
+                        },
+                        "requestCompressedContent": {
+                            "mode": "chose"
+                        },
+                        "inputMethod": {
+                            "label": "JSON stringEnter the JSON body as a raw text string. If values contain JSON reserved characters, you must escape them manually."
+                        },
+                        "paginationType": {
+                            "label": "Empty"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "authenticationType",
+                        "type": "select",
+                        "label": "Authentication type",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "noAuth",
+                                "apiKey",
+                                "basicAuth",
+                                "oAuth"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "tlsType",
+                        "type": "select",
+                        "label": "Transport layer security (TLS)",
+                        "validate": {
+                            "enum": [
+                                "mTls",
+                                "tls"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "proxyKeychain",
+                        "type": "keychain:proxy",
+                        "label": "Proxy"
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "url",
+                        "type": "url",
+                        "label": "URL",
+                        "required": true
+                    },
+                    {
+                        "name": "method",
+                        "type": "select",
+                        "label": "Method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "get",
+                                "head",
+                                "post",
+                                "put",
+                                "patch",
+                                "delete",
+                                "options"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "headers",
+                        "type": "array",
+                        "label": "Headers",
+                        "spec": {
+                            "name": "value",
+                            "label": "Header",
+                            "type": "collection",
+                            "spec": [
+                                {
+                                    "name": "name",
+                                    "label": "Name",
+                                    "type": "text",
+                                    "required": true,
+                                    "validate": {
+                                        "pattern": "^[-!#$%&'*+.^_`|~0-9A-Za-z]+$"
+                                    }
+                                },
+                                {
+                                    "name": "value",
+                                    "label": "Value",
+                                    "type": "text"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "queryParameters",
+                        "type": "array",
+                        "label": "Query parameters",
+                        "spec": {
+                            "name": "value",
+                            "label": "Parameter",
+                            "type": "collection",
+                            "spec": [
+                                {
+                                    "name": "name",
+                                    "label": "Name",
+                                    "type": "text",
+                                    "required": true
+                                },
+                                {
+                                    "name": "value",
+                                    "label": "Value",
+                                    "type": "text"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "contentType",
+                        "type": "select",
+                        "label": "Body content type",
+                        "validate": {
+                            "enum": [
+                                "json",
+                                "multipart",
+                                "urlEncoded",
+                                "custom"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "parseResponse",
+                        "type": "boolean",
+                        "label": "Parse response",
+                        "required": true
+                    },
+                    {
+                        "name": "stopOnHttpError",
+                        "type": "boolean",
+                        "label": "Return error if HTTP request fails",
+                        "required": true
+                    },
+                    {
+                        "name": "timeout",
+                        "type": "uinteger",
+                        "label": "Timeout",
+                        "validate": {
+                            "min": 1,
+                            "max": 300
+                        }
+                    },
+                    {
+                        "name": "allowRedirects",
+                        "type": "boolean",
+                        "label": "Allow redirects",
+                        "required": true
+                    },
+                    {
+                        "name": "shareCookies",
+                        "type": "boolean",
+                        "label": "Share cookies with other HTTP modules",
+                        "required": true
+                    },
+                    {
+                        "name": "requestCompressedContent",
+                        "type": "boolean",
+                        "label": "Request compressed content",
+                        "required": true
+                    },
+                    {
+                        "name": "inputMethod",
+                        "type": "select",
+                        "label": "Body input method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "dataStructure",
+                                "jsonString"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "jsonStringBodyContent",
+                        "type": "text",
+                        "label": "Body content",
+                        "required": true
+                    },
+                    {
+                        "name": "paginationType",
+                        "type": "select",
+                        "label": "Pagination type",
+                        "validate": {
+                            "enum": [
+                                "offsetBased",
+                                "pageBased",
+                                "urlBased",
+                                "tokenBased"
+                            ]
+                        }
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "data",
+                        "label": "Data",
+                        "type": "any"
+                    },
+                    {
+                        "name": "statusCode",
+                        "label": "Status Code",
+                        "type": "number"
+                    },
+                    {
+                        "name": "headers",
+                        "label": "Headers",
+                        "type": "collection",
+                        "spec": [
+                            {
+                                "name": "content-length",
+                                "label": "Content-Length",
+                                "type": "text"
+                            },
+                            {
+                                "name": "content-encoding",
+                                "label": "Content-Encoding",
+                                "type": "text"
+                            },
+                            {
+                                "name": "content-type",
+                                "label": "Content-Type",
+                                "type": "text"
+                            },
+                            {
+                                "name": "server",
+                                "label": "Server",
+                                "type": "text"
+                            },
+                            {
+                                "name": "cache-control",
+                                "label": "Cache-Control",
+                                "type": "text"
+                            },
+                            {
+                                "name": "set-cookie",
+                                "label": "Set-Cookie",
+                                "type": "array",
+                                "spec": {
+                                    "type": "text"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": 6,
+            "module": "twilio:SendSMS",
+            "version": 2,
+            "parameters": {
+                "__IMTCONN__": 6861999
+            },
+            "mapper": {
+                "to": "{{1.From}}",
+                "body": "{{5.data.text}}",
+                "from": "{{1.To}}",
+                "fromType": "phone",
+                "messageBody": "body"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 1500,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "from": {
+                            "mode": "edit"
+                        },
+                        "fromType": {
+                            "mode": "chose",
+                            "label": "phone number"
+                        },
+                        "mediaUrl": {
+                            "mode": "chose"
+                        },
+                        "messageBody": {
+                            "mode": "chose",
+                            "label": "Create a Body"
+                        },
+                        "smartEncoded": {
+                            "mode": "chose"
+                        },
+                        "applicationSid": {
+                            "mode": "chose"
+                        },
+                        "provideFeedback": {
+                            "mode": "chose"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "twilio"
+                            },
+                            "label": "My Twilio connection"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:twilio",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "fromType",
+                        "type": "select",
+                        "label": "Send a message from",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "phone",
+                                "service",
+                                "channel"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "type": "text",
+                        "label": "To",
+                        "required": true
+                    },
+                    {
+                        "name": "messageBody",
+                        "type": "select",
+                        "label": "Message Body",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "body",
+                                "template"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "mediaUrl",
+                        "spec": {
+                            "name": "value",
+                            "type": "url"
+                        },
+                        "type": "array",
+                        "label": "Media URL"
+                    },
+                    {
+                        "name": "smartEncoded",
+                        "type": "boolean",
+                        "label": "Smart encoded"
+                    },
+                    {
+                        "name": "validityPeriod",
+                        "type": "uinteger",
+                        "label": "Validity period"
+                    },
+                    {
+                        "name": "statusCallback",
+                        "type": "url",
+                        "label": "Status callback"
+                    },
+                    {
+                        "name": "applicationSid",
+                        "type": "select",
+                        "label": "Application"
+                    },
+                    {
+                        "name": "maxPrice",
+                        "type": "number",
+                        "label": "Max price"
+                    },
+                    {
+                        "name": "provideFeedback",
+                        "type": "boolean",
+                        "label": "Provide feedback"
+                    },
+                    {
+                        "name": "from",
+                        "type": "select",
+                        "label": "Phone number",
+                        "required": true
+                    },
+                    {
+                        "name": "body",
+                        "type": "text",
+                        "label": "Body",
+                        "required": true,
+                        "validate": {
+                            "max": 1600
+                        }
+                    }
+                ]
+            }
         }
-      }
-    },
-    {
-      "id": 3,
-      "module": "twilio:SendMessage",
-      "version": 1,
-      "parameters": {},
-      "mapper": {
-        "to": "{{1.From}}",
-        "from": "YOUR_TWILIO_WHATSAPP_NUMBER",
-        "body": "⏳ Processing your message..."
-      },
-      "metadata": {
-        "designer": { "x": 600, "y": 0 }
-      }
-    },
-    {
-      "id": 4,
-      "module": "builtin:Sleep",
-      "version": 1,
-      "parameters": {},
-      "mapper": { "delay": "10" },
-      "metadata": {
-        "designer": { "x": 900, "y": 0 }
-      }
-    },
-    {
-      "id": 5,
-      "module": "http:ActionSendData",
-      "version": 3,
-      "parameters": {},
-      "mapper": {
-        "url": `${webhookUrl}/fetchresponse`,
-        "method": "post",
-        "headers": [
-          { "name": "Content-Type", "value": "application/json" }
-        ],
-        "bodyType": "raw",
-        "parseResponse": true,
-        "body": JSON.stringify({
-          from: "{{1.From}}",
-          contactId: "{{1.From}}"
-        }, null, 2)
-      },
-      "metadata": {
-        "designer": { "x": 1200, "y": 0 },
-        "restore": {
-          "expect": {
-            "method": { "mode": "chose", "label": "POST" },
-            "bodyType": { "label": "Raw" }
-          }
-        }
-      }
-    },
-    {
-      "id": 6,
-      "module": "twilio:SendMessage",
-      "version": 1,
-      "parameters": {},
-      "mapper": {
-        "to": "{{1.From}}",
-        "from": "YOUR_TWILIO_WHATSAPP_NUMBER",
-        "body": "{{5.data.text}}"
-      },
-      "metadata": {
-        "designer": { "x": 1500, "y": 0 }
-      }
+    ],
+    "metadata": {
+        "instant": true,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "us2.make.com",
+        "notes": []
     }
-  ],
-  "metadata": {
-    "version": 1,
-    "scenario": {
-      "roundtrips": 1,
-      "maxErrors": 3,
-      "autoCommit": true,
-      "sequential": false,
-      "confidential": false,
-      "dataloss": false,
-      "dlq": false
-    },
-    "designer": { "orphans": [] },
-    "zone": "us1.make.com"
-  }
 })
 
 const generateSMSTemplate = (webhookUrl: string, connectionName: string) => ({
-  "name": `${connectionName} - SMS via Twilio`,
-  "flow": [
-    {
-      "id": 1,
-      "module": "twilio:TriggerIncomingSMS",
-      "version": 1,
-      "parameters": {
-        "accountSid": "YOUR_TWILIO_ACCOUNT_SID",
-        "authToken": "YOUR_TWILIO_AUTH_TOKEN"
-      },
-      "mapper": {},
-      "metadata": {
-        "designer": { "x": 0, "y": 0 },
-        "restore": {},
-        "expect": [
-          { "name": "Body", "type": "text", "label": "Message Body" },
-          { "name": "From", "type": "text", "label": "Phone Number" }
-        ]
-      }
-    },
-    {
-      "id": 2,
-      "module": "http:ActionSendData",
-      "version": 3,
-      "parameters": {},
-      "mapper": {
-        "url": webhookUrl,
-        "method": "post",
-        "headers": [
-          { "name": "Content-Type", "value": "application/json" }
-        ],
-        "bodyType": "raw",
-        "parseResponse": true,
-        "body": JSON.stringify({
-          message: "{{1.Body}}",
-          from: "{{1.From}}",
-          contactId: "{{1.From}}",
-          platform: "sms"
-        }, null, 2)
-      },
-      "metadata": {
-        "designer": { "x": 300, "y": 0 },
-        "restore": {
-          "expect": {
-            "method": { "mode": "chose", "label": "POST" },
-            "bodyType": { "label": "Raw" }
-          }
+    "name": `${connectionName} - SMS Integration`,
+    "flow": [
+        {
+            "id": 1,
+            "module": "gateway:CustomWebHook",
+            "version": 1,
+            "parameters": {
+                "hook": 1751365,
+                "maxResults": 1
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "restore": {
+                    "parameters": {
+                        "hook": {
+                            "data": {
+                                "editable": "true"
+                            },
+                            "label": "test sms"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "hook",
+                        "type": "hook:gateway-webhook",
+                        "label": "Webhook",
+                        "required": true
+                    },
+                    {
+                        "name": "maxResults",
+                        "type": "number",
+                        "label": "Maximum number of results"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 8,
+            "module": "gateway:WebhookRespond",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "body": "",
+                "status": "204",
+                "headers": []
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "headers": {
+                            "mode": "chose"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "status",
+                        "type": "uinteger",
+                        "label": "Status",
+                        "required": true,
+                        "validate": {
+                            "min": 100
+                        }
+                    },
+                    {
+                        "name": "body",
+                        "type": "any",
+                        "label": "Body"
+                    },
+                    {
+                        "name": "headers",
+                        "spec": [
+                            {
+                                "name": "key",
+                                "type": "text",
+                                "label": "Key",
+                                "required": true,
+                                "validate": {
+                                    "max": 256
+                                }
+                            },
+                            {
+                                "name": "value",
+                                "type": "text",
+                                "label": "Value",
+                                "required": true,
+                                "validate": {
+                                    "max": 4096
+                                }
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Custom headers",
+                        "validate": {
+                            "maxItems": 16
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": 2,
+            "module": "http:MakeRequest",
+            "version": 4,
+            "parameters": {
+                "authenticationType": "noAuth",
+                "tlsType": "",
+                "proxyKeychain": ""
+            },
+            "mapper": {
+                "url": `${webhookUrl}`,
+                "method": "post",
+                "headers": [
+                    {
+                        "name": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "contentType": "json",
+                "parseResponse": true,
+                "stopOnHttpError": true,
+                "allowRedirects": true,
+                "shareCookies": false,
+                "requestCompressedContent": true,
+                "inputMethod": "jsonString",
+                "jsonStringBodyContent": "{\r\n  \"message\": \"{{1.Body}}\",\r\n  \"from\": \"{{1.From}}\",\r\n  \"contactId\": \"{{1.From}}\",\r\n  \"platform\": \"sms\"\r\n}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 0,
+                    "name": "HTTP - POST EndPoint"
+                },
+                "restore": {
+                    "parameters": {
+                        "authenticationType": {
+                            "label": "No authenticationUse when no credentials are required for the request."
+                        },
+                        "tlsType": {
+                            "label": "Empty"
+                        },
+                        "proxyKeychain": {
+                            "label": "Choose a key"
+                        }
+                    },
+                    "expect": {
+                        "method": {
+                            "mode": "chose",
+                            "label": "POST"
+                        },
+                        "headers": {
+                            "mode": "chose",
+                            "items": [
+                                null
+                            ]
+                        },
+                        "queryParameters": {
+                            "mode": "chose"
+                        },
+                        "contentType": {
+                            "label": "application/jsonEnter data in the JSON format, as a string or using a data structure."
+                        },
+                        "parseResponse": {
+                            "mode": "chose"
+                        },
+                        "stopOnHttpError": {
+                            "mode": "chose"
+                        },
+                        "allowRedirects": {
+                            "mode": "chose"
+                        },
+                        "shareCookies": {
+                            "mode": "chose"
+                        },
+                        "requestCompressedContent": {
+                            "mode": "chose"
+                        },
+                        "inputMethod": {
+                            "label": "JSON stringEnter the JSON body as a raw text string. If values contain JSON reserved characters, you must escape them manually."
+                        },
+                        "paginationType": {
+                            "label": "Empty"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "authenticationType",
+                        "type": "select",
+                        "label": "Authentication type",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "noAuth",
+                                "apiKey",
+                                "basicAuth",
+                                "oAuth"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "tlsType",
+                        "type": "select",
+                        "label": "Transport layer security (TLS)",
+                        "validate": {
+                            "enum": [
+                                "mTls",
+                                "tls"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "proxyKeychain",
+                        "type": "keychain:proxy",
+                        "label": "Proxy"
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "url",
+                        "type": "url",
+                        "label": "URL",
+                        "required": true
+                    },
+                    {
+                        "name": "method",
+                        "type": "select",
+                        "label": "Method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "get",
+                                "head",
+                                "post",
+                                "put",
+                                "patch",
+                                "delete",
+                                "options"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "headers",
+                        "type": "array",
+                        "label": "Headers",
+                        "spec": {
+                            "name": "value",
+                            "label": "Header",
+                            "type": "collection",
+                            "spec": [
+                                {
+                                    "name": "name",
+                                    "label": "Name",
+                                    "type": "text",
+                                    "required": true,
+                                    "validate": {
+                                        "pattern": "^[-!#$%&'*+.^_`|~0-9A-Za-z]+$"
+                                    }
+                                },
+                                {
+                                    "name": "value",
+                                    "label": "Value",
+                                    "type": "text"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "queryParameters",
+                        "type": "array",
+                        "label": "Query parameters",
+                        "spec": {
+                            "name": "value",
+                            "label": "Parameter",
+                            "type": "collection",
+                            "spec": [
+                                {
+                                    "name": "name",
+                                    "label": "Name",
+                                    "type": "text",
+                                    "required": true
+                                },
+                                {
+                                    "name": "value",
+                                    "label": "Value",
+                                    "type": "text"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "contentType",
+                        "type": "select",
+                        "label": "Body content type",
+                        "validate": {
+                            "enum": [
+                                "json",
+                                "multipart",
+                                "urlEncoded",
+                                "custom"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "parseResponse",
+                        "type": "boolean",
+                        "label": "Parse response",
+                        "required": true
+                    },
+                    {
+                        "name": "stopOnHttpError",
+                        "type": "boolean",
+                        "label": "Return error if HTTP request fails",
+                        "required": true
+                    },
+                    {
+                        "name": "timeout",
+                        "type": "uinteger",
+                        "label": "Timeout",
+                        "validate": {
+                            "min": 1,
+                            "max": 300
+                        }
+                    },
+                    {
+                        "name": "allowRedirects",
+                        "type": "boolean",
+                        "label": "Allow redirects",
+                        "required": true
+                    },
+                    {
+                        "name": "shareCookies",
+                        "type": "boolean",
+                        "label": "Share cookies with other HTTP modules",
+                        "required": true
+                    },
+                    {
+                        "name": "requestCompressedContent",
+                        "type": "boolean",
+                        "label": "Request compressed content",
+                        "required": true
+                    },
+                    {
+                        "name": "inputMethod",
+                        "type": "select",
+                        "label": "Body input method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "dataStructure",
+                                "jsonString"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "jsonStringBodyContent",
+                        "type": "text",
+                        "label": "Body content",
+                        "required": true
+                    },
+                    {
+                        "name": "paginationType",
+                        "type": "select",
+                        "label": "Pagination type",
+                        "validate": {
+                            "enum": [
+                                "offsetBased",
+                                "pageBased",
+                                "urlBased",
+                                "tokenBased"
+                            ]
+                        }
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "data",
+                        "label": "Data",
+                        "type": "any"
+                    },
+                    {
+                        "name": "statusCode",
+                        "label": "Status Code",
+                        "type": "number"
+                    },
+                    {
+                        "name": "headers",
+                        "label": "Headers",
+                        "type": "collection",
+                        "spec": [
+                            {
+                                "name": "content-length",
+                                "label": "Content-Length",
+                                "type": "text"
+                            },
+                            {
+                                "name": "content-encoding",
+                                "label": "Content-Encoding",
+                                "type": "text"
+                            },
+                            {
+                                "name": "content-type",
+                                "label": "Content-Type",
+                                "type": "text"
+                            },
+                            {
+                                "name": "server",
+                                "label": "Server",
+                                "type": "text"
+                            },
+                            {
+                                "name": "cache-control",
+                                "label": "Cache-Control",
+                                "type": "text"
+                            },
+                            {
+                                "name": "set-cookie",
+                                "label": "Set-Cookie",
+                                "type": "array",
+                                "spec": {
+                                    "type": "text"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": 4,
+            "module": "util:FunctionSleep",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "duration": "15"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 900,
+                    "y": 0
+                },
+                "restore": {},
+                "expect": [
+                    {
+                        "name": "duration",
+                        "type": "uinteger",
+                        "label": "Delay",
+                        "required": true,
+                        "validate": {
+                            "max": 300,
+                            "min": 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": 5,
+            "module": "http:MakeRequest",
+            "version": 4,
+            "parameters": {
+                "authenticationType": "noAuth",
+                "tlsType": "",
+                "proxyKeychain": ""
+            },
+            "mapper": {
+                "url": `${webhookUrl}/fetchresponse`,
+                "method": "post",
+                "headers": [
+                    {
+                        "name": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "contentType": "json",
+                "parseResponse": true,
+                "stopOnHttpError": true,
+                "allowRedirects": true,
+                "shareCookies": false,
+                "requestCompressedContent": true,
+                "inputMethod": "jsonString",
+                "jsonStringBodyContent": "{\r\n  \"message\": \"{{1.Body}}\",\r\n  \"from\": \"{{1.From}}\",\r\n  \"contactId\": \"{{1.From}}\",\r\n  \"platform\": \"sms\"\r\n}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 1200,
+                    "y": 0,
+                    "name": "http - Fetch Response"
+                },
+                "restore": {
+                    "parameters": {
+                        "authenticationType": {
+                            "label": "No authenticationUse when no credentials are required for the request."
+                        },
+                        "tlsType": {
+                            "label": "Empty"
+                        },
+                        "proxyKeychain": {
+                            "label": "Choose a key"
+                        }
+                    },
+                    "expect": {
+                        "method": {
+                            "mode": "chose",
+                            "label": "POST"
+                        },
+                        "headers": {
+                            "mode": "chose",
+                            "items": [
+                                null
+                            ]
+                        },
+                        "queryParameters": {
+                            "mode": "chose"
+                        },
+                        "contentType": {
+                            "label": "application/jsonEnter data in the JSON format, as a string or using a data structure."
+                        },
+                        "parseResponse": {
+                            "mode": "chose"
+                        },
+                        "stopOnHttpError": {
+                            "mode": "chose"
+                        },
+                        "allowRedirects": {
+                            "mode": "chose"
+                        },
+                        "shareCookies": {
+                            "mode": "chose"
+                        },
+                        "requestCompressedContent": {
+                            "mode": "chose"
+                        },
+                        "inputMethod": {
+                            "label": "JSON stringEnter the JSON body as a raw text string. If values contain JSON reserved characters, you must escape them manually."
+                        },
+                        "paginationType": {
+                            "label": "Empty"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "authenticationType",
+                        "type": "select",
+                        "label": "Authentication type",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "noAuth",
+                                "apiKey",
+                                "basicAuth",
+                                "oAuth"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "tlsType",
+                        "type": "select",
+                        "label": "Transport layer security (TLS)",
+                        "validate": {
+                            "enum": [
+                                "mTls",
+                                "tls"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "proxyKeychain",
+                        "type": "keychain:proxy",
+                        "label": "Proxy"
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "url",
+                        "type": "url",
+                        "label": "URL",
+                        "required": true
+                    },
+                    {
+                        "name": "method",
+                        "type": "select",
+                        "label": "Method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "get",
+                                "head",
+                                "post",
+                                "put",
+                                "patch",
+                                "delete",
+                                "options"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "headers",
+                        "type": "array",
+                        "label": "Headers",
+                        "spec": {
+                            "name": "value",
+                            "label": "Header",
+                            "type": "collection",
+                            "spec": [
+                                {
+                                    "name": "name",
+                                    "label": "Name",
+                                    "type": "text",
+                                    "required": true,
+                                    "validate": {
+                                        "pattern": "^[-!#$%&'*+.^_`|~0-9A-Za-z]+$"
+                                    }
+                                },
+                                {
+                                    "name": "value",
+                                    "label": "Value",
+                                    "type": "text"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "queryParameters",
+                        "type": "array",
+                        "label": "Query parameters",
+                        "spec": {
+                            "name": "value",
+                            "label": "Parameter",
+                            "type": "collection",
+                            "spec": [
+                                {
+                                    "name": "name",
+                                    "label": "Name",
+                                    "type": "text",
+                                    "required": true
+                                },
+                                {
+                                    "name": "value",
+                                    "label": "Value",
+                                    "type": "text"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "contentType",
+                        "type": "select",
+                        "label": "Body content type",
+                        "validate": {
+                            "enum": [
+                                "json",
+                                "multipart",
+                                "urlEncoded",
+                                "custom"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "parseResponse",
+                        "type": "boolean",
+                        "label": "Parse response",
+                        "required": true
+                    },
+                    {
+                        "name": "stopOnHttpError",
+                        "type": "boolean",
+                        "label": "Return error if HTTP request fails",
+                        "required": true
+                    },
+                    {
+                        "name": "timeout",
+                        "type": "uinteger",
+                        "label": "Timeout",
+                        "validate": {
+                            "min": 1,
+                            "max": 300
+                        }
+                    },
+                    {
+                        "name": "allowRedirects",
+                        "type": "boolean",
+                        "label": "Allow redirects",
+                        "required": true
+                    },
+                    {
+                        "name": "shareCookies",
+                        "type": "boolean",
+                        "label": "Share cookies with other HTTP modules",
+                        "required": true
+                    },
+                    {
+                        "name": "requestCompressedContent",
+                        "type": "boolean",
+                        "label": "Request compressed content",
+                        "required": true
+                    },
+                    {
+                        "name": "inputMethod",
+                        "type": "select",
+                        "label": "Body input method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "dataStructure",
+                                "jsonString"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "jsonStringBodyContent",
+                        "type": "text",
+                        "label": "Body content",
+                        "required": true
+                    },
+                    {
+                        "name": "paginationType",
+                        "type": "select",
+                        "label": "Pagination type",
+                        "validate": {
+                            "enum": [
+                                "offsetBased",
+                                "pageBased",
+                                "urlBased",
+                                "tokenBased"
+                            ]
+                        }
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "data",
+                        "label": "Data",
+                        "type": "any"
+                    },
+                    {
+                        "name": "statusCode",
+                        "label": "Status Code",
+                        "type": "number"
+                    },
+                    {
+                        "name": "headers",
+                        "label": "Headers",
+                        "type": "collection",
+                        "spec": [
+                            {
+                                "name": "content-length",
+                                "label": "Content-Length",
+                                "type": "text"
+                            },
+                            {
+                                "name": "content-encoding",
+                                "label": "Content-Encoding",
+                                "type": "text"
+                            },
+                            {
+                                "name": "content-type",
+                                "label": "Content-Type",
+                                "type": "text"
+                            },
+                            {
+                                "name": "server",
+                                "label": "Server",
+                                "type": "text"
+                            },
+                            {
+                                "name": "cache-control",
+                                "label": "Cache-Control",
+                                "type": "text"
+                            },
+                            {
+                                "name": "set-cookie",
+                                "label": "Set-Cookie",
+                                "type": "array",
+                                "spec": {
+                                    "type": "text"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": 6,
+            "module": "twilio:SendSMS",
+            "version": 2,
+            "parameters": {
+                "__IMTCONN__": 6861999
+            },
+            "mapper": {
+                "to": "{{1.From}}",
+                "body": "{{5.data.text}}",
+                "from": "{{1.To}}",
+                "fromType": "phone",
+                "messageBody": "body"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 1500,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "from": {
+                            "mode": "edit"
+                        },
+                        "fromType": {
+                            "mode": "chose",
+                            "label": "phone number"
+                        },
+                        "mediaUrl": {
+                            "mode": "chose"
+                        },
+                        "messageBody": {
+                            "mode": "chose",
+                            "label": "Create a Body"
+                        },
+                        "smartEncoded": {
+                            "mode": "chose"
+                        },
+                        "applicationSid": {
+                            "mode": "chose"
+                        },
+                        "provideFeedback": {
+                            "mode": "chose"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "twilio"
+                            },
+                            "label": "My Twilio connection"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:twilio",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "fromType",
+                        "type": "select",
+                        "label": "Send a message from",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "phone",
+                                "service",
+                                "channel"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "type": "text",
+                        "label": "To",
+                        "required": true
+                    },
+                    {
+                        "name": "messageBody",
+                        "type": "select",
+                        "label": "Message Body",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "body",
+                                "template"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "mediaUrl",
+                        "spec": {
+                            "name": "value",
+                            "type": "url"
+                        },
+                        "type": "array",
+                        "label": "Media URL"
+                    },
+                    {
+                        "name": "smartEncoded",
+                        "type": "boolean",
+                        "label": "Smart encoded"
+                    },
+                    {
+                        "name": "validityPeriod",
+                        "type": "uinteger",
+                        "label": "Validity period"
+                    },
+                    {
+                        "name": "statusCallback",
+                        "type": "url",
+                        "label": "Status callback"
+                    },
+                    {
+                        "name": "applicationSid",
+                        "type": "select",
+                        "label": "Application"
+                    },
+                    {
+                        "name": "maxPrice",
+                        "type": "number",
+                        "label": "Max price"
+                    },
+                    {
+                        "name": "provideFeedback",
+                        "type": "boolean",
+                        "label": "Provide feedback"
+                    },
+                    {
+                        "name": "from",
+                        "type": "select",
+                        "label": "Phone number",
+                        "required": true
+                    },
+                    {
+                        "name": "body",
+                        "type": "text",
+                        "label": "Body",
+                        "required": true,
+                        "validate": {
+                            "max": 1600
+                        }
+                    }
+                ]
+            }
         }
-      }
-    },
-    {
-      "id": 3,
-      "module": "builtin:Sleep",
-      "version": 1,
-      "parameters": {},
-      "mapper": { "delay": "10" },
-      "metadata": {
-        "designer": { "x": 600, "y": 0 }
-      }
-    },
-    {
-      "id": 4,
-      "module": "http:ActionSendData",
-      "version": 3,
-      "parameters": {},
-      "mapper": {
-        "url": `${webhookUrl}/fetchresponse`,
-        "method": "post",
-        "headers": [
-          { "name": "Content-Type", "value": "application/json" }
-        ],
-        "bodyType": "raw",
-        "parseResponse": true,
-        "body": JSON.stringify({
-          from: "{{1.From}}",
-          contactId: "{{1.From}}"
-        }, null, 2)
-      },
-      "metadata": {
-        "designer": { "x": 900, "y": 0 },
-        "restore": {
-          "expect": {
-            "method": { "mode": "chose", "label": "POST" },
-            "bodyType": { "label": "Raw" }
-          }
-        }
-      }
-    },
-    {
-      "id": 5,
-      "module": "twilio:SendSMS",
-      "version": 1,
-      "parameters": {},
-      "mapper": {
-        "to": "{{1.From}}",
-        "from": "YOUR_TWILIO_PHONE_NUMBER",
-        "body": "{{4.data.text}}"
-      },
-      "metadata": {
-        "designer": { "x": 1200, "y": 0 }
-      }
+    ],
+    "metadata": {
+        "instant": true,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "us2.make.com",
+        "notes": []
     }
-  ],
-  "metadata": {
-    "version": 1,
-    "scenario": {
-      "roundtrips": 1,
-      "maxErrors": 3,
-      "autoCommit": true,
-      "sequential": false,
-      "confidential": false,
-      "dataloss": false,
-      "dlq": false
-    },
-    "designer": { "orphans": [] },
-    "zone": "us1.make.com"
-  }
-})
-
-const generateSlackTemplate = (webhookUrl: string, connectionName: string) => ({
-  "name": `${connectionName} - Slack`,
-  "flow": [
-    {
-      "id": 1,
-      "module": "slack:TriggerNewMessage",
-      "version": 1,
-      "parameters": {
-        "connection": "slack-connection"
-      },
-      "mapper": {},
-      "metadata": {
-        "designer": { "x": 0, "y": 0 },
-        "restore": {},
-        "expect": [
-          { "name": "text", "type": "text", "label": "Message Text" },
-          { "name": "user", "type": "text", "label": "User ID" },
-          { "name": "channel", "type": "text", "label": "Channel ID" }
-        ]
-      }
-    },
-    {
-      "id": 2,
-      "module": "http:ActionSendData",
-      "version": 3,
-      "parameters": {},
-      "mapper": {
-        "url": webhookUrl,
-        "method": "post",
-        "headers": [
-          { "name": "Content-Type", "value": "application/json" }
-        ],
-        "bodyType": "raw",
-        "parseResponse": true,
-        "body": JSON.stringify({
-          message: "{{1.text}}",
-          from: "{{1.user}}",
-          contactId: "{{1.user}}",
-          channel: "{{1.channel}}",
-          platform: "slack"
-        }, null, 2)
-      },
-      "metadata": {
-        "designer": { "x": 300, "y": 0 },
-        "restore": {
-          "expect": {
-            "method": { "mode": "chose", "label": "POST" },
-            "bodyType": { "label": "Raw" }
-          }
-        }
-      }
-    },
-    {
-      "id": 3,
-      "module": "builtin:Sleep",
-      "version": 1,
-      "parameters": {},
-      "mapper": { "delay": "5" },
-      "metadata": {
-        "designer": { "x": 600, "y": 0 }
-      }
-    },
-    {
-      "id": 4,
-      "module": "http:ActionSendData",
-      "version": 3,
-      "parameters": {},
-      "mapper": {
-        "url": `${webhookUrl}/fetchresponse`,
-        "method": "post",
-        "headers": [
-          { "name": "Content-Type", "value": "application/json" }
-        ],
-        "bodyType": "raw",
-        "parseResponse": true,
-        "body": JSON.stringify({
-          from: "{{1.user}}",
-          contactId: "{{1.user}}"
-        }, null, 2)
-      },
-      "metadata": {
-        "designer": { "x": 900, "y": 0 },
-        "restore": {
-          "expect": {
-            "method": { "mode": "chose", "label": "POST" },
-            "bodyType": { "label": "Raw" }
-          }
-        }
-      }
-    },
-    {
-      "id": 5,
-      "module": "slack:SendMessage",
-      "version": 1,
-      "parameters": {},
-      "mapper": {
-        "channel": "{{1.channel}}",
-        "text": "{{4.data.text}}"
-      },
-      "metadata": {
-        "designer": { "x": 1200, "y": 0 }
-      }
-    }
-  ],
-  "metadata": {
-    "version": 1,
-    "scenario": {
-      "roundtrips": 1,
-      "maxErrors": 3,
-      "autoCommit": true,
-      "sequential": false,
-      "confidential": false,
-      "dataloss": false,
-      "dlq": false
-    },
-    "designer": { "orphans": [] },
-    "zone": "us1.make.com"
-  }
-})
-
-const generateDiscordTemplate = (webhookUrl: string, connectionName: string) => ({
-  "name": `${connectionName} - Discord`,
-  "flow": [
-    {
-      "id": 1,
-      "module": "discord:TriggerNewMessage",
-      "version": 1,
-      "parameters": {
-        "botToken": "YOUR_DISCORD_BOT_TOKEN"
-      },
-      "mapper": {},
-      "metadata": {
-        "designer": { "x": 0, "y": 0 },
-        "restore": {},
-        "expect": [
-          { "name": "content", "type": "text", "label": "Message Content" },
-          { "name": "author_id", "type": "text", "label": "Author ID" },
-          { "name": "channel_id", "type": "text", "label": "Channel ID" }
-        ]
-      }
-    },
-    {
-      "id": 2,
-      "module": "http:ActionSendData",
-      "version": 3,
-      "parameters": {},
-      "mapper": {
-        "url": webhookUrl,
-        "method": "post",
-        "headers": [
-          { "name": "Content-Type", "value": "application/json" }
-        ],
-        "bodyType": "raw",
-        "parseResponse": true,
-        "body": JSON.stringify({
-          message: "{{1.content}}",
-          from: "{{1.author_id}}",
-          contactId: "{{1.author_id}}",
-          channel: "{{1.channel_id}}",
-          platform: "discord"
-        }, null, 2)
-      },
-      "metadata": {
-        "designer": { "x": 300, "y": 0 },
-        "restore": {
-          "expect": {
-            "method": { "mode": "chose", "label": "POST" },
-            "bodyType": { "label": "Raw" }
-          }
-        }
-      }
-    },
-    {
-      "id": 3,
-      "module": "builtin:Sleep",
-      "version": 1,
-      "parameters": {},
-      "mapper": { "delay": "5" },
-      "metadata": {
-        "designer": { "x": 600, "y": 0 }
-      }
-    },
-    {
-      "id": 4,
-      "module": "http:ActionSendData",
-      "version": 3,
-      "parameters": {},
-      "mapper": {
-        "url": `${webhookUrl}/fetchresponse`,
-        "method": "post",
-        "headers": [
-          { "name": "Content-Type", "value": "application/json" }
-        ],
-        "bodyType": "raw",
-        "parseResponse": true,
-        "body": JSON.stringify({
-          from: "{{1.author_id}}",
-          contactId: "{{1.author_id}}"
-        }, null, 2)
-      },
-      "metadata": {
-        "designer": { "x": 900, "y": 0 },
-        "restore": {
-          "expect": {
-            "method": { "mode": "chose", "label": "POST" },
-            "bodyType": { "label": "Raw" }
-          }
-        }
-      }
-    },
-    {
-      "id": 5,
-      "module": "discord:SendMessage",
-      "version": 1,
-      "parameters": {},
-      "mapper": {
-        "channel_id": "{{1.channel_id}}",
-        "content": "{{4.data.text}}"
-      },
-      "metadata": {
-        "designer": { "x": 1200, "y": 0 }
-      }
-    }
-  ],
-  "metadata": {
-    "version": 1,
-    "scenario": {
-      "roundtrips": 1,
-      "maxErrors": 3,
-      "autoCommit": true,
-      "sequential": false,
-      "confidential": false,
-      "dataloss": false,
-      "dlq": false
-    },
-    "designer": { "orphans": [] },
-    "zone": "us1.make.com"
-  }
 })
 
 // ==================== MAIN COMPONENT ====================
@@ -738,49 +2184,41 @@ export default function WebhookConnectionPage() {
     }
   }
 
-  const handleDownloadTemplate = (platform: 'whatsapp' | 'sms' | 'slack' | 'discord') => {
-    if (!connection?.webhookUrl) {
-      toast.error('Webhook URL not available')
-      return
-    }
-
-    let template: any
-    let filename: string
-
-    switch (platform) {
-      case 'whatsapp':
-        template = generateWhatsAppTemplate(connection.webhookUrl, connection.name)
-        filename = `${connection.name.replace(/\s+/g, '-').toLowerCase()}-whatsapp-make-template.json`
-        break
-      case 'sms':
-        template = generateSMSTemplate(connection.webhookUrl, connection.name)
-        filename = `${connection.name.replace(/\s+/g, '-').toLowerCase()}-sms-make-template.json`
-        break
-      case 'slack':
-        template = generateSlackTemplate(connection.webhookUrl, connection.name)
-        filename = `${connection.name.replace(/\s+/g, '-').toLowerCase()}-slack-make-template.json`
-        break
-      case 'discord':
-        template = generateDiscordTemplate(connection.webhookUrl, connection.name)
-        filename = `${connection.name.replace(/\s+/g, '-').toLowerCase()}-discord-make-template.json`
-        break
-      default:
-        toast.error('Invalid platform')
-        return
-    }
-
-    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    
-    toast.success(`${platform.toUpperCase()} template downloaded!`)
+  const handleDownloadTemplate = (platform: 'whatsapp' | 'sms') => {
+  if (!connection?.webhookUrl) {
+    toast.error('Webhook URL not available')
+    return
   }
+
+  let template: any
+  let filename: string
+
+  switch (platform) {
+    case 'whatsapp':
+      template = generateWhatsAppTemplate(connection.webhookUrl, connection.name)
+      filename = `${connection.name.replace(/\s+/g, '-').toLowerCase()}-whatsapp-make-template.json`
+      break
+    case 'sms':
+      template = generateSMSTemplate(connection.webhookUrl, connection.name)
+      filename = `${connection.name.replace(/\s+/g, '-').toLowerCase()}-sms-make-template.json`
+      break
+    default:
+      toast.error('Invalid platform')
+      return
+  }
+
+  const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  
+  toast.success(`${platform.toUpperCase()} template downloaded!`)
+}
 
   // ==================== CONVERSATION FUNCTIONS ====================
 
@@ -1096,7 +2534,7 @@ export default function WebhookConnectionPage() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-white">Setup Instructions</h2>
-                    <p className="text-gray-400">Follow these steps to connect your platform</p>
+                    <p className="text-gray-400">Connect your AI agent to any platform with Make.com</p>
                   </div>
                 </div>
 
@@ -1134,7 +2572,7 @@ export default function WebhookConnectionPage() {
                         >
                           <div className="text-3xl mb-2">💬</div>
                           <div className="text-sm font-semibold text-green-400 mb-1">WhatsApp</div>
-                          <div className="text-xs text-green-300/70">via Twilio</div>
+                          <div className="text-xs text-green-300/70">Twilio</div>
                           <div className="mt-2 flex items-center justify-center gap-1 text-xs text-green-400 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Download size={12} />
                             Download
@@ -1148,40 +2586,14 @@ export default function WebhookConnectionPage() {
                         >
                           <div className="text-3xl mb-2">📱</div>
                           <div className="text-sm font-semibold text-blue-400 mb-1">SMS</div>
-                          <div className="text-xs text-blue-300/70">via Twilio</div>
+                          <div className="text-xs text-blue-300/70">Twilio</div>
                           <div className="mt-2 flex items-center justify-center gap-1 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Download size={12} />
                             Download
                           </div>
                         </button>
 
-                        {/* Slack Template */}
-                        <button
-                          onClick={() => handleDownloadTemplate('slack')}
-                          className="group p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded-xl transition-all"
-                        >
-                          <div className="text-3xl mb-2">💼</div>
-                          <div className="text-sm font-semibold text-purple-400 mb-1">Slack</div>
-                          <div className="text-xs text-purple-300/70">Direct</div>
-                          <div className="mt-2 flex items-center justify-center gap-1 text-xs text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Download size={12} />
-                            Download
-                          </div>
-                        </button>
-
-                        {/* Discord Template */}
-                        <button
-                          onClick={() => handleDownloadTemplate('discord')}
-                          className="group p-4 bg-gradient-to-br from-indigo-500/10 to-blue-500/10 hover:from-indigo-500/20 hover:to-blue-500/20 border border-indigo-500/30 hover:border-indigo-500/50 rounded-xl transition-all"
-                        >
-                          <div className="text-3xl mb-2">🎮</div>
-                          <div className="text-sm font-semibold text-indigo-400 mb-1">Discord</div>
-                          <div className="text-xs text-indigo-300/70">Bot API</div>
-                          <div className="mt-2 flex items-center justify-center gap-1 text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Download size={12} />
-                            Download
-                          </div>
-                        </button>
+                        
                       </div>
                     </div>
                   </div>
@@ -1243,8 +2655,8 @@ export default function WebhookConnectionPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { name: 'WhatsApp', desc: 'via Twilio', icon: '💬' },
-                    { name: 'SMS', desc: 'via Twilio', icon: '📱' },
+                    { name: 'WhatsApp', desc: 'Twilio', icon: '💬' },
+                    { name: 'SMS', desc: 'Twilio', icon: '📱' },
                     { name: 'Slack', desc: 'Direct integration', icon: '💼' },
                     { name: 'Discord', desc: 'Bot integration', icon: '🎮' },
                     { name: 'Telegram', desc: 'Bot API', icon: '✈️' },
