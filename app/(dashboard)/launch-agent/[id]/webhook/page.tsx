@@ -2526,153 +2526,203 @@ export default function WebhookConnectionPage() {
             </FadeInSection>
 
             {/* Setup Instructions */}
-            <FadeInSection>
-              <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 shadow-2xl mb-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl flex items-center justify-center">
-                    <Settings className="w-6 h-6 text-orange-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">Setup Instructions</h2>
-                    <p className="text-gray-400">Connect your AI agent to any platform with Make.com</p>
-                  </div>
-                </div>
+<FadeInSection>
+  <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 shadow-2xl mb-8">
+    <div className="flex items-center gap-3 mb-6">
+      <div className="w-12 h-12 bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl flex items-center justify-center">
+        <Settings className="w-6 h-6 text-orange-400" />
+      </div>
+      <div>
+        <h2 className="text-2xl font-bold text-white">
+          Setup Instructions (for <a href="https://make.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">Make.com</a>)
+        </h2>
+        <p className="text-gray-400">Connect your AI agent to any platform with Make.com</p>
+      </div>
+    </div>
 
-                <div className="space-y-6">
-                  
-                  {/* Step 1 */}
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
-                      1
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white mb-2">Create Make.com Account</h3>
-                      <p className="text-gray-400 mb-3">
-                        Sign up for a free account at <a href="https://make.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">make.com</a>
-                      </p>
-                    </div>
-                  </div>
+    <div className="space-y-6">
+      
+      {/* Step 1 */}
+      <div className="flex gap-4">
+        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
+          1
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-white mb-2">Create Make.com Account</h3>
+          <p className="text-gray-400 mb-3">
+            Sign up for a free account at <a href="https://make.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">make.com</a>
+          </p>
+        </div>
+      </div>
 
-                  {/* Step 2 */}
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
-                      2
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white mb-2">Download Template for Your Platform</h3>
-                      <p className="text-gray-400 mb-4">
-                        Choose and download the pre-configured template for your platform
-                      </p>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {/* WhatsApp Template */}
-                        <button
-                          onClick={() => handleDownloadTemplate('whatsapp')}
-                          className="group p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 hover:from-green-500/20 hover:to-emerald-500/20 border border-green-500/30 hover:border-green-500/50 rounded-xl transition-all"
-                        >
-                          <div className="text-3xl mb-2">💬</div>
-                          <div className="text-sm font-semibold text-green-400 mb-1">WhatsApp</div>
-                          <div className="text-xs text-green-300/70">Twilio</div>
-                          <div className="mt-2 flex items-center justify-center gap-1 text-xs text-green-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Download size={12} />
-                            Download
-                          </div>
-                        </button>
-
-                        {/* SMS Template */}
-                        <button
-                          onClick={() => handleDownloadTemplate('sms')}
-                          className="group p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 border border-blue-500/30 hover:border-blue-500/50 rounded-xl transition-all"
-                        >
-                          <div className="text-3xl mb-2">📱</div>
-                          <div className="text-sm font-semibold text-blue-400 mb-1">SMS</div>
-                          <div className="text-xs text-blue-300/70">Twilio</div>
-                          <div className="mt-2 flex items-center justify-center gap-1 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Download size={12} />
-                            Download
-                          </div>
-                        </button>
-
-                        
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
-                      3
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white mb-2">Import to Make.com</h3>
-                      <p className="text-gray-400 mb-3">
-                        In Make.com, click "Create a new scenario" → "Import blueprint" → Upload the JSON file
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step 4 */}
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
-                      4
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white mb-2">Connect Your Platform</h3>
-                      <p className="text-gray-400 mb-3">
-                        Replace the webhook trigger with your platform (Twilio for WhatsApp/SMS, Slack, Discord, etc.)
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step 5 */}
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
-                      5
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white mb-2">Test & Activate</h3>
-                      <p className="text-gray-400 mb-3">
-                        Send a test message to verify everything works, then turn on the scenario!
-                      </p>
-                    </div>
-                  </div>
-                </div>
+       {/* Step 2 */}
+<div className="flex gap-4">
+  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
+    2
+  </div>
+  <div className="flex-1">
+    <h3 className="text-lg font-semibold text-white mb-2">Create Your Scenario</h3>
+    <p className="text-gray-400 mb-4">
+      You have two options:
+    </p>
+    
+    <div className="space-y-3 mb-4">
+      <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-3">
+        <p className="text-white font-medium text-sm mb-1">🎯 Option 1: Use a Pre-configured Template (Recommended)</p>
+        <p className="text-gray-400 text-sm">
+          Download one of our ready-to-use templates below for WhatsApp or SMS. Everything is already configured - you just need to add your credentials!
+        </p>
+      </div>
+      
+      <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-3">
+        <p className="text-white font-medium text-sm mb-1">🛠️ Option 2: Build Your Own (Advanced)</p>
+        <p className="text-gray-400 text-sm">
+          Create a custom scenario from scratch. Make sure to include these essential modules in order: Webhook Trigger → Webhook Response (204) → HTTP POST (to backend) → Sleep (15s) → HTTP POST (fetchresponse) → Send Message
+        </p>
+      </div>
+    </div>
+    
+    <div className="grid grid-cols-2 gap-3">
+            {/* WhatsApp Template */}
+            <button
+              onClick={() => handleDownloadTemplate('whatsapp')}
+              className="group p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 hover:from-green-500/20 hover:to-emerald-500/20 border border-green-500/30 hover:border-green-500/50 rounded-xl transition-all"
+            >
+              <div className="text-3xl mb-2">💬</div>
+              <div className="text-sm font-semibold text-green-400 mb-1">WhatsApp</div>
+              <div className="text-xs text-green-300/70">Twilio</div>
+              <div className="mt-2 flex items-center justify-center gap-1 text-xs text-green-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Download size={12} />
+                Download
               </div>
-            </FadeInSection>
+            </button>
 
-            {/* Example Platforms */}
-            <FadeInSection>
-              <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-2xl p-8 shadow-2xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-blue-200">Supported Platforms</h2>
-                    <p className="text-blue-300/70">This webhook works with any platform that supports HTTP requests</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { name: 'WhatsApp', desc: 'Twilio', icon: '💬' },
-                    { name: 'SMS', desc: 'Twilio', icon: '📱' },
-                    { name: 'Slack', desc: 'Direct integration', icon: '💼' },
-                    { name: 'Discord', desc: 'Bot integration', icon: '🎮' },
-                    { name: 'Telegram', desc: 'Bot API', icon: '✈️' },
-                    { name: 'Custom API', desc: 'Any HTTP client', icon: '⚡' },
-                    { name: 'n8n', desc: 'Alternative to Make', icon: '🔄' },
-                    { name: 'Zapier', desc: 'Another option', icon: '⚙️' }
-                  ].map((platform) => (
-                    <div key={platform.name} className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-center">
-                      <div className="text-3xl mb-2">{platform.icon}</div>
-                      <div className="text-blue-200 font-semibold text-sm">{platform.name}</div>
-                      <div className="text-blue-300/60 text-xs mt-1">{platform.desc}</div>
-                    </div>
-                  ))}
-                </div>
+            {/* SMS Template */}
+            <button
+              onClick={() => handleDownloadTemplate('sms')}
+              className="group p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 border border-blue-500/30 hover:border-blue-500/50 rounded-xl transition-all"
+            >
+              <div className="text-3xl mb-2">📱</div>
+              <div className="text-sm font-semibold text-blue-400 mb-1">SMS</div>
+              <div className="text-xs text-blue-300/70">Twilio</div>
+              <div className="mt-2 flex items-center justify-center gap-1 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Download size={12} />
+                Download
               </div>
-            </FadeInSection>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Step 3 */}
+      <div className="flex gap-4">
+        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
+          3
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-white mb-2">Import to Make.com</h3>
+          <p className="text-gray-400 mb-3">
+            If using a template: In Make.com, click "Create a new scenario" → "Import blueprint" → Upload the JSON file
+          </p>
+          <p className="text-gray-400">
+            If building from scratch: Click "Create a new scenario" and add the modules manually
+          </p>
+        </div>
+      </div>
+
+      {/* Step 4 */}
+      <div className="flex gap-4">
+        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
+          4
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-white mb-2">Connect Your Platform</h3>
+          <p className="text-gray-400 mb-3">
+            Configure the first and last modules to connect your messaging platform:
+          </p>
+          
+          <div className="space-y-2 text-sm text-gray-400">
+            <div className="flex gap-2">
+              <span className="text-blue-400">•</span>
+              <span><strong className="text-white">Module 1 (Webhook):</strong> Copy the webhook URL and paste it in your platform settings (Twilio, Slack, Discord, etc.)</span>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-blue-400">•</span>
+              <span><strong className="text-white">Last Module (Send Message):</strong> Connect your platform account (Twilio for WhatsApp/SMS, Slack, Discord, etc.)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Step 5 */}
+      <div className="flex gap-4">
+        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
+          5
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-white mb-2">Test & Activate</h3>
+          <p className="text-gray-400 mb-3">
+            Send a test message to verify everything works, then turn on the scenario!
+          </p>
+        </div>
+      </div>
+
+      {/* Important Notes - Minimaliste */}
+      <div className="mt-8 pt-6 border-t border-gray-700/50 space-y-3">
+        <div className="flex gap-3">
+          <div className="flex-shrink-0 w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-blue-400" />
+          </div>
+          <p className="text-gray-400 text-sm">
+            <strong className="text-white">Universal compatibility:</strong> This webhook integration works with any platform that supports HTTP requests (WhatsApp, SMS, Slack, Discord, Telegram, Facebook, Instagram, and more).
+          </p>
+        </div>
+        
+        <div className="flex gap-3">
+  <div className="flex-shrink-0 w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
+    <Zap className="w-4 h-4 text-purple-400" />
+  </div>
+  <p className="text-gray-400 text-sm">
+    <strong className="text-white">Other automation platforms:</strong> This webhook structure is compatible with automation tools like <a href="https://n8n.io" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">n8n</a> and similar platforms.
+  </p>
+</div>
+      </div>
+
+      {/* Help Section */}
+      <div className="flex gap-3">
+         <div className="flex-shrink-0 w-6 h-6 bg-red-500/20 rounded-lg flex items-center justify-center">
+  <Play className="w-4 h-4 text-red-400" />
+  </div>
+  <p className="text-gray-400 text-sm">
+    <strong className="text-white">Need help setting up?:</strong> Watch our step-by-step tutorials
+  </p>
+
+        <div className="flex justify-center gap-3">
+          <a
+            href="https://youtube.com/@yourchannel"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-300 text-sm transition-all flex items-center gap-2"
+          >
+            <ExternalLink size={14} />
+            WhatsApp Tutorial
+          </a>
+          <a
+            href="https://youtube.com/@yourchannel"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-300 text-sm transition-all flex items-center gap-2"
+          >
+            <ExternalLink size={14} />
+            SMS Tutorial
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</FadeInSection>
+
+           
           </div>
         </div>
       )}
