@@ -1,6 +1,9 @@
+// app\api\agents\[id]\route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
+import { Folder } from "@/models/Folder";
 import { AgentVersion } from "@/models/AgentVersion";
 import { AgentKnowledge } from "@/models/AgentKnowledge";
 import { ChatbotConfig } from "@/models/ChatbotConfig";
@@ -85,7 +88,7 @@ export async function PUT(req: NextRequest, context: any) {
   return NextResponse.json({ message: "Agent updated", agent: updated });
 }
 
-// 🆕 DELETE AVEC CASCADE - REMPLACE TON ANCIEN DELETE
+// DELETE AVEC CASCADE + DECREMENT AGENTCOUNT (SANS TRANSACTION)
 export async function DELETE(req: NextRequest, context: any) {
   const params = await context.params;
   await connectToDatabase();
@@ -103,6 +106,9 @@ export async function DELETE(req: NextRequest, context: any) {
 
     console.log(`🗑️ [DELETE CASCADE] Starting deletion of agent ${id}...`);
 
+    // ✅ Sauvegarder le folderId AVANT suppression
+    const folderId = agent.folderId;
+
     // 2️⃣ Supprimer TOUTES les versions de cet agent
     const deletedVersions = await AgentVersion.deleteMany({ agentId: id });
     console.log(`🗑️ [DELETE CASCADE] Deleted ${deletedVersions.deletedCount} agent versions`);
@@ -115,16 +121,29 @@ export async function DELETE(req: NextRequest, context: any) {
     const deletedConfigs = await ChatbotConfig.deleteMany({ selectedAgent: id });
     console.log(`🗑️ [DELETE CASCADE] Deleted ${deletedConfigs.deletedCount} chatbot configs`);
 
-    // 5️⃣ Finalement supprimer l'agent lui-même
+    // 5️⃣ Supprimer l'agent lui-même
     await Agent.deleteOne({ _id: id });
     console.log(`🗑️ [DELETE CASCADE] Deleted agent ${id}`);
 
-    // 6️⃣ Résumé des suppressions
+    // ✅ 6️⃣ Décrémenter agentCount du folder (COMME DEPLOYMENT FOLDERS)
+    if (folderId) {
+      await Folder.findByIdAndUpdate(
+        folderId,
+        { 
+          $inc: { agentCount: -1 },
+          updatedAt: new Date()
+        }
+      );
+      console.log(`🗑️ [DELETE CASCADE] Decremented agentCount for folder ${folderId}`);
+    }
+
+    // 7️⃣ Résumé des suppressions
     const summary = {
       agent: 1,
       versions: deletedVersions.deletedCount,
       knowledge: deletedKnowledge.deletedCount,
-      chatbotConfigs: deletedConfigs.deletedCount
+      chatbotConfigs: deletedConfigs.deletedCount,
+      folderUpdated: !!folderId
     };
 
     console.log(`✅ [DELETE CASCADE] Complete! Summary:`, summary);
@@ -143,7 +162,7 @@ export async function DELETE(req: NextRequest, context: any) {
   }
 }
 
-// POST avec action de duplication
+// POST avec action de duplication (SANS TRANSACTION)
 export async function POST(req: NextRequest, context: any) {
   const params = await context.params;
   await connectToDatabase();
@@ -154,29 +173,51 @@ export async function POST(req: NextRequest, context: any) {
   const action = searchParams.get("action");
 
   if (action === "duplicate") {
-    const original = await Agent.findOne({ _id: params.id, userId: user.id });
-    if (!original) return NextResponse.json({ error: "Original agent not found" }, { status: 404 });
+    try {
+      const original = await Agent.findOne({ _id: params.id, userId: user.id });
+      if (!original) return NextResponse.json({ error: "Original agent not found" }, { status: 404 });
 
-    const copy = await Agent.create({
-      userId: user.id,
-      name: original.name + " (Copy)",
-      template: original.template,
-      openaiModel: original.openaiModel,
-      apiKey: original.apiKey, // 🆕 AJOUTÉ
-      description: original.description,
-      questions: original.questions,
-      tone: original.tone,
-      rules: original.rules,
-      companyInfo: original.companyInfo,
-      language: original.language,
-      industry: original.industry,
-      temperature: original.temperature,
-      top_p: original.top_p,
-      integrations: original.integrations ?? [],
-      updatedAt: new Date(),
-    });
+      // ✅ Créer la copie
+      const copy = await Agent.create({
+        userId: user.id,
+        name: original.name + " (Copy)",
+        template: original.template,
+        openaiModel: original.openaiModel,
+        apiKey: original.apiKey,
+        description: original.description,
+        questions: original.questions,
+        tone: original.tone,
+        rules: original.rules,
+        companyInfo: original.companyInfo,
+        language: original.language,
+        industry: original.industry,
+        temperature: original.temperature,
+        top_p: original.top_p,
+        integrations: original.integrations ?? [],
+        folderId: original.folderId || null, // ✅ Même folder que l'original
+        updatedAt: new Date(),
+      });
 
-    return NextResponse.json({ message: "Agent duplicated", agentId: copy._id });
+      // ✅ Si dans un folder, incrémenter agentCount (COMME DEPLOYMENT FOLDERS)
+      if (original.folderId) {
+        await Folder.findByIdAndUpdate(
+          original.folderId,
+          { 
+            $inc: { agentCount: 1 },
+            updatedAt: new Date()
+          }
+        );
+      }
+
+      return NextResponse.json({ 
+        message: original.folderId ? "Agent duplicated in same folder" : "Agent duplicated", 
+        agentId: copy._id 
+      });
+
+    } catch (error) {
+      console.error("❌ Failed to duplicate agent:", error);
+      return NextResponse.json({ error: "Failed to duplicate agent" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ error: "Invalid action" }, { status: 400 });

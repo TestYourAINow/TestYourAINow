@@ -1,3 +1,5 @@
+// app\api\connections\[id]\toggle\route.ts
+
 import { connectToDatabase } from '@/lib/db'
 import { Connection } from '@/models/Connection'
 import { NextRequest, NextResponse } from 'next/server'

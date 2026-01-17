@@ -1,3 +1,5 @@
+// components\FolderCard.tsx
+
 "use client"
 
 import Link from "next/link"
@@ -22,7 +24,17 @@ interface FolderCardProps {
 export default function FolderCard({ folder, onEdit, onDelete }: FolderCardProps) {
   return (
     <Link href={`/folders/${folder._id}`}>
-      <div className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-5 h-[260px] hover:border-gray-500/50 hover:shadow-2xl hover:shadow-gray-500/5 hover:scale-[1.02] transition-all duration-300 group cursor-pointer">
+      <div 
+        className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm rounded-2xl shadow-xl p-5 h-[260px] hover:scale-[1.02] transition-all duration-300 group cursor-pointer border border-gray-700/50"
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = folder.color + '60'
+          e.currentTarget.style.boxShadow = `0 8px 32px ${folder.color}20`
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = 'rgb(55 65 81 / 0.5)' // gray-700/50
+          e.currentTarget.style.boxShadow = ''
+        }}
+      >
         {/* Glow effect subtil */}
         <div
           className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-5 transition-all duration-200 pointer-events-none"

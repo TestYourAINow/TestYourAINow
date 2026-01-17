@@ -1,8 +1,12 @@
+// app\api\agents\route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
+import { Folder } from "@/models/Folder";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
   await connectToDatabase();
@@ -12,7 +16,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ✅ AJOUTÉ isDeployed au select !
   const agents = await Agent.find({ userId: session.user.id })
     .sort({ createdAt: -1 })
     .select("_id name integrations prompt openaiModel temperature top_p folderId createdAt updatedAt isDeployed apiKey");
@@ -20,7 +23,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ agents });
 }
 
-// POST - Create new agent - CORRIGÉ avec rawPrompt
+// POST - Create new agent
 export async function POST(req: NextRequest) {
   await connectToDatabase();
 
@@ -45,9 +48,28 @@ export async function POST(req: NextRequest) {
       temperature = 0.3,
       top_p = 1,
       prompt = "",
-      rawPrompt = "", // 🆕 AJOUTÉ
+      rawPrompt = "",
+      folderId = null, // ✅ Pour créer directement dans un folder
     } = await req.json();
 
+    // ✅ Validation du folderId si fourni
+    if (folderId && !mongoose.Types.ObjectId.isValid(folderId)) {
+      return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
+    }
+
+    // ✅ Si folderId fourni, vérifier que le folder existe
+    if (folderId) {
+      const folder = await Folder.findOne({
+        _id: folderId,
+        userId: session.user.id
+      });
+
+      if (!folder) {
+        return NextResponse.json({ error: "Folder not found" }, { status: 404 });
+      }
+    }
+
+    // ✅ Créer l'agent
     const newAgent = await Agent.create({
       userId: session.user.id,
       name,
@@ -64,10 +86,26 @@ export async function POST(req: NextRequest) {
       temperature,
       top_p,
       prompt,
-      rawPrompt, // 🆕 AJOUTÉ
+      rawPrompt,
+      folderId: folderId || null
     });
 
-    return NextResponse.json({ message: "Agent created", id: newAgent._id });
+    // ✅ Si dans un folder, incrémenter agentCount
+    if (folderId) {
+      await Folder.findByIdAndUpdate(
+        folderId,
+        { 
+          $inc: { agentCount: 1 },
+          updatedAt: new Date()
+        }
+      );
+    }
+
+    return NextResponse.json({ 
+      message: folderId ? "Agent created in folder" : "Agent created", 
+      id: newAgent._id 
+    });
+
   } catch (err) {
     console.error("❌ Failed to create agent:", err);
     return NextResponse.json({ error: "Failed to create agent" }, { status: 500 });

@@ -1,8 +1,9 @@
-// 📁 /app/api/agents/[id]/folder/route.ts
+// app\api\agents\[id]\folder\route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
+import { Folder } from "@/models/Folder";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import mongoose from "mongoose";
@@ -33,14 +34,26 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
     }
 
-    // Update agent
+    // ✅ Récupérer l'agent actuel pour connaître l'ancien folderId
+    const currentAgent = await Agent.findOne({
+      _id: agentId,
+      userId: session.user.id
+    });
+
+    if (!currentAgent) {
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+    }
+
+    const oldFolderId = currentAgent.folderId;
+
+    // ✅ Update l'agent avec le nouveau folderId
     const updatedAgent = await Agent.findOneAndUpdate(
       { 
         _id: agentId, 
         userId: session.user.id 
       },
       { 
-        folderId: folderId ? new mongoose.Types.ObjectId(folderId) : null 
+        folderId: folderId ? folderId : null 
       },
       { 
         new: true,
@@ -48,8 +61,25 @@ export async function PUT(
       }
     );
 
-    if (!updatedAgent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+    // ✅ UPDATE FOLDER COUNTS (comme deployment folders)
+    if (oldFolderId) {
+      await Folder.findByIdAndUpdate(
+        oldFolderId,
+        { 
+          $inc: { agentCount: -1 },
+          updatedAt: new Date()
+        }
+      );
+    }
+
+    if (folderId) {
+      await Folder.findByIdAndUpdate(
+        folderId,
+        { 
+          $inc: { agentCount: 1 },
+          updatedAt: new Date()
+        }
+      );
     }
 
     return NextResponse.json({ 

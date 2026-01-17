@@ -1,3 +1,5 @@
+// models\Folder.ts
+
 import mongoose, { Schema, Document, models, model } from "mongoose";
 
 export interface FolderDocument extends Document {
@@ -5,6 +7,7 @@ export interface FolderDocument extends Document {
   name: string;
   description?: string;
   color: string;
+  agentCount: number; // ✅ AJOUTÉ - Compteur d'agents
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +34,11 @@ const FolderSchema = new Schema<FolderDocument>(
       type: String, 
       required: true,
       match: /^#[0-9A-F]{6}$/i // Validation couleur hex
+    },
+    agentCount: {
+      type: Number,
+      default: 0, // ✅ AJOUTÉ - Par défaut 0 agents
+      min: 0
     }
   },
   { 
@@ -41,4 +49,9 @@ const FolderSchema = new Schema<FolderDocument>(
 // Index pour performance
 FolderSchema.index({ userId: 1, createdAt: -1 });
 
-export const Folder = models.Folder || model<FolderDocument>("Folder", FolderSchema);
+// 🔥 FORCER LE DELETE DU MODÈLE AVANT DE LE RECRÉER
+if (mongoose.models.Folder) {
+  delete mongoose.models.Folder;
+}
+
+export const Folder = mongoose.model<FolderDocument>("Folder", FolderSchema);

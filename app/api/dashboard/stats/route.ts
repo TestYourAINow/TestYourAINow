@@ -94,26 +94,37 @@ export async function GET(request: NextRequest) {
       inactive: totalAgents - activeAgents
     };
 
-    // 🔧 11. PLATFORM BREAKDOWN - SEULEMENT Connections (comme Launch Agent)
-    const platformBreakdown = {
-      'website-widget': { total: 0, active: 0 },
-      'instagram-dms': { total: 0, active: 0 },
-      'facebook-messenger': { total: 0, active: 0 },
-      'sms': { total: 0, active: 0 }
-    };
+   // 🔧 11. PLATFORM BREAKDOWN - SIMPLIFIÉ
+const platformBreakdown: {
+  'website-widget': { total: number; active: number };
+  'instagram-dms': { total: number; active: number };
+  'facebook-messenger': { total: number; active: number };
+  'webhook': { total: number; active: number };
+} = {
+  'website-widget': { total: 0, active: 0 },
+  'instagram-dms': { total: 0, active: 0 },
+  'facebook-messenger': { total: 0, active: 0 },
+  'webhook': { total: 0, active: 0 }
+};
 
-    // Compter TOUTES les connections par type (identique à Launch Agent)
-    const connections = await Connection.find({ userId: userId });
-    for (const conn of connections) {
-      if (platformBreakdown[conn.integrationType as keyof typeof platformBreakdown]) {
-        platformBreakdown[conn.integrationType as keyof typeof platformBreakdown].total++;
-        if (conn.isActive) {
-          platformBreakdown[conn.integrationType as keyof typeof platformBreakdown].active++;
-        }
-      }
+// Compter TOUTES les connections par type
+const connections = await Connection.find({ userId: userId });
+for (const conn of connections) {
+  // Mapper universal-webhook vers 'webhook'
+  const mappedType = conn.integrationType === 'universal-webhook' 
+    ? 'webhook' 
+    : conn.integrationType;
+  
+  // Vérifier si le type existe dans platformBreakdown
+  if (platformBreakdown[mappedType as keyof typeof platformBreakdown]) {
+    platformBreakdown[mappedType as keyof typeof platformBreakdown].total++;
+    if (conn.isActive) {
+      platformBreakdown[mappedType as keyof typeof platformBreakdown].active++;
     }
+  }
+}
 
-    console.log(`📊 [PLATFORM BREAKDOWN] Calculated:`, platformBreakdown);
+console.log(`📊 [PLATFORM BREAKDOWN] Calculated:`, platformBreakdown);
 
     // 🎯 RÉPONSE FINALE - NETTOYÉE
     const dashboardStats = {

@@ -8,7 +8,7 @@ import {
   Trash2, Bot, Plus, Settings, Info, Globe, Link as LinkIcon,
   Search, Activity, Zap, Monitor, Circle, Filter, ChevronDown,
   TrendingUp, Clock, Users, MoreHorizontal, Eye, Edit3, Star,
-  Rocket, Signal, Wifi, PlayCircle, PauseCircle, Power, Folder,
+  Rocket, Signal, Wifi, PlayCircle, PauseCircle, Webhook, Folder,
   FolderPlus
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -20,53 +20,36 @@ import ConnectionActions from '@/components/Dropdowns/ConnectionActions'
 
 // Composants d'icônes avec gradients (INCHANGÉS)
 const InstagramIcon = ({ size = 18, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
-    <defs>
-      <linearGradient id="instagram-gradient-launch" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#f09433" />
-        <stop offset="25%" stopColor="#e6683c" />
-        <stop offset="50%" stopColor="#dc2743" />
-        <stop offset="75%" stopColor="#cc2366" />
-        <stop offset="100%" stopColor="#bc1888" />
-      </linearGradient>
-    </defs>
-    <path fill="url(#instagram-gradient-launch)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
   </svg>
 )
 
 const FacebookIcon = ({ size = 18, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
-    <defs>
-      <linearGradient id="facebook-gradient-launch" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#1877F2" />
-        <stop offset="100%" stopColor="#42A5F5" />
-      </linearGradient>
-    </defs>
-    <path fill="url(#facebook-gradient-launch)" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-  </svg>
-)
-
-const SMSIcon = ({ size = 18, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
-    <defs>
-      <linearGradient id="sms-gradient-launch" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#25D366" />
-        <stop offset="100%" stopColor="#128C7E" />
-      </linearGradient>
-    </defs>
-    <path fill="url(#sms-gradient-launch)" d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
   </svg>
 )
 
 const WebsiteIcon = ({ size = 18, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+  </svg>
+)
+
+// 🆕 NOUVEAU - Icône Webhook avec gradient
+const WebhookIcon = ({ size = 18, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
     <defs>
-      <linearGradient id="website-gradient-launch" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#00D2FF" />
-        <stop offset="100%" stopColor="#3A7BD5" />
+      <linearGradient id="webhook-gradient-launch" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#8B5CF6" />
+        <stop offset="100%" stopColor="#EC4899" />
       </linearGradient>
     </defs>
-    <path fill="url(#website-gradient-launch)" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+    <path 
+      fill="url(#webhook-gradient-launch)" 
+      d="M10.59 13.41c.41.39.41 1.03 0 1.42-.39.39-1.03.39-1.42 0a5.003 5.003 0 0 1 0-7.07l3.54-3.54a5.003 5.003 0 0 1 7.07 0 5.003 5.003 0 0 1 0 7.07l-1.49 1.49c.01-.82-.12-1.64-.4-2.42l.47-.48a2.982 2.982 0 0 0 0-4.24 2.982 2.982 0 0 0-4.24 0l-3.53 3.53a2.982 2.982 0 0 0 0 4.24zm2.82-4.24c.39-.39 1.03-.39 1.42 0a5.003 5.003 0 0 1 0 7.07l-3.54 3.54a5.003 5.003 0 0 1-7.07 0 5.003 5.003 0 0 1 0-7.07l1.49-1.49c-.01.82.12 1.64.4 2.43l-.47.47a2.982 2.982 0 0 0 0 4.24 2.982 2.982 0 0 0 4.24 0l3.53-3.53a2.982 2.982 0 0 0 0-4.24.973.973 0 0 1 0-1.42z"
+    />
   </svg>
 )
 
@@ -403,36 +386,36 @@ const CompactDeploymentCard = ({
   onMoveToFolder: (folderId: string | null) => void;
 }) => {
   const getIntegrationIcon = (type: string) => {
-    switch (type) {
-      case 'website-widget': return <WebsiteIcon size={20} />;
-      case 'facebook-messenger': return <FacebookIcon size={20} />;
-      case 'instagram-dms': return <InstagramIcon size={20} />;
-      case 'sms': return <SMSIcon size={20} />;
-      default: return <Globe size={20} className="text-gray-400" />;
-    }
-  };
+  switch (type) {
+    case 'website-widget': return <WebsiteIcon size={32} className="text-white" />;
+    case 'facebook-messenger': return <FacebookIcon size={32} className="text-white" />;
+    case 'instagram-dms': return <InstagramIcon size={32} className="text-white" />;
+    case 'webhook': return <Webhook size={32} className="text-white" />;
+    default: return <Globe size={32} className="text-gray-400" />;
+  }
+};
 
-  const getIntegrationDisplayName = (type: string) => {
-    switch (type) {
-      case 'website-widget': return 'Website Widget';
-      case 'facebook-messenger': return 'Facebook Messenger';
-      case 'instagram-dms': return 'Instagram DMs';
-      case 'sms': return 'SMS';
-      case 'api': return 'API Integration';
-      default: return type;
-    }
-  };
+const getIntegrationDisplayName = (type: string) => {
+  switch (type) {
+    case 'website-widget': return 'Website Widget';
+    case 'facebook-messenger': return 'Facebook Messenger';
+    case 'instagram-dms': return 'Instagram DMs';
+    case 'universal-webhook': return 'Webhook Integration';  // ← AJOUTÉ
+    case 'api': return 'API Integration';
+    default: return type;
+  }
+};
 
   return (
     <div className="relative group">
       <div className={`
-        relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-5 h-[240px] transition-all duration-300 cursor-pointer flex flex-col
-        ${connection.isActive 
-          ? 'hover:border-emerald-500/30 hover:shadow-emerald-500/5' 
-          : 'hover:border-blue-500/40 hover:shadow-blue-500/10'
-        }
-        hover:scale-[1.02] group
-      `}>
+  relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm rounded-2xl shadow-xl p-5 h-[240px] transition-all duration-300 cursor-pointer flex flex-col
+  ${connection.isActive 
+    ? 'border-2 border-emerald-500/40 hover:border-emerald-500/60 hover:shadow-emerald-500/10' 
+    : 'border-2 border-gray-700/50 hover:border-gray-600/60 hover:shadow-gray-500/5'
+  }
+  hover:scale-[1.02] group
+`}>
         
         <div className={`absolute inset-0 rounded-2xl transition-all duration-300 pointer-events-none ${
           connection.isActive 
@@ -464,13 +447,19 @@ const CompactDeploymentCard = ({
 
         <div onClick={onView} className="flex-1 flex flex-col items-center text-center justify-center">
           <div className="relative mb-4">
-            <div className={`w-16 h-16 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${
-              connection.isActive
-                ? 'bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border-emerald-500/30 shadow-lg shadow-emerald-500/10'
-                : 'bg-gradient-to-br from-gray-700/50 to-gray-600/30 border-gray-600/50'
-            }`}>
-              {getIntegrationIcon(connection.integrationType)}
-            </div>
+            <div className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg ${
+  connection.integrationType === 'webhook'
+    ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+    : connection.integrationType === 'instagram-dms'
+      ? 'bg-gradient-to-r from-[#f09433] via-[#e6683c] via-[#dc2743] via-[#cc2366] to-[#bc1888]'
+      : connection.integrationType === 'facebook-messenger'
+        ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
+        : connection.integrationType === 'website-widget'
+          ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
+          : 'bg-gray-700/50'
+}`}>
+  {getIntegrationIcon(connection.integrationType)}
+</div>
 
             <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${
               connection.isActive ? 'bg-emerald-400' : 'bg-gray-500'

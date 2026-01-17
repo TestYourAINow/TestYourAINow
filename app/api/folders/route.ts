@@ -1,7 +1,9 @@
+//app\api\folders\route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/authOptions' // ✅ CORRIGÉ
-import { connectToDatabase } from '@/lib/db' // ✅ CORRIGÉ  
+import { authOptions } from '@/lib/authOptions'
+import { connectToDatabase } from '@/lib/db'
 import { Folder } from '@/models/Folder'
 import { Agent } from '@/models/Agent'
 import mongoose from 'mongoose'
@@ -15,37 +17,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await connectToDatabase() // ✅ CORRIGÉ
+    await connectToDatabase()
 
-    // Récupérer les folders avec le count d'agents
-    const folders = await Folder.aggregate([
-      { 
-        $match: { 
-          userId: new mongoose.Types.ObjectId(session.user.id) 
-        } 
-      },
-      {
-        $lookup: {
-          from: 'agents',
-          localField: '_id',
-          foreignField: 'folderId',
-          as: 'agents'
-        }
-      },
-      {
-        $addFields: {
-          agentCount: { $size: '$agents' }
-        }
-      },
-      {
-        $project: {
-          agents: 0 // Ne pas retourner les agents complets
-        }
-      },
-      {
-        $sort: { updatedAt: -1 }
-      }
-    ])
+    // ✅ OPTIMISÉ - Simple find() au lieu d'aggregation
+    const folders = await Folder.find({ 
+      userId: session.user.id 
+    })
+    .select('_id name description color agentCount createdAt updatedAt')
+    .sort({ updatedAt: -1 })
+    .lean()
 
     return NextResponse.json({ 
       success: true, 
@@ -102,7 +82,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await connectToDatabase() // ✅ CORRIGÉ
+    await connectToDatabase()
 
     // Vérifier si le nom existe déjà pour cet utilisateur
     const existingFolder = await Folder.findOne({
@@ -117,24 +97,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Créer le folder
+    // Créer le folder avec agentCount = 0 par défaut
     const folder = await Folder.create({
       userId: session.user.id,
       name: name.trim(),
       description: description?.trim() || '',
-      color
+      color,
+      agentCount: 0 // ✅ Explicitement 0 à la création
     })
-
-    // Retourner le folder avec agentCount = 0
-    const folderWithCount = {
-      ...folder.toObject(),
-      agentCount: 0
-    }
 
     return NextResponse.json({
       success: true,
       message: 'Folder created successfully',
-      ...folderWithCount
+      ...folder.toObject()
     }, { status: 201 })
 
   } catch (error) {
@@ -166,7 +141,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    await connectToDatabase() // ✅ CORRIGÉ
+    await connectToDatabase()
 
     // Vérifier que le folder appartient à l'utilisateur
     const folder = await Folder.findOne({
@@ -203,7 +178,7 @@ export async function DELETE(request: NextRequest) {
           ).session(session_db)
         }
 
-        // Supprimer le folder
+        // Supprimer le folder (agentCount sera automatiquement supprimé avec)
         await Folder.findByIdAndDelete(folderId).session(session_db)
       })
 

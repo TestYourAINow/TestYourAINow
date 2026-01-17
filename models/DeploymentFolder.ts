@@ -1,10 +1,11 @@
-import mongoose, { Schema, Document, models, model } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface DeploymentFolderDocument extends Document {
   userId: mongoose.Types.ObjectId;
   name: string;
   description?: string;
   color: string;
+  connectionCount: number;  // ✅ IMPORTANT
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,7 +31,12 @@ const DeploymentFolderSchema = new Schema<DeploymentFolderDocument>(
     color: { 
       type: String, 
       required: true,
-      match: /^#[0-9A-F]{6}$/i // Validation couleur hex
+      match: /^#[0-9A-F]{6}$/i
+    },
+    connectionCount: {  // ✅ AJOUTÉ ICI
+      type: Number,
+      default: 0,
+      min: 0
     }
   },
   { 
@@ -38,8 +44,11 @@ const DeploymentFolderSchema = new Schema<DeploymentFolderDocument>(
   }
 );
 
-// Index pour performance
 DeploymentFolderSchema.index({ userId: 1, createdAt: -1 });
 
-// 🔧 CORRECTION - Cast explicite du type
-export const DeploymentFolder = (models.DeploymentFolder || model<DeploymentFolderDocument>("DeploymentFolder", DeploymentFolderSchema)) as mongoose.Model<DeploymentFolderDocument>;
+// 🔥 FORCER LE DELETE DU MODÈLE AVANT DE LE RECRÉER
+if (mongoose.models.DeploymentFolder) {
+  delete mongoose.models.DeploymentFolder;
+}
+
+export const DeploymentFolder = mongoose.model<DeploymentFolderDocument>("DeploymentFolder", DeploymentFolderSchema);

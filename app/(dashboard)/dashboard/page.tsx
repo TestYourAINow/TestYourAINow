@@ -1,4 +1,5 @@
-// app/(dashboard)/dashboard/page.tsx - VERSION PROPRE NETTOYÉE
+// app/(dashboard)/dashboard/page.tsx
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -10,7 +11,7 @@ import {
   MessageCircle, Globe, CheckCircle, AlertTriangle,
   Plus, Settings, Star, Gauge, Key, FlaskConical,
   RefreshCw, Folder, GitBranch, Share2, BarChart3,
-  ArrowUp, ArrowDown, Minus, Sparkles, Workflow, Hand,
+  ArrowUp, ArrowDown, Minus, Sparkles, Workflow, Webhook,
   Filter, PieChart as PieIcon
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -20,53 +21,20 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 // 🎨 Composants d'icônes (inchangés)
 const InstagramIcon = ({ size = 24, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
-    <defs>
-      <linearGradient id="instagram-gradient-dashboard" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#f09433" />
-        <stop offset="25%" stopColor="#e6683c" />
-        <stop offset="50%" stopColor="#dc2743" />
-        <stop offset="75%" stopColor="#cc2366" />
-        <stop offset="100%" stopColor="#bc1888" />
-      </linearGradient>
-    </defs>
-    <path fill="url(#instagram-gradient-dashboard)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
   </svg>
 )
 
 const FacebookIcon = ({ size = 24, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
-    <defs>
-      <linearGradient id="facebook-gradient-dashboard" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#1877F2" />
-        <stop offset="100%" stopColor="#42A5F5" />
-      </linearGradient>
-    </defs>
-    <path fill="url(#facebook-gradient-dashboard)" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-  </svg>
-)
-
-const SMSIcon = ({ size = 24, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
-    <defs>
-      <linearGradient id="sms-gradient-dashboard" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#25D366" />
-        <stop offset="100%" stopColor="#128C7E" />
-      </linearGradient>
-    </defs>
-    <path fill="url(#sms-gradient-dashboard)" d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
   </svg>
 )
 
 const WebsiteIcon = ({ size = 24, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
-    <defs>
-      <linearGradient id="website-gradient-dashboard" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#00D2FF" />
-        <stop offset="100%" stopColor="#3A7BD5" />
-      </linearGradient>
-    </defs>
-    <path fill="url(#website-gradient-dashboard)" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
   </svg>
 )
 
@@ -90,7 +58,7 @@ interface DashboardStats {
     'website-widget': { total: number; active: number; };
     'instagram-dms': { total: number; active: number; };
     'facebook-messenger': { total: number; active: number; };
-    'sms': { total: number; active: number; };
+    'webhook': { total: number; active: number; };
   };
   lastUpdated: string;
 }
@@ -270,39 +238,39 @@ export default function DashboardPage() {
   const demoProgress = (stats.totalDemos / 15) * 100;
 
   const allPlatforms = [
-    { 
-      type: 'website-widget', 
-      icon: WebsiteIcon, 
-      name: 'Website Widget', 
-      color: 'from-cyan-500 to-blue-500',
-      total: stats?.platformBreakdown?.['website-widget']?.total || 0,
-      active: stats?.platformBreakdown?.['website-widget']?.active || 0
-    },
-    { 
-      type: 'instagram-dms', 
-      icon: InstagramIcon, 
-      name: 'Instagram DMs', 
-      color: 'from-pink-500 to-purple-500',
-      total: stats?.platformBreakdown?.['instagram-dms']?.total || 0,
-      active: stats?.platformBreakdown?.['instagram-dms']?.active || 0
-    },
-    { 
-      type: 'facebook-messenger', 
-      icon: FacebookIcon, 
-      name: 'Facebook Messenger', 
-      color: 'from-blue-500 to-indigo-500',
-      total: stats?.platformBreakdown?.['facebook-messenger']?.total || 0,
-      active: stats?.platformBreakdown?.['facebook-messenger']?.active || 0
-    },
-    { 
-      type: 'sms', 
-      icon: SMSIcon, 
-      name: 'SMS', 
-      color: 'from-green-500 to-emerald-500',
-      total: stats?.platformBreakdown?.['sms']?.total || 0,
-      active: stats?.platformBreakdown?.['sms']?.active || 0
-    }
-  ];
+  { 
+    type: 'website-widget', 
+    icon: ({ size = 20 }) => <WebsiteIcon size={size} className="text-white" />,  // ← AJOUTÉ className
+    name: 'Website Widget', 
+    color: 'from-cyan-500 to-blue-500',
+    total: stats?.platformBreakdown?.['website-widget']?.total || 0,
+    active: stats?.platformBreakdown?.['website-widget']?.active || 0
+  },
+ { 
+  type: 'instagram-dms', 
+  icon: ({ size = 20 }) => <InstagramIcon size={size} className="text-white" />,
+  name: 'Instagram DMs', 
+  color: 'from-[#f09433] via-[#e6683c] via-[#dc2743] via-[#cc2366] to-[#bc1888]',  // ← VRAI GRADIENT INSTAGRAM
+  total: stats?.platformBreakdown?.['instagram-dms']?.total || 0,
+  active: stats?.platformBreakdown?.['instagram-dms']?.active || 0
+},
+  { 
+    type: 'facebook-messenger', 
+    icon: ({ size = 20 }) => <FacebookIcon size={size} className="text-white" />,  // ← AJOUTÉ className
+    name: 'Facebook Messenger', 
+    color: 'from-blue-500 to-indigo-500',
+    total: stats?.platformBreakdown?.['facebook-messenger']?.total || 0,
+    active: stats?.platformBreakdown?.['facebook-messenger']?.active || 0
+  },
+  { 
+    type: 'webhook', 
+    icon: ({ size = 20 }) => <Webhook size={size} className="text-white" />,
+    name: 'Webhook Integration', 
+    color: 'from-purple-500 to-pink-500',
+    total: stats?.platformBreakdown?.['webhook']?.total || 0,
+    active: stats?.platformBreakdown?.['webhook']?.active || 0
+  }
+];
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
@@ -442,9 +410,11 @@ export default function DashboardPage() {
                     className="bg-gray-700/30 backdrop-blur-sm border border-gray-600/50 rounded-xl p-4 hover:bg-gray-700/40 hover:border-gray-500/60 transition-all duration-300 group/platform"
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${platform.color}/20 border border-gray-600/50 flex items-center justify-center group-hover/platform:scale-110 transition-transform duration-300`}>
-                        <IconComponent size={20} />
-                      </div>
+                      <div 
+  className={`w-10 h-10 rounded-lg bg-gradient-to-r ${platform.color} flex items-center justify-center group-hover/platform:scale-110 transition-transform duration-300 shadow-md`}
+>
+  <IconComponent size={20} />
+</div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-white text-sm truncate">{platform.name}</h4>
                         <p className="text-xs text-gray-400">

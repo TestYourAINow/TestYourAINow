@@ -1,3 +1,5 @@
+// app\(dashboard)\agents\page.tsx
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -29,7 +31,7 @@ type FolderType = {
   _id: string
   name: string
   description: string
-  color: string
+  color: string 
   agentCount: number
   updatedAt: string
 }
@@ -830,9 +832,18 @@ export default function AgentsPage() {
             {filteredAgents.map((agent) => (
               <div
                 key={agent._id}
-                className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-5 h-[260px] hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer flex flex-col"
-              >
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none"></div>
+className={`relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm rounded-2xl shadow-xl p-5 h-[260px] transition-all duration-300 group cursor-pointer flex flex-col border-2
+  ${agent.isDeployed 
+    ? 'border-emerald-500/40 hover:border-emerald-500/60 hover:shadow-emerald-500/10' 
+    : 'border-gray-700/50 hover:border-gray-600/60 hover:shadow-gray-500/5'
+  }
+  hover:scale-[1.02]
+`}              >
+                <div className={`absolute inset-0 rounded-2xl transition-all duration-300 pointer-events-none ${
+  agent.isDeployed 
+    ? 'group-hover:bg-emerald-500/[0.02]' 
+    : 'group-hover:bg-blue-500/[0.02]'
+}`}></div>
 
                 <div className="absolute top-4 right-4 z-10">
                   <AgentActions
@@ -845,20 +856,19 @@ export default function AgentsPage() {
 
                 <Link href={`/agents/${agent._id}`} className="flex flex-col h-full">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-blue-500/20">
-                        <Bot className="w-6 h-6 text-blue-400" />
-                      </div>
-                      <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-gray-800 ${Boolean(agent.isDeployed)
-                        ? 'bg-emerald-400'
-                        : 'bg-gray-500'
-                        } shadow-sm`} />
-                    </div>
+                   <div className="relative">
+  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-blue-500/30">
+    <Bot className="w-6 h-6 text-white" />
+  </div>
+  <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-gray-800 ${
+    agent.isDeployed ? 'bg-emerald-400' : 'bg-gray-500'
+  } shadow-sm`} />
+</div>
                   </div>
 
                   <div className="flex-1 flex flex-col">
                     <div className="mb-4">
-                      <h3 className="text-white font-bold text-base mb-2 line-clamp-2 leading-tight group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+                      <h3 className="text-white font-bold text-base mb-2 line-clamp-2 leading-tight">
                         {agent.name || "Untitled Agent"}
                       </h3>
                       <AgentStatus isDeployed={agent.isDeployed} />

@@ -1,3 +1,5 @@
+// app\(dashboard)\folders\[id]\page.tsx
+
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -876,18 +878,27 @@ export default function FolderDetailPage() {
           </FadeInSection>
         )}
 
-        {/* Agents Grid - SANS CREATE AGENT CARD */}
+        {/* Agents Grid - DESIGN UNIFIÉ */}
         <FadeInSection>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 mb-8">
 
-            {/* Agent Cards SEULEMENT */}
+            {/* Agent Cards UNIFORMISÉS */}
             {filteredAgents.map((agent) => (
               <div
                 key={agent._id}
-                className="group relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl p-5 h-[260px] hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:scale-[1.02] transition-all duration-300 cursor-pointer flex flex-col"
+                className={`relative bg-gradient-to-br from-gray-900/60 to-gray-800/40 backdrop-blur-sm rounded-2xl shadow-xl p-5 h-[260px] transition-all duration-300 group cursor-pointer flex flex-col border-2
+  ${agent.integrations && agent.integrations.length > 0
+                    ? 'border-emerald-500/40 hover:border-emerald-500/60 hover:shadow-emerald-500/10'
+                    : 'border-gray-700/50 hover:border-gray-600/60 hover:shadow-gray-500/5'
+                  }
+  hover:scale-[1.02]
+`}
               >
                 {/* Background Gradient Overlay */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none"></div>
+                <div className={`absolute inset-0 rounded-2xl transition-all duration-300 pointer-events-none ${agent.integrations && agent.integrations.length > 0
+                    ? 'group-hover:bg-emerald-500/[0.02]'
+                    : 'group-hover:bg-blue-500/[0.02]'
+                  }`}></div>
 
                 {/* Actions Menu */}
                 <div className="absolute top-4 right-4 z-20">
@@ -903,16 +914,14 @@ export default function FolderDetailPage() {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="relative">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-blue-500/20">
-                        <Bot className="w-6 h-6 text-blue-400" />
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-blue-500/30">
+                        <Bot className="w-6 h-6 text-white" />
                       </div>
                       {/* Status Indicator */}
-                      <div className="absolute -top-1 -right-1">
-                        <div className={`w-3 h-3 rounded-full border-2 border-gray-800 ${agent.integrations && agent.integrations.length > 0
-                          ? 'bg-emerald-400'
-                          : 'bg-gray-500'
-                          } shadow-sm`} />
-                      </div>
+                      <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-gray-800 ${agent.integrations && agent.integrations.length > 0
+                        ? 'bg-emerald-400'
+                        : 'bg-gray-500'
+                        } shadow-sm`} />
                     </div>
                   </div>
 
@@ -921,7 +930,7 @@ export default function FolderDetailPage() {
 
                     {/* Name & Status */}
                     <div className="mb-4">
-                      <h3 className="text-white font-bold text-base mb-2 line-clamp-2 leading-tight group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+                      <h3 className="text-white font-bold text-base mb-2 line-clamp-2 leading-tight">
                         {agent.name || "Untitled Agent"}
                       </h3>
                       <AgentStatus integrations={agent.integrations} />

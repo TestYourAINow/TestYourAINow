@@ -9,6 +9,7 @@ import { Connection } from '@/models/Connection'
 import mongoose from 'mongoose'
 
 // GET - Récupérer tous les deployment folders de l'utilisateur
+// GET - Récupérer tous les deployment folders de l'utilisateur
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
@@ -19,35 +20,12 @@ export async function GET() {
 
     await connectToDatabase()
 
-    // Récupérer les folders avec le count de connections
-    const folders = await DeploymentFolder.aggregate([
-      { 
-        $match: { 
-          userId: new mongoose.Types.ObjectId(session.user.id) 
-        } 
-      },
-      {
-        $lookup: {
-          from: 'connections',
-          localField: '_id',
-          foreignField: 'folderId',
-          as: 'connections'
-        }
-      },
-      {
-        $addFields: {
-          connectionCount: { $size: '$connections' }
-        }
-      },
-      {
-        $project: {
-          connections: 0 // Ne pas retourner les connections complètes
-        }
-      },
-      {
-        $sort: { updatedAt: -1 }
-      }
-    ])
+    // ✅ SIMPLE FIND - Utilise le connectionCount de la DB
+    const folders = await DeploymentFolder.find({ 
+      userId: session.user.id 
+    })
+    .sort({ updatedAt: -1 })
+    .lean()
 
     return NextResponse.json({ 
       success: true, 
@@ -119,13 +97,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Créer le folder
-    const folder = await DeploymentFolder.create({
-      userId: session.user.id,
-      name: name.trim(),
-      description: description?.trim() || '',
-      color
-    })
+    // Créer le folder AVEC connectionCount initialisé
+const folder = await DeploymentFolder.create({
+  userId: session.user.id,
+  name: name.trim(),
+  description: description?.trim() || '',
+  color,
+  connectionCount: 0  // 🆕 AJOUTÉ - Initialiser explicitement
+})
 
     // Retourner le folder avec connectionCount = 0
     const folderWithCount = {
