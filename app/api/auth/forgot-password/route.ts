@@ -50,68 +50,80 @@ export async function POST(req: NextRequest) {
         to: email,
         subject: "Reset Your Password - TestYourAI Now",
         html: `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0a0a0b; margin: 0; padding: 0;">
-              <div style="max-width: 600px; margin: 40px auto; background: linear-gradient(135deg, #111827 0%, #1f2937 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 40px 0;">
+      <tr>
+        <td align="center">
+          <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <tr>
+              <td style="background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); padding: 40px; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Reset Your Password</h1>
+              </td>
+            </tr>
+            
+            <!-- Content -->
+            <tr>
+              <td style="padding: 40px;">
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  Hello,
+                </p>
                 
-                <!-- Header -->
-                <div style="background: linear-gradient(to right, #3b82f6, #06b6d4); padding: 32px; text-align: center;">
-                  <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Reset Your Password</h1>
-                </div>
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                  We received a request to reset your password for your TestYourAI account. Click the button below to create a new password:
+                </p>
                 
-                <!-- Content -->
-                <div style="padding: 40px 32px;">
-                  <p style="color: #e5e7eb; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                    Hello,
-                  </p>
-                  
-                  <p style="color: #e5e7eb; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                    We received a request to reset your password for your TestYourAI account. Click the button below to create a new password:
-                  </p>
-                  
-                  <!-- Reset Button -->
-                  <div style="text-align: center; margin: 32px 0;">
-                    <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(to right, #3b82f6, #06b6d4); color: white; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-                      Reset Password
-                    </a>
-                  </div>
-                  
-                  <p style="color: #9ca3af; font-size: 14px; line-height: 1.6; margin: 24px 0 0 0;">
-                    Or copy and paste this link into your browser:
-                  </p>
-                  
-                  <p style="color: #3b82f6; font-size: 14px; word-break: break-all; background: #1f2937; padding: 12px; border-radius: 8px; margin: 8px 0 24px 0;">
-                    ${resetUrl}
-                  </p>
-                  
-                  <!-- Warning Box -->
-                  <div style="background: #7f1d1d; border-left: 4px solid #ef4444; padding: 16px; border-radius: 8px; margin: 24px 0;">
-                    <p style="color: #fca5a5; font-size: 14px; margin: 0; line-height: 1.6;">
-                      ⚠️ <strong>Important:</strong> This link will expire in 1 hour. If you didn't request this password reset, please ignore this email.
-                    </p>
-                  </div>
-                  
-                  <p style="color: #9ca3af; font-size: 14px; line-height: 1.6; margin: 24px 0 0 0;">
-                    Best regards,<br>
-                    The TestYourAI Team
-                  </p>
-                </div>
+                <!-- Button -->
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td align="center" style="padding: 20px 0;">
+                      <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                        Reset Password
+                      </a>
+                    </td>
+                  </tr>
+                </table>
                 
-                <!-- Footer -->
-                <div style="background: #0a0a0b; padding: 24px 32px; text-align: center; border-top: 1px solid #374151;">
-                  <p style="color: #6b7280; font-size: 12px; margin: 0;">
-                    © ${new Date().getFullYear()} TestYourAI. All rights reserved.
-                  </p>
-                </div>
-              </div>
-            </body>
-          </html>
-        `,
+                <!-- Warning Box -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
+                  <tr>
+                    <td style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 4px;">
+                      <p style="color: #991b1b; font-size: 14px; margin: 0; line-height: 1.6;">
+                        <strong>⚠️ Important:</strong> This link will expire in 1 hour. If you didn't request this password reset, please ignore this email.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                
+                <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0;">
+                  Best regards,<br>
+                  The TestYourAI Team
+                </p>
+              </td>
+            </tr>
+            
+            <!-- Footer -->
+            <tr>
+              <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="color: #6b7280; font-size: 12px; margin: 0;">
+                  © ${new Date().getFullYear()} TestYourAI. All rights reserved.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+`,
       });
 
       console.log(`✅ Password reset email sent to ${email}`);
