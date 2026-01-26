@@ -18,6 +18,8 @@ const UserSchema = new mongoose.Schema({
   apiKeys: [ApiKeySchema], // 👈 NOUVEAU : Array d'API keys
   openaiApiKey: { type: String }, // 👈 GARDE pour compatibilité (migration)
   profileImage: { type: String, default: null },
+  resetPasswordToken: { type: String }, // 🆕 Token pour reset password
+  resetPasswordExpiry: { type: Date }, // 🆕 Expiration du token
   createdAt: { type: Date, default: Date.now },
 });
 

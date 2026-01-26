@@ -126,9 +126,18 @@ export default function LoginPage() {
 
               {/* Password Input Field with Visibility Toggle */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Password
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-300">
+                    Password
+                  </label>
+                  {/* 🆕 FORGOT PASSWORD LINK */}
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
