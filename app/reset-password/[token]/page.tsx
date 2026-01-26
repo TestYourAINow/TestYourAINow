@@ -108,10 +108,10 @@ export default function ResetPasswordPage() {
           <>
             {/* Header Section */}
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-400 rounded-2xl mb-6 shadow-2xl shadow-purple-500/25">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl mb-6 shadow-2xl shadow-blue-500/25">
                 <Lock size={32} className="text-white" />
               </div>
-              <h1 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white via-purple-100 to-pink-100 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
                 Reset your password
               </h1>
               <p className="text-gray-400 text-lg">Choose a new secure password for your account.</p>
@@ -132,7 +132,7 @@ export default function ResetPasswordPage() {
                         placeholder="Enter your new password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-4 py-3.5 pr-12 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
+                        className="w-full px-4 py-3.5 pr-12 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                         disabled={isLoading}
                         autoComplete="new-password"
                       />
@@ -158,7 +158,7 @@ export default function ResetPasswordPage() {
                         placeholder="Confirm your new password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-4 py-3.5 pr-12 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
+                        className="w-full px-4 py-3.5 pr-12 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-gray-400 font-medium backdrop-blur-sm"
                         disabled={isLoading}
                         autoComplete="new-password"
                       />
@@ -207,7 +207,7 @@ export default function ResetPasswordPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full group relative px-4 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/25 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed overflow-hidden"
+                    className="w-full group relative px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed overflow-hidden"
                   >
                     {/* Shimmer effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
@@ -270,7 +270,7 @@ export default function ResetPasswordPage() {
                 className="text-gray-400 hover:text-white transition-colors font-medium"
               >
                 Remember your password?{" "}
-                <span className="text-purple-400 hover:text-purple-300">Sign in</span>
+                <span className="text-blue-400 hover:text-blue-300">Sign in</span>
               </Link>
             </div>
           </>
@@ -301,13 +301,13 @@ export default function ResetPasswordPage() {
                   <span className="text-gray-300 font-medium">Redirecting to login...</span>
                 </div>
                 <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-purple-500 to-pink-400 rounded-full animate-pulse"></div>
+                  <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full animate-pulse"></div>
                 </div>
               </div>
 
               <Link
                 href="/login"
-                className="block w-full px-4 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/25"
+                className="block w-full px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/25"
               >
                 Go to Login Now
               </Link>
