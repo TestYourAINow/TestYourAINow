@@ -65,19 +65,24 @@ const historyContext = conversationHistory.length > 0
   ? `Conversation so far:\n${conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n')}\n\n`
   : '';
 
+const systemPrompt = `You are analyzing if a webhook should be triggered.
+
+Webhook name: ${integration.name}
+Webhook description: ${integration.description || 'No description'}
+Required fields: ${integration.fields.map((f: any) => `${f.key} (${f.value})`).join(', ')}
+
+${historyContext}Look at the full conversation. If the user has been progressively providing information matching the required fields, reply 'true'. Reply ONLY with 'true' or 'false'.`;
+
+console.log(`📋 [WEBHOOK] System prompt:`, systemPrompt);
+console.log(`📋 [WEBHOOK] User message:`, userMessage);
+
 const shouldTriggerRes = await openai.chat.completions.create({
   model: agentModel,
   temperature: 0,
   messages: [
     {
       role: "system",
-      content: `You are analyzing if a webhook should be triggered.
-
-Webhook name: ${integration.name}
-Webhook description: ${integration.description || 'No description'}
-Required fields: ${integration.fields.map((f: any) => `${f.key} (${f.value})`).join(', ')}
-
-${historyContext}Look at the full conversation. If the user has been progressively providing information matching the required fields, reply 'true'. Reply ONLY with 'true' or 'false'.`
+      content: systemPrompt
     },
     {
       role: "user",
