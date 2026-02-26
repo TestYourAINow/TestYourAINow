@@ -87,6 +87,8 @@ ${historyContext}Look at the full conversation. If the user has been progressive
 });
 
       const shouldTrigger = shouldTriggerRes.choices[0]?.message?.content?.toLowerCase().trim() === 'true';
+
+console.log(`🎯 [WEBHOOK] shouldTrigger result: "${shouldTriggerRes.choices[0]?.message?.content}"`);
       
       if (!shouldTrigger) {
         console.log(`⏭️ [WEBHOOK] ${integration.name} not triggered - no matching intent`);
