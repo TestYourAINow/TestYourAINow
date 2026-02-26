@@ -9,7 +9,7 @@ function getDateInTimezone(timezone: string): string {
   const month = String(userDate.getMonth() + 1).padStart(2, '0');
   const day = String(userDate.getDate()).padStart(2, '0');
   
-  return `${year}-${month}-${day}`;
+  return `${year}-${month}-${day}`; 
 }
 
 function getTomorrowInTimezone(timezone: string): string {
@@ -42,7 +42,8 @@ export async function handleWebhookIntegration(
   integrations: any[],
   openai: any,
   agentModel: string,
-  userTimezone: string = 'UTC'
+  userTimezone: string = 'UTC',
+  conversationHistory: any[] = []
 ): Promise<string | null> {
   const webhookIntegrations = integrations.filter(i => i.type === "webhook" && i.enabled !== false);
   
@@ -77,9 +78,11 @@ Based ONLY on the webhook name, description, and required fields, decide if the 
 Reply ONLY with 'true' or 'false'.`
           },
           {
-            role: "user",
-            content: userMessage
-          }
+  role: "user",
+  content: conversationHistory.length > 0
+    ? `Conversation history:\n${conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n')}\n\nLatest message: ${userMessage}`
+    : userMessage
+}
         ]
       });
 
