@@ -60,6 +60,8 @@ export async function handleWebhookIntegration(
     try {
       // 🔥 AMÉLIORATION - Détection intelligente basée sur le nom et la description
       console.log(`🤔 [WEBHOOK] Checking if ${integration.name} should be triggered...`);
+      console.log(`📜 [WEBHOOK] History length: ${conversationHistory.length}`);
+console.log(`📜 [WEBHOOK] History preview:`, conversationHistory.slice(0, 3).map(m => `${m.role}: ${m.content?.substring(0, 50)}`).join(' | '));
       
       const shouldTriggerRes = await openai.chat.completions.create({
         model: agentModel,
@@ -73,8 +75,7 @@ Webhook name: ${integration.name}
 Webhook description: ${integration.description || 'No description'}
 Required fields: ${integration.fields.map((f: any) => `${f.key} (${f.value})`).join(', ')}
 
-Based ONLY on the webhook name, description, and required fields, decide if the user's message matches the purpose of this webhook.
-
+IMPORTANT: Look at the FULL conversation history, not just the last message. If the user has been progressively providing information that matches the required fields of this webhook throughout the conversation, reply 'true'.
 Reply ONLY with 'true' or 'false'.`
           },
           {
