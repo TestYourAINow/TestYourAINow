@@ -232,15 +232,12 @@ async function processWithAI(
 const userTimezone = requestData.timezone || userData.timezone || 'America/Montreal';
 
 console.log(`🔍 [WEBHOOK] Checking for webhook integrations...`);
-const conversationHistoryForWebhook = await getConversationHistory(conversationId);
-
 const webhookResponse = await handleWebhookIntegration(
   userMessage,
   agent.integrations || [],
   openai,
   agent.openaiModel,
-  userTimezone,
-  conversationHistoryForWebhook
+  userTimezone
 );
 
 if (webhookResponse) {
