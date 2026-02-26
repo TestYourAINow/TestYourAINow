@@ -231,13 +231,22 @@ async function processWithAI(
     // 🆕 2. VÉRIFIER LES WEBHOOKS PERSONNALISÉS AVANT OPENAI
 const userTimezone = requestData.timezone || userData.timezone || 'America/Montreal';
 
+await storeConversationHistory(conversationId, {
+  role: 'user',
+  content: userMessage,
+  timestamp: Date.now()
+});
+
+const conversationHistoryForWebhook = await getConversationHistory(conversationId);
+
 console.log(`🔍 [WEBHOOK] Checking for webhook integrations...`);
 const webhookResponse = await handleWebhookIntegration(
   userMessage,
   agent.integrations || [],
   openai,
   agent.openaiModel,
-  userTimezone
+  userTimezone,
+  conversationHistoryForWebhook
 );
 
 if (webhookResponse) {

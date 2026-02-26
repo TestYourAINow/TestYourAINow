@@ -42,7 +42,8 @@ export async function handleWebhookIntegration(
   integrations: any[],
   openai: any,
   agentModel: string,
-  userTimezone: string = 'UTC'
+  userTimezone: string = 'UTC',
+  conversationHistory: any[] = []
 ): Promise<string | null> {
   const webhookIntegrations = integrations.filter(i => i.type === "webhook" && i.enabled !== false);
   
@@ -59,29 +60,31 @@ export async function handleWebhookIntegration(
     try {
       // 🔥 AMÉLIORATION - Détection intelligente basée sur le nom et la description
       console.log(`🤔 [WEBHOOK] Checking if ${integration.name} should be triggered...`);
-      
-      const shouldTriggerRes = await openai.chat.completions.create({
-        model: agentModel,
-        temperature: 0,
-        messages: [
-          {
-            role: "system",
-            content: `You are analyzing if a webhook should be triggered.
+
+const historyContext = conversationHistory.length > 0
+  ? `Conversation so far:\n${conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n')}\n\n`
+  : '';
+
+const shouldTriggerRes = await openai.chat.completions.create({
+  model: agentModel,
+  temperature: 0,
+  messages: [
+    {
+      role: "system",
+      content: `You are analyzing if a webhook should be triggered.
 
 Webhook name: ${integration.name}
 Webhook description: ${integration.description || 'No description'}
 Required fields: ${integration.fields.map((f: any) => `${f.key} (${f.value})`).join(', ')}
 
-Based ONLY on the webhook name, description, and required fields, decide if the user's message matches the purpose of this webhook.
-
-Reply ONLY with 'true' or 'false'.`
-          },
-          {
-            role: "user",
-            content: userMessage
-          }
-        ]
-      });
+${historyContext}Look at the full conversation. If the user has been progressively providing information matching the required fields, reply 'true'. Reply ONLY with 'true' or 'false'.`
+    },
+    {
+      role: "user",
+      content: userMessage
+    }
+  ]
+});
 
       const shouldTrigger = shouldTriggerRes.choices[0]?.message?.content?.toLowerCase().trim() === 'true';
       
