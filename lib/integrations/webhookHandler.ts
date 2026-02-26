@@ -60,32 +60,6 @@ export async function handleWebhookIntegration(
       // 🔥 AMÉLIORATION - Détection intelligente basée sur le nom et la description
       console.log(`🤔 [WEBHOOK] Checking if ${integration.name} should be triggered...`);
       
-      // Construire un contexte riche pour la détection
-      let detectionContext = `Webhook: ${integration.name}\n`;
-      detectionContext += `Description: ${integration.description || 'No description'}\n\n`;
-      
-      // Ajouter des exemples basés sur le nom du webhook
-      if (integration.name.toLowerCase().includes('list') || 
-          integration.name.toLowerCase().includes('check') ||
-          integration.name.toLowerCase().includes('show')) {
-        detectionContext += `TRIGGER when user asks to:\n`;
-        detectionContext += `- Check their calendar/schedule\n`;
-        detectionContext += `- See what's planned\n`;
-        detectionContext += `- Verify availability\n`;
-        detectionContext += `- List events\n\n`;
-        detectionContext += `Examples: "What's on my calendar?", "Am I free today?", "Qu'est-ce que j'ai aujourd'hui?"\n`;
-      }
-      
-      if (integration.name.toLowerCase().includes('add') || 
-          integration.name.toLowerCase().includes('create') ||
-          integration.name.toLowerCase().includes('schedule')) {
-        detectionContext += `TRIGGER when user wants to:\n`;
-        detectionContext += `- Add/create an event\n`;
-        detectionContext += `- Schedule something\n`;
-        detectionContext += `- Book an appointment\n\n`;
-        detectionContext += `Examples: "Add event", "Schedule meeting", "Ajoute un événement"\n`;
-      }
-      
       const shouldTriggerRes = await openai.chat.completions.create({
         model: agentModel,
         temperature: 0,
@@ -94,11 +68,13 @@ export async function handleWebhookIntegration(
             role: "system",
             content: `You are analyzing if a webhook should be triggered.
 
-${detectionContext}
+Webhook name: ${integration.name}
+Webhook description: ${integration.description || 'No description'}
+Required fields: ${integration.fields.map((f: any) => `${f.key} (${f.value})`).join(', ')}
 
-Analyze the user's message and reply ONLY with 'true' if it matches this webhook's purpose, 'false' otherwise.
+Based ONLY on the webhook name, description, and required fields, decide if the user's message matches the purpose of this webhook.
 
-Be generous in matching - if the intent is related, say 'true'.`
+Reply ONLY with 'true' or 'false'.`
           },
           {
             role: "user",
