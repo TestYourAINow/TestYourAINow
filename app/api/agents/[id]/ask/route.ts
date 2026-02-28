@@ -665,7 +665,8 @@ export async function POST(
       agent.integrations || [], 
       openai,
       agentModel,
-      userTimezone
+      userTimezone,
+      previousMessages
     );
 
     if (webhookResponse) {
