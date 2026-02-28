@@ -149,6 +149,10 @@ Response format (copy exactly):
 If missing data:
 {"hasAllData": false, "missing": ["field1", "field2"]}`
           },
+         ...conversationHistory.map((m: any) => ({  // ← ajoute les 3 points
+    role: m.role as "user" | "assistant",
+    content: m.content
+  })),
           {
             role: "user",
             content: userMessage
