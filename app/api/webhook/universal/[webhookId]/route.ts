@@ -214,7 +214,7 @@ async function processWithAI(
       console.error(`❌ OpenAI setup failed: ${error}`);
       const errorMessage = "Sorry, technical problem.";
       await storeAIResponse(conversationId, errorMessage);
-      await storeInMongoDB(
+       storeInMongoDB(
         conversationId,
         connection._id.toString(),
         connection.webhookId,
@@ -224,7 +224,7 @@ async function processWithAI(
         agent,
         connection,
         requestData
-      );
+      ).catch(err => console.error('❌ [MONGODB] Storage error:', err));
       return;
     }
 
@@ -261,7 +261,7 @@ if (webhookResponse) {
   console.log(`✅ [WEBHOOK] Response stored in Redis`);
   
   // Puis stocker dans MongoDB (peut être plus lent)
-  await storeInMongoDB(
+  storeInMongoDB(
     conversationId,
     connection._id.toString(),
     connection.webhookId,
@@ -271,9 +271,9 @@ if (webhookResponse) {
     agent,
     connection,
     requestData
-  );
+  ).catch(err => console.error('❌ [MONGODB] Storage error:', err));
   
-  console.log(`✅ [WEBHOOK] Response stored in MongoDB`);
+  console.log(`✅ [WEBHOOK] MongoDB storage started in background`);
   return; // ← Retourner 200 APRÈS avoir tout stocké
 }
 
@@ -359,7 +359,7 @@ if (webhookResponse) {
       timestamp: Date.now()
     });
 
-    await storeInMongoDB(
+     storeInMongoDB(
       conversationId,
       connection._id.toString(),
       connection.webhookId,
@@ -369,7 +369,7 @@ if (webhookResponse) {
       agent,
       connection,
       requestData
-    );
+    ).catch(err => console.error('❌ [MONGODB] Storage error:', err));
 
     console.log(`🎉 [COMPLETE] Message processed and stored`);
 
@@ -386,7 +386,7 @@ if (webhookResponse) {
     }
 
     await storeAIResponse(conversationId, errorMessage);
-    await storeInMongoDB(
+     storeInMongoDB(
       conversationId,
       connection._id.toString(),
       connection.webhookId,
@@ -396,7 +396,7 @@ if (webhookResponse) {
       agent,
       connection,
       requestData
-    );
+    ).catch(err => console.error('❌ [MONGODB] Storage error:', err));
   }
 }
 

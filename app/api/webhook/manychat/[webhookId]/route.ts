@@ -216,7 +216,7 @@ async function processWithAI(agent: any, userMessage: string, userData: UserData
       await storeAIResponse(conversationId, errorMessage);
 
       // 🆕 STOCKER L'ERREUR DANS MONGODB AVEC DONNÉES UTILISATEUR
-      await storeInMongoDB(
+     storeInMongoDB(
         conversationId,
         connection._id.toString(),
         connection.webhookId,
@@ -225,7 +225,7 @@ async function processWithAI(agent: any, userMessage: string, userData: UserData
         errorMessage,
         agent,
         connection
-      );
+      ).catch(err => console.error('❌ [MONGODB] Storage error:', err));
       return;
     }
 
@@ -234,13 +234,22 @@ async function processWithAI(agent: any, userMessage: string, userData: UserData
     // 🆕 AJOUTER ICI - VÉRIFIER LES WEBHOOKS PERSONNALISÉS AVANT OPENAI
 const userTimezone = userData.timezone || 'America/Montreal';
 
+await storeConversationHistory(conversationId, {
+    role: 'user',
+    content: userMessage,
+    timestamp: Date.now()
+  });
+
+const conversationHistoryForWebhook = await getConversationHistory(conversationId);
+
 console.log(`🔍 [WEBHOOK] Checking for webhook integrations...`);
 const webhookResponse = await handleWebhookIntegration(
   userMessage,
   agent.integrations || [],
   openai,
   agent.openaiModel,
-  userTimezone
+  userTimezone,
+  conversationHistoryForWebhook
 );
 
 if (webhookResponse) {
@@ -250,12 +259,8 @@ if (webhookResponse) {
   await storeAIResponse(conversationId, webhookResponse);
   console.log(`✅ [REDIS] Response stored for ManyChat`);
   
-  // 🔥 PRIORITÉ 2: Historique Redis (rapide aussi)
-  await storeConversationHistory(conversationId, {
-    role: 'user',
-    content: userMessage,
-    timestamp: Date.now()
-  });
+
+  
   
   await storeConversationHistory(conversationId, {
     role: 'assistant',
@@ -263,7 +268,7 @@ if (webhookResponse) {
     timestamp: Date.now()
   });
   
-  // 🔥 PRIORITÉ 3: MongoDB (archive, non-bloquant)
+  // MongoDB (archive, non-bloquant)
   storeInMongoDB(
     conversationId,
     connection._id.toString(),
@@ -363,12 +368,6 @@ console.log(`ℹ️  [WEBHOOK] No webhook match, using standard OpenAI response`
     const response = completion.choices[0]?.message?.content || "I couldn't respond.";
     console.log(`✅ OpenAI response received: ${response.substring(0, 100)}...`);
 
-    // 7. 🧠 STOCKER DANS REDIS (pour mémoire OpenAI future)
-    await storeConversationHistory(conversationId, {
-      role: 'user',
-      content: userMessage,
-      timestamp: Date.now()
-    });
 
     // 8. 🚀 Stocker la réponse dans Redis (pour récupération ManyChat)
     await storeAIResponse(conversationId, response);
@@ -381,7 +380,7 @@ console.log(`ℹ️  [WEBHOOK] No webhook match, using standard OpenAI response`
     });
 
     // 10. 🆕 STOCKER DANS MONGODB avec toutes les données utilisateur
-    await storeInMongoDB(
+   storeInMongoDB(
       conversationId,
       connection._id.toString(),
       connection.webhookId,
@@ -390,7 +389,7 @@ console.log(`ℹ️  [WEBHOOK] No webhook match, using standard OpenAI response`
       response,
       agent,
       connection
-    );
+    ).catch(err => console.error('❌ [MONGODB] Storage error:', err));
 
     console.log(`🎉 [COMPLETE] Message processed and stored in both Redis and MongoDB with user data`);
 
@@ -411,7 +410,7 @@ console.log(`ℹ️  [WEBHOOK] No webhook match, using standard OpenAI response`
     await storeAIResponse(conversationId, errorMessage);
 
     // 🆕 STOCKER L'ERREUR DANS MONGODB AVEC DONNÉES UTILISATEUR
-    await storeInMongoDB(
+     storeInMongoDB(
       conversationId,
       connection._id.toString(),
       connection.webhookId,
@@ -420,7 +419,7 @@ console.log(`ℹ️  [WEBHOOK] No webhook match, using standard OpenAI response`
       errorMessage,
       agent,
       connection
-    );
+    ).catch(err => console.error('❌ [MONGODB] Storage error:', err));
   }
 }
 

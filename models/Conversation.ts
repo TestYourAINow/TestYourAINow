@@ -1,3 +1,5 @@
+// models\Conversation.ts
+
 import mongoose, { Schema, model, models, Document } from 'mongoose'
 
 // 📊 Interface pour un message individuel
