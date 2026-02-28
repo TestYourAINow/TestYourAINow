@@ -347,12 +347,6 @@ if (webhookResponse) {
     const response = completion.choices[0]?.message?.content || "I couldn't respond.";
     console.log(`✅ OpenAI response received: ${response.substring(0, 100)}...`);
 
-    await storeConversationHistory(conversationId, {
-      role: 'user',
-      content: userMessage,
-      timestamp: Date.now()
-    });
-
     await storeAIResponse(conversationId, response);
 
     await storeConversationHistory(conversationId, {

@@ -137,6 +137,12 @@ IMPORTANT DATE CONVERSION RULES:
 - For "lundi dernier"/"last Monday": Calculate the most recent occurrence from ${todayStr}
 - Convert ALL natural language dates to YYYY-MM-DD format
 
+CRITICAL LANGUAGE RULE:
+NEVER translate the user's responses. Keep all extracted values in the exact language the user used.
+If the user said "perdre du poids", extract "perdre du poids", NOT "lose weight".
+If the user said "débutant", extract "débutant", NOT "beginner".
+If the user said "maison", extract "maison", NOT "home".
+
 Response format (copy exactly):
 {"hasAllData": true, "data": {"field1": "value1", "field2": "value2"}}
 

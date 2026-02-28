@@ -1,3 +1,5 @@
+// app\api\webhook\universal\[webhookId]\route.ts
+
 import { NextResponse } from "next/server";
 import { createAgentOpenAI } from "@/lib/openai";
 import { connectToDatabase } from "@/lib/db";
@@ -188,70 +190,74 @@ NATURAL LANGUAGE → DATE FORMAT CONVERSION:
 Include AT LEAST 5 examples of natural language date/time conversions.
 ` : ''}
 
-Generate instructions in this EXACT format (use markdown):
+Generate instructions in this EXACT format (plain text only, NO markdown symbols):
 
-## 📋 ${safeWebhookName.toUpperCase()} INTEGRATION
+📋 ${safeWebhookName.toUpperCase()} INTEGRATION
 
 You have access to a ${safeWebhookName} webhook integration. Use it when users want to:
 [List 3-5 specific use cases based on the description]
 
-### WHEN TO TRIGGER:
+WHEN TO TRIGGER:
 Trigger this webhook when the user says things like:
 [Provide 7+ natural language examples in multiple languages - English, French, Spanish if relevant]
 ${isListType ? '[Include examples for PAST dates: "What did I have yesterday?", "Show me last week"]' : ''}
 ${isListType ? '[Include examples for FUTURE dates: "What do I have tomorrow?", "Am I free next Monday?"]' : ''}
 
-### REQUIRED INFORMATION:
+REQUIRED INFORMATION:
 Before triggering the webhook, you MUST collect:
 
-${fields.map((f, i) => `${i + 1}. **${f.key.trim()}** (${f.value.trim()})
+${fields.map((f, i) => `${i + 1}. ${f.key.trim()} (${f.value.trim()})
    - Example values: [Provide 2-3 realistic examples]
    - Format requirements: [Specify exact format like YYYY-MM-DD, HH:MM, etc.]
    - Conversion: [How to convert from natural language, e.g., "tomorrow" → "2026-01-02"]`).join('\n\n')}
 
-### EXTRACTION PROCESS:
+EXTRACTION PROCESS:
 
-**Step 1:** When user mentions this action, acknowledge warmly ${isListType ? '(or trigger immediately if you have all info)' : ''}
-**Step 2:** Extract all available information from their message
-**Step 3:** If ANY required information is missing, ask for it naturally:
+Step 1: When user mentions this action, acknowledge warmly ${isListType ? '(or trigger immediately if you have all info)' : ''}
+Step 2: Extract all available information from their message
+Step 3: If ANY required information is missing, ask for it naturally:
 ${fields.map((f) => `   - Missing ${f.key}: [Write a natural, conversational question]`).join('\n')}
+Step 4: Once you have ALL required info, trigger the webhook
 
-**Step 4:** Once you have ALL required info, trigger the webhook
+IMPORTANT RULES:
 
-### IMPORTANT RULES:
+1. ${isListType ? 'Trigger IMMEDIATELY when you have enough info - do not ask unnecessary questions' : 'NEVER trigger the webhook if you are missing required fields'}
+2. ALWAYS validate data formats before triggering
+3. ALWAYS confirm with the user after successfully completing the action
+4. If the webhook returns data, use it in your response
+${isListType ? '5. Default to sensible values (days=1, limit=10) - do not ask for optional fields' : ''}
 
-1. ${isListType ? '✅ Trigger IMMEDIATELY when you have enough info - don\'t ask unnecessary questions' : '⚠️ NEVER trigger the webhook if you\'re missing required fields'}
-2. ✅ ALWAYS validate data formats before triggering
-3. ✅ ALWAYS confirm with the user after successfully completing the action
-4. ✅ If the webhook returns data, use it in your response
-${isListType ? '5. ✅ Default to sensible values (days=1, limit=10) - don\'t ask for optional fields' : ''}
+CRITICAL WEBHOOK RULE:
+When you have collected ALL required fields for ${safeWebhookName}, you MUST immediately call the ${safeWebhookName} webhook function with ALL collected data.
+Do NOT write "[triggering webhook]" or describe the action in text.
+ACTUALLY call the function. This is mandatory.
 
-### RESPONSE AFTER SUCCESS:
+RESPONSE AFTER SUCCESS:
 
 When the webhook returns success, respond naturally like:
 [Provide 3 example success responses that use the returned data]
 
-### EXAMPLE CONVERSATIONS:
+EXAMPLE CONVERSATIONS:
 
-**Example 1: Complete information provided**
+Example 1: Complete information provided
 User: [Realistic user message with all required info]
 AI: ${isListType ? '[Triggers webhook immediately without asking questions]' : '[Triggers webhook]'}
 AI: [Success response using returned data]
 
-**Example 2: Missing information**
+Example 2: Missing information
 User: [Realistic user message missing some info]
 AI: [Asks for missing info conversationally]
 User: [Provides the missing info]
 AI: [Triggers webhook]
 AI: [Success confirmation]
 
-**Example 3: Using returned data**
+Example 3: Using returned data
 User: [Request that expects specific data back]
 AI: [Triggers webhook]
 AI: [Natural response incorporating the returned data - be specific with examples]
 
 ${isListType ? `
-**Example 4: Past date query**
+Example 4: Past date query
 User: "What did I have yesterday?" or "Qu'est-ce que j'avais hier ?"
 AI: [Calculates yesterday's date automatically, triggers webhook]
 AI: [Lists events from yesterday or says "You had nothing scheduled"]
@@ -262,7 +268,7 @@ CRITICAL: Make the instructions conversational, specific, and actionable. Includ
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        { role: "system", content: "You are an expert prompt engineer specializing in AI agent integrations. Generate clear, comprehensive, and actionable instructions." },
+        { role: "system", content: "You are an expert prompt engineer specializing in AI agent integrations. Generate clear, comprehensive, and actionable instructions. Do NOT use Markdown formatting. Avoid #, ##, **, *, or any formatting symbols. Use plain text only with simple line breaks for structure." },
         { role: "user", content: prompt },
       ],
       temperature: 0.7,
