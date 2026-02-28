@@ -239,6 +239,9 @@ await storeConversationHistory(conversationId, {
 
 const conversationHistoryForWebhook = await getConversationHistory(conversationId);
 
+console.log(`📚 [WEBHOOK] History length: ${conversationHistoryForWebhook.length}`);
+console.log(`📚 [WEBHOOK] History content:`, JSON.stringify(conversationHistoryForWebhook, null, 2));
+
 console.log(`🔍 [WEBHOOK] Checking for webhook integrations...`);
 const webhookResponse = await handleWebhookIntegration(
   userMessage,
