@@ -238,6 +238,7 @@ await storeConversationHistory(conversationId, {
 });
 
 const conversationHistoryForWebhook = await getConversationHistory(conversationId);
+console.log(`🆔 [CONV ID] conversationId: ${conversationId}`);
 
 console.log(`📚 [WEBHOOK] History length: ${conversationHistoryForWebhook.length}`);
 console.log(`📚 [WEBHOOK] History content:`, JSON.stringify(conversationHistoryForWebhook, null, 2));
