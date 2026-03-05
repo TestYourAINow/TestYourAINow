@@ -981,7 +981,7 @@ export default function AgentLab() {
                     <div className="text-xs opacity-75 mb-1 font-medium">
                       {msg.role === "user" ? "You" : "Prompt AI"}
                     </div>
-                    <div dangerouslySetInnerHTML={{ __html: formatMessageContent(msg.content) }} />
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
                   </div>
                 </div>
               ))}
