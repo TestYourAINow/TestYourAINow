@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ import GoogleCalendarIntegrationModal from "@/components/integrations/GoogleCale
 import IntegrationActions from "@/components/Dropdowns/IntegrationActions";
 import SelectAgentDropdown from "@/components/Dropdowns/SelectAgentDropdown";
 import SelectVersionDropdown from "@/components/Dropdowns/SelectVersionDropdown";
+import { formatMessageContent } from "@/lib/formatMessage";
 
 type Agent = {
   _id: string;
@@ -156,6 +157,7 @@ export default function AgentLab() {
   const [showAddApiModal, setShowAddApiModal] = useState(false);
   const [selectedAgentApiKey, setSelectedAgentApiKey] = useState<string>("");
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   // ===== DÉTECTION MOBILE =====
@@ -307,6 +309,12 @@ export default function AgentLab() {
       setIsThinking(false);
     }
   };
+
+  useEffect(() => {
+  if (messagesEndRef.current) {
+    messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  }
+}, [chatMessagesTestAI, messages, isThinking]);
 
   const handleSendTestMessage = async () => {
     if (!selectedAgentId || !testMessage.trim()) return;
@@ -921,7 +929,7 @@ export default function AgentLab() {
                     <div className="text-xs opacity-75 mb-1 font-medium">
                       {msg.role === "user" ? "You" : "AI Agent"}
                     </div>
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                    <div dangerouslySetInnerHTML={{ __html: formatMessageContent(msg.content) }} />
                   </div>
                 </div>
               ))}
@@ -935,6 +943,8 @@ export default function AgentLab() {
                 </div>
               )}
             </div>
+
+<div ref={messagesEndRef} />
 
             {chatMessagesTestAI.length > 0 && (
               <div className="flex justify-center mt-4">
@@ -971,7 +981,7 @@ export default function AgentLab() {
                     <div className="text-xs opacity-75 mb-1 font-medium">
                       {msg.role === "user" ? "You" : "Prompt AI"}
                     </div>
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                    <div dangerouslySetInnerHTML={{ __html: formatMessageContent(msg.content) }} />
                   </div>
                 </div>
               ))}
@@ -985,6 +995,8 @@ export default function AgentLab() {
                 </div>
               )}
             </div>
+
+<div ref={messagesEndRef} />
 
             {/* Diff Display */}
             {suggestedPrompt && diff && (
