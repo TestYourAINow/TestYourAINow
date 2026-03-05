@@ -553,7 +553,7 @@ export default function AgentLab() {
                   "bg-gray-900/60 border border-gray-700/50 rounded-lg p-3 text-sm text-white whitespace-pre-wrap overflow-y-auto custom-scrollbar backdrop-blur-sm",
                   isMobile ? "h-[300px]" : "h-[400px]"
                 )}
-                dangerouslySetInnerHTML={{ __html: diffPrompt }}
+                dangerouslySetInnerHTML={{ __html: diffPrompt.replace(/<(?!span|\/span)[^>]+>/g, (match) => match.replace(/</g, '&lt;').replace(/>/g, '&gt;')) }}
               />
             ) : (
               <textarea
