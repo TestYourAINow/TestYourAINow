@@ -106,6 +106,7 @@ Your objective:
 → ALWAYS preserve the exact format of the original prompt (HTML tags, line breaks, structure, lists, etc.).
 → If the prompt contains HTML, the updatedPrompt must also contain HTML with the same structure.
 → ALWAYS write the updatedPrompt in the same language as the original prompt.
+→ ALWAYS write the summary in the same language as the user's instruction.
 → Do NOT lose important information unless the user explicitly asked to remove it.
 → Do NOT over-correct or invent things that were not mentioned.
 → Do NOT produce a continuous block of text without structure.
