@@ -10,6 +10,7 @@ import { ChatbotConfig } from "@/models/ChatbotConfig"
 import { Connection } from "@/models/Connection"
 import { Conversation } from "@/models/Conversation"
 import { Folder } from "@/models/Folder"
+import { DeploymentFolder } from "@/models/DeploymentFolder"
 import { Demo } from "@/models/Demo"
 import { supabase } from "@/lib/supabase"
 import Stripe from "stripe"
@@ -91,6 +92,9 @@ export async function DELETE(req: NextRequest) {
     // 5️⃣ 🆕 NOUVEAU - Supprimer les dossiers
     const deletedFolders = await Folder.deleteMany({ userId })
     console.log(`🗑️ Deleted ${deletedFolders.deletedCount} folders`)
+
+    const deletedDeploymentFolders = await DeploymentFolder.deleteMany({ userId })
+    console.log(`🗑️ Deleted ${deletedDeploymentFolders.deletedCount} deployment folders`)
     
     // 6️⃣ 🆕 NOUVEAU - Supprimer les démos
     const deletedDemos = await Demo.deleteMany({ userId })
