@@ -9,6 +9,7 @@ import { AgentKnowledge } from "@/models/AgentKnowledge";
 import { ChatbotConfig } from "@/models/ChatbotConfig";
 import { Connection } from "@/models/Connection";
 import { Conversation } from "@/models/Conversation";
+import { Demo } from "@/models/Demo";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
@@ -131,7 +132,11 @@ export async function DELETE(req: NextRequest, context: any) {
     const deletedConnections = await Connection.deleteMany({ aiBuildId: id, userId: user.id });
     console.log(`🗑️ [DELETE CASCADE] Deleted ${deletedConnections.deletedCount} connections`);
 
-    // 7️⃣ Supprimer l'agent lui-même
+    // 7️⃣ Supprimer TOUS les demos liés à cet agent
+    const deletedDemos = await Demo.deleteMany({ agentId: id, userId: user.id });
+    console.log(`🗑️ [DELETE CASCADE] Deleted ${deletedDemos.deletedCount} demos`);
+
+    // 8️⃣ Supprimer l'agent lui-même
     await Agent.deleteOne({ _id: id });
     console.log(`🗑️ [DELETE CASCADE] Deleted agent ${id}`);
 
@@ -147,7 +152,7 @@ export async function DELETE(req: NextRequest, context: any) {
       console.log(`🗑️ [DELETE CASCADE] Decremented agentCount for folder ${folderId}`);
     }
 
-    // 8️⃣ Résumé des suppressions
+    // 9️⃣ Résumé des suppressions
     const summary = {
       agent: 1,
       versions: deletedVersions.deletedCount,
@@ -155,6 +160,7 @@ export async function DELETE(req: NextRequest, context: any) {
       chatbotConfigs: deletedConfigs.deletedCount,
       conversations: deletedConversations.deletedCount,
       connections: deletedConnections.deletedCount,
+      demos: deletedDemos.deletedCount,
       folderUpdated: !!folderId
     };
 
