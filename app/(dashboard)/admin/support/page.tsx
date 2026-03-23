@@ -4,11 +4,12 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { 
-  MessageCircle, Search, Clock, User, Mail, 
-  ChevronRight, BarChart3, AlertCircle,
+import Link from 'next/link';
+import {
+  MessageCircle, Search, Clock, User, Mail,
+  ChevronRight, AlertCircle,
   CheckCircle, Calendar, Archive, Shield,
-  Headphones, Bell, Filter
+  Headphones, Bell, Filter, ArrowLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -196,6 +197,12 @@ export default function AdminSupportPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Back button */}
+        <Link href="/admin" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 group">
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Admin</span>
+        </Link>
+
         {/* Admin Header */}
         <div className="mb-8">
           <div className="flex items-center gap-6">

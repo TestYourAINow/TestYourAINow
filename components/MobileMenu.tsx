@@ -15,7 +15,8 @@ import {
   BarChart3,
   X,
   ChevronLeft,
-  Shield
+  Shield,
+  Megaphone
 } from "lucide-react"
 import { useSession, signOut } from "next-auth/react"
 import { useState, useRef, useEffect } from "react"
@@ -199,6 +200,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
   const resourceItems = [
     { href: "/api-key", label: "API Key", icon: <Key size={20} />, isActive: pathname === "/api-key" },
+    { href: "/updates", label: "What's New", icon: <Megaphone size={20} />, isActive: pathname === "/updates" },
     { href: "/video-guides", label: "Video Guides", icon: <PlayCircle size={20} />, isActive: pathname === "/video-guides" },
     { 
       href: "/support", 
@@ -210,10 +212,10 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     },
     // Support ADMIN - Ajouté après Support normal
     ...(isAdmin ? [{
-      href: "/admin/support", 
-      label: "Support Admin", 
-      icon: <Shield size={20} />, 
-      isActive: pathname.startsWith("/admin/support")
+      href: "/admin",
+      label: "Admin",
+      icon: <Shield size={20} />,
+      isActive: pathname.startsWith("/admin")
     }] : [])
   ]
 

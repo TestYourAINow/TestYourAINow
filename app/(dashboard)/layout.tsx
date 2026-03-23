@@ -3,6 +3,7 @@
 import { ReactNode } from "react"
 import { SidebarProvider } from "@/context/SidebarContext"
 import ClientLayout from "@/components/ClientLayout"
+import AnnouncementPopup from "@/components/AnnouncementPopup"
 import { Toaster } from "sonner"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/authOptions"
@@ -29,6 +30,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <SidebarProvider>
       <ClientLayout>
+        <AnnouncementPopup />
         {children}
       </ClientLayout>
     </SidebarProvider>

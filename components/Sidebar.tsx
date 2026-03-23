@@ -14,7 +14,8 @@ import {
   CreditCard,
   LogOut,
   BarChart3,
-  Shield
+  Shield,
+  Megaphone
 } from "lucide-react"
 import { useSidebar } from "@/context/SidebarContext"
 import { useSession, signOut } from "next-auth/react"
@@ -274,6 +275,7 @@ export default function Sidebar() {
 
   const resourceItems = [
     { href: "/api-key", label: "API Key", icon: <Key size={20} />, isActive: pathname === "/api-key" },
+    { href: "/updates", label: "What's New", icon: <Megaphone size={20} />, isActive: pathname === "/updates" },
     { href: "/video-guides", label: "Video Guides", icon: <PlayCircle size={20} />, isActive: pathname === "/video-guides" },
     { 
       href: "/support", 
@@ -285,10 +287,10 @@ export default function Sidebar() {
     },
     // ✅ SUPPORT ADMIN - Ajouté après Support normal
     ...(isAdmin ? [{
-      href: "/admin/support", 
-      label: "Support Admin", 
-      icon: <Shield size={20} />, 
-      isActive: pathname.startsWith("/admin/support")
+      href: "/admin",
+      label: "Admin",
+      icon: <Shield size={20} />,
+      isActive: pathname.startsWith("/admin")
     }] : [])
   ]
 
