@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, RotateCcw, X, Send } from 'lucide-react';
+import { RotateCcw, X, Send } from 'lucide-react';
 import styles from './ChatWidget.module.css';
 import { formatMessageContent } from '@/lib/formatMessage';
 
@@ -343,8 +343,8 @@ export default function DemoPageChatWidget({
       '--primary-color': primaryColor,
       '--chat-bg': isDark ? '#1f2937' : '#ffffff',
       position: 'absolute',
-      bottom: '24px',
-      right: '24px',
+      bottom: '8px',
+      right: '8px',
     } as React.CSSProperties;
   };
 
@@ -380,7 +380,9 @@ export default function DemoPageChatWidget({
           onClick={onToggle}
           aria-label="Open chat"
         >
-          <MessageCircle size={24} color="white" />
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+            <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
+          </svg>
         </button>
       )}
 

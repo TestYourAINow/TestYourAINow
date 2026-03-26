@@ -963,12 +963,12 @@ const ChatbotBuilder: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between lg:mb-3 mb-2">
                     <label className="text-sm font-medium text-gray-300">Show welcome message</label>
-                    <input
-                      type="checkbox"
-                      checked={settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true}
-                      onChange={(e) => updateSettings('showWelcomeMessage', e.target.checked)}
-                      className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
-                    />
+                    <button
+                      onClick={() => updateSettings('showWelcomeMessage', !(settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true))}
+                      className={`relative w-11 h-6 rounded-full transition-all duration-200 focus:outline-none shrink-0 ${(settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true) ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gray-700'}`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${(settings.showWelcomeMessage !== undefined ? settings.showWelcomeMessage : true) ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
                   </div>
                   <input
                     type="text"
@@ -1015,12 +1015,12 @@ const ChatbotBuilder: React.FC = () => {
               <div className="lg:space-y-4 space-y-3">
                 <div className="flex items-center justify-between lg:mb-3 mb-2">
                   <label className="text-sm font-medium text-gray-300">Enable popup</label>
-                  <input
-                    type="checkbox"
-                    checked={settings.showPopup !== undefined ? settings.showPopup : true}
-                    onChange={(e) => updateSettings('showPopup', e.target.checked)}
-                    className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
-                  />
+                  <button
+                    onClick={() => updateSettings('showPopup', !(settings.showPopup !== undefined ? settings.showPopup : true))}
+                    className={`relative w-11 h-6 rounded-full transition-all duration-200 focus:outline-none shrink-0 ${(settings.showPopup !== undefined ? settings.showPopup : true) ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gray-700'}`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${(settings.showPopup !== undefined ? settings.showPopup : true) ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
                 </div>
                 <div className="relative">
                   <input

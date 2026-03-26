@@ -265,9 +265,14 @@ export default function DemoAgentPage() {
 
   // Popup handling
   useEffect(() => {
-    if (!config.agentId || !config.showPopup || isOpen) return;
+    if (!config.agentId || isOpen) return;
 
-    setShowPopupBubble(false); // reset à chaque changement d'agent
+    if (!config.showPopup) {
+      setShowPopupBubble(false);
+      return;
+    }
+
+    setShowPopupBubble(false);
     const timer = setTimeout(() => {
       setShowPopupBubble(true);
     }, config.popupDelay * 1000);
@@ -903,12 +908,12 @@ export default function DemoAgentPage() {
               <div className="lg:space-y-4 space-y-3">
                 <div className="flex items-center justify-between lg:mb-3 mb-2">
                   <label className="text-sm font-medium text-gray-300">Enable Popup</label>
-                  <input
-                    type="checkbox"
-                    checked={config.showPopup}
-                    onChange={(e) => updateConfig('showPopup', e.target.checked)}
-                    className="w-4 h-4 text-orange-600 bg-gray-800 border-gray-600 rounded focus:ring-orange-500"
-                  />
+                  <button
+                    onClick={() => updateConfig('showPopup', !config.showPopup)}
+                    className={`relative w-11 h-6 rounded-full transition-all duration-200 focus:outline-none shrink-0 ${config.showPopup ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gray-700'}`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${config.showPopup ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
                 </div>
 
                 <div className="relative">
@@ -961,12 +966,12 @@ export default function DemoAgentPage() {
                 <div>
                   <div className="flex items-center justify-between lg:mb-3 mb-2">
                     <label className="text-sm font-medium text-gray-300">Show Welcome Message</label>
-                    <input
-                      type="checkbox"
-                      checked={config.showWelcomeMessage}
-                      onChange={(e) => updateConfig('showWelcomeMessage', e.target.checked)}
-                      className="w-4 h-4 text-emerald-600 bg-gray-800 border-gray-600 rounded focus:ring-emerald-500"
-                    />
+                    <button
+                      onClick={() => updateConfig('showWelcomeMessage', !config.showWelcomeMessage)}
+                      className={`relative w-11 h-6 rounded-full transition-all duration-200 focus:outline-none shrink-0 ${config.showWelcomeMessage ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gray-700'}`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${config.showWelcomeMessage ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
                   </div>
                 </div>
               </div>
