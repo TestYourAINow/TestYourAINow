@@ -4,17 +4,16 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { 
-  Bot, Zap, Activity, Clock, Users, TrendingUp, Play, 
-  Rocket, Calendar, Brain, TestTube, Eye, ArrowRight,
-  MessageCircle, Globe, CheckCircle, AlertTriangle,
-  Plus, Settings, Star, Gauge, Key, FlaskConical,
-  RefreshCw, Folder, GitBranch, Share2, BarChart3,
-  ArrowUp, ArrowDown, Minus, Sparkles, Workflow, Webhook,
-  Filter, PieChart as PieIcon
+import { useSession } from 'next-auth/react';
+import {
+  Bot, Activity, TrendingUp,
+  Rocket, Brain, ArrowRight,
+  CheckCircle, AlertTriangle,
+  Gauge, Key,
+  GitBranch, Share2, BarChart3,
+  Sparkles, Webhook
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 // 🗑️ SUPPRIMÉ - Import des types analytics
 // import type { AnalyticsData } from '@/types/analytics';
@@ -72,12 +71,12 @@ const CHART_COLORS = {
 };
 
 export default function DashboardPage() {
-  // États existants du dashboard
+  const { data: session } = useSession();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const router = useRouter();
+  const [onboardingComplete, setOnboardingComplete] = useState(true);
+  const [onboardingSteps, setOnboardingSteps] = useState({ hasCreatedAgent: false, hasCreatedConnection: false, hasCreatedDemo: false });
 
   // 🗑️ SUPPRIMÉ - États pour analytics avec types corrects
   // const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -90,14 +89,9 @@ export default function DashboardPage() {
   // const periods = [...]
 
   // Fonction pour charger les stats du dashboard (existante)
-  const fetchDashboardStats = async (isRefresh = false) => {
+  const fetchDashboardStats = async () => {
     try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      
+      setLoading(true);
       const response = await fetch('/api/dashboard/stats', {
         method: 'GET',
         credentials: 'include',
@@ -109,7 +103,7 @@ export default function DashboardPage() {
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
         setStats(data.stats);
         setError(null);
@@ -121,7 +115,6 @@ export default function DashboardPage() {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -131,7 +124,13 @@ export default function DashboardPage() {
   // Chargements initiaux - NETTOYÉ
   useEffect(() => {
     fetchDashboardStats();
-    // 🗑️ SUPPRIMÉ - fetchAnalyticsData(selectedPeriod);
+    fetch('/api/onboarding')
+      .then(r => r.json())
+      .then(data => {
+        setOnboardingComplete(data.onboardingComplete ?? false);
+        if (data.steps) setOnboardingSteps(data.steps);
+      })
+      .catch(() => setOnboardingComplete(true));
   }, []);
 
   // 🗑️ SUPPRIMÉ - Recharger analytics quand période change
@@ -277,34 +276,66 @@ export default function DashboardPage() {
       <div className="space-y-8 px-4 md:px-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
-              Welcome back!<span className="text-white">👋</span>
-            </h1>
-            <p className="text-gray-400 text-lg">Here's what's happening with your AI agents today</p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => fetchDashboardStats(true)}
-              disabled={refreshing}
-              className="flex items-center gap-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 hover:border-gray-600/50 text-gray-300 hover:text-white px-4 py-2 rounded-xl transition-all disabled:opacity-50 hover:scale-105 disabled:scale-100 backdrop-blur-sm"
-            >
-              <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-            
-            <div className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-xl border border-emerald-500/30 backdrop-blur-sm hover:bg-emerald-500/30 hover:border-emerald-500/40 transition-all duration-300">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium hidden sm:inline">All Systems Operational</span>
-              <span className="text-sm font-medium sm:hidden">Online</span>
-            </div>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+            {session?.user?.name ? `Welcome back, ${session.user.name}!` : 'Welcome back!'} <span className="text-white">👋</span>
+          </h1>
+          <p className="text-gray-400 text-lg">Here's what's happening with your AI agents today</p>
         </div>
 
-        {/* 🗑️ SUPPRIMÉ - Section Analytics + Métriques */}
-        {/* TOUTE la section "Section Analytics + Métriques" avec le graphique, filtres et Analytics Summary a été supprimée */}
+        {/* Onboarding Checklist */}
+        {!onboardingComplete && stats && (() => {
+          const steps = [
+            { label: 'Create your first agent', done: onboardingSteps.hasCreatedAgent, href: '/agents/new' },
+            { label: 'Add a connection', done: onboardingSteps.hasCreatedConnection, href: '/create-connection' },
+            { label: 'Create a demo', done: onboardingSteps.hasCreatedDemo, href: '/demo-agent' },
+          ];
+          const allDone = steps.every(s => s.done);
+
+          // if (allDone) {
+          //   fetch('/api/onboarding', { method: 'POST' }).then(() => setOnboardingComplete(true));
+          //   return null;
+          // }
+
+          return (
+            <div className="bg-gray-900/80 border border-gray-700/50 rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center shrink-0">
+                  <Rocket size={18} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-white font-bold">Get started</h2>
+                  <p className="text-gray-500 text-xs">{steps.filter(s => s.done).length} of {steps.length} completed</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {steps.map((step) => (
+                  <Link
+                    key={step.label}
+                    href={step.done ? '#' : step.href}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${step.done ? 'opacity-50 cursor-default' : 'hover:bg-gray-800/60 cursor-pointer'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${step.done ? 'bg-blue-600 border-blue-600' : 'border-gray-600'}`}>
+                      {step.done && <CheckCircle size={12} className="text-white" />}
+                    </div>
+                    <span className={`text-sm font-medium ${step.done ? 'line-through text-gray-500' : 'text-gray-300'}`}>{step.label}</span>
+                  </Link>
+                ))}
+              </div>
+              {allDone && (
+                <div className="mt-4 pt-4 border-t border-gray-700/50 flex items-center justify-between">
+                  <p className="text-sm text-gray-400">You're all set up!</p>
+                  <button
+                    onClick={() => fetch('/api/onboarding', { method: 'POST' }).then(() => setOnboardingComplete(true))}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl text-sm font-semibold transition-all"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Section des métriques principales - Agent Status et Demo Progress déplacés */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">

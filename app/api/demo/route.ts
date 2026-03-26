@@ -4,7 +4,8 @@ import { connectToDatabase } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import { Demo } from '@/models/Demo';
-import crypto from 'crypto'; // 🆕 Ajouter cet import
+import User from '@/models/User';
+import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -76,6 +77,10 @@ export async function POST(req: NextRequest) {
     // Dates
     createdAt: new Date(),
   });
+
+  try {
+    await User.findByIdAndUpdate(session.user.id, { $set: { 'onboardingSteps.hasCreatedDemo': true } });
+  } catch {}
 
   return NextResponse.json({ id: demo._id }, { status: 200 });
 }

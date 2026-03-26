@@ -21,6 +21,12 @@ const UserSchema = new mongoose.Schema({
   resetPasswordToken: { type: String },
   resetPasswordExpiry: { type: Date },
   seenAnnouncements: [{ type: String }],
+  onboardingSteps: {
+    hasCreatedAgent:      { type: Boolean, default: false },
+    hasCreatedConnection: { type: Boolean, default: false },
+    hasCreatedDemo:       { type: Boolean, default: false },
+  },
+  onboardingComplete: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -5,6 +5,7 @@ import { connectToDatabase } from '@/lib/db';
 import { Connection } from '@/models/Connection';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
+import User from '@/models/User';
 import crypto from 'crypto';
 import { updateAgentDeploymentStatus } from '@/lib/deployment-utils';
 
@@ -102,14 +103,16 @@ export async function POST(req: NextRequest) {
     hasWebhook: !!webhookUrl
   });
 
-  return NextResponse.json({ 
-    success: true, 
+  try {
+    await User.findByIdAndUpdate(session.user.id, { $set: { 'onboardingSteps.hasCreatedConnection': true } });
+  } catch {}
+
+  return NextResponse.json({
+    success: true,
     connection: {
       ...connection.toObject(),
-      // Retourner les infos webhook seulement si elles existent
       ...(webhookUrl && { webhookUrl }),
       ...(webhookSecret && { webhookSecret }),
-      // Retourner le shareToken si généré
       ...(shareToken && { shareToken }),
     }
   });

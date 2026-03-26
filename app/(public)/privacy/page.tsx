@@ -1,10 +1,9 @@
 "use client";
 
 import { ArrowLeft, Shield, Lock, Eye } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function PrivacyPage() {
-  const router = useRouter();
 
   return (
     <main 
@@ -28,13 +27,10 @@ export default function PrivacyPage() {
 
       <div className="relative max-w-4xl mx-auto px-6 sm:px-12 lg:px-20 py-12">
         {/* Back Button - FIXED */}
-        <button 
-          onClick={() => router.push('/')}
-          className="group flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-300 mb-8"
-        >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
+        <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group">
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           <span>Back to Home</span>
-        </button>
+        </Link>
 
         {/* Header */}
         <div className="text-center mb-16">

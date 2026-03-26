@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { 
   ArrowLeft, Search, Book, Zap, Bot, Crown, AlertTriangle, 
   ChevronDown, HelpCircle, Sparkles
@@ -25,7 +25,6 @@ interface Category {
 }
 
 export default function FAQPage() {
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
@@ -179,13 +178,10 @@ export default function FAQPage() {
 
       <div className="relative max-w-7xl mx-auto px-6 sm:px-12 lg:px-20 py-12">
         {/* Back Button */}
-        <button 
-          onClick={() => router.push('/')}
-          className="group flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-300 mb-8"
-        >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
+        <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group">
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           <span>Back to Home</span>
-        </button>
+        </Link>
 
         {/* Header */}
         <div className="text-center mb-16">

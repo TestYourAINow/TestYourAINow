@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { Folder } from "@/models/Folder";
+import User from "@/models/User";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import mongoose from "mongoose";
@@ -101,9 +102,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ 
-      message: folderId ? "Agent created in folder" : "Agent created", 
-      id: newAgent._id 
+    try {
+      await User.findByIdAndUpdate(session.user.id, { $set: { 'onboardingSteps.hasCreatedAgent': true } });
+    } catch {}
+
+    return NextResponse.json({
+      message: folderId ? "Agent created in folder" : "Agent created",
+      id: newAgent._id
     });
 
   } catch (err) {
