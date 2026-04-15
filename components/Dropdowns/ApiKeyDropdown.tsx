@@ -9,6 +9,7 @@ export interface ApiKeyOption {
   name: string;
   maskedKey: string;
   isDefault: boolean;
+  provider?: "openai" | "anthropic";
 }
 
 interface ApiKeyDropdownProps {
@@ -122,6 +123,11 @@ export default function ApiKeyDropdown({
                     Default
                   </span>
                 )}
+                {selectedApiKeyData?.provider === "anthropic" ? (
+                  <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-full">Anthropic</span>
+                ) : selectedApiKeyData?.provider === "openai" ? (
+                  <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">OpenAI</span>
+                ) : null}
               </div>
               <div className="text-xs text-gray-400 font-mono">{selectedApiKeyData?.maskedKey || 'No key selected'}</div>
             </div>
@@ -158,9 +164,12 @@ export default function ApiKeyDropdown({
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-white">{apiKey.name}</span>
                     {apiKey.isDefault && (
-                      <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
-                        Default
-                      </span>
+                      <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">Default</span>
+                    )}
+                    {apiKey.provider === "anthropic" ? (
+                      <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-full">Anthropic</span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">OpenAI</span>
                     )}
                   </div>
                   <div className="text-xs text-gray-400 font-mono">{apiKey.maskedKey}</div>

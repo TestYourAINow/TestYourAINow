@@ -8,7 +8,7 @@ import { Demo } from "@/models/Demo";
 import { Conversation } from "@/models/Conversation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { createAgentOpenAI, createAgentOpenAIForWebhook } from "@/lib/openai";
+import { getAIClient, getAIClientForWebhook, callAI } from "@/lib/ai-client";
 import { handleWebhookIntegration } from '@/lib/integrations/webhookHandler'; // 🆕 AJOUTÉ
 
 type IntegrationFile = { name: string; size: number; path: string; url: string };
@@ -604,40 +604,37 @@ export async function POST(
       return NextResponse.json({ error: "Agent not found." }, { status: 404 });
     }
 
-    let openaiResult;
-    
-    if (isPublicOK) {
-      console.log(`Création OpenAI en mode public (${publicKind})...`);
-      openaiResult = await createAgentOpenAIForWebhook(agent);
-    } else {
-      openaiResult = await createAgentOpenAI(agent);
-    }
+    const aiClientResult = isPublicOK
+      ? await getAIClientForWebhook(agent)
+      : await getAIClient(agent);
 
-    if (!openaiResult.openai) {
-      console.error('Erreur création OpenAI:', openaiResult.error);
-      
+    if (!aiClientResult.client) {
+      console.error('Erreur création AI client:', aiClientResult.error);
       if (isPublicOK) {
-        return NextResponse.json(
-          { error: `Mode public: ${openaiResult.error}` },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: `Mode public: ${aiClientResult.error}` }, { status: 400 });
       } else {
-        return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
 
-    const openai = openaiResult.openai;
-    console.log('Instance OpenAI créée avec succès');
-
+    const { client: aiClient, provider: aiProvider } = aiClientResult;
     const agentModel = agent.openaiModel || 'gpt-4o';
+    console.log(`Instance AI créée avec succès (${aiProvider}, ${agentModel})`);
+
+    // Helper to call AI with this agent's client/provider/model
+    const agentCallAI = (msgs: ChatMessage[], temperature?: number) =>
+      callAI(aiClient, aiProvider, agentModel, msgs, {
+        temperature: temperature !== undefined ? temperature : agent.temperature,
+        top_p: agent.top_p,
+      });
 
     const googleCalendarResponse = await handleGoogleCalendarIntegration(
-      userMessage, 
-      agent.integrations || [], 
-      openai,
+      userMessage,
+      agent.integrations || [],
+      { chat: { completions: { create: async (params: any) => {
+        const text = await callAI(aiClient, aiProvider, agentModel, params.messages, { temperature: params.temperature });
+        return { choices: [{ message: { content: text } }] };
+      }}}},
       userTimezone,
       agentModel
     );
@@ -648,9 +645,12 @@ export async function POST(
     }
 
     const calendlyResponse = await handleCalendlyIntegration(
-      userMessage, 
-      agent.integrations || [], 
-      openai,
+      userMessage,
+      agent.integrations || [],
+      { chat: { completions: { create: async (params: any) => {
+        const text = await callAI(aiClient, aiProvider, agentModel, params.messages, { temperature: params.temperature });
+        return { choices: [{ message: { content: text } }] };
+      }}}},
       agentModel
     );
 
@@ -659,12 +659,10 @@ export async function POST(
       return NextResponse.json({ reply: calendlyResponse });
     }
 
-    // 🆕 Vérifier les webhooks personnalisés (maintenant importé depuis /lib)
     const webhookResponse = await handleWebhookIntegration(
-      userMessage, 
-      agent.integrations || [], 
-      openai,
-      agentModel,
+      userMessage,
+      agent.integrations || [],
+      agentCallAI,
       userTimezone,
       previousMessages
     );
@@ -750,14 +748,10 @@ export async function POST(
     messages.push(...previousMessages);
     messages.push({ role: "user", content: userMessage });
 
-    const completion = await openai.chat.completions.create({
-      model: agentModel,
+    const reply = await callAI(aiClient, aiProvider, agentModel, messages, {
       temperature: agent.temperature,
       top_p: agent.top_p,
-      messages,
-    });
-
-    const reply = completion.choices[0]?.message?.content || "I couldn't provide a response.";
+    }) || "I couldn't provide a response.";
 
     // 🆕 STOCKAGE MONGODB POUR LES WIDGETS
     if (publicKind === 'widget' && widgetId && sessionId) {

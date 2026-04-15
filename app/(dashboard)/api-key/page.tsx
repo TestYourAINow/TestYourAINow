@@ -3,16 +3,18 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import {
-  Key, Shield, ExternalLink, CheckCircle, AlertTriangle,
-  Plus, Trash2, Star, Copy, RefreshCw, Settings, Zap, Lock,
-  Activity, Globe, Crown, Sparkles, Info, Bot
+  Key, Shield, CheckCircle, AlertTriangle,
+  Plus, Trash2, Star, Copy, Settings, Lock,
+  Activity, Crown, Info, Bot
 } from "lucide-react";
 import LoadingScreen from '@/components/LoadingScreen';
+import AddApiKeyModal from '@/components/AddApiKeyModal';
 
 interface ApiKey {
   id: string;
   name: string;
   maskedKey: string;
+  provider: string;
   isDefault: boolean;
   createdAt: string;
 }
@@ -20,16 +22,10 @@ interface ApiKey {
 export default function ApiKeyPage() {
   const { data: session } = useSession();
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-
-  // Form state
-  const [newKeyName, setNewKeyName] = useState("");
-  const [newApiKey, setNewApiKey] = useState("");
-  const [testingKey, setTestingKey] = useState(false);
 
  useEffect(() => {
   if (session) {
@@ -59,42 +55,6 @@ export default function ApiKeyPage() {
       }
     } catch (err) {
       console.error("Error fetching API keys:", err);
-    }
-  };
-
-  const handleAddApiKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-    setError("");
-
-    try {
-      const response = await fetch("/api/user/api-key", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: newKeyName,
-          apiKey: newApiKey
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage("API key added successfully!");
-        setNewKeyName("");
-        setNewApiKey("");
-        setShowAddForm(false);
-        fetchApiKeys();
-      } else {
-        setError(data.error || "Something went wrong");
-      }
-    } catch (err) {
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -202,7 +162,7 @@ if (initialLoading || !session) {
                   API Key Management
                 </h1>
                 <p className="text-gray-400 text-lg">
-                  Manage your OpenAI API keys for different projects
+                  Manage your OpenAI and Anthropic API keys for different projects
                 </p>
               </div>
             </div>
@@ -229,7 +189,7 @@ if (initialLoading || !session) {
                 </div>
 
                 <button
-                  onClick={() => setShowAddForm(true)}
+                  onClick={() => setShowAddModal(true)}
                   className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transform hover:scale-105"
                 >
                   <Plus size={16} />
@@ -249,7 +209,7 @@ if (initialLoading || !session) {
                       Add your first OpenAI API key to start building amazing AI experiences
                     </p>
                     <button
-                      onClick={() => setShowAddForm(true)}
+                      onClick={() => setShowAddModal(true)}
                       className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
                     >
                       Add Your First API Key
@@ -282,6 +242,13 @@ if (initialLoading || !session) {
                           <div>
                             <div className="flex items-center gap-3 mb-1">
                               <h3 className="font-bold text-white text-lg">{apiKey.name}</h3>
+                              <span className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
+                                apiKey.provider === "anthropic"
+                                  ? "bg-orange-500/20 border border-orange-500/30 text-orange-400"
+                                  : "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
+                              }`}>
+                                {apiKey.provider === "anthropic" ? "Anthropic" : "OpenAI"}
+                              </span>
                               {apiKey.isDefault && (
                                 <span className="px-3 py-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 text-yellow-400 text-xs rounded-full font-semibold">
                                   Default Project
@@ -335,93 +302,6 @@ if (initialLoading || !session) {
               </div>
             </div>
 
-            {/* Add New API Key Form - Enhanced */}
-            {showAddForm && (
-              <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <Plus className="text-emerald-400" size={20} />
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-emerald-200 to-green-200 bg-clip-text text-transparent">Add New API Key</h2>
-                </div>
-
-                {/* FIXED: Changed from div to form */}
-                <form onSubmit={handleAddApiKey} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
-                      Project Name
-                    </label>
-                    <input
-                      type="text"
-                      value={newKeyName}
-                      onChange={(e) => setNewKeyName(e.target.value)}
-                      placeholder="e.g., My Main Project, Client ABC"
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
-                      OpenAI API Key
-                    </label>
-                    <input
-                      type="password"
-                      value={newApiKey}
-                      onChange={(e) => setNewApiKey(e.target.value)}
-                      placeholder="sk-proj-..."
-                      className="w-full px-4 py-3.5 bg-gray-900/80 border border-gray-700/50 text-white rounded-xl outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all backdrop-blur-sm placeholder-gray-400 font-medium"
-                      required
-                    />
-                    <p className="text-xs text-gray-400 mt-3 flex items-center gap-2">
-                      <Globe size={12} />
-                      Get your API key from{" "}
-                      <a
-                        href="https://platform.openai.com/api-keys"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1 font-medium"
-                      >
-                        OpenAI Dashboard
-                        <ExternalLink size={12} />
-                      </a>
-                    </p>
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 disabled:from-gray-700 disabled:to-gray-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transform hover:scale-105 disabled:transform-none disabled:opacity-50 flex items-center justify-center gap-3 relative overflow-hidden group"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                      {loading ? (
-                        <>
-                          <RefreshCw className="w-5 h-5 animate-spin relative z-10" />
-                          <span className="relative z-10">Adding...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-5 h-5 relative z-10" />
-                          <span className="relative z-10">Add API Key</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setNewKeyName("");
-                        setNewApiKey("");
-                        setError("");
-                      }}
-                      className="px-6 py-4 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-xl font-semibold transition-all duration-300 border border-gray-700/50 hover:border-gray-600/50"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
             {/* Enhanced Messages */}
             {message && (
               <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-500/20 rounded-xl backdrop-blur-sm">
@@ -463,7 +343,7 @@ if (initialLoading || !session) {
                 </div>
                 <div className="flex items-start gap-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                   <CheckCircle size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-emerald-200 text-sm font-medium">API calls are made directly to OpenAI</span>
+                  <span className="text-emerald-200 text-sm font-medium">API calls are made directly to OpenAI or Anthropic</span>
                 </div>
               </div>
             </div>
@@ -491,26 +371,32 @@ if (initialLoading || !session) {
                       </div>
                       <span className="text-amber-200 font-semibold">Default Key</span>
                     </div>
-                    <p className="text-gray-300 text-sm leading-relaxed ml-11">
-                      Your <strong>default choice</strong> - automatically selected when creating new agents. You can always change it to any other key during agent creation.
-                    </p>
+                    <div className="ml-11 space-y-1">
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        Auto-selected when creating a new agent. Used by all <strong>platform tools</strong>:
+                      </p>
+                      <ul className="text-gray-400 text-xs space-y-0.5 mt-1 list-disc list-inside">
+                        <li>Prompt generation</li>
+                        <li>Turn into FAQ feature</li>
+                        <li>AI Prompter (prompt improvement tool)</li>
+                        <li>Add Instructions feature</li>
+                      </ul>
+                    </div>
                   </div>
 
-                  {/* Other Keys */}
+                  {/* Agent Key */}
                   <div className="p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
                         <Bot size={16} className="text-blue-400" />
                       </div>
-                      <span className="text-blue-200 font-semibold">Project Keys</span>
+                      <span className="text-blue-200 font-semibold">Agent Key</span>
                     </div>
                     <p className="text-gray-300 text-sm leading-relaxed ml-11">
-                      Additional keys for <strong>specific projects or clients</strong>. Perfect for separating costs and organizing your work by project.
+                      The key assigned to a specific agent. Used for <strong>all conversations</strong> with that agent, including test chat.
                     </p>
                   </div>
                 </div>
-
-
 
                 {/* Pro Tip */}
                 <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-4 mt-4 backdrop-blur-sm">
@@ -519,7 +405,7 @@ if (initialLoading || !session) {
                     <span className="text-purple-200 text-sm font-semibold">Pro Tip</span>
                   </div>
                   <p className="text-purple-100/80 text-xs leading-relaxed">
-                    Set your most-used key as default to save time. You can always change the default or use different keys for specific projects.
+                    Set your main account key as default to keep platform tools working smoothly. For client agents, assign a separate key so costs stay isolated.
                   </p>
                 </div>
               </div>
@@ -534,11 +420,11 @@ if (initialLoading || !session) {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text">2.</span>
-                    <span>You can choose a different key from the dropdown if needed</span>
+                    <span>You can assign any key to any agent from the dropdown</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text">3.</span>
-                    <span>Everything for that agent uses the selected key</span>
+                    <span>The agent&apos;s assigned key handles all its conversations</span>
                   </div>
                 </div>
               </div>
@@ -547,15 +433,14 @@ if (initialLoading || !session) {
         </div>
       </div>
 
-      {/* Enhanced Custom Styles */}
-      <style jsx>{`
-        .bg-grid {
-          background-image: 
-            linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
-          background-size: 40px 40px;
-        }
-      `}</style>
+      <AddApiKeyModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onApiKeyAdded={() => {
+          setMessage("API key added successfully!");
+          fetchApiKeys();
+        }}
+      />
     </div>
   );
 }

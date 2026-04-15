@@ -266,7 +266,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave, o
           </div>
 
           {/* Body - Scrollable */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
 
             {/* 📊 ONGLET ANALYTICS */}
             {activeTab === 'analytics' && (
@@ -360,7 +360,7 @@ export default function UsageLimitModal({ isOpen, onClose, connection, onSave, o
                       <h4 className="font-semibold text-white text-lg">Usage History</h4>
                       <span className="text-sm text-gray-500">({connection.usageHistory.length} periods)</span>
                     </div>
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                    <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
                       {connection.usageHistory.slice().reverse().map((history: any, i: number) => (
                         <div
                           key={history._id || i}

@@ -18,7 +18,7 @@ export default function PromptChatHistory({ history }: PromptChatHistoryProps) {
   }, [history]);
 
   return (
-    <div className="flex flex-col gap-3 p-4 h-full overflow-y-auto text-sm">
+    <div className="flex flex-col gap-3 p-4 h-full overflow-y-auto custom-scrollbar text-sm">
       {history.map((entry, idx) => (
         <div key={idx} className="space-y-2">
           <div className="bg-[#222] p-3 rounded text-white">

@@ -45,7 +45,7 @@ export default function VideoGuidesPage() {
   ];
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
       <div className="max-w-7xl mx-auto px-6 py-8">
         
         {/* Header centré */}

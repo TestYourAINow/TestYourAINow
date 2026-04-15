@@ -260,7 +260,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         </div>
 
         {/* Contenu scrollable avec plus d'espace */}
-        <div className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-8">
           
           {/* WORKSPACE Section */}
           <div className="mb-8">

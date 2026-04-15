@@ -10,7 +10,7 @@ import SelectIntegrationModal, { IntegrationType } from "@/components/integratio
 import WebhookIntegrationModal from "@/components/integrations/WebhookIntegrationModal";
 import CalendlyIntegrationModal from "@/components/integrations/CalendlyIntegrationModal";
 import FileUploadIntegrationModal from "@/components/integrations/FileUploadIntegrationModal";
-import AiModelDropdown from "@/components/Dropdowns/AiModelDropdown";
+import AiModelDropdown, { modelOptions } from "@/components/Dropdowns/AiModelDropdown";
 import ApiKeyDropdown, { ApiKeyOption } from "@/components/Dropdowns/ApiKeyDropdown";
 import { AgentIntegration } from "@/types/integrations";
 import {
@@ -156,6 +156,18 @@ export default function AgentLab() {
   const [apiKeys, setApiKeys] = useState<ApiKeyOption[]>([]);
   const [showAddApiModal, setShowAddApiModal] = useState(false);
   const [selectedAgentApiKey, setSelectedAgentApiKey] = useState<string>("");
+
+  const handleApiKeySelect = (keyId: string) => {
+    const newKey = apiKeys.find(k => k.id === keyId);
+    const newProvider = newKey?.provider || "openai";
+    const currentModel = modelOptions.find(m => m.id === openaiModel);
+    if (currentModel && currentModel.provider !== newProvider) {
+      const defaultModel = newProvider === "anthropic" ? "claude-sonnet-4-6" : "gpt-4o";
+      setOpenaiModel(defaultModel);
+      toast(`Model switched to ${modelOptions.find(m => m.id === defaultModel)?.name}`);
+    }
+    setSelectedAgentApiKey(keyId);
+  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -585,6 +597,7 @@ export default function AgentLab() {
                   <AiModelDropdown
                     selectedModel={openaiModel}
                     onModelSelect={(modelId) => setOpenaiModel(modelId)}
+                    provider={apiKeys.find(k => k.id === selectedAgentApiKey)?.provider}
                     disabled={!selectedAgentId}
                   />
                 </div>
@@ -595,7 +608,7 @@ export default function AgentLab() {
                   </label>
                   <ApiKeyDropdown
                     selectedApiKey={selectedAgentApiKey}
-                    onApiKeySelect={(keyId) => setSelectedAgentApiKey(keyId)}
+                    onApiKeySelect={handleApiKeySelect}
                     onAddNewClick={() => setShowAddApiModal(true)}
                     apiKeys={apiKeys}
                     disabled={!selectedAgentId}

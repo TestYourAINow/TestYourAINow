@@ -108,3 +108,36 @@ html {
 .sidebar-scroll-container::-webkit-scrollbar {
   display: none;
 }
+
+/* TipTap editor placeholder */
+.announcement-editor .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #6b7280;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Announcement rich text render — popup + updates page */
+.announcement-content h1 { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+.announcement-content h2 { font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+.announcement-content h3 { font-size: 1.1rem; font-weight: 600; color: #e5e7eb; margin-bottom: 0.4rem; }
+.announcement-content p  { margin-bottom: 0.6rem; color: #d1d5db; font-size: 0.875rem; line-height: 1.6; }
+.announcement-content strong { color: #fff; font-weight: 600; }
+.announcement-content em { font-style: italic; }
+.announcement-content u  { text-decoration: underline; text-underline-offset: 2px; }
+.announcement-content ul { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.6rem; color: #d1d5db; font-size: 0.875rem; }
+.announcement-content ol { list-style: decimal; padding-left: 1.25rem; margin-bottom: 0.6rem; color: #d1d5db; font-size: 0.875rem; }
+.announcement-content li { margin-bottom: 0.2rem; }
+.announcement-content a  { color: #60a5fa; text-decoration: underline; text-underline-offset: 2px; }
+.announcement-content hr { border-color: #374151; margin: 0.75rem 0; }
+
+/* TipTap editor content styles */
+.announcement-editor .tiptap h1 { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+.announcement-editor .tiptap h2 { font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+.announcement-editor .tiptap h3 { font-size: 1.1rem; font-weight: 600; color: #e5e7eb; margin-bottom: 0.4rem; }
+.announcement-editor .tiptap p  { margin-bottom: 0.4rem; }
+.announcement-editor .tiptap ul { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.4rem; }
+.announcement-editor .tiptap ol { list-style: decimal; padding-left: 1.25rem; margin-bottom: 0.4rem; }
+.announcement-editor .tiptap li { margin-bottom: 0.15rem; }
+.announcement-editor .tiptap hr { border-color: #374151; margin: 0.5rem 0; }

@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { createUserOpenAI, createAgentOpenAI } from "@/lib/openai";
+import { getUserDefaultAIClient, callAI } from "@/lib/ai-client";
 
 export async function POST(
   req: NextRequest,
@@ -57,10 +57,9 @@ export async function POST(
       return NextResponse.json({ prompt: finalRawPrompt });
     }
 
-    // 🔧 CHANGEMENT PRINCIPAL - Utiliser la clé spécifique de l'agent
-    const { openai, error } = await createAgentOpenAI(agent);
+    const { client: aiClient, provider: aiProvider, model: aiModel, error } = await getUserDefaultAIClient();
 
-    if (!openai) {
+    if (!aiClient) {
       return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
     }
 
@@ -159,17 +158,10 @@ If the content is too vague, generate a general fallback instead.
 ${adjustedCompanyInfo}
 `.trim();
 
-    const completion = await openai.chat.completions.create({
-      model: openaiModel,
-      temperature,
-      top_p,
-      messages: [{ role: "user", content: metaPrompt }],
-    });
-
-    const output = completion.choices?.[0]?.message?.content;
+    const output = await callAI(aiClient, aiProvider, aiModel, [{ role: "user", content: metaPrompt }], { temperature, top_p });
 
     if (!output) {
-      return NextResponse.json({ error: "No response from OpenAI." }, { status: 500 });
+      return NextResponse.json({ error: "No response from AI." }, { status: 500 });
     }
 
     agent.finalPrompt = output;

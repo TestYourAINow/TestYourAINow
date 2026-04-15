@@ -10,6 +10,7 @@ interface ApiKeyDoc {
   _id: any;
   name: string;
   key: string;
+  provider?: string;
   isDefault: boolean;
   createdAt: Date;
 }
@@ -42,13 +43,20 @@ export async function GET() {
       await user.save();
     }
 
-const apiKeys = (user.apiKeys || []).map((apiKey: ApiKeyDoc) => ({
-  id: apiKey._id?.toString() || "unknown",
-  name: apiKey.name,
-  maskedKey: `sk-...${apiKey.key.slice(-4)}`,
-  isDefault: apiKey.isDefault,
-  createdAt: apiKey.createdAt
-}));
+const apiKeys = (user.apiKeys || []).map((apiKey: ApiKeyDoc) => {
+  const provider = apiKey.provider || "openai";
+  const maskedKey = provider === "anthropic"
+    ? `sk-ant-...${apiKey.key.slice(-4)}`
+    : `sk-...${apiKey.key.slice(-4)}`;
+  return {
+    id: apiKey._id?.toString() || "unknown",
+    name: apiKey.name,
+    maskedKey,
+    provider,
+    isDefault: apiKey.isDefault,
+    createdAt: apiKey.createdAt,
+  };
+});
 
     return NextResponse.json({ apiKeys });
   } catch (error) {
@@ -69,40 +77,55 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, apiKey }: { name: string; apiKey: string } = await req.json();
+    const { name, apiKey, provider = "openai" }: { name: string; apiKey: string; provider?: string } = await req.json();
 
     if (!name || !apiKey || !apiKey.startsWith('sk-')) {
-      return NextResponse.json({ 
-        error: "Invalid project name or API key format" 
+      return NextResponse.json({
+        error: "Invalid project name or API key format"
       }, { status: 400 });
+    }
+
+    if (!["openai", "anthropic"].includes(provider)) {
+      return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
     }
 
     // Test si l'API key fonctionne
     try {
-      const openai = new OpenAI({ apiKey });
-      await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: "test" }],
-        max_tokens: 5,
-      });
-    } catch (openaiError: any) {
-      return NextResponse.json({ 
-        error: "Invalid API key or insufficient permissions" 
+      if (provider === "anthropic") {
+        const Anthropic = (await import("@anthropic-ai/sdk")).default;
+        const anthropic = new Anthropic({ apiKey });
+        await anthropic.messages.create({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 5,
+          messages: [{ role: "user", content: "test" }],
+        });
+      } else {
+        const openai = new OpenAI({ apiKey });
+        await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: "test" }],
+          max_tokens: 5,
+        });
+      }
+    } catch (keyError: any) {
+      return NextResponse.json({
+        error: "Invalid API key or insufficient permissions"
       }, { status: 400 });
     }
 
     // Ajoute dans la DB
     await connectToDatabase();
     const user = await User.findById(session.user.id);
-    
+
     if (!user.apiKeys) user.apiKeys = [];
-    
+
     // Si c'est la première clé, la marquer comme default
     const isFirstKey = user.apiKeys.length === 0;
-    
+
     user.apiKeys.push({
       name,
       key: apiKey,
+      provider,
       isDefault: isFirstKey,
       createdAt: new Date()
     });

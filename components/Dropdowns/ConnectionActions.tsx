@@ -252,7 +252,7 @@ export default function ConnectionActions({
       {mounted && showFolderSubmenu && createPortal(
         <div 
           data-connection-dropdown="submenu"
-          className="fixed bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-[200] min-w-[180px] py-2 max-h-[200px] overflow-y-auto animate-fade-in"
+          className="fixed bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-[200] min-w-[180px] py-2 max-h-[200px] overflow-y-auto custom-scrollbar animate-fade-in"
           style={{
             top: `${submenuPosition.top}px`,
             left: `${submenuPosition.left}px`,

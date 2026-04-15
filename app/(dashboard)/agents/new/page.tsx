@@ -13,7 +13,7 @@ import {
 import { toast, Toaster } from "react-hot-toast";
 
 // ===== ÉTAPE 1: AJOUTER CES IMPORTS =====
-import AiModelDropdown from "@/components/Dropdowns/AiModelDropdown";
+import AiModelDropdown, { modelOptions } from "@/components/Dropdowns/AiModelDropdown";
 import ApiKeyDropdown, { ApiKeyOption } from "@/components/Dropdowns/ApiKeyDropdown";
 
 // 🔧 CORRECTION - Import du vrai composant au lieu du mock
@@ -277,6 +277,18 @@ export default function CreateAgentWizard() {
       setApiKeys((prev: ApiKeyOption[]) => [...prev, newApiKeyData]);
       updateFormData("apiKey", newApiKeyData.id);
     }
+  };
+
+  const handleApiKeySelect = (keyId: string) => {
+    const newKey = apiKeys.find(k => k.id === keyId);
+    const newProvider = newKey?.provider || "openai";
+    const currentModel = modelOptions.find(m => m.id === formData.openaiModel);
+    if (currentModel && currentModel.provider !== newProvider) {
+      const defaultModel = newProvider === "anthropic" ? "claude-sonnet-4-6" : "gpt-4o";
+      updateFormData("openaiModel", defaultModel);
+      toast(`Model switched to ${modelOptions.find(m => m.id === defaultModel)?.name}`);
+    }
+    updateFormData("apiKey", keyId);
   };
 
   // 🔧 CORRECTION - Fonction d'import corrigée pour correspondre à l'ancienne version
@@ -685,6 +697,7 @@ export default function CreateAgentWizard() {
                           <AiModelDropdown
                             selectedModel={formData.openaiModel}
                             onModelSelect={(modelId) => updateFormData("openaiModel", modelId)}
+                            provider={apiKeys.find(k => k.id === formData.apiKey)?.provider}
                           />
                         </div>
 
@@ -732,44 +745,34 @@ export default function CreateAgentWizard() {
                               contextWindow: "400K",
                             },
                             {
-                              id: "gpt-4-turbo",
-                              name: "GPT-4 Turbo",
-                              description: "Advanced reasoning with large context window",
-                              badge: "",
-                              badgeColor: "",
-                              inputPrice: 10.00,
-                              outputPrice: 30.00,
-                              contextWindow: "128K",
+                              id: "claude-sonnet-4-6",
+                              name: "Claude Sonnet 4.6",
+                              description: "Fast and highly capable — best balance of speed and intelligence",
+                              badge: "Most Popular",
+                              badgeColor: "bg-orange-500",
+                              inputPrice: 3.00,
+                              outputPrice: 15.00,
+                              contextWindow: "200K",
                             },
                             {
-                              id: "gpt-4",
-                              name: "GPT-4",
-                              description: "High-intelligence standard model",
-                              badge: "",
-                              badgeColor: "",
-                              inputPrice: 30.00,
-                              outputPrice: 60.00,
-                              contextWindow: "8K",
+                              id: "claude-haiku-4-5-20251001",
+                              name: "Claude Haiku 4.5",
+                              description: "Fastest and most cost-efficient Claude model",
+                              badge: "Best Value",
+                              badgeColor: "bg-green-500",
+                              inputPrice: 0.80,
+                              outputPrice: 4.00,
+                              contextWindow: "200K",
                             },
                             {
-                              id: "gpt-4-32k",
-                              name: "GPT-4 32K",
-                              description: "Extended context version of GPT-4",
-                              badge: "",
-                              badgeColor: "",
-                              inputPrice: 60.00,
-                              outputPrice: 120.00,
-                              contextWindow: "32K",
-                            },
-                            {
-                              id: "gpt-3.5-turbo",
-                              name: "GPT-3.5 Turbo",
-                              description: "Fast and efficient for most tasks",
-                              badge: "",
-                              badgeColor: "",
-                              inputPrice: 0.50,
-                              outputPrice: 1.50,
-                              contextWindow: "16K",
+                              id: "claude-opus-4-6",
+                              name: "Claude Opus 4.6",
+                              description: "Most powerful Claude model for complex reasoning",
+                              badge: "Most Powerful",
+                              badgeColor: "bg-purple-500",
+                              inputPrice: 15.00,
+                              outputPrice: 75.00,
+                              contextWindow: "200K",
                             },
                           ];
 
@@ -785,7 +788,7 @@ export default function CreateAgentWizard() {
                                 <div>
                                   <div className="text-gray-400 mb-1">Type</div>
                                   <div className="text-white font-semibold">
-                                    {selectedModel.id.includes('4o') || selectedModel.id.includes('5') ? 'Multimodal' : 'Text'}
+                                    {selectedModel.id.startsWith('claude-') || selectedModel.id.includes('4o') || selectedModel.id.includes('5') ? 'Multimodal' : 'Text'}
                                   </div>
                                 </div>
                               </div>
@@ -810,7 +813,7 @@ export default function CreateAgentWizard() {
                                   💡 A token is approximately 4 characters or 0.75 words. You only pay for what you use.
                                 </div>
                                 <a
-                                  href="https://platform.openai.com/docs/models"
+                                  href={selectedModel.id.startsWith('claude-') ? 'https://docs.anthropic.com/en/docs/about-claude/models' : 'https://platform.openai.com/docs/models'}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-xs text-gray-500 hover:text-gray-400 transition-colors flex items-center gap-1 mt-2"
@@ -842,7 +845,7 @@ export default function CreateAgentWizard() {
                             {/* ===== ÉTAPE 5: REMPLACER PAR LE NOUVEAU COMPOSANT ===== */}
                             <ApiKeyDropdown
                               selectedApiKey={formData.apiKey}
-                              onApiKeySelect={(keyId) => updateFormData("apiKey", keyId)}
+                              onApiKeySelect={handleApiKeySelect}
                               onAddNewClick={() => setShowAddApiModal(true)}
                               apiKeys={apiKeys}
                             />
@@ -1275,7 +1278,7 @@ export default function CreateAgentWizard() {
                             </div>
                             <h3 className="text-xl font-semibold text-indigo-200">Raw Prompt Preview</h3>
                           </div>
-                          <div className="bg-gray-900/50 rounded-xl p-4 max-h-64 overflow-y-auto">
+                          <div className="bg-gray-900/50 rounded-xl p-4 max-h-64 overflow-y-auto custom-scrollbar">
                             <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono">
                               {formData.rawPrompt || 'No raw prompt provided'}
                             </pre>

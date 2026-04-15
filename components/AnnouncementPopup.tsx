@@ -9,6 +9,8 @@ type Announcement = {
   title: string;
   message: string;
   type: 'update' | 'feature' | 'maintenance' | 'info';
+  imageUrl?: string;
+  imageLayout?: 'banner' | 'thumbnail';
   createdAt: string;
 };
 
@@ -19,13 +21,37 @@ const TYPE_LABEL: Record<string, string> = {
   info:        'Info',
 };
 
-export default function AnnouncementPopup() {
+// Preview mode: pass announcements directly, no API fetch, no seen tracking
+interface PreviewProps {
+  preview: true;
+  announcements: Announcement[];
+  onClose: () => void;
+}
+
+// Normal mode: fetches from API, tracks seen
+interface NormalProps {
+  preview?: false;
+}
+
+type Props = PreviewProps | NormalProps;
+
+export default function AnnouncementPopup(props: Props) {
   const router = useRouter();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [current, setCurrent] = useState(0);
   const [visible, setVisible] = useState(false);
 
+  const isPreview = props.preview === true;
+
   useEffect(() => {
+    if (isPreview) {
+      const p = props as PreviewProps;
+      setAnnouncements(p.announcements);
+      setVisible(p.announcements.length > 0);
+      setCurrent(0);
+      return;
+    }
+
     const sessionKey = 'announcements_shown';
     if (sessionStorage.getItem(sessionKey)) return;
 
@@ -39,9 +65,19 @@ export default function AnnouncementPopup() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [isPreview]);
+
+  // Sync preview announcements when they change
+  useEffect(() => {
+    if (!isPreview) return;
+    const p = props as PreviewProps;
+    setAnnouncements(p.announcements);
+    setVisible(p.announcements.length > 0);
+    setCurrent(0);
+  }, [isPreview && (props as PreviewProps).announcements]);
 
   const markSeen = async (id: string) => {
+    if (isPreview) return;
     await fetch('/api/announcements', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -50,11 +86,15 @@ export default function AnnouncementPopup() {
   };
 
   const handleNext = () => {
-    markSeen(announcements[current]._id);
+    if (!isPreview) markSeen(announcements[current]._id);
     if (current < announcements.length - 1) {
       setCurrent(c => c + 1);
     } else {
-      setVisible(false);
+      if (isPreview) {
+        (props as PreviewProps).onClose();
+      } else {
+        setVisible(false);
+      }
     }
   };
 
@@ -63,11 +103,19 @@ export default function AnnouncementPopup() {
   };
 
   const handleClose = () => {
+    if (isPreview) {
+      (props as PreviewProps).onClose();
+      return;
+    }
     announcements.slice(current).forEach(a => markSeen(a._id));
     setVisible(false);
   };
 
   const handleViewAll = () => {
+    if (isPreview) {
+      (props as PreviewProps).onClose();
+      return;
+    }
     announcements.slice(current).forEach(a => markSeen(a._id));
     setVisible(false);
     router.push('/updates');
@@ -81,12 +129,10 @@ export default function AnnouncementPopup() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      {/* Fixed size modal — content scrolls inside */}
       <div className="relative w-full max-w-md h-[500px] max-h-[90vh] bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl flex flex-col">
 
-        {/* Header — fixed, never scrolls */}
+        {/* Header */}
         <div className="px-6 pt-5 pb-4 shrink-0">
-          {/* Type + date + controls */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-semibold text-white uppercase tracking-widest">
@@ -105,7 +151,6 @@ export default function AnnouncementPopup() {
               </button>
             </div>
           </div>
-          {/* Title */}
           <h2 className="text-white font-bold text-2xl">{ann.title}</h2>
         </div>
 
@@ -114,7 +159,32 @@ export default function AnnouncementPopup() {
 
         {/* Content — scrollable */}
         <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar">
-          <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{ann.message}</p>
+          {ann.imageUrl && ann.imageLayout === 'banner' && (
+            <img
+              src={ann.imageUrl}
+              alt=""
+              className="w-full rounded-xl object-cover max-h-40 mb-4"
+            />
+          )}
+          {ann.imageUrl && ann.imageLayout !== 'banner' && (
+            <div className="flex items-start gap-4 mb-3">
+              <img
+                src={ann.imageUrl}
+                alt=""
+                className="w-20 h-20 rounded-xl object-cover shrink-0"
+              />
+              <div
+                className="announcement-content"
+                dangerouslySetInnerHTML={{ __html: ann.message }}
+              />
+            </div>
+          )}
+          {(!ann.imageUrl || ann.imageLayout === 'banner') && (
+            <div
+              className="announcement-content"
+              dangerouslySetInnerHTML={{ __html: ann.message }}
+            />
+          )}
         </div>
 
         {/* Progress dots */}
@@ -129,7 +199,7 @@ export default function AnnouncementPopup() {
           </div>
         )}
 
-        {/* Footer — fixed */}
+        {/* Footer */}
         <div className="px-6 py-4 flex items-center justify-between shrink-0 border-t border-gray-800">
           <div className="flex items-center gap-4">
             {current > 0 && (
@@ -141,12 +211,14 @@ export default function AnnouncementPopup() {
                 Back
               </button>
             )}
-            <button
-              onClick={handleViewAll}
-              className="text-gray-500 hover:text-gray-300 text-xs hover:underline underline-offset-2 transition-colors"
-            >
-              View all updates
-            </button>
+            {!isPreview && (
+              <button
+                onClick={handleViewAll}
+                className="text-gray-500 hover:text-gray-300 text-xs hover:underline underline-offset-2 transition-colors"
+              >
+                View all updates
+              </button>
+            )}
           </div>
 
           <button

@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 const ApiKeySchema = new mongoose.Schema({
   name: { type: String, required: true }, // "My Main Project", "Client ABC", etc.
   key: { type: String, required: true },
+  provider: { type: String, enum: ['openai', 'anthropic'], default: 'openai' },
   createdAt: { type: Date, default: Date.now },
   isDefault: { type: Boolean, default: false }, // Une clé par défaut
 });

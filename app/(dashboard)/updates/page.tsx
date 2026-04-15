@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Megaphone, ChevronDown } from 'lucide-react';
+import { Megaphone } from 'lucide-react';
+import AnnouncementPopup from '@/components/AnnouncementPopup';
 
 type AnnouncementType = 'update' | 'feature' | 'maintenance' | 'info';
 
@@ -10,6 +11,8 @@ interface Announcement {
   title: string;
   message: string;
   type: AnnouncementType;
+  imageUrl?: string;
+  imageLayout?: 'banner' | 'thumbnail';
   createdAt: string;
 }
 
@@ -38,13 +41,11 @@ function groupByMonth(announcements: Announcement[]): { label: string; items: An
   return Array.from(map.entries()).map(([label, items]) => ({ label, items }));
 }
 
-const PREVIEW_LENGTH = 120;
-
 export default function UpdatesPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [activeFilter, setActiveFilter] = useState<AnnouncementType | 'all'>('all');
+  const [selected, setSelected] = useState<Announcement | null>(null);
 
   useEffect(() => {
     fetch('/api/updates')
@@ -53,14 +54,6 @@ export default function UpdatesPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
-
-  function toggle(id: string) {
-    setExpanded(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
 
   const filtered = activeFilter === 'all'
     ? announcements
@@ -81,7 +74,7 @@ export default function UpdatesPage() {
           </div>
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-1">
-              What's New
+              What&apos;s New
             </h1>
             <p className="text-gray-400 text-lg">Latest updates and features</p>
           </div>
@@ -125,40 +118,23 @@ export default function UpdatesPage() {
                 <div className="space-y-3">
                   {items.map((ann) => {
                     const date = new Date(ann.createdAt);
-                    const isOpen = expanded.has(ann._id);
-                    const hasMore = ann.message.length > PREVIEW_LENGTH;
-                    const preview = hasMore ? ann.message.slice(0, PREVIEW_LENGTH).trimEnd() + '…' : ann.message;
-
                     return (
-                      <div key={ann._id} className="bg-gray-900/80 border border-gray-700/50 rounded-2xl overflow-hidden">
-                        <button
-                          onClick={() => hasMore && toggle(ann._id)}
-                          className={`w-full text-left p-6 ${hasMore ? 'cursor-pointer hover:bg-gray-800/30 transition-colors' : 'cursor-default'}`}
-                        >
-                          {/* Type chip + date */}
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <span className="bg-gray-800 border border-gray-700/60 rounded-md px-2 py-0.5 text-xs text-gray-400 font-medium">
-                                {TYPE_LABEL[ann.type]}
-                              </span>
-                              <span className="text-gray-600 text-xs">
-                                {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                              </span>
-                            </div>
-                            {hasMore && (
-                              <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-                            )}
-                          </div>
-
-                          {/* Title */}
-                          <h2 className="text-white font-bold text-xl mb-2">{ann.title}</h2>
-
-                          {/* Message */}
-                          <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-line">
-                            {isOpen ? ann.message : preview}
-                          </p>
-                        </button>
-                      </div>
+                      <button
+                        key={ann._id}
+                        onClick={() => setSelected(ann)}
+                        className="w-full text-left bg-gray-900/80 border border-gray-700/50 rounded-2xl px-6 py-5 hover:bg-gray-800/40 transition-colors"
+                      >
+                        <h2 className="text-white font-bold text-xl mb-3">{ann.title}</h2>
+                        <div className="h-px bg-gray-800 mb-3" />
+                        <div className="flex items-center gap-2">
+                          <span className="bg-gray-800 border border-gray-700/60 rounded-md px-2 py-0.5 text-xs text-gray-400 font-medium">
+                            {TYPE_LABEL[ann.type]}
+                          </span>
+                          <span className="text-gray-600 text-xs">
+                            {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -167,6 +143,15 @@ export default function UpdatesPage() {
           </div>
         )}
       </div>
+
+      {/* Popup */}
+      {selected && (
+        <AnnouncementPopup
+          preview
+          announcements={[selected]}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </div>
   );
 }

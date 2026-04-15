@@ -6,7 +6,7 @@ import { Connection } from '@/models/Connection';
 import { Agent } from '@/models/Agent';
 import { AgentKnowledge } from '@/models/AgentKnowledge';
 import { Conversation } from '@/models/Conversation';
-import { createAgentOpenAIForWebhook } from '@/lib/openai';
+import { getAIClientForWebhook, callAI } from '@/lib/ai-client';
 import { storeAIResponse, storeConversationHistory, getConversationHistory } from '@/lib/redisCache';
 import { handleWebhookIntegration } from '@/lib/integrations/webhookHandler';
 
@@ -209,9 +209,9 @@ async function processWithAI(
   try {
     console.log(`🤖 Processing message for agent ${agent._id} with user ${userData.fullName || userData.userId}`);
 
-    const { openai, error } = await createAgentOpenAIForWebhook(agent);
-    if (!openai) {
-      console.error(`❌ OpenAI setup failed: ${error}`);
+    const { client: aiClient, provider: aiProvider, error } = await getAIClientForWebhook(agent);
+    if (!aiClient) {
+      console.error(`❌ AI client setup failed: ${error}`);
       const errorMessage = "Sorry, technical problem.";
       await storeAIResponse(conversationId, errorMessage);
        storeInMongoDB(
@@ -227,6 +227,12 @@ async function processWithAI(
       ).catch(err => console.error('❌ [MONGODB] Storage error:', err));
       return;
     }
+    const agentModel = agent.openaiModel || 'gpt-4o';
+    const agentCallAI = (msgs: ChatMessage[], temperature?: number) =>
+      callAI(aiClient, aiProvider, agentModel, msgs, {
+        temperature: temperature !== undefined ? temperature : agent.temperature,
+        top_p: agent.top_p,
+      });
 
     // 🆕 2. VÉRIFIER LES WEBHOOKS PERSONNALISÉS AVANT OPENAI
 const userTimezone = requestData.timezone || userData.timezone || 'America/Montreal';
@@ -247,8 +253,7 @@ console.log(`🔍 [WEBHOOK] Checking for webhook integrations...`);
 const webhookResponse = await handleWebhookIntegration(
   userMessage,
   agent.integrations || [],
-  openai,
-  agent.openaiModel,
+  agentCallAI,
   userTimezone,
   conversationHistoryForWebhook
 );
@@ -341,14 +346,10 @@ if (webhookResponse) {
 
     console.log(`💬 Calling OpenAI with model: ${agent.openaiModel} (${messages.length} messages)`);
 
-    const completion = await openai.chat.completions.create({
-      model: agent.openaiModel,
+    const response = await callAI(aiClient, aiProvider, agentModel, messages, {
       temperature: agent.temperature,
       top_p: agent.top_p,
-      messages,
-    });
-
-    const response = completion.choices[0]?.message?.content || "I couldn't respond.";
+    }) || "I couldn't respond.";
     console.log(`✅ OpenAI response received: ${response.substring(0, 100)}...`);
 
     await storeAIResponse(conversationId, response);

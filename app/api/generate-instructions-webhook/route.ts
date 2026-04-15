@@ -1,11 +1,9 @@
-// app\api\webhook\universal\[webhookId]\route.ts
-
 import { NextResponse } from "next/server";
-import { createAgentOpenAI } from "@/lib/openai";
 import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { getAIClient, getUserDefaultAIClient, callAI } from "@/lib/ai-client";
 
 export async function POST(req: Request) {
   try {
@@ -16,8 +14,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing fields." }, { status: 400 });
     }
 
-    // Utiliser la clé de l'agent si disponible
-    let openai;
+    let client: any;
+    let provider: "openai" | "anthropic";
+    let model: string;
+
     if (agentId) {
       const session = await getServerSession(authOptions);
       if (!session?.user?.id) {
@@ -26,23 +26,26 @@ export async function POST(req: Request) {
 
       await connectToDatabase();
       const agent = await Agent.findOne({ _id: agentId, userId: session.user.id });
-      
+
       if (!agent) {
         return NextResponse.json({ error: "Agent not found" }, { status: 404 });
       }
 
-      const result = await createAgentOpenAI(agent);
-      if (!result.openai) {
+      const result = await getAIClient(agent);
+      if (!result.client) {
         return NextResponse.json({ error: result.error }, { status: 400 });
       }
-      openai = result.openai;
+      client = result.client;
+      provider = result.provider;
+      model = agent.openaiModel || "gpt-4o";
     } else {
-      const { createUserOpenAI } = await import("@/lib/openai");
-      const result = await createUserOpenAI();
-      if (!result.openai) {
-        return NextResponse.json({ error: result.error }, { status: 400 });
+      const result = await getUserDefaultAIClient();
+      if (!result.client) {
+        return NextResponse.json({ error: result.error }, { status: result.error === "Unauthorized" ? 401 : 400 });
       }
-      openai = result.openai;
+      client = result.client;
+      provider = result.provider;
+      model = result.model;
     }
 
     const safeWebhookName = webhookName.trim();
@@ -265,23 +268,19 @@ AI: [Lists events from yesterday or says "You had nothing scheduled"]
 
 CRITICAL: Make the instructions conversational, specific, and actionable. Include concrete examples for EVERY scenario. Use real-world phrasing, not robotic language.`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: "You are an expert prompt engineer specializing in AI agent integrations. Generate clear, comprehensive, and actionable instructions. Do NOT use Markdown formatting. Avoid #, ##, **, *, or any formatting symbols. Use plain text only with simple line breaks for structure." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.7,
-    });
+    const systemMsg = "You are an expert prompt engineer specializing in AI agent integrations. Generate clear, comprehensive, and actionable instructions. Do NOT use Markdown formatting. Avoid #, ##, **, *, or any formatting symbols. Use plain text only with simple line breaks for structure.";
+    const output = await callAI(client, provider, model, [
+      { role: "system", content: systemMsg },
+      { role: "user", content: prompt },
+    ], { temperature: 0.7 });
 
-    const result = completion.choices[0].message.content;
-    return NextResponse.json({ instructions: result });
+    return NextResponse.json({ instructions: output });
   } catch (error: any) {
     console.error("[GENERATE_INSTRUCTIONS]", error);
-    
-    if (error.status === 401 || error.code === 'invalid_api_key') {
+
+    if (error.status === 401 || error.code === "invalid_api_key") {
       return NextResponse.json(
-        { error: "Invalid OpenAI API key. Please check your agent's selected API key." },
+        { error: "Invalid API key. Please check your agent's selected API key." },
         { status: 400 }
       );
     }

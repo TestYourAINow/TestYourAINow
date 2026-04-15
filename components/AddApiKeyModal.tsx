@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Key, Eye, EyeOff, Globe, ExternalLink, RefreshCw, Plus } from "lucide-react";
+import { X, Key, Eye, EyeOff, Globe, ExternalLink, RefreshCw } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface AddApiKeyModalProps {
@@ -13,65 +13,65 @@ interface AddApiKeyModalProps {
 export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddApiKeyModalProps) {
   const [apiKey, setApiKey] = useState("");
   const [projectName, setProjectName] = useState("");
+  const [provider, setProvider] = useState<"openai" | "anthropic">("openai");
   const [showApiKey, setShowApiKey] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!apiKey.trim() || !projectName.trim()) {
       toast.error("Please fill in both fields");
       return;
     }
-    
-    if (!apiKey.startsWith('sk-')) {
-      toast.error("Please enter a valid OpenAI API key");
+
+    if (provider === "openai" && !apiKey.startsWith("sk-")) {
+      toast.error("Please enter a valid OpenAI API key (starts with sk-)");
       return;
     }
-    
+
+    if (provider === "anthropic" && !apiKey.startsWith("sk-ant-")) {
+      toast.error("Please enter a valid Anthropic API key (starts with sk-ant-)");
+      return;
+    }
+
     setSaving(true);
-    
+
     try {
-      // 🔥 VRAIE REQUÊTE - Même logique que la page API Key
-      const response = await fetch('/api/user/api-key', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: projectName.trim(),
-          apiKey: apiKey.trim(),
-        }),
+      const response = await fetch("/api/user/api-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: projectName.trim(), apiKey: apiKey.trim(), provider }),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         toast.success("API key added successfully!");
-        
-        // Créer l'objet comme il serait retourné par l'API
+
+        const maskedKey = provider === "anthropic"
+          ? `sk-ant-...${apiKey.slice(-4)}`
+          : `sk-...${apiKey.slice(-4)}`;
+
         const newApiKeyData = {
-          id: Date.now().toString(), // Temporaire, on va fetch la vraie liste après
+          id: Date.now().toString(),
           name: projectName.trim(),
-          maskedKey: `sk-...${apiKey.slice(-4)}`,
-          isDefault: false
+          maskedKey,
+          isDefault: false,
         };
-        
-        // Reset du formulaire
+
         setApiKey("");
         setProjectName("");
+        setProvider("openai");
         setShowApiKey(false);
         onClose();
-        
-        // Notifier le parent pour refresh la liste
-        if (onApiKeyAdded) {
-          onApiKeyAdded(newApiKeyData);
-        }
+
+        if (onApiKeyAdded) onApiKeyAdded(newApiKeyData);
       } else {
         toast.error(data.error || "Failed to add API key");
       }
     } catch (error) {
-      console.error('Error adding API key:', error);
+      console.error("Error adding API key:", error);
       toast.error("Network error. Please try again.");
     } finally {
       setSaving(false);
@@ -82,12 +82,19 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
     if (!saving) {
       setApiKey("");
       setProjectName("");
+      setProvider("openai");
       setShowApiKey(false);
       onClose();
     }
   };
 
   if (!isOpen) return null;
+
+  const placeholder = provider === "anthropic" ? "sk-ant-..." : "sk-proj-...";
+  const docUrl = provider === "anthropic"
+    ? "https://console.anthropic.com/settings/keys"
+    : "https://platform.openai.com/api-keys";
+  const docLabel = provider === "anthropic" ? "Anthropic Console" : "OpenAI Dashboard";
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
@@ -101,47 +108,66 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
               </div>
               <h3 className="text-xl font-bold text-white">Add New API Key</h3>
             </div>
-            <button
-              onClick={handleClose}
-              disabled={saving}
-              className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
-            >
+            <button onClick={handleClose} disabled={saving} className="text-gray-400 hover:text-white transition-colors disabled:opacity-50">
               <X size={24} />
             </button>
           </div>
-          
-          <p className="text-gray-400 text-sm mb-6">
-            Provide a project name and your OpenAI API key. It will be stored securely.
-          </p>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Provider toggle */}
+            <div>
+              <label className="block text-sm font-medium mb-3 text-gray-300">Provider</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setProvider("openai")}
+                  className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                    provider === "openai"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-gray-800 text-gray-400 hover:text-white border border-gray-600"
+                  }`}
+                >
+                  OpenAI
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProvider("anthropic")}
+                  className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                    provider === "anthropic"
+                      ? "bg-orange-600 text-white"
+                      : "bg-gray-800 text-gray-400 hover:text-white border border-gray-600"
+                  }`}
+                >
+                  Anthropic (Claude)
+                </button>
+              </div>
+            </div>
+
             {/* Project Name */}
             <div>
-              <label className="block text-sm font-medium mb-3 text-gray-300">
-                Project Name
-              </label>
+              <label className="block text-sm font-medium mb-3 text-gray-300">Project Name</label>
               <input
                 type="text"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
-                placeholder="e.g., My Main Project, Test Environment"
+                placeholder="e.g., My Main Project, Client ABC"
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-white placeholder-gray-500 transition-all"
                 disabled={saving}
                 autoFocus
               />
             </div>
-            
-            {/* OpenAI API Key */}
+
+            {/* API Key */}
             <div>
               <label className="block text-sm font-medium mb-3 text-gray-300">
-                OpenAI API Key
+                {provider === "anthropic" ? "Anthropic API Key" : "OpenAI API Key"}
               </label>
               <div className="relative">
                 <input
                   type={showApiKey ? "text" : "password"}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-proj-..."
+                  placeholder={placeholder}
                   className="w-full px-4 py-3 pr-12 bg-gray-800 border border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-white placeholder-gray-500 transition-all font-mono"
                   disabled={saving}
                 />
@@ -158,24 +184,24 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
                 <Globe size={12} />
                 Get your API key from{" "}
                 <a
-                  href="https://platform.openai.com/api-keys"
+                  href={docUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1 font-medium"
                 >
-                  OpenAI Dashboard
+                  {docLabel}
                   <ExternalLink size={12} />
                 </a>
               </p>
             </div>
-            
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
+
+            {/* Buttons */}
+            <div className="flex gap-3 pt-2">
               <button
                 type="button"
                 onClick={handleClose}
                 disabled={saving}
-                className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-700 disabled:opacity-50 text-white rounded-lg transition-colors font-medium"
+                className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition-colors font-medium"
               >
                 Cancel
               </button>

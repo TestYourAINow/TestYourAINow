@@ -1191,7 +1191,7 @@ const ChatbotBuilder: React.FC = () => {
                     )}
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
                       {conversationDetailsLoading ? (
                         <div className="text-center text-gray-400 py-8">
                           <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -1245,7 +1245,7 @@ const ChatbotBuilder: React.FC = () => {
                 </div>
               ) : (
                 // Vue liste mobile
-                <div className="h-full overflow-y-auto">
+                <div className="h-full overflow-y-auto custom-scrollbar">
                   {/* Header liste mobile */}
                   <div className="p-3 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
                     <div className="flex items-center gap-2">
@@ -1372,7 +1372,7 @@ const ChatbotBuilder: React.FC = () => {
                     </div>
 
                     {/* Liste scrollable */}
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
                       {conversationsLoading ? (
                         <div className="p-8 text-center text-gray-400">
                           <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -1490,7 +1490,7 @@ const ChatbotBuilder: React.FC = () => {
                           )}
 
                           {/* Messages */}
-                          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
                             {conversationDetailsLoading ? (
                               <div className="text-center text-gray-400 py-8">
                                 <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>

@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Bot, ChevronRight, CheckCircle } from "lucide-react";
+import { ChevronRight, CheckCircle } from "lucide-react";
+import { Claude, OpenAI } from "@lobehub/icons";
 
 const modelOptions = [
+  // ── OpenAI ──────────────────────────────────────────────────
   {
     id: "gpt-4o",
     name: "GPT-4o",
+    provider: "openai" as const,
     description: "Multimodal model, excellent for complex tasks",
     badge: "Most Popular",
     badgeColor: "bg-blue-500",
@@ -18,6 +21,7 @@ const modelOptions = [
   {
     id: "gpt-4o-mini",
     name: "GPT-4o Mini",
+    provider: "openai" as const,
     description: "Fast and cost-effective multimodal model",
     badge: "Best Value",
     badgeColor: "bg-green-500",
@@ -25,10 +29,10 @@ const modelOptions = [
     outputPrice: 0.60,
     contextWindow: "128K",
   },
-  // 🆕 NOUVEAUX MODÈLES GPT-5
   {
     id: "gpt-5-nano",
     name: "GPT-5 Nano",
+    provider: "openai" as const,
     description: "Fastest, most cost-efficient version of GPT-5",
     badge: "New",
     badgeColor: "bg-purple-500",
@@ -39,6 +43,7 @@ const modelOptions = [
   {
     id: "gpt-5-mini",
     name: "GPT-5 Mini",
+    provider: "openai" as const,
     description: "A faster, cost-efficient version of GPT-5 for well-defined tasks",
     badge: "New",
     badgeColor: "bg-purple-500",
@@ -46,62 +51,60 @@ const modelOptions = [
     outputPrice: 2.00,
     contextWindow: "400K",
   },
-  // FIN NOUVEAUX MODÈLES GPT-5
+  // ── Anthropic Claude ────────────────────────────────────────
   {
-    id: "gpt-4-turbo",
-    name: "GPT-4 Turbo",
-    description: "Advanced reasoning with large context window",
-    badge: "",
-    badgeColor: "",
-    inputPrice: 10.00,
-    outputPrice: 30.00,
-    contextWindow: "128K",
+    id: "claude-sonnet-4-6",
+    name: "Claude Sonnet 4.6",
+    provider: "anthropic" as const,
+    description: "Fast and highly capable — best balance of speed and intelligence",
+    badge: "Most Popular",
+    badgeColor: "bg-orange-500",
+    inputPrice: 3.00,
+    outputPrice: 15.00,
+    contextWindow: "200K",
   },
   {
-    id: "gpt-4",
-    name: "GPT-4",
-    description: "High-intelligence standard model",
-    badge: "",
-    badgeColor: "",
-    inputPrice: 30.00,
-    outputPrice: 60.00,
-    contextWindow: "8K",
+    id: "claude-haiku-4-5-20251001",
+    name: "Claude Haiku 4.5",
+    provider: "anthropic" as const,
+    description: "Fastest and most cost-efficient Claude model",
+    badge: "Best Value",
+    badgeColor: "bg-green-500",
+    inputPrice: 0.80,
+    outputPrice: 4.00,
+    contextWindow: "200K",
   },
   {
-    id: "gpt-4-32k",
-    name: "GPT-4 32K",
-    description: "Extended context version of GPT-4",
-    badge: "",
-    badgeColor: "",
-    inputPrice: 60.00,
-    outputPrice: 120.00,
-    contextWindow: "32K",
-  },
-  {
-    id: "gpt-3.5-turbo",
-    name: "GPT-3.5 Turbo",
-    description: "Fast and efficient for most tasks",
-    badge: "",
-    badgeColor: "",
-    inputPrice: 0.50,
-    outputPrice: 1.50,
-    contextWindow: "16K",
+    id: "claude-opus-4-6",
+    name: "Claude Opus 4.6",
+    provider: "anthropic" as const,
+    description: "Most powerful Claude model for complex reasoning",
+    badge: "Most Powerful",
+    badgeColor: "bg-purple-500",
+    inputPrice: 15.00,
+    outputPrice: 75.00,
+    contextWindow: "200K",
   },
 ];
+
+export { modelOptions };
 
 interface AiModelDropdownProps {
   selectedModel: string;
   onModelSelect: (modelId: string) => void;
+  provider?: "openai" | "anthropic";
   disabled?: boolean;
   className?: string;
 }
 
-export default function AiModelDropdown({ 
-  selectedModel, 
+export default function AiModelDropdown({
+  selectedModel,
   onModelSelect,
+  provider,
   disabled = false,
   className = ""
 }: AiModelDropdownProps) {
+  const visibleModels = provider ? modelOptions.filter(m => m.provider === provider) : modelOptions;
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const [mounted, setMounted] = useState(false);
@@ -178,13 +181,23 @@ export default function AiModelDropdown({
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center shadow-lg">
-              <Bot className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center shadow-lg shrink-0">
+              {selectedModelData?.provider === 'anthropic'
+                ? <Claude.Color size={18} />
+                : <OpenAI size={18} style={{ color: 'white' }} />
+              }
             </div>
-            <div className="text-left">
-              <div className="font-medium">{selectedModelData?.name || 'Select Model'}</div>
-              {selectedModelData?.badge && (
-                <div className="text-xs text-gray-400">{selectedModelData.badge}</div>
+            <div className="text-left min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{selectedModelData?.name || 'Select Model'}</span>
+                {selectedModelData?.badge && (
+                  <span className={`px-2 py-0.5 text-xs rounded-full text-white shrink-0 ${selectedModelData.badgeColor}`}>
+                    {selectedModelData.badge}
+                  </span>
+                )}
+              </div>
+              {selectedModelData?.description && (
+                <div className="text-xs text-gray-400 truncate max-w-[220px]">{selectedModelData.description}</div>
               )}
             </div>
           </div>
@@ -195,7 +208,7 @@ export default function AiModelDropdown({
       {/* Portal Dropdown */}
       {mounted && showDropdown && !disabled && createPortal(
         <div 
-          className="fixed bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-[99999] max-h-80 overflow-y-auto animate-fade-in"
+          className="fixed bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-[99999] max-h-80 overflow-y-auto custom-scrollbar animate-fade-in"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -203,7 +216,13 @@ export default function AiModelDropdown({
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {modelOptions.map((model) => (
+          {/* OpenAI section */}
+          {visibleModels.some(m => m.provider === 'openai') && (
+            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-700/30">
+              OpenAI
+            </div>
+          )}
+          {visibleModels.filter(m => m.provider === 'openai').map((model) => (
             <button
               key={model.id}
               onClick={(e) => {
@@ -215,18 +234,58 @@ export default function AiModelDropdown({
                 selectedModel === model.id ? 'bg-blue-500/20 border-blue-500/30' : ''
               }`}
             >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded flex items-center justify-center">
-                  <Bot className="w-3 h-3 text-white" />
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 bg-gray-800 rounded flex items-center justify-center shrink-0">
+                  <OpenAI size={14} style={{ color: 'white' }} />
                 </div>
                 <span className="font-medium text-white">{model.name}</span>
                 {model.badge && (
-                  <span className={`px-2 py-1 text-xs rounded-full text-white ${model.badgeColor}`}>
+                  <span className={`px-2 py-0.5 text-xs rounded-full text-white ${model.badgeColor} shrink-0`}>
                     {model.badge}
                   </span>
                 )}
                 {selectedModel === model.id && (
-                  <CheckCircle className="w-4 h-4 text-blue-400 ml-auto" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 ml-auto shrink-0" />
+                )}
+              </div>
+              <p className="text-sm text-gray-400 mb-2">{model.description}</p>
+              <div className="flex items-center gap-4 text-xs text-gray-500">
+                <span>Input: ${model.inputPrice}/1M</span>
+                <span>Output: ${model.outputPrice}/1M</span>
+                <span>Context: {model.contextWindow}</span>
+              </div>
+            </button>
+          ))}
+          {/* Anthropic section */}
+          {visibleModels.some(m => m.provider === 'anthropic') && (
+            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-y border-gray-700/50 mt-1">
+              Anthropic Claude
+            </div>
+          )}
+          {visibleModels.filter(m => m.provider === 'anthropic').map((model) => (
+            <button
+              key={model.id}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSelect(model.id);
+              }}
+              className={`w-full p-4 text-left hover:bg-gray-800/50 transition-all border-b border-gray-700/30 last:border-b-0 ${
+                selectedModel === model.id ? 'bg-blue-500/20 border-blue-500/30' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 bg-gray-800 rounded flex items-center justify-center shrink-0">
+                  <Claude.Color size={14} />
+                </div>
+                <span className="font-medium text-white">{model.name}</span>
+                {model.badge && (
+                  <span className={`px-2 py-0.5 text-xs rounded-full text-white ${model.badgeColor} shrink-0`}>
+                    {model.badge}
+                  </span>
+                )}
+                {selectedModel === model.id && (
+                  <CheckCircle className="w-4 h-4 text-blue-400 ml-auto shrink-0" />
                 )}
               </div>
               <p className="text-sm text-gray-400 mb-2">{model.description}</p>

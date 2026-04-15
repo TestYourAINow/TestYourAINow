@@ -190,7 +190,7 @@ export default function ImportWebsiteModal({ isOpen, onClose, onImport }: Props)
                   <CheckCircle className="text-emerald-400 mt-0.5 flex-shrink-0" size={20} />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-emerald-200">Content imported successfully!</p>
-                    <div className="mt-3 p-3 bg-gray-800/60 rounded-lg text-xs text-gray-300 max-h-20 overflow-y-auto border border-gray-600/50 backdrop-blur-sm">
+                    <div className="mt-3 p-3 bg-gray-800/60 rounded-lg text-xs text-gray-300 max-h-20 overflow-y-auto custom-scrollbar border border-gray-600/50 backdrop-blur-sm">
                       {preview}
                     </div>
                   </div>

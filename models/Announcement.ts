@@ -1,9 +1,11 @@
-import mongoose, { Schema, model, models, Document } from 'mongoose';
+import { Schema, model, models, Document } from 'mongoose';
 
 export interface AnnouncementDocument extends Document {
   title: string;
   message: string;
   type: 'update' | 'feature' | 'maintenance' | 'info';
+  imageUrl?: string;
+  imageLayout?: 'banner' | 'thumbnail';
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -17,6 +19,8 @@ const AnnouncementSchema = new Schema<AnnouncementDocument>({
     enum: ['update', 'feature', 'maintenance', 'info'],
     default: 'update'
   },
+  imageUrl: { type: String, default: '' },
+  imageLayout: { type: String, enum: ['banner', 'thumbnail'], default: 'thumbnail' },
   isActive: { type: Boolean, default: true, index: true },
 }, { timestamps: true });
 

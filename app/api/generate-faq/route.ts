@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUserOpenAI } from "@/lib/openai";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { connectToDatabase } from "@/lib/db";
 import User from "@/models/User";
 import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
+import { getUserDefaultAIClient, callAI } from "@/lib/ai-client";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,10 +17,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    let openai: OpenAI;
+    let client: OpenAI | Anthropic;
+    let provider: "openai" | "anthropic";
+    let model: string;
 
-    // Si on reçoit un apiKey spécifique (ID d'une clé), l'utiliser
     if (apiKey && apiKey !== "user_api_key") {
+      // Specific key selected by ID
       const session = await getServerSession(authOptions);
       if (!session?.user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -27,31 +30,32 @@ export async function POST(req: NextRequest) {
 
       await connectToDatabase();
       const user = await User.findById(session.user.id);
-      
       if (!user) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
 
-      // Trouver l'API key spécifique par son ID
-      const selectedApiKey = user.apiKeys?.find((key: any) => key._id.toString() === apiKey);
-      
-      if (!selectedApiKey) {
-        return NextResponse.json({ 
-          error: "Selected API key not found. Please check your API key selection." 
-        }, { status: 400 });
+      const selectedKey = user.apiKeys?.find((key: any) => key._id.toString() === apiKey);
+      if (!selectedKey) {
+        return NextResponse.json(
+          { error: "Selected API key not found. Please check your API key selection." },
+          { status: 400 }
+        );
       }
 
-      // Créer l'instance OpenAI avec la clé spécifique
-      openai = new OpenAI({
-        apiKey: selectedApiKey.key,
-      });
+      provider = selectedKey.provider || "openai";
+      model = provider === "anthropic" ? "claude-haiku-4-5-20251001" : "gpt-4o";
+      client = provider === "anthropic"
+        ? new Anthropic({ apiKey: selectedKey.key })
+        : new OpenAI({ apiKey: selectedKey.key });
     } else {
-      // Fallback sur la clé par défaut
-      const { openai: defaultOpenai, error } = await createUserOpenAI();
-      if (!defaultOpenai) {
-        return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
+      // User's default key
+      const result = await getUserDefaultAIClient();
+      if (!result.client) {
+        return NextResponse.json({ error: result.error }, { status: result.error === "Unauthorized" ? 401 : 400 });
       }
-      openai = defaultOpenai;
+      client = result.client;
+      provider = result.provider;
+      model = result.model;
     }
 
     const userPrompt = `
@@ -77,25 +81,19 @@ Here is the content to use:
 ${content}
 `;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: userPrompt }],
-      temperature: 0.3,
-    });
-
-    const output = completion.choices[0]?.message?.content || "";
+    const output = await callAI(client, provider, model, [{ role: "user", content: userPrompt }], { temperature: 0.3 });
 
     return NextResponse.json({ faq: output });
   } catch (error: any) {
     console.error("FAQ generation error:", error);
-    
-    if (error.status === 401 || error.code === 'invalid_api_key') {
+
+    if (error.status === 401 || error.code === "invalid_api_key") {
       return NextResponse.json(
-        { error: "Invalid OpenAI API key. Please check your selected API key." },
+        { error: "Invalid API key. Please check your selected API key." },
         { status: 400 }
       );
     }
-    
+
     return NextResponse.json(
       { error: "Something went wrong while generating the FAQ." },
       { status: 500 }

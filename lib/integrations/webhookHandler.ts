@@ -37,11 +37,13 @@ function getYesterdayInTimezone(timezone: string): string {
 }
 
 // 🔥 FONCTION PRINCIPALE - GESTION DES WEBHOOKS
+// Simple AI call type — messages in, text out
+type AICallFn = (messages: { role: "user" | "assistant" | "system"; content: string }[], temperature?: number) => Promise<string>;
+
 export async function handleWebhookIntegration(
   userMessage: string,
   integrations: any[],
-  openai: any,
-  agentModel: string,
+  aiCall: AICallFn,
   userTimezone: string = 'UTC',
   conversationHistory: any[] = []
 ): Promise<string | null> {
@@ -76,25 +78,15 @@ ${historyContext}Look at the full conversation. If the user has been progressive
 console.log(`📋 [WEBHOOK] System prompt:`, systemPrompt);
 console.log(`📋 [WEBHOOK] User message:`, userMessage);
 
-const shouldTriggerRes = await openai.chat.completions.create({
-  model: agentModel,
-  temperature: 0,
-  messages: [
-    {
-      role: "system",
-      content: systemPrompt
-    },
-    {
-      role: "user",
-      content: userMessage
-    }
-  ]
-});
+const shouldTriggerText = await aiCall([
+  { role: "system", content: systemPrompt },
+  { role: "user", content: userMessage }
+], 0);
 
-      const shouldTrigger = shouldTriggerRes.choices[0]?.message?.content?.toLowerCase().trim() === 'true';
+      const shouldTrigger = shouldTriggerText.toLowerCase().trim() === 'true';
 
-console.log(`🎯 [WEBHOOK] shouldTrigger result: "${shouldTriggerRes.choices[0]?.message?.content}"`);
-      
+console.log(`🎯 [WEBHOOK] shouldTrigger result: "${shouldTriggerText}"`);
+
       if (!shouldTrigger) {
         console.log(`⏭️ [WEBHOOK] ${integration.name} not triggered - no matching intent`);
         continue;
@@ -104,18 +96,15 @@ console.log(`🎯 [WEBHOOK] shouldTrigger result: "${shouldTriggerRes.choices[0]
 
       // 2️⃣ Extraire les données nécessaires
       console.log(`📊 [WEBHOOK] Extracting data for ${integration.name}...`);
-      
+
       // 🔥 CALCUL DES DATES DANS LE TIMEZONE UTILISATEUR
       const todayStr = getDateInTimezone(userTimezone);
       const tomorrowStr = getTomorrowInTimezone(userTimezone);
       const yesterdayStr = getYesterdayInTimezone(userTimezone);
-      
+
       console.log(`📅 [DATES] Timezone: ${userTimezone}, Today: ${todayStr}, Tomorrow: ${tomorrowStr}`);
-      
-      const extractRes = await openai.chat.completions.create({
-        model: agentModel,
-        temperature: 0,
-        messages: [
+
+      const rawResponse = await aiCall([
           {
             role: "system",
             content: `You MUST respond with ONLY valid JSON. No explanations, no markdown, no extra text.
@@ -149,7 +138,7 @@ Response format (copy exactly):
 If missing data:
 {"hasAllData": false, "missing": ["field1", "field2"]}`
           },
-         ...conversationHistory.map((m: any) => ({  // ← ajoute les 3 points
+         ...conversationHistory.map((m: any) => ({
     role: m.role as "user" | "assistant",
     content: m.content
   })),
@@ -157,10 +146,7 @@ If missing data:
             role: "user",
             content: userMessage
           }
-        ]
-      });
-
-      const rawResponse = extractRes.choices[0]?.message?.content?.trim() || '';
+        ], 0);
       console.log(`📝 [WEBHOOK] Raw AI response:`, rawResponse.substring(0, 200));
 
       let extractedData;
@@ -188,10 +174,7 @@ If missing data:
       if (!extractedData.hasAllData) {
         console.log(`❌ [WEBHOOK] Missing data for ${integration.name}:`, extractedData);
         
-        const missingFieldsRes = await openai.chat.completions.create({
-          model: agentModel,
-          temperature: 0.3,
-          messages: [
+        const missingFieldsText = await aiCall([
             {
               role: "system",
               content: `The user wants to use the "${integration.name}" feature but some required information is missing.
@@ -205,10 +188,9 @@ Ask the user politely to provide the missing information. Be specific about what
               role: "user",
               content: userMessage
             }
-          ]
-        });
+          ], 0.3);
 
-        return missingFieldsRes.choices[0]?.message?.content || "I need more information to proceed with this request.";
+        return missingFieldsText || "I need more information to proceed with this request.";
       }
 
       // 3️⃣ Envoyer le webhook
@@ -246,10 +228,7 @@ Ask the user politely to provide the missing information. Be specific about what
       // 4️⃣ Générer la réponse
       console.log(`🤖 [WEBHOOK] Generating AI response with webhook data...`);
       
-      const confirmationRes = await openai.chat.completions.create({
-        model: agentModel,
-        temperature: 0.3,
-        messages: [
+      const response = await aiCall([
           {
             role: "system",
             content: `The webhook "${integration.name}" was ${webhookSuccess ? 'successfully' : 'unsuccessfully'} triggered.
@@ -271,10 +250,7 @@ Generate a natural, friendly response to inform the user.`
             role: "user",
             content: userMessage
           }
-        ]
-      });
-
-      const response = confirmationRes.choices[0]?.message?.content;
+        ], 0.3);
       
       if (response) {
         console.log(`✅ [WEBHOOK] ${integration.name} processed successfully`);

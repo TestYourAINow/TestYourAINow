@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { Agent } from "@/models/Agent";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { createAgentOpenAI } from "@/lib/openai";
+import { getUserDefaultAIClient, callAI } from "@/lib/ai-client";
 import { diffWords } from "diff";
 
 // 🆕 FONCTION HELPER POUR LA DATE LOCALISÉE
@@ -72,10 +72,9 @@ export async function POST(
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
-    // 🔧 CHANGEMENT PRINCIPAL - Utiliser la clé spécifique de l'agent
-    const { openai, error } = await createAgentOpenAI(agent);
-    
-    if (!openai) {
+    const { client: aiClient, provider: aiProvider, model: aiModel, error } = await getUserDefaultAIClient();
+
+    if (!aiClient) {
       return NextResponse.json({ error }, { status: error === "Unauthorized" ? 401 : 400 });
     }
 
@@ -120,22 +119,13 @@ Expected output format:
 }
 `;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      temperature: 0.3,
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: `Current Prompt:\n${prompt}\n\nUser Instruction:\n${instruction}`,
-        },
-      ],
-    });
-
-    const aiReply = completion.choices[0].message.content;
+    const aiReply = await callAI(aiClient, aiProvider, aiModel, [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: `Current Prompt:\n${prompt}\n\nUser Instruction:\n${instruction}` },
+    ], { temperature: 0.3 });
 
     try {
-      const cleanReply = aiReply?.replace(/```json|```/g, "").trim();
+      const cleanReply = aiReply.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(cleanReply || "{}");
 
       const { summary, updatedPrompt } = parsed;
