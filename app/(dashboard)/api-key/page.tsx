@@ -149,10 +149,10 @@ if (initialLoading || !session) {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-6">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-600 to-red-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-orange-600/20">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-600/20">
                   <Key className="text-white" size={28} />
                 </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-orange-400 rounded-full flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                   <Lock className="text-white" size={12} />
                 </div>
               </div>

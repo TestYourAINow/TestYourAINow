@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Key, Eye, EyeOff, Globe, ExternalLink, RefreshCw } from "lucide-react";
+import { Claude, OpenAI } from "@lobehub/icons";
 import { toast } from "react-hot-toast";
 
 interface AddApiKeyModalProps {
@@ -103,7 +104,7 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-600 rounded-lg">
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg">
                 <Key className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-xl font-bold text-white">Add New API Key</h3>
@@ -121,24 +122,26 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
                 <button
                   type="button"
                   onClick={() => setProvider("openai")}
-                  className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                  className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
                     provider === "openai"
-                      ? "bg-emerald-600 text-white"
-                      : "bg-gray-800 text-gray-400 hover:text-white border border-gray-600"
+                      ? "bg-gray-700 text-white border border-gray-500"
+                      : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"
                   }`}
                 >
+                  <OpenAI size={16} style={{ color: "white" }} />
                   OpenAI
                 </button>
                 <button
                   type="button"
                   onClick={() => setProvider("anthropic")}
-                  className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                  className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
                     provider === "anthropic"
-                      ? "bg-orange-600 text-white"
-                      : "bg-gray-800 text-gray-400 hover:text-white border border-gray-600"
+                      ? "bg-gray-700 text-white border border-gray-500"
+                      : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"
                   }`}
                 >
-                  Anthropic (Claude)
+                  <Claude.Color size={16} />
+                  Anthropic
                 </button>
               </div>
             </div>
@@ -151,7 +154,7 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 placeholder="e.g., My Main Project, Client ABC"
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-white placeholder-gray-500 transition-all"
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-white placeholder-gray-500 transition-all"
                 disabled={saving}
                 autoFocus
               />
@@ -168,7 +171,7 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder={placeholder}
-                  className="w-full px-4 py-3 pr-12 bg-gray-800 border border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-white placeholder-gray-500 transition-all font-mono"
+                  className="w-full px-4 py-3 pr-12 bg-gray-800 border border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-white placeholder-gray-500 transition-all font-mono"
                   disabled={saving}
                 />
                 <button
@@ -208,7 +211,7 @@ export default function AddApiKeyModal({ isOpen, onClose, onApiKeyAdded }: AddAp
               <button
                 type="submit"
                 disabled={!apiKey.trim() || !projectName.trim() || saving}
-                className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
               >
                 {saving ? (
                   <>
