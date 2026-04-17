@@ -166,7 +166,7 @@ export default function Home() {
       {/* 🆕 STICKY DISCOUNT BADGE - VERSION AMÉLIORÉE */}
       <div className="fixed bottom-6 right-6 z-50 animate-bounce-gentle">
         <a
-          href="/signup"
+          href="/subscribe"
           className="group relative flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-5 py-3.5 rounded-full shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-110 border border-blue-500/30 overflow-hidden"
         >
           {/* Effet shimmer au hover */}
@@ -228,7 +228,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
 
               <Wrench size={20} className="relative z-10 group-hover:rotate-12 transition-transform duration-300 sm:w-6 sm:h-6" />
-              <span className="relative z-10">{session ? "Go to Dashboard" : "Start Building"}</span>
+              <span className="relative z-10">{session ? "Go to Dashboard" : "Start Building for Free"}</span>
               <ArrowRight size={20} className="relative z-10 group-hover:translate-x-1 transition-transform duration-300 sm:w-6 sm:h-6" />
             </Link>
 

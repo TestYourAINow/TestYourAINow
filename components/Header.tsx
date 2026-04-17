@@ -61,7 +61,7 @@ export default function Header() {
   }, []);
 
   // Loading state pendant que NextAuth vérifie la session
-  if (!isClient || status === "loading") {
+  if (!isClient || (status === "loading" && !session)) {
     return (
       <header className="fixed top-0 left-0 w-full z-50 backdrop-blur-xl bg-[#0A0A0B]/90 text-white border-b border-gray-700/30">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
