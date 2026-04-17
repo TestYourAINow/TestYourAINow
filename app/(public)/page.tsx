@@ -28,7 +28,7 @@ interface FeatureCarouselProps {
 export default function Home() {
   const { data: session, status } = useSession();
   const isSubscribed = session?.user?.isSubscribed;
-  const redirectUrl = session ? "/dashboard" : "/signup";
+  const redirectUrl = session ? "/dashboard" : "/subscribe";
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -121,15 +121,15 @@ export default function Home() {
 
   // CTA text configuration
   const ctaText = !session
-    ? "Get 50% off"
+    ? "Start Free Trial"
     : isSubscribed
       ? "Go to Dashboard"
-      : "Activate your access";
+      : "Start Free Trial";
 
   const showLink = !session || isSubscribed;
 
   const ctaLink = !session
-    ? "/signup?"
+    ? "/subscribe"
     : isSubscribed
       ? "/dashboard"
       : "#";
@@ -166,22 +166,16 @@ export default function Home() {
       {/* 🆕 STICKY DISCOUNT BADGE - VERSION AMÉLIORÉE */}
       <div className="fixed bottom-6 right-6 z-50 animate-bounce-gentle">
         <a
-          href="#pricing"
-          onClick={(e) => {
-            e.preventDefault();
-            document.getElementById('pricing')?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start'
-            });
-          }}
+          href="/signup"
           className="group relative flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-5 py-3.5 rounded-full shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-110 border border-blue-500/30 overflow-hidden"
         >
           {/* Effet shimmer au hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
 
           {/* Contenu */}
-          <span className="relative z-10 text-sm font-bold">🔥 50% OFF</span>
+          <span className="relative z-10 text-sm font-bold">🔥 Try it for FREE!</span>
           <ArrowRight className="relative z-10 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+
         </a>
       </div>
 
@@ -269,7 +263,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
-              <span>50% Off for Early Users</span>
+              <span>7-Day Free Trial</span>
             </div>
           </div>
         </div>
@@ -695,7 +689,7 @@ export default function Home() {
             <span className="bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 bg-clip-text text-transparent">
               50% off
             </span>{" "}
-            for the first 3 months!
+            for the first 3 months after your Free Trial!
           </h1>
 
           <p className="text-gray-300 text-lg sm:text-xl mb-12 sm:mb-16 px-4">
@@ -740,74 +734,31 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Features list - GROUPED VERSION */}
-                <div className="space-y-6 mb-8 sm:mb-10">
-
-                  {/* Core Features */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-1 h-4 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full"></div>
-                      <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider">Core Features</h4>
+                {/* Features list */}
+                <div className="space-y-3 mb-8 sm:mb-10">
+                  {[
+                    "Unlimited AI Builds",
+                    "Advanced Prompt Testing",
+                    "AI Agent Templates",
+                    "Demo Sharing",
+                    "Custom Branding",
+                    "Widget Embeds",
+                    "Multi-Platform Deployment",
+                    "Priority Support",
+                  ].map((feature, i) => (
+                    <div key={i} className="flex items-center gap-3 sm:gap-4 group">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                      </div>
+                      <span className="text-gray-300 text-base sm:text-lg group-hover:text-white transition-colors">{feature}</span>
                     </div>
-                    <div className="space-y-3 pl-3">
-                      {[
-                        "Unlimited AI Builds",
-                        "Advanced Prompt Testing",
-                        "AI Agent Templates",
-                      ].map((feature, i) => (
-                        <div key={i} className="flex items-center gap-3 sm:gap-4 group">
-                          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                          </div>
-                          <span className="text-gray-300 text-base sm:text-lg group-hover:text-white transition-colors">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Collaboration */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-purple-500 rounded-full"></div>
-                      <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider">Collaboration</h4>
-                    </div>
-                    <div className="space-y-3 pl-3">
-                      {[
-                        "Demo Sharing",
-                        "Custom Branding",
-                      ].map((feature, i) => (
-                        <div key={i} className="flex items-center gap-3 sm:gap-4 group">
-                          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                          </div>
-                          <span className="text-gray-300 text-base sm:text-lg group-hover:text-white transition-colors">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Deployment */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-1 h-4 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></div>
-                      <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider">Deployment</h4>
-                    </div>
-                    <div className="space-y-3 pl-3">
-                      {[
-                        "Widget Embeds",
-                        "Multi-Platform Deployment",
-                      ].map((feature, i) => (
-                        <div key={i} className="flex items-center gap-3 sm:gap-4 group">
-                          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                          </div>
-                          <span className="text-gray-300 text-base sm:text-lg group-hover:text-white transition-colors">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
+                  ))}
                 </div>
+
+                {/* Trial mention */}
+                <p className="text-center text-sm text-emerald-400 font-medium mb-4">
+                  Start with a 7-day free trial, then 50% off for 3 months
+                </p>
 
                 {/* CTA Button - responsive */}
                 {showLink ? (
@@ -853,14 +804,6 @@ export default function Home() {
       >
         <div className="max-w-4xl mx-auto">
 
-          {/* 🆕 Urgency Badge */}
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600/20 to-orange-600/20 border border-red-500/40 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-4 sm:mb-6 backdrop-blur-xl animate-pulse">
-            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
-            <span className="text-red-400 text-xs sm:text-sm font-semibold">
-              Limited Time: 50% Off Ending Soon
-            </span>
-          </div>
-
           {/* Section badge */}
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-6 sm:mb-8 backdrop-blur-xl">
             <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
@@ -896,7 +839,7 @@ export default function Home() {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
 
-            <span className="relative z-10">{session ? "Go to Dashboard" : "Get Started"}</span>
+            <span className="relative z-10 text-xl sm:text-2xl">{session ? "Go to Dashboard" : "Get Started"}</span>
             <ArrowRight size={20} className="relative z-10 group-hover:translate-x-1 transition-transform duration-300 sm:w-6 sm:h-6" />
           </Link>
 

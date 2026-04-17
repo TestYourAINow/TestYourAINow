@@ -4,11 +4,12 @@
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { useState } from "react"
-import { CreditCard, RotateCcw, ArrowLeft, Loader2, CheckCircle, Zap, Shield, Users, Globe, Palette, Bot, Settings } from "lucide-react"
+import { CreditCard, ArrowLeft, Loader2, CheckCircle, Zap, Shield, Users, Globe, Palette, Bot, Settings, Gift } from "lucide-react"
 
 export default function SubscribePage() {
   const { data: session } = useSession()
   const [isLoading, setIsLoading] = useState(false)
+  const trialUsed = session?.user?.trialUsed ?? false
 
   const handleSubscribe = async () => {
     if (!session?.user?.email) return
@@ -122,11 +123,17 @@ export default function SubscribePage() {
             {/* Main Message */}
             <div className="space-y-4">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500/20 to-cyan-400/20 rounded-full border border-blue-500/30">
-                <CreditCard size={40} className="text-blue-400" />
+                {trialUsed ? <CreditCard size={40} className="text-blue-400" /> : <Gift size={40} className="text-cyan-400" />}
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Complete Your Subscription</h2>
-                <p className="text-gray-300">You need an active subscription to get Full Access to TestYourAI Now.</p>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {trialUsed ? "Complete Your Subscription" : "Try TestYourAI Free for 7 Days"}
+                </h2>
+                <p className="text-gray-300">
+                  {trialUsed
+                    ? "You need an active subscription to get Full Access to TestYourAI Now."
+                    : "Get started free - no limits, no pressure."}
+                </p>
               </div>
             </div>
 
@@ -149,6 +156,15 @@ export default function SubscribePage() {
                       </div>
                     </div>
                   ))}
+                  <div className="flex items-start gap-3 text-gray-300 pt-2 border-t border-gray-700/50">
+                    <div className="text-emerald-400 mt-0.5">
+                      <Gift className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-white">50% Off for 3 Months</div>
+                      <div className="text-sm text-gray-400">Use code <span className="text-emerald-400 font-semibold">3MONTHS50</span> at checkout to get 3 months at 50% after your Free Trial</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -156,27 +172,33 @@ export default function SubscribePage() {
             {/* Action Buttons */}
             <div className="space-y-4">
               {session ? (
-                <button
-                  onClick={handleSubscribe}
-                  disabled={isLoading}
-                  className="w-full group relative px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed overflow-hidden"
-                >
-                  {/* Shimmer Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                  <div className="relative flex items-center justify-center gap-2">
-                    {isLoading ? (
-                      <>
-                        <Loader2 size={20} className="animate-spin" />
-                        <span>Starting Checkout...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard size={20} />
-                        <span>Subscribe Now</span>
-                      </>
-                    )}
-                  </div>
-                </button>
+                <>
+                  <button
+                    onClick={handleSubscribe}
+                    disabled={isLoading}
+                    className="w-full group relative px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    <div className="relative flex items-center justify-center gap-2">
+                      {isLoading ? (
+                        <>
+                          <Loader2 size={20} className="animate-spin" />
+                          <span>Starting Checkout...</span>
+                        </>
+                      ) : trialUsed ? (
+                        <>
+                          <CreditCard size={20} />
+                          <span>Subscribe Now - $39/month</span>
+                        </>
+                      ) : (
+                        <>
+                          <Gift size={20} />
+                          <span>Start Free Trial</span>
+                        </>
+                      )}
+                    </div>
+                  </button>
+                </>
               ) : (
                 <Link
                   href="/signup"
@@ -185,8 +207,8 @@ export default function SubscribePage() {
                   {/* Shimmer Effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   <div className="relative flex items-center gap-2">
-                    <CreditCard size={20} />
-                    <span>Get Started</span>
+                    <Gift size={20} />
+                    <span>Start Free Trial</span>
                   </div>
                 </Link>
               )}

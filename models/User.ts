@@ -14,6 +14,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   username: { type: String, required: true, unique: true },
   isSubscribed: { type: Boolean, default: false },
+  trialUsed: { type: Boolean, default: false },
   stripeCustomerId: { type: String },
   subscriptionDate: { type: Date },
   apiKeys: [ApiKeySchema], // 👈 NOUVEAU : Array d'API keys

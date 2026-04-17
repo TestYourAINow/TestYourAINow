@@ -8,6 +8,7 @@ declare module "next-auth" {
       email: string;
       name?: string;
       isSubscribed: boolean;
+      trialUsed?: boolean;
       stripeCustomerId?: string;
       openaiApiKey: string;
       profileImage: string | null;

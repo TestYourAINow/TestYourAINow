@@ -279,7 +279,7 @@ export default function SignupPage() {
           <h1 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
             Create your account
           </h1>
-          <p className="text-gray-400 text-lg">Start building AI agents today</p>
+          <p className="text-gray-400 text-lg">Your 7-day free trial starts right after signup</p>
         </div>
 
         {/* Registration Form */}
@@ -528,7 +528,7 @@ export default function SignupPage() {
               ) : (
                 <>
                   <UserPlus size={20} />
-                  <span>Create Account</span>
+                  <span>Create Account - Start Free Trial</span>
                 </>
               )}
             </div>

@@ -58,6 +58,8 @@ export async function POST(request: Request) {
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
+    const trialEligible = !user.trialUsed;
+
     console.log("Creating checkout session");
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -68,6 +70,9 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
+      ...(trialEligible && {
+        subscription_data: { trial_period_days: 7 },
+      }),
       allow_promotion_codes: true,
       automatic_tax: { enabled: true },
       billing_address_collection: 'required',

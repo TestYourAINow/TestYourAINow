@@ -90,6 +90,7 @@ export const authOptions: NextAuthOptions = {
         email: token.email as string,
         name: dbUser?.username || token.name as string,
         isSubscribed: dbUser?.isSubscribed ?? false,
+        trialUsed: dbUser?.trialUsed ?? false,
         stripeCustomerId: dbUser?.stripeCustomerId ?? "",
         openaiApiKey: dbUser?.openaiApiKey ?? "",
         profileImage: dbUser?.profileImage ?? null,

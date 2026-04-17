@@ -54,8 +54,9 @@ export async function POST(req: NextRequest) {
         // Mise à jour de l'utilisateur
         const updatedUser = await User.findOneAndUpdate(
           { email },
-          { 
+          {
             isSubscribed: true,
+            trialUsed: true,
             stripeCustomerId: session.customer,
             subscriptionDate: new Date()
           },
