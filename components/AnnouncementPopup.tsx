@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, ArrowLeft, ArrowRight } from 'lucide-react';
+import { X, ArrowLeft, ArrowRight, Maximize2, Minimize2 } from 'lucide-react';
 
 type Announcement = {
   _id: string;
@@ -40,6 +40,7 @@ export default function AnnouncementPopup(props: Props) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [current, setCurrent] = useState(0);
   const [visible, setVisible] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const isPreview = props.preview === true;
 
@@ -129,7 +130,7 @@ export default function AnnouncementPopup(props: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-md h-[500px] max-h-[90vh] bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl flex flex-col">
+      <div className={`relative w-full bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl flex flex-col transition-all duration-300 ${expanded ? 'max-w-3xl h-[90vh]' : 'max-w-md h-[500px] max-h-[90vh]'}`}>
 
         {/* Header */}
         <div className="px-6 pt-5 pb-4 shrink-0">
@@ -146,6 +147,9 @@ export default function AnnouncementPopup(props: Props) {
               {total > 1 && (
                 <span className="text-gray-500 text-xs">{current + 1} / {total}</span>
               )}
+              <button onClick={() => setExpanded(e => !e)} className="text-gray-500 hover:text-white transition-colors">
+                {expanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              </button>
               <button onClick={handleClose} className="text-gray-500 hover:text-white transition-colors">
                 <X className="w-4 h-4" />
               </button>
