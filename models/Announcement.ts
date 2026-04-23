@@ -7,6 +7,8 @@ export interface AnnouncementDocument extends Document {
   imageUrl?: string;
   imageLayout?: 'banner' | 'thumbnail';
   isActive: boolean;
+  status: 'draft' | 'published';
+  publishedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +24,8 @@ const AnnouncementSchema = new Schema<AnnouncementDocument>({
   imageUrl: { type: String, default: '' },
   imageLayout: { type: String, enum: ['banner', 'thumbnail'], default: 'thumbnail' },
   isActive: { type: Boolean, default: true, index: true },
+  status: { type: String, enum: ['draft', 'published'], default: 'published', index: true },
+  publishedAt: { type: Date, default: null },
 }, { timestamps: true });
 
 export const Announcement = models.Announcement || model<AnnouncementDocument>('Announcement', AnnouncementSchema);

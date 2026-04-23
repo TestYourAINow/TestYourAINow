@@ -111,6 +111,9 @@ const ConnectionSchema = new Schema({
     createdAt: { type: Date, default: Date.now }
   }],
   
+  // Whether this connection's usage counts toward the agent's global limit
+  countsTowardGlobalLimit: { type: Boolean, default: false },
+
   createdAt: { type: Date, default: Date.now },
 })
 

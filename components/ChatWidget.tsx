@@ -317,6 +317,7 @@ export default function ChatWidget({ config, isPreview = false }: ChatWidgetProp
         'x-widget-id': config._id,
         'x-widget-token': 'public'
       };
+      if (isPreview) headers['x-preview'] = 'true';
 
       const response = await fetch(`/api/agents/${config.selectedAgent}/ask`, {
         method: 'POST',

@@ -17,11 +17,26 @@ export interface AgentDocument extends Document {
   temperature: number;
   top_p: number;
   finalPrompt?: string;
-  rawPrompt?: string; // 🆕 NOUVEAU CHAMP AJOUTÉ
-  
-  // 🆕 NOUVEAU CHAMP - SÉCURITAIRE
-  isDeployed?: boolean; // Optionnel pour ne pas casser l'existant
-  
+  rawPrompt?: string;
+  isDeployed?: boolean;
+
+  // Global usage limit (agent-level, applies across all connections)
+  globalLimitEnabled?: boolean;
+  globalMessageLimit?: number;
+  globalPeriodDays?: number;
+  globalPeriodStartDate?: Date;
+  globalPeriodEndDate?: Date;
+  globalAllowOverage?: boolean;
+  globalLimitReachedMessage?: string;
+  globalShowLimitMessage?: boolean;
+  agentUsageHistory?: {
+    periodStart: Date;
+    periodEnd: Date;
+    totalMessages: number;
+    periodDays: number;
+    note?: string;
+  }[];
+
   integrations?: {
     type: string;
     name: string;
@@ -63,12 +78,27 @@ const AgentSchema = new Schema<AgentDocument>(
     finalPrompt: { type: String },
     rawPrompt: { type: String }, // 🆕 NOUVEAU CHAMP AJOUTÉ
     
-    // 🆕 NOUVEAU CHAMP - SÉCURITAIRE
-    isDeployed: { 
-      type: Boolean, 
-      default: false // Défaut à false pour tous les agents existants
-    },
-    
+    isDeployed: { type: Boolean, default: false },
+
+    // Global usage limit fields
+    globalLimitEnabled: { type: Boolean, default: false },
+    globalMessageLimit: { type: Number, default: null },
+    globalPeriodDays: { type: Number, default: 30, enum: [30, 90, 365] },
+    globalPeriodStartDate: { type: Date, default: null },
+    globalPeriodEndDate: { type: Date, default: null },
+    globalAllowOverage: { type: Boolean, default: false },
+    globalLimitReachedMessage: { type: String, default: 'Monthly message limit reached. Please contact support to upgrade your plan.' },
+    globalShowLimitMessage: { type: Boolean, default: true },
+    agentUsageHistory: [
+      {
+        periodStart: Date,
+        periodEnd: Date,
+        totalMessages: { type: Number, default: 0 },
+        periodDays: Number,
+        note: { type: String, default: null },
+      },
+    ],
+
     integrations: [
       {
         type: {

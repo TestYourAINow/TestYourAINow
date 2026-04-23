@@ -52,6 +52,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     if (pathname === '/agent-lab') return 'Agent Lab';
     if (pathname === '/demo-agent') return 'Demo Agent';
     if (pathname === '/launch-agent') return 'Launch Agent';
+    if (pathname === '/usage-limits') return 'Usage Limits';
     if (pathname === '/api-key') return 'API Key';
     if (pathname === '/video-guides') return 'Video Guides';
     if (pathname === '/support') return 'Support';

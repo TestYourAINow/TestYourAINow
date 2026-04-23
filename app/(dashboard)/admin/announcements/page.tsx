@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Plus, Trash2, Megaphone, ArrowLeft, Eye, ImageIcon, X } from 'lucide-react';
+import { Plus, Trash2, Megaphone, ArrowLeft, Eye, ImageIcon, X, Send } from 'lucide-react';
 import AnnouncementPopup from '@/components/AnnouncementPopup';
 import RichTextEditor from '@/components/RichTextEditor';
 
@@ -19,6 +19,8 @@ interface Announcement {
   imageUrl?: string;
   imageLayout?: 'banner' | 'thumbnail';
   isActive: boolean;
+  status: 'draft' | 'published';
+  publishedAt?: string | null;
   createdAt: string;
 }
 
@@ -40,6 +42,7 @@ export default function AdminAnnouncementsPage() {
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ title: '', message: '', type: 'update' as AnnouncementType, imageLayout: 'thumbnail' as 'banner' | 'thumbnail' });
   const [showForm, setShowForm] = useState(false);
+  const [editingDraft, setEditingDraft] = useState<Announcement | null>(null);
 
   // Image upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,7 +111,7 @@ export default function AdminAnnouncementsPage() {
     }
   };
 
-  const handleCreate = async () => {
+  const handleCreate = async (status: 'published' | 'draft') => {
     if (!form.title.trim() || !form.message.trim()) {
       toast.error('Title and message are required');
       return;
@@ -123,7 +126,7 @@ export default function AdminAnnouncementsPage() {
       const res = await fetch('/api/admin/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, imageUrl, imageLayout: form.imageLayout }),
+        body: JSON.stringify({ ...form, imageUrl, imageLayout: form.imageLayout, status }),
       });
       const data = await res.json();
       if (data.success) {
@@ -131,10 +134,53 @@ export default function AdminAnnouncementsPage() {
         setForm({ title: '', message: '', type: 'update', imageLayout: 'thumbnail' });
         removeImage();
         setShowForm(false);
-        toast.success('Announcement created');
+        toast.success(status === 'draft' ? 'Draft saved' : 'Announcement published');
       }
     } catch {
       toast.error('Failed to create announcement');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleOpenEditDraft = (ann: Announcement) => {
+    setEditingDraft(ann);
+    setForm({ title: ann.title, message: ann.message, type: ann.type, imageLayout: ann.imageLayout || 'thumbnail' });
+    if (ann.imageUrl) setImagePreviewUrl(ann.imageUrl);
+    setShowForm(true);
+  };
+
+  const handleUpdateDraft = async (status: 'draft' | 'published') => {
+    if (!editingDraft) return;
+    if (!form.title.trim() || !form.message.trim()) {
+      toast.error('Title and message are required');
+      return;
+    }
+    setCreating(true);
+    try {
+      let imageUrl = editingDraft.imageUrl || '';
+      if (imageFile) imageUrl = await uploadImage();
+
+      const res = await fetch('/api/admin/announcements', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingDraft._id,
+          publish: status === 'published',
+          update: { title: form.title.trim(), message: form.message.trim(), type: form.type, imageUrl, imageLayout: form.imageLayout },
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAnnouncements(prev => prev.map(a => a._id === editingDraft._id ? data.announcement : a));
+        setEditingDraft(null);
+        setForm({ title: '', message: '', type: 'update', imageLayout: 'thumbnail' });
+        removeImage();
+        setShowForm(false);
+        toast.success(status === 'published' ? 'Draft published' : 'Draft updated');
+      }
+    } catch {
+      toast.error('Failed to update draft');
     } finally {
       setCreating(false);
     }
@@ -180,6 +226,8 @@ export default function AdminAnnouncementsPage() {
     imageUrl: imagePreviewUrl || '',
     imageLayout: form.imageLayout,
     isActive: true,
+    status: 'published' as const,
+    publishedAt: null,
     createdAt: new Date().toISOString(),
   };
 
@@ -227,7 +275,7 @@ export default function AdminAnnouncementsPage() {
         {/* Create Form */}
         {showForm && (
           <div className="bg-gray-900/80 border border-gray-700/50 rounded-2xl p-6 mb-6">
-            <h2 className="text-white font-semibold mb-4">New Announcement</h2>
+            <h2 className="text-white font-semibold mb-4">{editingDraft ? 'Edit Draft' : 'New Announcement'}</h2>
 
             <div className="space-y-4">
               {/* Type */}
@@ -327,7 +375,7 @@ export default function AdminAnnouncementsPage() {
 
               <div className="flex gap-3 justify-end">
                 <button
-                  onClick={() => setShowForm(false)}
+                  onClick={() => { setShowForm(false); setEditingDraft(null); setForm({ title: '', message: '', type: 'update', imageLayout: 'thumbnail' }); removeImage(); }}
                   className="px-4 py-2 text-gray-400 hover:text-white text-sm transition-colors"
                 >
                   Cancel
@@ -340,11 +388,19 @@ export default function AdminAnnouncementsPage() {
                   Preview
                 </button>
                 <button
-                  onClick={handleCreate}
+                  onClick={() => editingDraft ? handleUpdateDraft('draft') : handleCreate('draft')}
                   disabled={creating || uploading}
-                  className="px-5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-all"
+                  className="px-4 py-2 border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white rounded-xl text-sm font-medium transition-all disabled:opacity-50"
                 >
-                  {creating || uploading ? 'Creating...' : 'Create'}
+                  {creating || uploading ? '...' : 'Save as Draft'}
+                </button>
+                <button
+                  onClick={() => editingDraft ? handleUpdateDraft('published') : handleCreate('published')}
+                  disabled={creating || uploading}
+                  className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-all"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {creating || uploading ? 'Publishing...' : 'Publish'}
                 </button>
               </div>
             </div>
@@ -359,15 +415,19 @@ export default function AdminAnnouncementsPage() {
           {announcements.map(ann => {
             const typeOpt = TYPE_OPTIONS.find(t => t.value === ann.type) || TYPE_OPTIONS[0];
             return (
-              <div key={ann._id} className={`bg-gray-900/80 border rounded-2xl overflow-hidden transition-all ${ann.isActive ? 'border-gray-700/50' : 'border-gray-800/30 opacity-60'}`}>
+              <div key={ann._id} className="bg-gray-900/80 border border-gray-700/50 rounded-2xl overflow-hidden transition-all">
                 <div className="p-5 flex items-start gap-4">
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">{typeOpt.label}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ann.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-700 text-gray-400'}`}>
-                        {ann.isActive ? 'Active' : 'Inactive'}
-                      </span>
+                      {ann.status === 'draft' ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-yellow-500/20 text-yellow-400">Draft</span>
+                      ) : (
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ann.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-700 text-gray-400'}`}>
+                          {ann.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      )}
                       {ann.imageUrl && (
                         <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-700 text-gray-400">
                           Image
@@ -385,13 +445,22 @@ export default function AdminAnnouncementsPage() {
                       <Eye className="w-4 h-4" />
                     </button>
 
-                    {/* Active toggle */}
-                    <button
-                      onClick={() => handleToggle(ann)}
-                      className={`relative w-11 h-6 rounded-full transition-all duration-200 focus:outline-none shrink-0 ${ann.isActive ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gray-700'}`}
-                    >
-                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${ann.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </button>
+                    {/* Edit draft */}
+                    {ann.status === 'draft' && (
+                      <button onClick={() => handleOpenEditDraft(ann)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 text-xs font-medium transition-all">
+                        Edit
+                      </button>
+                    )}
+
+                    {/* Active toggle — only for published */}
+                    {ann.status !== 'draft' && (
+                      <button
+                        onClick={() => handleToggle(ann)}
+                        className={`relative w-11 h-6 rounded-full transition-all duration-200 focus:outline-none shrink-0 ${ann.isActive ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gray-700'}`}
+                      >
+                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${ann.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                      </button>
+                    )}
 
                     {/* Delete */}
                     <button onClick={() => handleDelete(ann._id)} className="text-gray-500 hover:text-red-400 transition-colors">

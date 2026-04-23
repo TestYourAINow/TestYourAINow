@@ -15,7 +15,8 @@ import {
   LogOut,
   BarChart3,
   Shield,
-  Megaphone
+  Megaphone,
+  Gauge
 } from "lucide-react"
 import { useSidebar } from "@/context/SidebarContext"
 import { useSession, signOut } from "next-auth/react"
@@ -268,6 +269,7 @@ export default function Sidebar() {
     { href: "/agent-lab", label: "Improve Agent", icon: <Brain size={20} />, isActive: pathname === "/agent-lab" },
     { href: "/demo-agent", label: "Demo Agent", icon: <FlaskConical size={20} />, isActive: pathname === "/demo-agent" },
     { href: "/launch-agent", label: "Launch Agent", icon: <Rocket size={20} />, isActive: pathname === "/launch-agent" },
+    { href: "/usage-limits", label: "Usage Limits", icon: <Gauge size={20} />, isActive: pathname === "/usage-limits" },
   ]
 
   // ✅ SUPPORT ADMIN - Visible seulement pour les admins

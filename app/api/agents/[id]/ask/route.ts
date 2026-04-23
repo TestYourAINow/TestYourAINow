@@ -9,7 +9,8 @@ import { Conversation } from "@/models/Conversation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { getAIClient, getAIClientForWebhook, callAI } from "@/lib/ai-client";
-import { handleWebhookIntegration } from '@/lib/integrations/webhookHandler'; // 🆕 AJOUTÉ
+import { handleWebhookIntegration } from '@/lib/integrations/webhookHandler';
+import { checkGlobalLimit, incrementGlobalUsage } from '@/lib/globalLimitCheck';
 
 type IntegrationFile = { name: string; size: number; path: string; url: string };
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
@@ -491,92 +492,6 @@ export async function POST(
       }
     }
 
-    // 🆕 LOGIQUE DE LIMITE - VÉRIFICATION ET INCRÉMENTATION ATOMIQUE
-    if (publicKind === 'widget' && widgetId) {
-      console.log(`🔒 [LIMIT] Checking usage limits for widget: ${widgetId}`);
-      
-      try {
-        const { Connection } = await import('@/models/Connection');
-        let connection = await Connection.findById(widgetId);
-        
-        if (connection?.limitEnabled && connection.messageLimit) {
-          const now = new Date();
-          
-          if (!connection.periodStartDate) {
-            console.log(`🆕 [LIMIT] First usage - Initializing period`);
-            connection.periodStartDate = now;
-            connection.periodEndDate = new Date(now.getTime() + (connection.periodDays * 24 * 60 * 60 * 1000));
-            connection.currentPeriodUsage = 0;
-            connection.overageCount = 0;
-            await connection.save();
-          }
-          
-          else if (now >= connection.periodEndDate) {
-            console.log(`🔄 [LIMIT] Period expired - Resetting usage`);
-            
-            const historyEntry = {
-              period: `${connection.periodStartDate.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-              })} to ${connection.periodEndDate.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-              })}`,
-              messagesUsed: connection.currentPeriodUsage,
-              overageMessages: connection.overageCount || 0,
-              startDate: connection.periodStartDate,
-              endDate: connection.periodEndDate,
-              note: 'Period completed'
-            };
-            
-            connection.usageHistory = [...(connection.usageHistory || []), historyEntry];
-            connection.periodStartDate = now;
-            connection.periodEndDate = new Date(now.getTime() + (connection.periodDays * 24 * 60 * 60 * 1000));
-            connection.currentPeriodUsage = 0;
-            connection.overageCount = 0;
-            await connection.save();
-          }
-          
-          const usageAfterThisMessage = connection.currentPeriodUsage + 1;
-          const isOverLimit = usageAfterThisMessage > connection.messageLimit;
-          
-          console.log(`📊 [LIMIT] State check:`, {
-            currentUsage: connection.currentPeriodUsage,
-            afterThisMessage: usageAfterThisMessage,
-            limit: connection.messageLimit,
-            wouldExceed: isOverLimit,
-            allowOverage: connection.allowOverage
-          });
-          
-          if (isOverLimit && !connection.allowOverage) {
-            console.log(`❌ [LIMIT] BLOCKING - Would exceed limit`);
-            
-            if (connection.showLimitMessage && connection.limitReachedMessage) {
-              return NextResponse.json({ 
-                reply: connection.limitReachedMessage,
-                limitReached: true,
-                usage: connection.currentPeriodUsage,
-                limit: connection.messageLimit
-              });
-            } else {
-              return NextResponse.json({ 
-                reply: '',
-                limitReached: true,
-                usage: connection.currentPeriodUsage,
-                limit: connection.messageLimit
-              });
-            }
-          }
-          
-          console.log(`✅ [LIMIT] Message allowed - will increment after processing`);
-        }
-      } catch (error) {
-        console.error('❌ [LIMIT] Error checking limits:', error);
-      }
-    }
-
     const body = await req.json();
     const userMessage: string = body.message;
     const previousMessages: ChatMessage[] = body.previousMessages || [];
@@ -602,6 +517,28 @@ export async function POST(
 
     if (!agent) {
       return NextResponse.json({ error: "Agent not found." }, { status: 404 });
+    }
+
+    // Resolve real Connection ID from ChatbotConfig (widgetId is ChatbotConfig._id, not Connection._id)
+    const isPreviewRequest = req.headers.get('x-preview') === 'true'
+    let widgetConnectionId: string | null = null
+    if (publicKind === 'widget' && widgetId && !isPreviewRequest) {
+      try {
+        const { ChatbotConfig } = await import('@/models/ChatbotConfig')
+        const cfg = await ChatbotConfig.findById(widgetId).select('connectionId').lean() as any
+        if (cfg?.connectionId) widgetConnectionId = String(cfg.connectionId)
+      } catch {}
+    }
+
+    // Global agent-level limit check
+    if (publicKind === 'widget' && widgetConnectionId) {
+      const globalCheck = await checkGlobalLimit(agent._id.toString(), widgetConnectionId)
+      if (globalCheck.blocked) {
+        return NextResponse.json({
+          reply: globalCheck.showMessage ? (globalCheck.message ?? '') : '',
+          limitReached: true,
+        })
+      }
     }
 
     const aiClientResult = isPublicOK
@@ -786,69 +723,11 @@ export async function POST(
       }
     }
 
-    // 🆕 INCRÉMENTER LE COMPTEUR
-    if (publicKind === 'widget' && widgetId) {
-      try {
-        const { Connection } = await import('@/models/Connection');
-        
-        const connection = await Connection.findById(widgetId);
-        
-        if (connection?.limitEnabled && connection.messageLimit) {
-          const newUsage = connection.currentPeriodUsage + 1;
-          const isNowOverLimit = newUsage > connection.messageLimit;
-          
-          console.log(`📊 [LIMIT-INCREMENT] Before update:`, {
-            currentUsage: connection.currentPeriodUsage,
-            willBe: newUsage,
-            limit: connection.messageLimit,
-            isOverLimit: isNowOverLimit,
-            allowOverage: connection.allowOverage
-          });
-          
-          if (isNowOverLimit && connection.allowOverage) {
-            const result = await Connection.findByIdAndUpdate(
-              widgetId,
-              {
-                $inc: { 
-                  currentPeriodUsage: 1,
-                  overageCount: 1 
-                }
-              },
-              { new: true }
-            );
-            
-            console.log(`📈 [LIMIT-INCREMENT] ✅ Overage incremented:`, {
-              usage: result.currentPeriodUsage,
-              limit: result.messageLimit,
-              overage: result.overageCount
-            });
-            
-          } else {
-            const result = await Connection.findByIdAndUpdate(
-              widgetId,
-              {
-                $inc: { currentPeriodUsage: 1 }
-              },
-              { new: true }
-            );
-            
-            console.log(`📈 [LIMIT-INCREMENT] ✅ Usage incremented:`, {
-              usage: result.currentPeriodUsage,
-              limit: result.messageLimit
-            });
-          }
-          
-        } else {
-          console.log(`⚠️ [LIMIT-INCREMENT] Limits not enabled, skipping increment`);
-        }
-        
-      } catch (err) {
-        const error = err as Error;
-        console.error('❌ [LIMIT-INCREMENT] Error incrementing usage:', error);
-        console.error('Error details:', error.message);
-        console.error('Stack:', error.stack);
-      }
+    // Increment global usage counter
+    if (publicKind === 'widget' && widgetConnectionId) {
+      await incrementGlobalUsage(agent._id.toString(), widgetConnectionId)
     }
+
 
     return NextResponse.json({ reply });
     

@@ -5,10 +5,11 @@ import { connectToDatabase } from '@/lib/db';
 import { Connection } from '@/models/Connection';
 import { Agent } from '@/models/Agent';
 import { AgentKnowledge } from '@/models/AgentKnowledge';
-import { Conversation } from '@/models/Conversation'; // 🆕 NOUVEAU
+import { Conversation } from '@/models/Conversation';
 import { getAIClientForWebhook, callAI } from '@/lib/ai-client';
 import { storeAIResponse, storeConversationHistory, getConversationHistory } from '@/lib/redisCache';
 import { handleWebhookIntegration } from '@/lib/integrations/webhookHandler';
+import { checkGlobalLimit, incrementGlobalUsage } from '@/lib/globalLimitCheck';
 
 
 // 📝 Types pour les messages OpenAI
@@ -369,6 +370,9 @@ console.log(`ℹ️  [WEBHOOK] No webhook match, using standard OpenAI response`
     // 8. 🚀 Stocker la réponse dans Redis (pour récupération ManyChat)
     await storeAIResponse(conversationId, response);
 
+    // Increment global usage counter
+    await incrementGlobalUsage(connection.aiBuildId.toString(), connection._id.toString());
+
     // 9. 🧠 Stocker la réponse IA dans Redis
     await storeConversationHistory(conversationId, {
       role: 'assistant',
@@ -479,7 +483,15 @@ export async function POST(req: NextRequest, context: any) {
       }, { status: 400 });
     }
 
-    // 5. 🆕 Traiter le message avec l'AI (avec données utilisateur)
+    // 5. Check global usage limit before processing
+    const limitCheck = await checkGlobalLimit(connection.aiBuildId.toString(), connection._id.toString())
+    if (limitCheck.blocked) {
+      const limitMsg = limitCheck.message ?? ''
+      await storeAIResponse(conversationId, limitMsg)
+      return NextResponse.json({ success: true, message: 'Message received and processing', status: 'received' })
+    }
+
+    // 6. Traiter le message avec l'AI (avec données utilisateur)
     processWithAI(agent, userMessage, userData, conversationId, connection);
 
     // 6. Retourner immédiatement à ManyChat

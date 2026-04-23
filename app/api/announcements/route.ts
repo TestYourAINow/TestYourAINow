@@ -23,13 +23,19 @@ export async function GET() {
     const seenIds = user.seenAnnouncements || [];
     const userCreatedAt = user.createdAt || new Date(0);
 
-    // Only show announcements created after user registration and not yet seen
+    // Only show published announcements after user registration and not yet seen
+    // Use publishedAt for date comparison (drafts have no publishedAt)
+    // Backward compat: docs without status field are treated as published
     const announcements = await Announcement.find({
       isActive: true,
-      createdAt: { $gt: userCreatedAt },
+      status: { $ne: 'draft' },
+      $or: [
+        { publishedAt: { $gt: userCreatedAt } },
+        { publishedAt: null, createdAt: { $gt: userCreatedAt } },
+      ],
       _id: { $nin: seenIds }
     })
-      .sort({ createdAt: -1 })
+      .sort({ publishedAt: -1 })
       .lean();
 
     return NextResponse.json({ announcements });

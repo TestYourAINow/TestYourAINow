@@ -35,13 +35,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { title, message, type, imageUrl, imageLayout } = await req.json();
+  const { title, message, type, imageUrl, imageLayout, status } = await req.json();
   if (!title?.trim() || !message?.trim()) {
     return NextResponse.json({ error: 'Title and message are required' }, { status: 400 });
   }
 
+  const isDraft = status === 'draft'
+  const now = new Date()
+
   await connectToDatabase();
-  const announcement = await Announcement.create({ title: title.trim(), message: message.trim(), type: type || 'update', imageUrl: imageUrl || '', imageLayout: imageLayout || 'thumbnail', isActive: true });
+  const announcement = await Announcement.create({
+    title: title.trim(),
+    message: message.trim(),
+    type: type || 'update',
+    imageUrl: imageUrl || '',
+    imageLayout: imageLayout || 'thumbnail',
+    isActive: !isDraft,
+    status: isDraft ? 'draft' : 'published',
+    publishedAt: isDraft ? null : now,
+  });
   return NextResponse.json({ success: true, announcement }, { status: 201 });
 }
 
@@ -51,13 +63,28 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id, isActive } = await req.json();
+  const { id, isActive, publish, update } = await req.json();
   if (!id) {
     return NextResponse.json({ error: 'id required' }, { status: 400 });
   }
 
   await connectToDatabase();
-  const updated = await Announcement.findByIdAndUpdate(id, { isActive }, { new: true });
+  let updatePayload: Record<string, unknown>
+  if (publish) {
+    updatePayload = { status: 'published', publishedAt: new Date(), isActive: true }
+    if (update) {
+      // Publish with content update
+      const { title, message, type, imageUrl, imageLayout } = update
+      Object.assign(updatePayload, { title, message, type, imageUrl, imageLayout })
+    }
+  } else if (update) {
+    // Save draft content update
+    const { title, message, type, imageUrl, imageLayout } = update
+    updatePayload = { title, message, type, imageUrl, imageLayout }
+  } else {
+    updatePayload = { isActive }
+  }
+  const updated = await Announcement.findByIdAndUpdate(id, updatePayload, { new: true });
   return NextResponse.json({ success: true, announcement: updated });
 }
 

@@ -9,6 +9,7 @@ import { Conversation } from '@/models/Conversation';
 import { getAIClientForWebhook, callAI } from '@/lib/ai-client';
 import { storeAIResponse, storeConversationHistory, getConversationHistory } from '@/lib/redisCache';
 import { handleWebhookIntegration } from '@/lib/integrations/webhookHandler';
+import { checkGlobalLimit, incrementGlobalUsage } from '@/lib/globalLimitCheck';
 
 type ChatMessage = {
   role: "user" | "assistant" | "system";
@@ -354,6 +355,9 @@ if (webhookResponse) {
 
     await storeAIResponse(conversationId, response);
 
+    // Increment global usage counter
+    await incrementGlobalUsage(connection.aiBuildId.toString(), connection._id.toString());
+
     await storeConversationHistory(conversationId, {
       role: 'assistant',
       content: response,
@@ -484,6 +488,14 @@ export async function POST(req: NextRequest, context: any) {
         text: "Empty message received.",
         success: false
       }, { status: 400 });
+    }
+
+    // Check global usage limit before processing
+    const limitCheck = await checkGlobalLimit(connection.aiBuildId.toString(), connection._id.toString())
+    if (limitCheck.blocked) {
+      const limitMsg = limitCheck.message ?? ''
+      await storeAIResponse(conversationId, limitMsg)
+      return NextResponse.json({ success: true, message: 'Message received and processing', status: 'received' })
     }
 
     // Traiter le message avec l'AI (asynchrone)
