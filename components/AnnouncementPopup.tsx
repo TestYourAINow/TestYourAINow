@@ -163,6 +163,7 @@ export default function AnnouncementPopup(props: Props) {
             <img
               src={ann.imageUrl}
               alt=""
+              loading="eager"
               className="w-full rounded-xl object-cover max-h-40 mb-4"
             />
           )}
@@ -171,6 +172,7 @@ export default function AnnouncementPopup(props: Props) {
               <img
                 src={ann.imageUrl}
                 alt=""
+                loading="eager"
                 className="w-20 h-20 rounded-xl object-cover shrink-0"
               />
               <div
