@@ -64,9 +64,9 @@ type LimitForm = {
 }
 
 const PERIOD_OPTIONS = [
-  { value: 30, label: '30 days (monthly)' },
-  { value: 90, label: '90 days (quarterly)' },
-  { value: 365, label: '365 days (yearly)' },
+  { value: 30, label: 'Monthly' },
+  { value: 90, label: 'Quarterly' },
+  { value: 365, label: 'Yearly' },
 ]
 
 function getPlatformIcon(type: string) {

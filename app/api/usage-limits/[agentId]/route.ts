@@ -9,6 +9,7 @@ import { Agent } from '@/models/Agent'
 import { Connection } from '@/models/Connection'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/authOptions'
+import { nextPeriodEnd } from '@/lib/periodUtils'
 
 export async function GET(_req: NextRequest, context: { params: Promise<{ agentId: string }> }) {
   await connectToDatabase()
@@ -71,10 +72,10 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ agentId
   if (globalLimitEnabled && !agent.globalPeriodStartDate) {
     // First time enabling: start period now
     periodStartDate = now
-    periodEndDate = new Date(now.getTime() + period * 24 * 60 * 60 * 1000)
+    periodEndDate = nextPeriodEnd(now, period)
   } else if (agent.globalPeriodStartDate && globalPeriodDays && globalPeriodDays !== agent.globalPeriodDays) {
     // Period duration changed: recalculate endDate from original startDate, keep usage intact
-    periodEndDate = new Date(agent.globalPeriodStartDate.getTime() + period * 24 * 60 * 60 * 1000)
+    periodEndDate = nextPeriodEnd(agent.globalPeriodStartDate, period)
   }
 
   agent.globalLimitEnabled = globalLimitEnabled ?? agent.globalLimitEnabled

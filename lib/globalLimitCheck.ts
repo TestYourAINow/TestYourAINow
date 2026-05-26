@@ -4,6 +4,7 @@
 import { connectToDatabase } from '@/lib/db'
 import { Agent } from '@/models/Agent'
 import { Connection } from '@/models/Connection'
+import { nextPeriodEnd } from '@/lib/periodUtils'
 
 type LimitCheckResult =
   | { blocked: false }
@@ -38,9 +39,8 @@ export async function checkGlobalLimit(
 
     if (!agent.globalPeriodStartDate) {
       // First time: initialize period
-      const periodMs = (agent.globalPeriodDays ?? 30) * 24 * 60 * 60 * 1000
       agent.globalPeriodStartDate = now
-      agent.globalPeriodEndDate = new Date(now.getTime() + periodMs)
+      agent.globalPeriodEndDate = nextPeriodEnd(now, agent.globalPeriodDays ?? 30)
       await agent.save()
     } else if (agent.globalPeriodEndDate && now >= agent.globalPeriodEndDate) {
       // Save period to history before resetting
@@ -57,14 +57,13 @@ export async function checkGlobalLimit(
         periodDays: agent.globalPeriodDays ?? 30,
       })
 
-      // Period expired: reset all counting connections and start new period
-      const periodMs = (agent.globalPeriodDays ?? 30) * 24 * 60 * 60 * 1000
+      // Reset counting connections and start new period from previous end date
       await Connection.updateMany(
         { aiBuildId: agentId, countsTowardGlobalLimit: true },
         { $set: { currentPeriodUsage: 0, overageCount: 0 } }
       )
-      agent.globalPeriodStartDate = now
-      agent.globalPeriodEndDate = new Date(now.getTime() + periodMs)
+      agent.globalPeriodStartDate = agent.globalPeriodEndDate
+      agent.globalPeriodEndDate = nextPeriodEnd(agent.globalPeriodEndDate, agent.globalPeriodDays ?? 30)
       await agent.save()
     }
 
