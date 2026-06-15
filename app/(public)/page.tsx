@@ -26,7 +26,7 @@ interface FeatureCarouselProps {
 
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const isSubscribed = session?.user?.isSubscribed;
   const redirectUrl = session ? "/dashboard" : "/subscribe";
 
@@ -212,10 +212,9 @@ export default function Home() {
 
           {/* Description - responsive */}
           <p className="text-gray-300 text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed px-4">
-            Build and share your AI agents with a single link.{" "}
-            <span className="text-blue-400 font-semibold">No coding.</span>{" "}
-            <span className="text-cyan-400 font-semibold">No hassle.</span>{" "}
-            <span className="text-white font-semibold">Just results.</span>
+            The platform to{" "}
+            <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-semibold">build and deploy AI agents for your clients.</span>{" "}
+            <span className="text-white font-semibold">No coding. No hassle. Just results.</span>
           </p>
 
           {/* CTA buttons - stack on mobile, side by side on desktop */}
@@ -845,7 +844,7 @@ export default function Home() {
 
           {/* 🆕 Trust signals */}
           <p className="text-xs sm:text-sm text-gray-500 mt-6 sm:mt-8">
-            Join hundreds of agencies already building with TestYourAI Now
+            Join freelancers and agencies already building with AI
           </p>
         </div>
       </section>
